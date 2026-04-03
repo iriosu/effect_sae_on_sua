@@ -1,0 +1,2286 @@
+---
+title: "Analysis of Additional Games"
+output:
+  pdf_document:
+    keep_tex:  true
+    latex_engine: xelatex
+  html_document: default
+header-includes:
+   - \usepackage{floatrow}
+   - \floatsetup[figure]{capposition=top}
+---
+
+```{r setup, include=FALSE}
+setwd("/Users/iar200000/Dropbox/Education - On going projects/Code/R")
+knitr::opts_knit$set(root.dir = "/Users/iar200000/Dropbox/Education - On going projects/Code/R")
+```
+
+<!-- folding region for editor: Setup -->
+<!-- region:setup -->
+<!-- endregion -->
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# Clean ---------------------------------------------------------------
+rm(list = ls())
+
+# Libraries ---------------------------------------------------------------
+# region Libraries_and_data
+library(dplyr)
+library(tidyr)
+library(magrittr)
+library(ggplot2)
+library(stargazer)
+library(knitr)
+library(kableExtra)
+library(stringr)
+library(fixest)
+library(purrr)
+library(did)
+options(knitr.table.format = "latex")
+
+my_colors <- RColorBrewer::brewer.pal(4, "Pastel1")[1:2]
+myblue <- "#2F5597"
+myred <- "#B2182B"
+
+dsd <- readRDS("data/panel_stayers_9-12_2004_2024.rds")
+s <- readRDS("data/panel_simce_2medio_2006_2024.rds")
+
+clustering_strategy <- ~ rbd + year
+clustering_var <- "rbd"
+init_year <- 2010
+end_year <- 2021
+# or
+# clustering_strategy <- ~ rbd
+# endregion
+```
+
+```{r create_df_by_rbd, echo=FALSE, message=FALSE, warning=FALSE}
+# region Create_df_by_rbd
+dr <- dsd %>%
+  filter(!is.na(nom_rbd) & is_private > -Inf) %>%
+  dplyr::mutate(
+    scored_lm = coalesce(scored_lm, 0),
+    prom_gral = coalesce(prom_gral, 0),
+    att = coalesce(att, 0),
+    prom_lm_actual = coalesce(lm_pct, 0),
+    applied = coalesce(applied, 0),
+    assigned = coalesce(assigned, 0),
+    enrolled = coalesce(enrolled, 0)
+  ) %>%
+  filter(year_start >= init_year & year_start <= end_year) %>%
+  group_by(rbd, year_start) %>%
+  dplyr::summarise(
+    nom_rbd = first(nom_rbd),
+    cod_reg_rbd = first(cod_reg_rbd),
+    year_first_sae = min(rbd_first_sae),
+    region_first_sae = min(region_first_sae),
+    num_students = n_distinct(mrun),
+    prom_gral = mean(prom_gral, na.rm = TRUE),
+    att = mean(att, na.rm = TRUE),
+    is_female = mean(is_female, na.rm = TRUE),
+    is_low_income = mean(is_low_income, na.rm = TRUE),
+    avg_lm = mean(prom_lm_actual, na.rm = TRUE),
+    scored_lm = mean(scored_lm, na.rm = TRUE),
+    applied = mean(applied, na.rm = TRUE),
+    assigned = mean(assigned, na.rm = TRUE),
+    enrolled = mean(enrolled, na.rm = TRUE),
+    is_private = max(is_private, na.rm = TRUE)
+  ) %>%
+  dplyr::rename(year = year_start) %>%
+  dplyr::mutate(
+    treated = ifelse(year >= year_first_sae & year_first_sae < 2026, 1, 0),
+    post_sae = ifelse(year >= region_first_sae, 1, 0),
+    in_sae = ifelse(year_first_sae < 2026, 1, 0)
+  ) %>%
+  left_join(s %>% dplyr::select(-nom_rbd) %>% dplyr::mutate(in_simce = 1), by = c("rbd", "year")) %>%
+  dplyr::mutate(
+    in_simce = coalesce(in_simce, 0),
+    nalu_lect2m_rbd = coalesce(nalu_lect2m_rbd, 0),
+    nalu_mate2m_rbd = coalesce(nalu_mate2m_rbd, 0),
+    prom_lect2m_rbd = coalesce(prom_lect2m_rbd, 0),
+    prom_mate2m_rbd = coalesce(prom_mate2m_rbd, 0),
+    avg_lm_simce = (prom_lect2m_rbd + prom_mate2m_rbd) / 2
+  ) %>%
+  group_by(year) %>%
+  dplyr::arrange(is_private, -avg_lm_simce) %>%
+  dplyr::mutate(rank_lm_simce = row_number()) %>%
+  dplyr::select(-cod_reg_rbd.y) %>%
+  dplyr::rename(cod_reg_rbd = cod_reg_rbd.x) %>%
+  ungroup() %>%
+  as.data.frame()
+
+# endregion
+
+# dr %>% filter(is.na(nom_rbd))
+# #
+# dr %>% filter(year == 2015) %>% dplyr::select(rbd, nom_rbd, rank_lm_simce, avg_lm_simce, is_private )
+#
+# dr %>% group_by(is_private > -Inf) %>% tally()
+```
+
+
+# Staggered DID: Callaway - Sant'Anna (2005)
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# region make_did_table
+make_did_table <- function(models,
+                           caption = "Regression Results",
+                           label = "tab:main_results",
+                           cluster_var = "rbd",
+                           fe_vars = c("rbd", "year"),
+                           digits = 3,
+                           means_pre = NULL,
+                           means_map = NULL,
+                           obs = NULL) {
+  # Helper: significance stars
+  star_fun <- function(att, se) {
+    pval <- 2 * pnorm(-abs(att / se))
+    ifelse(pval < 0.01, "$^{***}$",
+      ifelse(pval < 0.05, "$^{**}$",
+        ifelse(pval < 0.10, "$^{*}$", "")
+      )
+    )
+  }
+
+  # Aggregate all models (robust to NULL / failing models)
+  aggs <- lapply(models, function(m) {
+    if (is.null(m)) {
+      return(list(overall.att = NA_real_, overall.se = NA_real_))
+    }
+    tryCatch(aggte(m, type = "simple"), error = function(e) {
+      warning("aggte failed for one model: ", conditionMessage(e))
+      list(overall.att = NA_real_, overall.se = NA_real_)
+    })
+  })
+
+  # Extract ATT and SE
+  atts <- sapply(aggs, function(x) x$overall.att)
+  ses <- sapply(aggs, function(x) x$overall.se)
+
+  stars <- mapply(star_fun, atts, ses)
+  stars[is.na(stars)] <- ""
+
+  att_fmt <- sprintf(paste0("%.", digits, "f%s"), atts, stars)
+  se_fmt <- sprintf(paste0("(%.", digits, "f)"), ses)
+
+  # Column names from list names
+  colnames <- names(models)
+  k <- length(models)
+
+  # Column numbering
+  col_numbers <- paste0("(", 1:k, ")", collapse = " & ")
+  col_header <- paste(colnames, collapse = " & ")
+  att_row <- paste(att_fmt, collapse = " & ")
+  se_row <- paste(se_fmt, collapse = " & ")
+  # Observations: allow user to pass `obs` (like `means_pre`) or fall back to legacy behavior
+  if (!is.null(obs)) {
+    # normalize helper
+    norm_name <- function(x) tolower(gsub("[^[:alnum:]]", "", x))
+
+    # Accept a data.frame (take first row) or a named vector/list
+    if (is.data.frame(obs)) {
+      obs_row_raw <- as.list(obs[1, , drop = TRUE])
+    } else if (is.list(obs) && !is.null(names(obs))) {
+      obs_row_raw <- as.list(obs)
+    } else {
+      obs_row_raw <- as.list(obs)
+    }
+    obs_names <- names(obs_row_raw)
+
+    # If named, try to map display names to obs names by exact or normalized match
+    if (!is.null(obs_names)) {
+      norm_obs <- setNames(obs_names, vapply(obs_names, norm_name, ""))
+      vars <- sapply(colnames, function(dn) {
+        if (dn %in% obs_names) {
+          return(dn)
+        }
+        nn <- norm_name(dn)
+        if (nn %in% names(norm_obs)) {
+          return(norm_obs[[nn]])
+        }
+        return(NA_character_)
+      }, USE.NAMES = FALSE)
+
+      obs_vals <- sapply(vars, function(v) {
+        if (!is.null(v) && !is.na(v) && v %in% obs_names) {
+          as.numeric(obs_row_raw[[v]])
+        } else {
+          NA_real_
+        }
+      })
+    } else {
+      # unnamed: allow scalar or vector matching k columns
+      if (length(obs_row_raw) == 1L) {
+        obs_vals <- rep(as.numeric(obs_row_raw[[1]]), k)
+      } else if (length(obs_row_raw) == k) {
+        obs_vals <- as.numeric(unlist(obs_row_raw))
+      } else {
+        obs_vals <- rep(NA_real_, k)
+      }
+    }
+
+    obs_fmt <- sapply(obs_vals, function(x) ifelse(is.na(x), "NA", format(x, big.mark = ",")))
+    obs_row <- paste(obs_fmt, collapse = " & ")
+  } else {
+    # legacy: Find first model with an 'n' field and repeat it across columns
+    n_raw <- NA_integer_
+    for (m in models) {
+      if (!is.null(m) && !is.null(m$n)) {
+        n_raw <- m$n
+        break
+      }
+    }
+    if (is.na(n_raw)) {
+      n_obs_val <- NA_character_
+    } else {
+      n_obs_val <- format(n_raw, big.mark = ",")
+    }
+    obs_row <- paste(rep(ifelse(is.na(n_obs_val), "NA", n_obs_val), k), collapse = " & ")
+  }
+  # Mean pre-treatment row (if provided)
+  if (!is.null(means_pre)) {
+    # normalize helper
+    norm_name <- function(x) tolower(gsub("[^[:alnum:]]", "", x))
+
+    # Accept a data.frame (take first row) or a named vector/list
+    if (is.data.frame(means_pre)) {
+      means_row_raw <- as.list(means_pre[1, , drop = TRUE])
+    } else if (is.list(means_pre) && !is.null(names(means_pre))) {
+      means_row_raw <- as.list(means_pre)
+    } else {
+      means_row_raw <- as.list(means_pre)
+    }
+    means_names <- names(means_row_raw)
+
+    # If user provided an explicit map, use it (named vector: display_name -> var_name)
+    if (!is.null(means_map)) {
+      vars <- unname(means_map[colnames])
+    } else {
+      # try to match model display names to means column names by normalized matching
+      norm_means <- setNames(means_names, vapply(means_names, norm_name, ""))
+      vars <- sapply(colnames, function(dn) {
+        # direct match
+        if (dn %in% means_names) {
+          return(dn)
+        }
+        # normalized match
+        nn <- norm_name(dn)
+        if (nn %in% names(norm_means)) {
+          return(norm_means[[nn]])
+        }
+        # no match
+        return(NA_character_)
+      }, USE.NAMES = FALSE)
+    }
+
+    means_vals <- sapply(vars, function(v) {
+      if (!is.null(v) && !is.na(v) && v %in% means_names) {
+        as.numeric(means_row_raw[[v]])
+      } else {
+        NA_real_
+      }
+    })
+    means_fmt <- sprintf(paste0("%.", digits, "f"), means_vals)
+    means_row <- paste(means_fmt, collapse = " & ")
+  } else {
+    means_row <- paste(rep("", k), collapse = " & ")
+  }
+  fe_rows <- paste0(
+    sapply(fe_vars, function(v) {
+      paste0(
+        "      ", v, " & ",
+        paste(rep("$\\checkmark$", k), collapse = " & "),
+        "\\\\\n"
+      )
+    }),
+    collapse = ""
+  )
+
+  # Build LaTeX table
+  latex_table <- paste0(
+    "\\begin{table}[htbp]\n",
+    "   \\caption{", caption, "}\\label{", label, "}\n",
+    "   \\bigskip\n",
+    "   \\centering\n",
+    "   \\begin{tabular}{l", paste(rep("c", k), collapse = ""), "}\n",
+    "      \\toprule\n",
+    "                   & ", col_header, "\\\\\n",
+    "                   & ", col_numbers, "\\\\\n",
+    "      \\midrule\n",
+    "      Treated      & ", att_row, "\\\\\n",
+    "                   & ", se_row, "\\\\\n",
+    "      Mean pre-treatment & ", means_row, "\\\\\n",
+    "       \\\\\n",
+    "      Observations & ", obs_row, "\\\\\n",
+    "       \\\\\n",
+    fe_rows,
+    "      \\bottomrule\n",
+    "   \\end{tabular}\n",
+    "\\end{table}"
+  )
+
+  return(latex_table)
+}
+# endregion
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+gpa <- att_gt(
+  yname = "prom_gral",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dr %>% dplyr::mutate(year_first_sae = ifelse(in_sae == 1, year_first_sae, 0)),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+lm <- att_gt(
+  yname = "avg_lm",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dr %>% dplyr::mutate(year_first_sae = ifelse(in_sae == 1, year_first_sae, 0)),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+app <- att_gt(
+  yname = "applied",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dr %>% dplyr::mutate(year_first_sae = ifelse(in_sae == 1, year_first_sae, 0)),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+ass <- att_gt(
+  yname = "assigned",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dr %>% dplyr::mutate(year_first_sae = ifelse(in_sae == 1, year_first_sae, 0)),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+enr <- att_gt(
+  yname = "enrolled",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dr %>% dplyr::mutate(year_first_sae = ifelse(in_sae == 1, year_first_sae, 0)),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+means_pre <- dr %>%
+  filter(in_sae == 1, year < year_first_sae) %>%
+  summarise(
+    "GPA" = mean(prom_gral, na.rm = TRUE),
+    "Average LM" = mean(avg_lm, na.rm = TRUE),
+    "Applied" = mean(applied, na.rm = TRUE),
+    "Assigned" = mean(assigned, na.rm = TRUE),
+    "Enrolled" = mean(enrolled, na.rm = TRUE)
+  )
+
+obs <- dr %>%
+  summarise(
+    "GPA" = n(),
+    "Average LM" = n(),
+    "Applied" = n(),
+    "Assigned" = n(),
+    "Enrolled" = n()
+  )
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+models_list <- list(
+  GPA = gpa,
+  "Average LM" = lm,
+  Applied = app,
+  Assigned = ass,
+  Enrolled = enr
+)
+
+latex_code <- make_did_table(models_list, means_pre = means_pre, obs = obs)
+
+cat(latex_code)
+```
+
+
+# Heterogeneity
+
+## Gender
+```{r gender_data, echo=FALSE, warning=FALSE, message=FALSE}
+df <- dsd %>%
+  filter(!is.na(nom_rbd) & is_private > -Inf) %>%
+  dplyr::mutate(
+    year_first_sae = min(rbd_first_sae),
+    region_first_sae = min(region_first_sae),
+    treated = ifelse(year >= year_first_sae & year_first_sae < 2026, 1, 0),
+    post_sae = ifelse(year >= region_first_sae, 1, 0),
+    in_sae = ifelse(year_first_sae < 2026, 1, 0),
+    is_female = ifelse(gen_alu == 2, 1, 0)
+  ) %>%
+  filter(is_female == 1) %>%
+  dplyr::mutate(
+    scored_lm = coalesce(scored_lm, 0),
+    prom_gral = coalesce(prom_gral, 0),
+    att = coalesce(att, 0),
+    prom_lm_actual = coalesce(lm_pct, 0),
+    applied = coalesce(applied, 0),
+    assigned = coalesce(assigned, 0),
+    enrolled = coalesce(enrolled, 0)
+  ) %>%
+  filter(year_start >= init_year & year_start <= end_year) %>%
+  group_by(rbd, gen_alu, year_start) %>%
+  dplyr::summarise(
+    nom_rbd = first(nom_rbd),
+    year_first_sae = min(rbd_first_sae),
+    region_first_sae = min(region_first_sae),
+    num_students = n_distinct(mrun),
+    prom_gral = mean(prom_gral, na.rm = TRUE),
+    att = mean(att, na.rm = TRUE),
+    avg_lm = mean(prom_lm_actual, na.rm = TRUE),
+    scored_lm = mean(scored_lm, na.rm = TRUE),
+    applied = mean(applied, na.rm = TRUE),
+    assigned = mean(assigned, na.rm = TRUE),
+    enrolled = mean(enrolled, na.rm = TRUE),
+    is_private = max(is_private, na.rm = TRUE)
+  ) %>%
+  dplyr::rename(year = year_start) %>%
+  dplyr::mutate(
+    treated = ifelse(year >= year_first_sae & year_first_sae < 2026, 1, 0),
+    post_sae = ifelse(year >= region_first_sae, 1, 0),
+    in_sae = ifelse(year_first_sae < 2026, 1, 0)
+  ) %>%
+  left_join(s %>% dplyr::select(-nom_rbd) %>% dplyr::mutate(in_simce = 1), by = c("rbd", "year")) %>%
+  dplyr::mutate(
+    in_simce = coalesce(in_simce, 0),
+    nalu_lect2m_rbd = coalesce(nalu_lect2m_rbd, 0),
+    nalu_mate2m_rbd = coalesce(nalu_mate2m_rbd, 0),
+    prom_lect2m_rbd = coalesce(prom_lect2m_rbd, 0),
+    prom_mate2m_rbd = coalesce(prom_mate2m_rbd, 0),
+    avg_lm_simce = (prom_lect2m_rbd + prom_mate2m_rbd) / 2
+  ) %>%
+  group_by(year) %>%
+  dplyr::arrange(is_private, -avg_lm_simce) %>%
+  dplyr::mutate(rank_lm_simce = row_number()) %>%
+  ungroup() %>%
+  as.data.frame()
+
+
+dm <- dsd %>%
+  filter(!is.na(nom_rbd) & is_private > -Inf) %>%
+  dplyr::mutate(
+    year_first_sae = min(rbd_first_sae),
+    region_first_sae = min(region_first_sae),
+    treated = ifelse(year >= year_first_sae & year_first_sae < 2026, 1, 0),
+    post_sae = ifelse(year >= region_first_sae, 1, 0),
+    in_sae = ifelse(year_first_sae < 2026, 1, 0),
+    is_female = ifelse(gen_alu == 2, 1, 0)
+  ) %>%
+  filter(is_female == 0) %>%
+  dplyr::mutate(
+    scored_lm = coalesce(scored_lm, 0),
+    prom_gral = coalesce(prom_gral, 0),
+    att = coalesce(att, 0),
+    prom_lm_actual = coalesce(lm_pct, 0),
+    applied = coalesce(applied, 0),
+    assigned = coalesce(assigned, 0),
+    enrolled = coalesce(enrolled, 0)
+  ) %>%
+  filter(year_start >= init_year & year_start <= end_year) %>%
+  group_by(rbd, gen_alu, year_start) %>%
+  dplyr::summarise(
+    nom_rbd = first(nom_rbd),
+    year_first_sae = min(rbd_first_sae),
+    region_first_sae = min(region_first_sae),
+    num_students = n_distinct(mrun),
+    prom_gral = mean(prom_gral, na.rm = TRUE),
+    att = mean(att, na.rm = TRUE),
+    avg_lm = mean(prom_lm_actual, na.rm = TRUE),
+    scored_lm = mean(scored_lm, na.rm = TRUE),
+    applied = mean(applied, na.rm = TRUE),
+    assigned = mean(assigned, na.rm = TRUE),
+    enrolled = mean(enrolled, na.rm = TRUE),
+    is_private = max(is_private, na.rm = TRUE)
+  ) %>%
+  dplyr::rename(year = year_start) %>%
+  dplyr::mutate(
+    treated = ifelse(year >= year_first_sae & year_first_sae < 2026, 1, 0),
+    post_sae = ifelse(year >= region_first_sae, 1, 0),
+    in_sae = ifelse(year_first_sae < 2026, 1, 0)
+  ) %>%
+  left_join(s %>% dplyr::select(-nom_rbd) %>% dplyr::mutate(in_simce = 1), by = c("rbd", "year")) %>%
+  dplyr::mutate(
+    in_simce = coalesce(in_simce, 0),
+    nalu_lect2m_rbd = coalesce(nalu_lect2m_rbd, 0),
+    nalu_mate2m_rbd = coalesce(nalu_mate2m_rbd, 0),
+    prom_lect2m_rbd = coalesce(prom_lect2m_rbd, 0),
+    prom_mate2m_rbd = coalesce(prom_mate2m_rbd, 0),
+    avg_lm_simce = (prom_lect2m_rbd + prom_mate2m_rbd) / 2
+  ) %>%
+  group_by(year) %>%
+  dplyr::arrange(is_private, -avg_lm_simce) %>%
+  dplyr::mutate(rank_lm_simce = row_number()) %>%
+  ungroup() %>%
+  as.data.frame()
+```
+
+```{r gender_estimation, echo=FALSE, message=FALSE, warning=FALSE}
+gpa_m <- att_gt(
+  yname = "prom_gral",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dm %>% dplyr::mutate(year_first_sae = ifelse(in_sae == 1, year_first_sae, 0)),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+lm_m <- att_gt(
+  yname = "avg_lm",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dm %>% dplyr::mutate(year_first_sae = ifelse(in_sae == 1, year_first_sae, 0)),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+app_m <- att_gt(
+  yname = "applied",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dm %>% dplyr::mutate(year_first_sae = ifelse(in_sae == 1, year_first_sae, 0)),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+ass_m <- att_gt(
+  yname = "assigned",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dm %>% dplyr::mutate(year_first_sae = ifelse(in_sae == 1, year_first_sae, 0)),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+enr_m <- att_gt(
+  yname = "enrolled",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dm %>% dplyr::mutate(year_first_sae = ifelse(in_sae == 1, year_first_sae, 0)),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+
+gpa_f <- att_gt(
+  yname = "prom_gral",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = df %>% dplyr::mutate(year_first_sae = ifelse(in_sae == 1, year_first_sae, 0)),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+lm_f <- att_gt(
+  yname = "avg_lm",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = df %>% dplyr::mutate(year_first_sae = ifelse(in_sae == 1, year_first_sae, 0)),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+app_f <- att_gt(
+  yname = "applied",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = df %>% dplyr::mutate(year_first_sae = ifelse(in_sae == 1, year_first_sae, 0)),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+ass_f <- att_gt(
+  yname = "assigned",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = df %>% dplyr::mutate(year_first_sae = ifelse(in_sae == 1, year_first_sae, 0)),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+enr_f <- att_gt(
+  yname = "enrolled",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = df %>% dplyr::mutate(year_first_sae = ifelse(in_sae == 1, year_first_sae, 0)),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+```
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+means_fm <- cbind(
+  df %>%
+    filter(in_sae == 1, year < year_first_sae) %>%
+    summarise(
+      "GPA F" = mean(prom_gral, na.rm = TRUE),
+      "Average LM F" = mean(avg_lm, na.rm = TRUE),
+      "Applied F" = mean(applied, na.rm = TRUE),
+      "Assigned F" = mean(assigned, na.rm = TRUE),
+      "Enrolled F" = mean(enrolled, na.rm = TRUE)
+    ),
+  dm %>%
+    filter(in_sae == 1, year < year_first_sae) %>%
+    summarise(
+      "GPA M" = mean(prom_gral, na.rm = TRUE),
+      "Average LM M" = mean(avg_lm, na.rm = TRUE),
+      "Applied M" = mean(applied, na.rm = TRUE),
+      "Assigned M" = mean(assigned, na.rm = TRUE),
+      "Enrolled M" = mean(enrolled, na.rm = TRUE)
+    )
+) %>%
+  dplyr::select(
+    "GPA F",        "GPA M",
+    "Average LM F", "Average LM M",
+    "Applied F",    "Applied M",
+    "Assigned F",   "Assigned M",
+    "Enrolled F",   "Enrolled M"
+  )
+
+obs_fm <- cbind(
+  df %>%
+    summarise(
+      "GPA F" = n(),
+      "Average LM F" = n(),
+      "Applied F" = n(),
+      "Assigned F" = n(),
+      "Enrolled F" = n()
+    ),
+  dm %>%
+    summarise(
+      "GPA M" = n(),
+      "Average LM M" = n(),
+      "Applied M" = n(),
+      "Assigned M" = n(),
+      "Enrolled M" = n()
+    )
+) %>%
+  dplyr::select(
+    "GPA F",        "GPA M",
+    "Average LM F", "Average LM M",
+    "Applied F",    "Applied M",
+    "Assigned F",   "Assigned M",
+    "Enrolled F",   "Enrolled M"
+  )
+
+models_fm <- list(
+  "GPA F" = gpa_f,
+  "GPA M" = gpa_m,
+  "Average LM F" = lm_f,
+  "Average LM M" = lm_m,
+  "Applied F" = app_f,
+  "Applied M" = app_m,
+  "Assigned F" = ass_f,
+  "Assigned M" = ass_m,
+  "Enrolled F" = enr_f,
+  "Enrolled M" = enr_m
+)
+
+latex_code <- make_did_table(models_fm, means_pre = means_fm, obs = obs_fm)
+
+cat(latex_code)
+```
+
+
+## Quality of School
+
+```{r hist_2015_avg_lm_simce, echo=FALSE, warning=FALSE, message=FALSE, fig.width=7, fig.height=4, fig.cap="Distribution of avg_lm_simce in 2015 by SAE membership", fig.pos='H'}
+# Prepare data for 2015
+plot_data <- dr %>%
+  dplyr::filter(year == 2015) %>%
+  dplyr::mutate(in_sae = factor(in_sae, levels = c(0, 1), labels = c("Not in SAE", "In SAE")))
+
+ggplot(plot_data, aes(x = avg_lm_simce, fill = in_sae)) +
+  geom_histogram(aes(y = ..density..), position = "identity", alpha = 0.5, bins = 30, color = NA) +
+  geom_density(alpha = 0.2, adjust = 1) +
+  scale_fill_manual(values = c("Not in SAE" = myblue, "In SAE" = myred)) +
+  theme_minimal(base_size = 13) +
+  labs(
+    x = "Average LM (SIMCE)", y = "Density", fill = "Group",
+    title = "Distribution of avg_lm_simce (2015): SAE vs non-SAE"
+  ) +
+  theme(legend.position = "top")
+```
+
+```{r simce_quality, echo=FALSE, warning=FALSE, message=FALSE}
+## compute percentile thresholds among schools in SAE in 2015
+pct_q <- dr %>%
+  dplyr::filter(year == 2015, in_sae == 1) %>%
+  dplyr::group_by(cod_reg_rbd) %>%
+  dplyr::summarise(
+    p25 = quantile(avg_lm_simce, 0.25, na.rm = TRUE),
+    p50 = quantile(avg_lm_simce, 0.50, na.rm = TRUE),
+    p75 = quantile(avg_lm_simce, 0.75, na.rm = TRUE),
+    p90 = quantile(avg_lm_simce, 0.90, na.rm = TRUE),
+    p99 = quantile(avg_lm_simce, 0.99, na.rm = TRUE)
+  )
+
+dh <- dr %>%
+  left_join(pct_q, by = "cod_reg_rbd") %>%
+  dplyr::mutate(
+    top_25_simce = ifelse(!is.na(avg_lm_simce) & avg_lm_simce >= p25, 1, 0),
+    top_50_simce = ifelse(!is.na(avg_lm_simce) & avg_lm_simce >= p50, 1, 0),
+    top_75_simce = ifelse(!is.na(avg_lm_simce) & avg_lm_simce >= p75, 1, 0),
+    top_90_simce = ifelse(!is.na(avg_lm_simce) & avg_lm_simce >= p90, 1, 0),
+    top_99_simce = ifelse(!is.na(avg_lm_simce) & avg_lm_simce >= p99, 1, 0)
+  ) %>%
+  dplyr::mutate(year_first_sae = ifelse(in_sae == 1, year_first_sae, 0))
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+gpa_top <- att_gt(
+  yname = "prom_gral",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dh %>% filter(top_50_simce == 1),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+
+lm_top <- att_gt(
+  yname = "avg_lm",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dh %>% filter(top_50_simce == 1),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+app_top <- att_gt(
+  yname = "applied",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dh %>% filter(top_50_simce == 1),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+ass_top <- att_gt(
+  yname = "assigned",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dh %>% filter(top_50_simce == 1),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+enr_top <- att_gt(
+  yname = "enrolled",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dh %>% filter(top_50_simce == 1),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+gpa_bot <- att_gt(
+  yname = "prom_gral",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dh %>% filter(top_50_simce == 0),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+
+lm_bot <- att_gt(
+  yname = "avg_lm",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dh %>% filter(top_50_simce == 0),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+app_bot <- att_gt(
+  yname = "applied",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dh %>% filter(top_50_simce == 0),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+ass_bot <- att_gt(
+  yname = "assigned",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dh %>% filter(top_50_simce == 0),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+enr_bot <- att_gt(
+  yname = "enrolled",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dh %>% filter(top_50_simce == 0),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+means_tb <- cbind(
+  dh %>%
+    filter(in_sae == 1, year < year_first_sae, top_50_simce == 1) %>%
+    summarise(
+      "GPA T" = mean(prom_gral, na.rm = TRUE),
+      "Average LM T" = mean(avg_lm, na.rm = TRUE),
+      "Applied T" = mean(applied, na.rm = TRUE),
+      "Assigned T" = mean(assigned, na.rm = TRUE),
+      "Enrolled T" = mean(enrolled, na.rm = TRUE)
+    ),
+  dh %>%
+    filter(in_sae == 1, year < year_first_sae, top_50_simce == 0) %>%
+    summarise(
+      "GPA B" = mean(prom_gral, na.rm = TRUE),
+      "Average LM B" = mean(avg_lm, na.rm = TRUE),
+      "Applied B" = mean(applied, na.rm = TRUE),
+      "Assigned B" = mean(assigned, na.rm = TRUE),
+      "Enrolled B" = mean(enrolled, na.rm = TRUE)
+    )
+) %>% dplyr::select("GPA B", "GPA T", "Average LM B", "Average LM T", "Applied B", "Applied T", "Assigned B", "Assigned T", "Enrolled B", "Enrolled T")
+
+obs_tb <- cbind(
+  dh %>%
+    filter(top_50_simce == 1) %>%
+    summarise(
+      "GPA T" = n(),
+      "Average LM T" = n(),
+      "Applied T" = n(),
+      "Assigned T" = n(),
+      "Enrolled T" = n()
+    ),
+  dh %>%
+    filter(top_50_simce == 0) %>%
+    summarise(
+      "GPA B" = n(),
+      "Average LM B" = n(),
+      "Applied B" = n(),
+      "Assigned B" = n(),
+      "Enrolled B" = n()
+    )
+) %>% dplyr::select("GPA B", "GPA T", "Average LM B", "Average LM T", "Applied B", "Applied T", "Assigned B", "Assigned T", "Enrolled B", "Enrolled T")
+
+models_tb <- list(
+  "GPA B" = gpa_bot,
+  "GPA T" = gpa_top,
+  "Average LM B" = lm_bot,
+  "Average LM T" = lm_top,
+  "Applied B" = app_bot,
+  "Applied T" = app_top,
+  "Assigned B" = ass_bot,
+  "Assigned T" = ass_top,
+  "Enrolled B" = enr_bot,
+  "Enrolled T" = enr_top
+)
+
+latex_code <- make_did_table(models_tb, means_pre = means_tb, obs = obs_tb)
+
+cat(latex_code)
+```
+
+
+## Vulnerability of School
+```{r ive, echo=FALSE, warning=FALSE, message=FALSE}
+panel_ee <- readRDS("data/panel_ee_2004_2025.rds")
+ive <- dr %>%
+  dplyr::select(rbd, year, in_sae, cod_reg_rbd) %>%
+  dplyr::filter(year == 2015, in_sae == 1) %>%
+  left_join(panel_ee %>% filter(year == 2015) %>%
+    dplyr::select(rbd, ive_sinae_media), by = "rbd") %>%
+  dplyr::group_by(cod_reg_rbd) %>%
+  dplyr::mutate(
+    ive_p25 = quantile(ive_sinae_media, 0.25, na.rm = TRUE),
+    ive_p50 = quantile(ive_sinae_media, 0.50, na.rm = TRUE),
+    ive_p75 = quantile(ive_sinae_media, 0.75, na.rm = TRUE),
+    ive_p90 = quantile(ive_sinae_media, 0.90, na.rm = TRUE),
+    ive_p99 = quantile(ive_sinae_media, 0.99, na.rm = TRUE)
+  ) %>%
+  ungroup() %>%
+  dplyr::mutate(
+    ive_q0 = ifelse(in_sae == 0 | is.na(ive_sinae_media), 1, 0),
+    ive_q1 = ifelse(in_sae == 1 & !is.na(ive_sinae_media) & ive_sinae_media < ive_p25, 1, 0),
+    ive_q2 = ifelse(in_sae == 1 & !is.na(ive_sinae_media) & ive_sinae_media >= ive_p25 & ive_sinae_media < ive_p50, 1, 0),
+    ive_q3 = ifelse(in_sae == 1 & !is.na(ive_sinae_media) & ive_sinae_media >= ive_p50 & ive_sinae_media < ive_p75, 1, 0),
+    ive_q4 = ifelse(in_sae == 1 & !is.na(ive_sinae_media) & ive_sinae_media >= ive_p75, 1, 0),
+    ive_low = ifelse(in_sae == 1 & !is.na(ive_sinae_media) & ive_sinae_media & ive_sinae_media < ive_p50, 1, 0),
+    ive_high = ifelse(in_sae == 1 & !is.na(ive_sinae_media) & ive_sinae_media & ive_sinae_media >= ive_p50, 1, 0),
+  )
+
+dv <- dr %>%
+  left_join(ive %>% dplyr::select(-in_sae, -year, -cod_reg_rbd), by = "rbd") %>%
+  dplyr::mutate(
+    year_first_sae = ifelse(in_sae == 1, year_first_sae, 0),
+    ive_none = ifelse(is.na(ive_sinae_media) | is.na(ive_low) | is.na(ive_high), 1, 0)
+  )
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+gpa_low <- att_gt(
+  yname = "prom_gral",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dv %>% filter(ive_none == 1 | ive_low == 1),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+
+lm_low <- att_gt(
+  yname = "avg_lm",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dv %>% filter(ive_none == 1 | ive_low == 1),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+app_low <- att_gt(
+  yname = "applied",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dv %>% filter(ive_none == 1 | ive_low == 1),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+ass_low <- att_gt(
+  yname = "assigned",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dv %>% filter(ive_none == 1 | ive_low == 1),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+enr_low <- att_gt(
+  yname = "enrolled",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dv %>% filter(ive_none == 1 | ive_low == 1),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+means_low <- dv %>%
+  filter(in_sae == 1, year < year_first_sae, ive_low == 1) %>%
+  summarise(
+    "GPA L" = mean(prom_gral, na.rm = TRUE),
+    "Average LM L" = mean(avg_lm, na.rm = TRUE),
+    "Applied L" = mean(applied, na.rm = TRUE),
+    "Assigned L" = mean(assigned, na.rm = TRUE),
+    "Enrolled L" = mean(enrolled, na.rm = TRUE)
+  )
+
+gpa_high <- att_gt(
+  yname = "prom_gral",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dv %>% filter(ive_none == 1 | ive_high == 1),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+
+lm_high <- att_gt(
+  yname = "avg_lm",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dv %>% filter(ive_none == 1 | ive_high == 1),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+app_high <- att_gt(
+  yname = "applied",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dv %>% filter(ive_none == 1 | ive_high == 1),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+ass_high <- att_gt(
+  yname = "assigned",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dv %>% filter(ive_none == 1 | ive_high == 1),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+enr_high <- att_gt(
+  yname = "enrolled",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dv %>% filter(ive_none == 1 | ive_high == 1),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+means_high <- dv %>%
+  filter(in_sae == 1, year < year_first_sae, ive_high == 1) %>%
+  summarise(
+    "GPA H" = mean(prom_gral, na.rm = TRUE),
+    "Average LM H" = mean(avg_lm, na.rm = TRUE),
+    "Applied H" = mean(applied, na.rm = TRUE),
+    "Assigned H" = mean(assigned, na.rm = TRUE),
+    "Enrolled H" = mean(enrolled, na.rm = TRUE)
+  )
+
+means <- cbind(means_low, means_high) %>% dplyr::select("GPA L", "GPA H", "Average LM L", "Average LM H", "Applied L", "Applied H", "Assigned L", "Assigned H", "Enrolled L", "Enrolled H")
+
+
+obs <- cbind(
+  dv %>%
+    filter(ive_none == 1 | ive_low == 1) %>%
+    summarise(
+      "GPA L" = n(),
+      "Average LM L" = n(),
+      "Applied L" = n(),
+      "Assigned L" = n(),
+      "Enrolled L" = n()
+    ),
+  dv %>%
+    filter(ive_none == 1 | ive_high == 1) %>%
+    summarise(
+      "GPA H" = n(),
+      "Average LM H" = n(),
+      "Applied H" = n(),
+      "Assigned H" = n(),
+      "Enrolled H" = n()
+    )
+) %>% dplyr::select("GPA L", "GPA H", "Average LM L", "Average LM H", "Applied L", "Applied H", "Assigned L", "Assigned H", "Enrolled L", "Enrolled H")
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+models_v <- list(
+  "GPA L" = gpa_low,
+  "GPA H" = gpa_high,
+  "Average LM L" = lm_low,
+  "Average LM H" = lm_high,
+  "Applied L" = app_low,
+  "Applied H" = app_high,
+  "Assigned L" = ass_low,
+  "Assigned H" = ass_high,
+  "Enrolled L" = enr_low,
+  "Enrolled H" = enr_high
+)
+
+latex_code <- make_did_table(models_v, means_pre = means, obs = obs)
+
+cat(latex_code)
+```
+
+## Selectivity of Programs
+
+```{r data_heterogeneity_selectivity, echo=FALSE, warning=FALSE, message=FALSE}
+# region Create_df_by_rbd
+car <- readRDS("data/panel_programs_2012_2025.rds")
+
+dh <- dsd %>%
+  filter(year >= 2012) %>%
+  left_join(
+    car %>% dplyr::rename(
+      year = YEAR,
+      codigo_carrera_seleccion = codigo_demre
+    ) %>%
+      dplyr::mutate(num_seats_reg = VAC_1SEM + VAC_2SEM + SC_1SEM + SC_2SEM) %>%
+      dplyr::select(codigo_carrera_seleccion, year, full_reg, starts_with("top") & ends_with("_reg")),
+    by = c("codigo_carrera_seleccion", "year")
+  ) %>%
+  filter(!is.na(nom_rbd) & is_private > -Inf) %>%
+  dplyr::mutate(
+    scored_lm = coalesce(scored_lm, 0),
+    prom_gral = coalesce(prom_gral, 0),
+    att = coalesce(att, 0),
+    prom_lm_actual = coalesce(lm_pct, 0),
+    applied = coalesce(applied, 0),
+    assigned = coalesce(assigned, 0),
+    enrolled = coalesce(enrolled, 0),
+    assigned_full = coalesce(assigned * full_reg, 0),
+    assigned_not_full = coalesce(assigned * (1 - full_reg), 0),
+    assigned_top1 = coalesce(assigned * top1_reg, 0),
+    assigned_top10 = coalesce(assigned * top10_reg, 0),
+    assigned_top25 = coalesce(assigned * top25_reg, 0),
+    assigned_top50 = coalesce(assigned * top50_reg, 0),
+    assigned_top75 = coalesce(assigned * top75_reg, 0),
+    assigned_top90 = coalesce(assigned * top90_reg, 0)
+  ) %>%
+  filter(year_start >= init_year & year_start <= end_year) %>%
+  group_by(rbd, year_start) %>%
+  dplyr::summarise(
+    nom_rbd = first(nom_rbd),
+    cod_reg_rbd = first(cod_reg_rbd),
+    year_first_sae = min(rbd_first_sae),
+    region_first_sae = min(region_first_sae),
+    num_students = n_distinct(mrun),
+    prom_gral = mean(prom_gral, na.rm = TRUE),
+    att = mean(att, na.rm = TRUE),
+    is_female = mean(is_female, na.rm = TRUE),
+    is_low_income = mean(is_low_income, na.rm = TRUE),
+    avg_lm = mean(prom_lm_actual, na.rm = TRUE),
+    scored_lm = mean(scored_lm, na.rm = TRUE),
+    applied = mean(applied, na.rm = TRUE),
+    assigned = mean(assigned, na.rm = TRUE),
+    enrolled = mean(enrolled, na.rm = TRUE),
+    assigned_full = mean(assigned_full, na.rm = TRUE),
+    assigned_not_full = mean(assigned_not_full, na.rm = TRUE),
+    assigned_top1 = mean(assigned_top1, na.rm = TRUE),
+    assigned_top10 = mean(assigned_top10, na.rm = TRUE),
+    assigned_top25 = mean(assigned_top25, na.rm = TRUE),
+    assigned_top50 = mean(assigned_top50, na.rm = TRUE),
+    assigned_top75 = mean(assigned_top75, na.rm = TRUE),
+    assigned_top90 = mean(assigned_top90, na.rm = TRUE),
+    is_private = max(is_private, na.rm = TRUE)
+  ) %>%
+  dplyr::rename(year = year_start) %>%
+  dplyr::mutate(
+    treated = ifelse(year >= year_first_sae & year_first_sae < 2026, 1, 0),
+    post_sae = ifelse(year >= region_first_sae, 1, 0),
+    in_sae = ifelse(year_first_sae < 2026, 1, 0)
+  ) %>%
+  left_join(s %>% dplyr::select(-nom_rbd) %>% dplyr::mutate(in_simce = 1), by = c("rbd", "year")) %>%
+  dplyr::mutate(
+    in_simce = coalesce(in_simce, 0),
+    nalu_lect2m_rbd = coalesce(nalu_lect2m_rbd, 0),
+    nalu_mate2m_rbd = coalesce(nalu_mate2m_rbd, 0),
+    prom_lect2m_rbd = coalesce(prom_lect2m_rbd, 0),
+    prom_mate2m_rbd = coalesce(prom_mate2m_rbd, 0),
+    avg_lm_simce = (prom_lect2m_rbd + prom_mate2m_rbd) / 2
+  ) %>%
+  group_by(year) %>%
+  dplyr::arrange(is_private, -avg_lm_simce) %>%
+  dplyr::mutate(rank_lm_simce = row_number()) %>%
+  ungroup() %>%
+  as.data.frame() %>%
+  dplyr::mutate(year_first_sae = ifelse(in_sae == 1, year_first_sae, 0))
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ass <- att_gt(
+  yname = "assigned",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dh,
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+assf <- att_gt(
+  yname = "assigned_full",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dh,
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+assnf <- att_gt(
+  yname = "assigned_not_full",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dh,
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+asst1 <- att_gt(
+  yname = "assigned_top1",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dh,
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+asst10 <- att_gt(
+  yname = "assigned_top10",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dh,
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+asst25 <- att_gt(
+  yname = "assigned_top25",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dh,
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+asst50 <- att_gt(
+  yname = "assigned_top50",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dh,
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+asst75 <- att_gt(
+  yname = "assigned_top75",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dh,
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+asst90 <- att_gt(
+  yname = "assigned_top90",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dh,
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+means_ass <- dh %>%
+  filter(in_sae == 1, year < year_first_sae) %>%
+  summarise(
+    `All` = mean(assigned, na.rm = TRUE),
+    `Full` = mean(assigned_full, na.rm = TRUE),
+    `Not Full` = mean(assigned_not_full, na.rm = TRUE),
+    `Top 10` = mean(assigned_top10, na.rm = TRUE),
+    `Top 25` = mean(assigned_top25, na.rm = TRUE),
+    `Top 50` = mean(assigned_top50, na.rm = TRUE),
+    `Top 75` = mean(assigned_top75, na.rm = TRUE),
+    `Top 90` = mean(assigned_top90, na.rm = TRUE)
+  )
+
+obs_ass <- dh %>%
+  summarise(
+    `All` = n(),
+    `Full` = n(),
+    `Not Full` = n(),
+    `Top 10` = n(),
+    `Top 25` = n(),
+    `Top 50` = n(),
+    `Top 75` = n(),
+    `Top 90` = n()
+  )
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+models_ass <- list(
+  "All" = ass,
+  "Full" = assf,
+  "Not Full" = assnf,
+  "Top 10" = asst10,
+  "Top 25" = asst25,
+  "Top 50" = asst50,
+  "Top 75" = asst75,
+  "Top 90" = asst90
+)
+
+latex_code <- make_did_table(models_ass, means_pre = means_ass, obs = obs_ass)
+
+cat(latex_code)
+```
+
+
+# Robustness
+
+## Parallel trends
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+make_eventstudy_table <- function(models,
+                                  caption = "Event Study Estimates",
+                                  label = "tab:event_study",
+                                  digits = 3,
+                                  ci_level = 0.99,
+                                  include_pretrend = TRUE) {
+  # ----------------------------
+  # Use pre-computed aggte objects if passed, otherwise compute
+  # (Re-computing calls bootstrap again, yielding different CIs)
+  # ----------------------------
+  if (inherits(models[[1]], "AGGTEobj")) {
+    dyn_list <- models
+  } else {
+    dyn_list <- lapply(models, function(m) aggte(m, type = "dynamic"))
+  }
+
+  # ----------------------------
+  # Collect all event times
+  # ----------------------------
+  all_egt <- sort(unique(unlist(lapply(dyn_list, function(x) x$egt))))
+
+  k <- length(models)
+
+  # Three rows per event time (coef + se + CI)
+  coef_mat <- matrix("", nrow = length(all_egt) * 3, ncol = k)
+  row_labels <- c()
+
+  # ----------------------------
+  # Fill coefficient matrix
+  # ----------------------------
+  for (i in seq_along(all_egt)) {
+    e <- all_egt[i]
+    row_labels <- c(
+      row_labels,
+      paste0("Event time ", e),
+      "",
+      ""
+    )
+
+    for (j in seq_along(dyn_list)) {
+      dyn <- dyn_list[[j]]
+      idx <- which(dyn$egt == e)
+
+      if (length(idx) == 0) {
+        coef_mat[(3 * i - 2):(3 * i), j] <- ""
+      } else {
+        att <- dyn$att.egt[idx]
+        se <- dyn$se.egt[idx]
+
+        # Use pointwise critical value based on ci_level
+        crit_val <- qnorm(1 - (1 - ci_level) / 2)
+
+        lower <- att - crit_val * se
+        upper <- att + crit_val * se
+
+        coef_mat[(3 * i - 2), j] <- sprintf(paste0("%.", digits, "f"), att)
+        coef_mat[(3 * i - 1), j] <- sprintf(paste0("(%.", digits, "f)"), se)
+        coef_mat[(3 * i), j] <- sprintf(paste0("[%.", digits, "f, %.", digits, "f]"), lower, upper)
+      }
+    }
+  }
+
+  # ----------------------------
+  # Add pre-trend test (robust)
+  # ----------------------------
+  if (include_pretrend) {
+    row_labels <- c(row_labels, "Pre-trend p-value")
+
+    pvals <- sapply(dyn_list, function(x) {
+      # Try the pre-trend Wald p-value; handle NULL / missing gracefully
+      val <- x$Wpval
+      if (is.null(val) || length(val) == 0) {
+        # Recompute from pre-treatment coefficients if Wpval is missing
+        pre_idx <- which(x$egt < 0)
+        if (length(pre_idx) >= 1) {
+          pre_att <- x$att.egt[pre_idx]
+          pre_se <- x$se.egt[pre_idx]
+          # Wald statistic: sum of (att/se)^2, chi-sq with df = # pre-periods
+          W <- sum((pre_att / pre_se)^2, na.rm = TRUE)
+          val <- 1 - pchisq(W, df = length(pre_idx))
+        } else {
+          val <- NA_real_
+        }
+      }
+      as.numeric(val[1])
+    })
+
+    coef_mat <- rbind(
+      coef_mat,
+      sprintf(paste0("%.", digits, "f"), pvals)
+    )
+  }
+
+  # ----------------------------
+  # Column headers
+  # ----------------------------
+  col_header <- paste(names(models), collapse = " & ")
+  col_numbers <- paste0("(", 1:k, ")", collapse = " & ")
+
+  # ----------------------------
+  # Build table body
+  # ----------------------------
+  body_rows <- ""
+  for (i in seq_len(nrow(coef_mat))) {
+    body_rows <- paste0(
+      body_rows,
+      "      ", row_labels[i], " & ",
+      paste(coef_mat[i, ], collapse = " & "),
+      "\\\\\n"
+    )
+  }
+
+  # ----------------------------
+  # Build LaTeX table
+  # ----------------------------
+  latex_table <- paste0(
+    "\\begin{table}[htbp]\n",
+    "   \\caption{", caption, "}\\label{", label, "}\n",
+    "   \\bigskip\n",
+    "   \\centering\n",
+    "   \\begin{tabular}{l", paste(rep("c", k), collapse = ""), "}\n",
+    "      \\toprule\n",
+    "                   & ", col_header, "\\\\\n",
+    "                   & ", col_numbers, "\\\\\n",
+    "      \\midrule\n",
+    body_rows,
+    "      \\bottomrule\n",
+    "   \\end{tabular}\n",
+    "\\end{table}"
+  )
+
+  return(latex_table)
+}
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+gpa <- att_gt(
+  yname = "prom_gral",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dr %>% dplyr::mutate(year_first_sae = ifelse(in_sae == 1, year_first_sae, 0)),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE,
+  control_group = "notyettreated", # key for your question
+  est_method = "dr" # doubly robust (recommended)
+)
+
+lm <- att_gt(
+  yname = "avg_lm",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dr %>% dplyr::mutate(year_first_sae = ifelse(in_sae == 1, year_first_sae, 0)),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE,
+  control_group = "notyettreated", # key for your question
+  est_method = "dr" # doubly robust (recommended)
+)
+
+
+app <- att_gt(
+  yname = "applied",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dr %>% dplyr::mutate(year_first_sae = ifelse(in_sae == 1, year_first_sae, 0)),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE,
+  control_group = "notyettreated", # key for your question
+  est_method = "dr" # doubly robust (recommended)
+)
+
+ass <- att_gt(
+  yname = "assigned",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dr %>% dplyr::mutate(year_first_sae = ifelse(in_sae == 1, year_first_sae, 0)),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE,
+  control_group = "notyettreated", # key for your question
+  est_method = "dr" # doubly robust (recommended)
+)
+
+enr <- att_gt(
+  yname = "enrolled",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dr %>% dplyr::mutate(year_first_sae = ifelse(in_sae == 1, year_first_sae, 0)),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE,
+  control_group = "notyettreated", # key for your question
+  est_method = "dr" # doubly robust (recommended)
+)
+
+dyn_gpa <- aggte(gpa, type = "dynamic")
+dyn_lm <- aggte(lm, type = "dynamic")
+dyn_app <- aggte(app, type = "dynamic")
+dyn_ass <- aggte(ass, type = "dynamic")
+dyn_enr <- aggte(enr, type = "dynamic")
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Variant: report Point Estimates (+ stars) per event time (no CIs)
+make_eventstudy_table_pe <- function(models,
+                                     caption = "Event Study Point Estimates",
+                                     label = "tab:event_study_pe",
+                                     digits = 3,
+                                     include_pretrend = TRUE) {
+  # Accept either pre-computed AGGTEobjs or raw att_gt objects
+  if (inherits(models[[1]], "AGGTEobj")) {
+    dyn_list <- models
+  } else {
+    dyn_list <- lapply(models, function(m) aggte(m, type = "dynamic"))
+  }
+
+  # Collect all event times
+  all_egt <- sort(unique(unlist(lapply(dyn_list, function(x) x$egt))))
+  k <- length(models)
+
+  # Two rows per event time: estimate (with stars) and se
+  coef_mat <- matrix("", nrow = length(all_egt) * 2, ncol = k)
+  row_labels <- c()
+
+  # Extract stars from summary(AGGTEobj) to match printed output
+  summaries <- lapply(dyn_list, function(d) capture.output(summary(d)))
+
+  for (i in seq_along(all_egt)) {
+    e <- all_egt[i]
+    row_labels <- c(row_labels, paste0("Event time ", e), "")
+
+    for (j in seq_along(dyn_list)) {
+      dyn <- dyn_list[[j]]
+      idx <- which(dyn$egt == e)
+      if (length(idx) == 0) {
+        coef_mat[(2 * i - 1):(2 * i), j] <- ""
+      } else {
+        att <- dyn$att.egt[idx]
+        se <- dyn$se.egt[idx]
+        # Find the corresponding line in the summary output and extract any trailing stars
+        summ_lines <- summaries[[j]]
+        # Lines with event estimates usually start with the event number (possibly padded)
+        pattern <- paste0("^\\s*", e, "\\b")
+        match_line <- summ_lines[grepl(pattern, summ_lines)]
+        if (length(match_line) >= 1) {
+          line <- match_line[1]
+          star_matches <- regmatches(line, gregexpr("\\*+", line))[[1]]
+          stars <- if (length(star_matches) >= 1) paste0(star_matches, collapse = "") else ""
+        } else {
+          stars <- ""
+        }
+        # Format estimate; if significant (had stars in summary) wrap in \textbf{}
+        est_txt <- sprintf(paste0("%.", digits, "f"), att)
+        if (nzchar(stars)) {
+          est_txt <- paste0("\\textbf{", est_txt, "}")
+        }
+        coef_mat[(2 * i - 1), j] <- est_txt
+        coef_mat[(2 * i), j] <- sprintf(paste0("(%.", digits, "f)"), se)
+      }
+    }
+  }
+
+  # Pre-trend p-value row
+  if (include_pretrend) {
+    row_labels <- c(row_labels, "Pre-trend p-value")
+    pvals <- sapply(dyn_list, function(x) {
+      val <- x$Wpval
+      if (is.null(val) || length(val) == 0) {
+        pre_idx <- which(x$egt < 0)
+        if (length(pre_idx) >= 1) {
+          pre_att <- x$att.egt[pre_idx]
+          pre_se <- x$se.egt[pre_idx]
+          W <- sum((pre_att / pre_se)^2, na.rm = TRUE)
+          val <- 1 - pchisq(W, df = length(pre_idx))
+        } else {
+          val <- NA_real_
+        }
+      }
+      as.numeric(val[1])
+    })
+    coef_mat <- rbind(coef_mat, sprintf(paste0("%.", digits, "f"), pvals))
+  }
+
+  col_header <- paste(names(models), collapse = " & ")
+  col_numbers <- paste0("(", 1:k, ")", collapse = " & ")
+
+  body_rows <- ""
+  for (i in seq_len(nrow(coef_mat))) {
+    body_rows <- paste0(
+      body_rows,
+      "      ", row_labels[i], " & ",
+      paste(coef_mat[i, ], collapse = " & "),
+      "\\\\\n"
+    )
+  }
+
+  latex_table <- paste0(
+    "\\begin{table}[htbp]\n",
+    "   \\caption{", caption, "}\\label{", label, "}\n",
+    "   \\bigskip\n",
+    "   \\centering\n",
+    "   \\begin{tabular}{l", paste(rep("c", k), collapse = ""), "}\n",
+    "      \\toprule\n",
+    "                   & ", col_header, "\\\\\n",
+    "                   & ", col_numbers, "\\\\\n",
+    "      \\midrule\n",
+    body_rows,
+    "      \\bottomrule\n",
+    "   \\end{tabular}\n",
+    "\\end{table}"
+  )
+
+  return(latex_table)
+}
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+# Pass the pre-computed aggte objects (not raw att_gt models)
+dyn_models_list <- list(
+  GPA = dyn_gpa,
+  "Average LM" = dyn_lm,
+  Applied = dyn_app,
+  Assigned = dyn_ass,
+  Enrolled = dyn_enr
+)
+
+# latex_code <- make_eventstudy_table(dyn_models_list, ci_level=0.95)
+latex_code <- make_eventstudy_table_pe(dyn_models_list)
+
+cat(latex_code)
+```
+
+
+
+## Placebo test
+### Moving treatment year
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+outcomes <- c(
+  "prom_gral",
+  "avg_lm",
+  "applied",
+  "assigned",
+  "enrolled"
+)
+
+formulas <- lapply(outcomes, function(y) {
+  as.formula(paste0(y, " ~ treated + num_students | rbd + year"))
+})
+names(formulas) <- outcomes
+
+build_placebo_data <- function(shifter, truncation_year = 2015) {
+  out <- dsd %>%
+    dplyr::mutate(
+      scored_lm = coalesce(scored_lm, 0),
+      prom_gral = coalesce(prom_gral, 0),
+      att = coalesce(att, 0),
+      prom_lm_actual = coalesce(lm_pct, 0),
+      applied = coalesce(applied, 0),
+      assigned = coalesce(assigned, 0),
+      enrolled = coalesce(enrolled, 0)
+    ) %>%
+    filter(year_start >= init_year & year_start <= truncation_year) %>% # ensures no true treatment enters placebo post
+    group_by(rbd, year_start) %>%
+    dplyr::summarise(
+      year_first_sae = min(rbd_first_sae),
+      region_first_sae = min(region_first_sae),
+      num_students = n_distinct(mrun),
+      prom_gral = mean(prom_gral, na.rm = TRUE),
+      att = mean(att, na.rm = TRUE),
+      is_female = mean(is_female, na.rm = TRUE),
+      is_low_income = mean(is_low_income, na.rm = TRUE),
+      avg_lm = mean(prom_lm_actual, na.rm = TRUE),
+      scored_lm = mean(scored_lm, na.rm = TRUE),
+      applied = mean(applied, na.rm = TRUE),
+      assigned = mean(assigned, na.rm = TRUE),
+      enrolled = mean(enrolled, na.rm = TRUE),
+      # is_private = max(is_private, na.rm = TRUE)
+    ) %>%
+    dplyr::rename(year = year_start) %>%
+    dplyr::mutate(
+      treated = ifelse(year >= year_first_sae - shifter &
+        year_first_sae < 2026, 1, 0),
+      post_sae = ifelse(year >= region_first_sae, 1, 0),
+      in_sae = ifelse(year_first_sae < 2026, 1, 0)
+    ) %>%
+    dplyr::left_join(s %>% mutate(in_simce = 1), by = c("rbd", "year")) %>%
+    dplyr::mutate(
+      in_simce = coalesce(in_simce, 0),
+      nalu_lect2m_rbd = coalesce(nalu_lect2m_rbd, 0),
+      nalu_mate2m_rbd = coalesce(nalu_mate2m_rbd, 0),
+      prom_lect2m_rbd = coalesce(prom_lect2m_rbd, 0),
+      prom_mate2m_rbd = coalesce(prom_mate2m_rbd, 0)
+    )
+  return(out)
+}
+
+run_placebo_models <- function(shifter, truncation_year = 2015) {
+  dp <- build_placebo_data(shifter, truncation_year)
+
+  map_df(names(formulas), function(outcome) {
+    fml <- formulas[[outcome]]
+
+    # SIMCE outcomes need in_simce == 1
+    data_use <- if (outcome %in% c("prom_lect2m_rbd", "prom_mate2m_rbd")) {
+      dp %>% filter(in_simce == 1)
+    } else {
+      dp
+    }
+
+    # Create a placebo group timing variable by shifting the observed first-treatment year
+    data_use2 <- data_use %>%
+      dplyr::mutate(
+        year_first_sae_placebo = ifelse(in_sae == 1, year_first_sae - shifter, 0)
+      )
+
+    # Estimate using the did package (Callaway & Sant'Anna)
+    est <- att_gt(
+      yname = outcome,
+      tname = "year",
+      idname = "rbd",
+      gname = "year_first_sae_placebo",
+      xformla = ~num_students,
+      data = data_use2,
+      clustervars = clustering_var,
+      panel = TRUE,
+      bstrap = TRUE,
+      biters = 10000,
+      cband = TRUE
+    )
+
+    # Aggregate to overall ATT (simple) and extract coef/se
+    agg <- aggte(est, type = "simple")
+    coef_att <- as.numeric(agg$overall.att)
+    se_att <- as.numeric(agg$overall.se)
+    pval_att <- 2 * pnorm(-abs(coef_att / se_att))
+
+    tibble(
+      shifter = shifter,
+      outcome = outcome,
+      coef = coef_att,
+      p_value = pval_att,
+      se = se_att
+    )
+  })
+}
+```
+
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+shifters <- 1:5
+placebo_results <- map_df(shifters, run_placebo_models)
+actual_results <- run_placebo_models(0, end_year)
+
+pretty_labels <- c(
+  prom_gral = "GPA",
+  avg_lm = "Avg. Math-Verbal",
+  applied = "Applied",
+  assigned = "Assigned",
+  enrolled = "Enrolled"
+)
+
+placebo_results <- placebo_results %>%
+  mutate(outcome = factor(outcome, levels = outcomes, labels = pretty_labels))
+
+actual_results <- actual_results %>%
+  mutate(outcome = factor(outcome, levels = outcomes, labels = pretty_labels))
+```
+
+```{r plot_placebo_shifter, eval=TRUE, echo=FALSE, warning=FALSE, message=FALSE, fig.width=6,fig.height=4, fig.align="center", fig.cap="Payoffs", fig.pos="H"}
+ggplot(placebo_results, aes(x = outcome, y = coef)) +
+  geom_boxplot(fill = "steelblue", alpha = 0.6) +
+  geom_jitter(width = 0.15, alpha = 0.3, color = "steelblue4") +
+  geom_point(
+    data = actual_results,
+    aes(x = outcome, y = coef),
+    color = "firebrick4", alpha = 0.7, size = 3
+  ) +
+  geom_segment(
+    data = actual_results,
+    aes(
+      x = as.numeric(outcome) - 0.4,
+      xend = as.numeric(outcome) + 0.4,
+      y = coef, yend = coef
+    ),
+    color = "firebrick4", alpha = 0.7, linewidth = 0.8
+  ) +
+  geom_linerange(
+    data = actual_results,
+    aes(x = outcome, ymin = coef - se, ymax = coef + se),
+    color = "firebrick4", alpha = 0.7, linewidth = 0.8
+  ) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray40") +
+  theme_minimal(base_size = 14) +
+  labs(
+    x = "Outcome",
+    y = "Estimated Effect"
+  ) +
+  theme(axis.text.x = element_text(angle = 20, hjust = 1))
+```
+
+### Analysis only considering private schools
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+gpa <- att_gt(
+  yname = "prom_gral",
+  tname = "year",
+  idname = "rbd",
+  gname = "region_first_sae",
+  xformla = ~num_students,
+  data = dr %>% filter(is_private == 1),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+lm <- att_gt(
+  yname = "avg_lm",
+  tname = "year",
+  idname = "rbd",
+  gname = "region_first_sae",
+  xformla = ~num_students,
+  data = dr %>% filter(is_private == 1),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+
+app <- att_gt(
+  yname = "applied",
+  tname = "year",
+  idname = "rbd",
+  gname = "region_first_sae",
+  xformla = ~num_students,
+  data = dr %>% filter(is_private == 1),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+ass <- att_gt(
+  yname = "assigned",
+  tname = "year",
+  idname = "rbd",
+  gname = "region_first_sae",
+  xformla = ~num_students,
+  data = dr %>% filter(is_private == 1),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+enr <- att_gt(
+  yname = "enrolled",
+  tname = "year",
+  idname = "rbd",
+  gname = "region_first_sae",
+  xformla = ~num_students,
+  data = dr %>% filter(is_private == 1),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+models_list <- list(
+  GPA = gpa,
+  "Average LM" = lm,
+  Applied = app,
+  Assigned = ass,
+  Enrolled = enr
+)
+
+# compute pre-treatment means among treated private schools
+means_pre_private <- dr %>%
+  filter(is_private == 1, year < region_first_sae) %>%
+  summarise(
+    GPA = mean(prom_gral, na.rm = TRUE),
+    "Average LM" = mean(avg_lm, na.rm = TRUE),
+    Applied = mean(applied, na.rm = TRUE),
+    Assigned = mean(assigned, na.rm = TRUE),
+    Enrolled = mean(enrolled, na.rm = TRUE)
+  )
+
+obs_private <- dr %>%
+  filter(is_private == 1) %>%
+  summarise(
+    GPA = n(),
+    "Average LM" = n(),
+    Applied = n(),
+    Assigned = n(),
+    Enrolled = n()
+  )
+
+latex_code <- make_did_table(models_list, means_pre = means_pre_private, obs = obs_private)
+
+cat(latex_code)
+```
+
+
+## Two-way fixed effects model
+
+```{r staggered_did_estimation, echo=FALSE, warning=FALSE, message=FALSE}
+# sim_lec <- feols(prom_lect2m_rbd ~ treated + num_students | rbd + year , data = dr %>% filter(in_simce == 1), vcov = clustering_strategy)
+# sim_mat <- feols(prom_mate2m_rbd ~ treated + num_students | rbd + year , data = dr %>% filter(in_simce == 1), vcov = clustering_strategy)
+# att <- feols(att ~ treated + num_students | rbd + year , data = dr, vcov = clustering_strategy)
+gpa <- feols(prom_gral ~ treated + num_students | rbd + year, data = dr, vcov = clustering_strategy)
+lm <- feols(avg_lm ~ treated + num_students | rbd + year, data = dr, vcov = clustering_strategy)
+app <- feols(applied ~ treated + num_students | rbd + year, data = dr, vcov = clustering_strategy)
+ass <- feols(assigned ~ treated + num_students | rbd + year, data = dr, vcov = clustering_strategy)
+enr <- feols(enrolled ~ treated + num_students | rbd + year, data = dr, vcov = clustering_strategy)
+```
+
+```{r staggered_did_table, echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+st <- style.tex("aer")
+
+# rename fixed-effect labels
+st$fixef.suffix <- "" # remove "fixed effects"
+st$fixef.prefix <- "" # remove prefix
+st$fixef.names <- c("RBD", "Year")
+
+out <- capture.output(
+  etable(
+    list(gpa, lm, app, ass, enr),
+    # --- LaTeX output ---
+    tex = TRUE,
+    style.tex = st,
+    #
+    #   # rename regressors
+    dict = c(
+      "treated" = "Treated",
+      # "prom_lect2m_rbd" = "Verbal",
+      # "prom_mate2m_rbd" = "Math",
+      # "att"             = "Attendance",
+      "prom_gral" = "GPA",
+      "avg_lm" = "Average LM",
+      "applied" = "Applied",
+      "assigned" = "Assigned",
+      "enrolled" = "Enrolled"
+      # "num_students" = "Num. Students"
+    ),
+    #
+    #   # numeric formatting
+    digits = 3, # valid
+    #   # no scientific notation: handled by digits + fixest default
+    #
+    #   # keep only Observations
+    fitstat = ~n,
+    #
+    drop = c("num_students"),
+    # wrap in table environment
+    title = "Regression Results",
+    label = "tab:reg_results"
+  )
+)
+
+# Replace hlines with booktabs rules
+# out <- clean_etable(out, header = " & \\multicolumn{2}{c}{Project} \\\\ \n \\cmidrule(lr){2-3} ")
+writeLines(out, "tables/twfe_sae_on_outcomes.tex")
+```
+
+\input{tables/twfe_sae_on_outcomes.tex}
+
+
+# Map
+```{r map, echo=FALSE, warning=FALSE, message=FALSE}
+library(sf)
+
+# 1. Load the Chile map
+chile_map <- st_read("plots/cl.json")
+
+# 2. SAE adoption data (keyed by ISO 3166-2 region codes used in the GeoJSON)
+#    Traditional Chilean numbering: 1=I(Tarapacá) ... 13=RM ... 15=XV(Arica) 16=XVI(Ñuble)
+sae_year <- data.frame(
+  id = c(
+    "CLTA", # 1  Tarapacá            (I)
+    "CLAN", # 2  Antofagasta         (II)
+    "CLAT", # 3  Atacama             (III)
+    "CLCO", # 4  Coquimbo            (IV)
+    "CLVS", # 5  Valparaíso          (V)
+    "CLLI", # 6  O'Higgins           (VI)
+    "CLML", # 7  Maule               (VII)
+    "CLBI", # 8  Bío-Bío             (VIII)
+    "CLAR", # 9  La Araucanía        (IX)
+    "CLLL", # 10 Los Lagos           (X)
+    "CLAI", # 11 Aysén               (XI)
+    "CLMA", # 12 Magallanes          (XII)
+    "CLRM", # 13 Metropolitana       (RM)
+    "CLLR", # 14 Los Ríos            (XIV)
+    "CLAP", # 15 Arica y Parinacota  (XV)
+    "CLNB"
+  ), # 16 Ñuble               (XVI)
+  year = c(
+    2017, 2018, 2018, 2017, 2018, 2017, 2018, 2018,
+    2018, 2017, 2018, 2016, 2019, 2018, 2018, 2018
+  )
+)
+# 3. Merge map with SAE data
+chile_map <- chile_map %>%
+  left_join(sae_year, by = "id")
+
+# 5. Rotate Chile 90° clockwise so north is at the left and south at the right
+rotation_matrix <- matrix(c(0, -1, 1, 0), nrow = 2) # 90° CW rotation
+chile_map_rot <- chile_map
+chile_map_rot$geometry <- chile_map_rot$geometry * rotation_matrix
+
+p <- ggplot(chile_map_rot) +
+  geom_sf(aes(fill = factor(year)), color = "black", size = 0.2) +
+  scale_fill_grey(
+    start = 0.9, end = 0.2,
+    name = "SAE adoption year"
+  ) +
+  theme_void() +
+  theme(
+    legend.position = "bottom",
+    legend.title = element_text(size = 11),
+    legend.text = element_text(size = 10)
+  )
+
+# 6. Save to PDF
+ggsave(
+  "sae_chile_map.pdf",
+  plot = p,
+  width = 12,
+  height = 3
+)
+```

@@ -1,0 +1,27 @@
+\begin{table}[htbp]
+   \caption{\label{tab:reg_results} Regression Results}
+   \bigskip
+   \centering
+   \begin{tabular}{lcccccccc}
+      \toprule
+                                            & Verbal        & Math          & Attendance    & GPA           & Score LM       & Average LM    & Assigned      & Enrolled\\  
+                                            & (1)           & (2)           & (3)           & (4)           & (5)            & (6)           & (7)           & (8)\\  
+      \midrule 
+      factor(years\_since\_first\_sae)-6    & -20.7$^{**}$  & -9.04         & -0.093        & 0.031         & -0.124$^{***}$ & -0.033        & 0.027         & 0.025\\   
+                                            & (9.36)        & (7.55)        & (0.684)       & (0.053)       & (0.039)        & (0.032)       & (0.037)       & (0.035)\\   
+      factor(years\_since\_first\_sae)-5    & -14.5$^{*}$   & -11.9$^{*}$   & -0.118        & -0.002        & -0.082$^{**}$  & -0.021        & 0.009         & 0.017\\   
+                                            & (7.73)        & (6.24)        & (0.574)       & (0.044)       & (0.033)        & (0.026)       & (0.031)       & (0.029)\\   
+      factor(years\_since\_first\_sae)-4    & -9.49         & -7.30         & 0.069         & -0.002        & -0.065$^{**}$  & -0.010        & 0.013         & 0.022\\   
+                                            & (7.04)        & (5.68)        & (0.540)       & (0.042)       & (0.031)        & (0.025)       & (0.029)       & (0.028)\\   
+      factor(years\_since\_first\_sae)-3    & -3.29         & -3.94         & 0.163         & 0.003         & -0.048         & -0.007        & 0.010         & 0.021\\   
+                                            & (6.51)        & (5.25)        & (0.514)       & (0.040)       & (0.029)        & (0.024)       & (0.028)       & (0.026)\\   
+      factor(years\_since\_first\_sae)-2    & 2.45          & -0.479        & 0.362         & 0.007         & -0.033         & -0.002        & 0.011         & 0.021\\   
+                                            & (6.05)        & (4.88)        & (0.489)       & (0.038)       & (0.028)        & (0.023)       & (0.026)       & (0.025)\\   
+       \\
+      Observations                          & 5,326         & 5,326         & 6,520         & 6,520         & 6,520          & 6,520         & 6,520         & 6,520\\  
+       \\
+      rbd                                   & $\checkmark$  & $\checkmark$  & $\checkmark$  & $\checkmark$  & $\checkmark$   & $\checkmark$  & $\checkmark$  & $\checkmark$\\   
+      year                                  & $\checkmark$  & $\checkmark$  & $\checkmark$  & $\checkmark$  & $\checkmark$   & $\checkmark$  & $\checkmark$  & $\checkmark$\\   
+      \bottomrule
+   \end{tabular}
+\end{table}
