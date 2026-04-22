@@ -1,0 +1,2316 @@
+---
+title: "Analysis of Additional Games"
+output:
+  pdf_document:
+    keep_tex:  true
+    latex_engine: xelatex
+  html_document: default
+header-includes:
+   - \usepackage{floatrow}
+   - \floatsetup[figure]{capposition=top}
+---
+
+```{r setup, include=FALSE}
+setwd("~/Dropbox/Effect SAE on SUA/effect_sae_on_sua/code")
+knitr::opts_knit$set(root.dir = "~/Dropbox/Effect SAE on SUA/effect_sae_on_sua/code")
+options(vsc.plot = TRUE)
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# Clean ---------------------------------------------------------------
+rm(list = ls())
+
+# Libraries ---------------------------------------------------------------
+# region Libraries_and_data
+library(dplyr)
+library(tidyr)
+library(magrittr)
+library(ggplot2)
+library(stargazer)
+library(knitr)
+library(kableExtra)
+library(stringr)
+library(fixest)
+library(purrr)
+library(did)
+library(httpgd)
+library(data.table)
+
+options(knitr.table.format = "latex")
+
+my_colors <- RColorBrewer::brewer.pal(4, "Pastel1")[1:2]
+myblue <- "#2F5597"
+myred <- "#B2182B"
+
+clustering_strategy <- ~ rbd + year
+clustering_var <- "rbd"
+start_year <- 2010
+end_year <- 2021
+
+outcomes <- c(
+  scored_lm   = "Scored",
+  avg_nem     = "NEM",
+  avg_ranking = "Ranking",
+  avg_lm      = "Average LM",
+  applied     = "Applied",
+  assigned    = "Assigned",
+  enrolled    = "Enrolled"
+)
+
+# or
+# clustering_strategy <- ~ rbd
+# endregion
+```
+
+```{r functions_to_tabulate, echo=FALSE, message=FALSE, warning=FALSE}
+# region make_did_table
+make_did_table <- function(models,
+                           caption = "Regression Results",
+                           label = "tab:main_results",
+                           cluster_var = "rbd",
+                           fe_vars = c("rbd", "year"),
+                           digits = 3,
+                           means_pre = NULL,
+                           means_map = NULL,
+                           obs = NULL) {
+  # Helper: significance stars
+  star_fun <- function(att, se) {
+    pval <- 2 * pnorm(-abs(att / se))
+    ifelse(pval < 0.01, "$^{***}$",
+      ifelse(pval < 0.05, "$^{**}$",
+        ifelse(pval < 0.10, "$^{*}$", "")
+      )
+    )
+  }
+
+  # Aggregate all models (robust to NULL / failing models)
+  aggs <- lapply(models, function(m) {
+    if (is.null(m)) {
+      return(list(overall.att = NA_real_, overall.se = NA_real_))
+    }
+    tryCatch(aggte(m, type = "simple"), error = function(e) {
+      warning("aggte failed for one model: ", conditionMessage(e))
+      list(overall.att = NA_real_, overall.se = NA_real_)
+    })
+  })
+
+  # Extract ATT and SE
+  atts <- sapply(aggs, function(x) x$overall.att)
+  ses <- sapply(aggs, function(x) x$overall.se)
+
+  stars <- mapply(star_fun, atts, ses)
+  stars[is.na(stars)] <- ""
+
+  att_fmt <- sprintf(paste0("%.", digits, "f%s"), atts, stars)
+  se_fmt <- sprintf(paste0("(%.", digits, "f)"), ses)
+
+  # Column names from list names
+  colnames <- names(models)
+  k <- length(models)
+
+  # Column numbering
+  col_numbers <- paste0("(", 1:k, ")", collapse = " & ")
+  col_header <- paste(colnames, collapse = " & ")
+  att_row <- paste(att_fmt, collapse = " & ")
+  se_row <- paste(se_fmt, collapse = " & ")
+  # Observations: allow user to pass `obs` (like `means_pre`) or fall back to legacy behavior
+  if (!is.null(obs)) {
+    # normalize helper
+    norm_name <- function(x) tolower(gsub("[^[:alnum:]]", "", x))
+
+    # Accept a data.frame (take first row) or a named vector/list
+    if (is.data.frame(obs)) {
+      obs_row_raw <- as.list(obs[1, , drop = TRUE])
+    } else if (is.list(obs) && !is.null(names(obs))) {
+      obs_row_raw <- as.list(obs)
+    } else {
+      obs_row_raw <- as.list(obs)
+    }
+    obs_names <- names(obs_row_raw)
+
+    # If named, try to map display names to obs names by exact or normalized match
+    if (!is.null(obs_names)) {
+      norm_obs <- setNames(obs_names, vapply(obs_names, norm_name, ""))
+      vars <- sapply(colnames, function(dn) {
+        if (dn %in% obs_names) {
+          return(dn)
+        }
+        nn <- norm_name(dn)
+        if (nn %in% names(norm_obs)) {
+          return(norm_obs[[nn]])
+        }
+        return(NA_character_)
+      }, USE.NAMES = FALSE)
+
+      obs_vals <- sapply(vars, function(v) {
+        if (!is.null(v) && !is.na(v) && v %in% obs_names) {
+          as.numeric(obs_row_raw[[v]])
+        } else {
+          NA_real_
+        }
+      })
+    } else {
+      # unnamed: allow scalar or vector matching k columns
+      if (length(obs_row_raw) == 1L) {
+        obs_vals <- rep(as.numeric(obs_row_raw[[1]]), k)
+      } else if (length(obs_row_raw) == k) {
+        obs_vals <- as.numeric(unlist(obs_row_raw))
+      } else {
+        obs_vals <- rep(NA_real_, k)
+      }
+    }
+
+    obs_fmt <- sapply(obs_vals, function(x) ifelse(is.na(x), "NA", format(x, big.mark = ",")))
+    obs_row <- paste(obs_fmt, collapse = " & ")
+  } else {
+    # legacy: Find first model with an 'n' field and repeat it across columns
+    n_raw <- NA_integer_
+    for (m in models) {
+      if (!is.null(m) && !is.null(m$n)) {
+        n_raw <- m$n
+        break
+      }
+    }
+    if (is.na(n_raw)) {
+      n_obs_val <- NA_character_
+    } else {
+      n_obs_val <- format(n_raw, big.mark = ",")
+    }
+    obs_row <- paste(rep(ifelse(is.na(n_obs_val), "NA", n_obs_val), k), collapse = " & ")
+  }
+  # Mean pre-treatment row (if provided)
+  if (!is.null(means_pre)) {
+    # normalize helper
+    norm_name <- function(x) tolower(gsub("[^[:alnum:]]", "", x))
+
+    # Accept a data.frame (take first row) or a named vector/list
+    if (is.data.frame(means_pre)) {
+      means_row_raw <- as.list(means_pre[1, , drop = TRUE])
+    } else if (is.list(means_pre) && !is.null(names(means_pre))) {
+      means_row_raw <- as.list(means_pre)
+    } else {
+      means_row_raw <- as.list(means_pre)
+    }
+    means_names <- names(means_row_raw)
+
+    # If user provided an explicit map, use it (named vector: display_name -> var_name)
+    if (!is.null(means_map)) {
+      vars <- unname(means_map[colnames])
+    } else {
+      # try to match model display names to means column names by normalized matching
+      norm_means <- setNames(means_names, vapply(means_names, norm_name, ""))
+      vars <- sapply(colnames, function(dn) {
+        # direct match
+        if (dn %in% means_names) {
+          return(dn)
+        }
+        # normalized match
+        nn <- norm_name(dn)
+        if (nn %in% names(norm_means)) {
+          return(norm_means[[nn]])
+        }
+        # no match
+        return(NA_character_)
+      }, USE.NAMES = FALSE)
+    }
+
+    means_vals <- sapply(vars, function(v) {
+      if (!is.null(v) && !is.na(v) && v %in% means_names) {
+        as.numeric(means_row_raw[[v]])
+      } else {
+        NA_real_
+      }
+    })
+    means_fmt <- sprintf(paste0("%.", digits, "f"), means_vals)
+    means_row <- paste(means_fmt, collapse = " & ")
+  } else {
+    means_row <- paste(rep("", k), collapse = " & ")
+  }
+  fe_rows <- paste0(
+    sapply(fe_vars, function(v) {
+      paste0(
+        "      ", v, " & ",
+        paste(rep("$\\checkmark$", k), collapse = " & "),
+        "\\\\\n"
+      )
+    }),
+    collapse = ""
+  )
+
+  # Build LaTeX table
+  latex_table <- paste0(
+    "\\begin{table}[htbp]\n",
+    "   \\caption{", caption, "}\\label{", label, "}\n",
+    "   \\bigskip\n",
+    "   \\centering\n",
+    "   \\begin{tabular}{l", paste(rep("c", k), collapse = ""), "}\n",
+    "      \\toprule\n",
+    "                   & ", col_header, "\\\\\n",
+    "                   & ", col_numbers, "\\\\\n",
+    "      \\midrule\n",
+    "      Treated      & ", att_row, "\\\\\n",
+    "                   & ", se_row, "\\\\\n",
+    "      Mean pre-treatment & ", means_row, "\\\\\n",
+    "       \\\\\n",
+    "      Observations & ", obs_row, "\\\\\n",
+    "       \\\\\n",
+    fe_rows,
+    "      \\bottomrule\n",
+    "   \\end{tabular}\n",
+    "\\end{table}"
+  )
+
+  return(latex_table)
+}
+
+make_eventstudy_table <- function(models,
+                                  caption = "Event Study Estimates",
+                                  label = "tab:event_study",
+                                  digits = 3,
+                                  ci_level = 0.99,
+                                  include_pretrend = TRUE) {
+  # ----------------------------
+  # Use pre-computed aggte objects if passed, otherwise compute
+  # (Re-computing calls bootstrap again, yielding different CIs)
+  # ----------------------------
+  if (inherits(models[[1]], "AGGTEobj")) {
+    dyn_list <- models
+  } else {
+    dyn_list <- lapply(models, function(m) aggte(m, type = "dynamic"))
+  }
+
+  # ----------------------------
+  # Collect all event times
+  # ----------------------------
+  all_egt <- sort(unique(unlist(lapply(dyn_list, function(x) x$egt))))
+
+  k <- length(models)
+
+  # Three rows per event time (coef + se + CI)
+  coef_mat <- matrix("", nrow = length(all_egt) * 3, ncol = k)
+  row_labels <- c()
+
+  # ----------------------------
+  # Fill coefficient matrix
+  # ----------------------------
+  for (i in seq_along(all_egt)) {
+    e <- all_egt[i]
+    row_labels <- c(
+      row_labels,
+      paste0("Event time ", e),
+      "",
+      ""
+    )
+
+    for (j in seq_along(dyn_list)) {
+      dyn <- dyn_list[[j]]
+      idx <- which(dyn$egt == e)
+
+      if (length(idx) == 0) {
+        coef_mat[(3 * i - 2):(3 * i), j] <- ""
+      } else {
+        att <- dyn$att.egt[idx]
+        se <- dyn$se.egt[idx]
+
+        # Use pointwise critical value based on ci_level
+        crit_val <- qnorm(1 - (1 - ci_level) / 2)
+
+        lower <- att - crit_val * se
+        upper <- att + crit_val * se
+
+        coef_mat[(3 * i - 2), j] <- sprintf(paste0("%.", digits, "f"), att)
+        coef_mat[(3 * i - 1), j] <- sprintf(paste0("(%.", digits, "f)"), se)
+        coef_mat[(3 * i), j] <- sprintf(paste0("[%.", digits, "f, %.", digits, "f]"), lower, upper)
+      }
+    }
+  }
+
+  # ----------------------------
+  # Add pre-trend test (robust)
+  # ----------------------------
+  if (include_pretrend) {
+    row_labels <- c(row_labels, "Pre-trend p-value")
+
+    pvals <- sapply(dyn_list, function(x) {
+      # Try the pre-trend Wald p-value; handle NULL / missing gracefully
+      val <- x$Wpval
+      if (is.null(val) || length(val) == 0) {
+        # Recompute from pre-treatment coefficients if Wpval is missing
+        pre_idx <- which(x$egt < 0)
+        if (length(pre_idx) >= 1) {
+          pre_att <- x$att.egt[pre_idx]
+          pre_se <- x$se.egt[pre_idx]
+          # Wald statistic: sum of (att/se)^2, chi-sq with df = # pre-periods
+          W <- sum((pre_att / pre_se)^2, na.rm = TRUE)
+          val <- 1 - pchisq(W, df = length(pre_idx))
+        } else {
+          val <- NA_real_
+        }
+      }
+      as.numeric(val[1])
+    })
+
+    coef_mat <- rbind(
+      coef_mat,
+      sprintf(paste0("%.", digits, "f"), pvals)
+    )
+  }
+
+  # ----------------------------
+  # Column headers
+  # ----------------------------
+  col_header <- paste(names(models), collapse = " & ")
+  col_numbers <- paste0("(", 1:k, ")", collapse = " & ")
+
+  # ----------------------------
+  # Build table body
+  # ----------------------------
+  body_rows <- ""
+  for (i in seq_len(nrow(coef_mat))) {
+    body_rows <- paste0(
+      body_rows,
+      "      ", row_labels[i], " & ",
+      paste(coef_mat[i, ], collapse = " & "),
+      "\\\\\n"
+    )
+  }
+
+  # ----------------------------
+  # Build LaTeX table
+  # ----------------------------
+  latex_table <- paste0(
+    "\\begin{table}[htbp]\n",
+    "   \\caption{", caption, "}\\label{", label, "}\n",
+    "   \\bigskip\n",
+    "   \\centering\n",
+    "   \\begin{tabular}{l", paste(rep("c", k), collapse = ""), "}\n",
+    "      \\toprule\n",
+    "                   & ", col_header, "\\\\\n",
+    "                   & ", col_numbers, "\\\\\n",
+    "      \\midrule\n",
+    body_rows,
+    "      \\bottomrule\n",
+    "   \\end{tabular}\n",
+    "\\end{table}"
+  )
+
+  return(latex_table)
+}
+
+# Variant: report Point Estimates (+ stars) per event time (no CIs)
+make_eventstudy_table_pe <- function(models,
+                                     caption = "Event Study Point Estimates",
+                                     label = "tab:event_study_pe",
+                                     digits = 3,
+                                     include_pretrend = TRUE) {
+  # Accept either pre-computed AGGTEobjs or raw att_gt objects
+  if (inherits(models[[1]], "AGGTEobj")) {
+    dyn_list <- models
+  } else {
+    dyn_list <- lapply(models, function(m) aggte(m, type = "dynamic"))
+  }
+
+  # Collect all event times
+  all_egt <- sort(unique(unlist(lapply(dyn_list, function(x) x$egt))))
+  k <- length(models)
+
+  # Two rows per event time: estimate (with stars) and se
+  coef_mat <- matrix("", nrow = length(all_egt) * 2, ncol = k)
+  row_labels <- c()
+
+  # Extract stars from summary(AGGTEobj) to match printed output
+  summaries <- lapply(dyn_list, function(d) capture.output(summary(d)))
+
+  for (i in seq_along(all_egt)) {
+    e <- all_egt[i]
+    row_labels <- c(row_labels, paste0("Event time ", e), "")
+
+    for (j in seq_along(dyn_list)) {
+      dyn <- dyn_list[[j]]
+      idx <- which(dyn$egt == e)
+      if (length(idx) == 0) {
+        coef_mat[(2 * i - 1):(2 * i), j] <- ""
+      } else {
+        att <- dyn$att.egt[idx]
+        se <- dyn$se.egt[idx]
+        # Find the corresponding line in the summary output and extract any trailing stars
+        summ_lines <- summaries[[j]]
+        # Lines with event estimates usually start with the event number (possibly padded)
+        pattern <- paste0("^\\s*", e, "\\b")
+        match_line <- summ_lines[grepl(pattern, summ_lines)]
+        if (length(match_line) >= 1) {
+          line <- match_line[1]
+          star_matches <- regmatches(line, gregexpr("\\*+", line))[[1]]
+          stars <- if (length(star_matches) >= 1) paste0(star_matches, collapse = "") else ""
+        } else {
+          stars <- ""
+        }
+        # Format estimate; if significant (had stars in summary) wrap in \textbf{}
+        est_txt <- sprintf(paste0("%.", digits, "f"), att)
+        if (nzchar(stars)) {
+          est_txt <- paste0("\\textbf{", est_txt, "}")
+        }
+        coef_mat[(2 * i - 1), j] <- est_txt
+        coef_mat[(2 * i), j] <- sprintf(paste0("(%.", digits, "f)"), se)
+      }
+    }
+  }
+
+  # Pre-trend p-value row
+  if (include_pretrend) {
+    row_labels <- c(row_labels, "Pre-trend p-value")
+    pvals <- sapply(dyn_list, function(x) {
+      val <- x$Wpval
+      if (is.null(val) || length(val) == 0) {
+        pre_idx <- which(x$egt < 0)
+        if (length(pre_idx) >= 1) {
+          pre_att <- x$att.egt[pre_idx]
+          pre_se <- x$se.egt[pre_idx]
+          W <- sum((pre_att / pre_se)^2, na.rm = TRUE)
+          val <- 1 - pchisq(W, df = length(pre_idx))
+        } else {
+          val <- NA_real_
+        }
+      }
+      as.numeric(val[1])
+    })
+    coef_mat <- rbind(coef_mat, sprintf(paste0("%.", digits, "f"), pvals))
+  }
+
+  col_header <- paste(names(models), collapse = " & ")
+  col_numbers <- paste0("(", 1:k, ")", collapse = " & ")
+
+  body_rows <- ""
+  for (i in seq_len(nrow(coef_mat))) {
+    body_rows <- paste0(
+      body_rows,
+      "      ", row_labels[i], " & ",
+      paste(coef_mat[i, ], collapse = " & "),
+      "\\\\\n"
+    )
+  }
+
+  latex_table <- paste0(
+    "\\begin{table}[htbp]\n",
+    "   \\caption{", caption, "}\\label{", label, "}\n",
+    "   \\bigskip\n",
+    "   \\centering\n",
+    "   \\begin{tabular}{l", paste(rep("c", k), collapse = ""), "}\n",
+    "      \\toprule\n",
+    "                   & ", col_header, "\\\\\n",
+    "                   & ", col_numbers, "\\\\\n",
+    "      \\midrule\n",
+    body_rows,
+    "      \\bottomrule\n",
+    "   \\end{tabular}\n",
+    "\\end{table}"
+  )
+
+  return(latex_table)
+}
+```
+
+```{r sample_selection, echo=FALSE, warning=FALSE, message=FALSE}
+# --- Step 1: Read and immediately drop columns we don't need ---
+# This shrinks memory BEFORE the expensive subset copy.
+df <- readRDS("data/panel_9-12_2010_2021.rds")
+setDT(df)
+
+# Columns needed by this chunk and all downstream analysis
+keep_cols <- c(
+  "MRUN", "AGNO", "RBD", "GEN_ALU", "COD_GRADO", "COD_ENSE",
+  "SIT_FIN_R", "MARCA_EGRESO",
+  "COD_REG_RBD", "COD_PRO_RBD", "COD_COM_RBD", "COD_DEPE",
+  "grade_min", "grade_max",
+  "only_regular_hc", "only_regular_tp",
+  "year_rbd_first_sae", "year_region_first_sae", "year_start",
+  "gpa_secondary", "att_secondary", "prom_gral", "att",
+  "is_female", "is_low_income", "is_private",
+  "prom_lm_actual", "nem_pct", "ranking_pct", "scored_lm",
+  "applied", "assigned", "enrolled",
+  "num_apps_reg", "num_valid_apps_reg", "pct_valid_reg",
+  "num_apps_above_prev_cutoff_reg", "pct_apps_above_prev_cutoff_reg",
+  "any_apps_above_prev_cutoff_reg",
+  "assigned_full", "assigned_not_full",
+  "assigned_top1", "assigned_top5", "assigned_top10", "assigned_top25",
+  "assigned_top50", "assigned_top75", "assigned_top90", "assigned_top95",
+  "assigned_selective_q10", "assigned_selective_q20", "assigned_selective_q30", "assigned_selective_q40",
+  "assigned_selective_q50", "assigned_selective_q60", "assigned_selective_q70", "assigned_selective_q80",
+  "assigned_selective_q90", "assigned_selective_q100",
+  "high_lect4b", "high_mate4b", "low_lect4b", "low_mate4b",
+  "dropped_secondary", "graduated_secondary", "stayer_secondary"
+)
+# Only keep columns that actually exist (safe against missing cols)
+keep_cols <- intersect(keep_cols, names(df))
+
+
+# Drop all other columns BY REFERENCE (no copy!)
+drop_cols <- setdiff(names(df), keep_cols)
+if (length(drop_cols) > 0L) df[, (drop_cols) := NULL]
+rm(drop_cols, keep_cols)
+gc()
+
+# --- Step 2: Subset rows (now on a much smaller table) ---
+df <- df[graduated_secondary == 1L & (only_regular_hc == 1L | only_regular_tp == 1L)]
+gc()
+
+# --- grade_level (row-level, by reference) ---
+df[, grade_level := fifelse(COD_ENSE == 110L, COD_GRADO, COD_GRADO + 8L)]
+
+# --- entry level per RBD (small table, fine with data.table) ---
+# Terminal grade = grade 4 in ANY secondary track (HC=310, TP=410-810, Art=910)
+rbd_info <- df[,
+  .(
+    has_terminal_grade = as.integer(any(COD_ENSE >= 310L & COD_GRADO == 4L)),
+    entry_level = min(grade_level)
+  ),
+  by = RBD
+]
+rbd_info[has_terminal_grade == 0L, entry_level := NA_integer_]
+
+# --- graduation RBD per student (small table) ---
+grad_rbd <- df[MARCA_EGRESO == 1L,
+  .(rbd_grad = RBD[which.max(AGNO)]),
+  by = MRUN
+]
+
+# --- Add rbd_grad to df by index lookup (no join copy) ---
+setkey(grad_rbd, MRUN)
+idx_grad <- grad_rbd[.(df$MRUN), on = .(MRUN), which = TRUE]
+set(df, j = "rbd_grad", value = grad_rbd$rbd_grad[idx_grad])
+rm(idx_grad)
+
+# --- Add entry_level to df by index lookup on rbd_grad ---
+setnames(rbd_info, "entry_level", "rbd_grad_entry_level")
+setkey(rbd_info, RBD)
+idx_entry <- rbd_info[.(df$rbd_grad), on = .(RBD), which = TRUE]
+set(df, j = "rbd_grad_entry_level", value = rbd_info$rbd_grad_entry_level[idx_entry])
+rm(grad_rbd, rbd_info, idx_entry)
+gc()
+
+# --- stayer_since_entry (grouped, by reference) ---
+df[, stayer_since_entry := {
+  el <- rbd_grad_entry_level[1L]
+  rg <- rbd_grad[1L]
+  if (is.na(el) | is.na(rg)) {
+    NA_integer_
+  } else {
+    rel <- grade_level >= el & grade_level <= 12L
+    if (any(rel)) as.integer(all(RBD[rel] == rg)) else NA_integer_
+  }
+}, by = MRUN]
+
+setDF(df)
+```
+
+
+```{r create_df_by_rbd, echo=FALSE, message=FALSE, warning=FALSE}
+dgs <- df %>%
+  # dplyr::filter(RBD == rbd_grad & stayer_since_entry == 1) %>%
+  # dplyr::filter(stayer_since_entry == 1) %>%
+  # dplyr::filter(rbd_grad_entry_level == grade_level & grade_level >= 7) %>%
+  dplyr::filter(stayer_secondary == 1 & grade_level >= 9) %>%
+  group_by(MRUN) %>%
+  slice_min(AGNO, n = 1) %>%
+  ungroup() %>%
+  group_by(RBD) %>%
+  dplyr::mutate(
+    COD_REG_RBD = first(na.omit(COD_REG_RBD), default = NA),
+    COD_PRO_RBD = first(na.omit(COD_PRO_RBD), default = NA),
+    COD_COM_RBD = first(na.omit(COD_COM_RBD), default = NA),
+    COD_DEPE = first(na.omit(COD_DEPE), default = NA),
+    year_rbd_first_sae = first(na.omit(year_rbd_first_sae), default = NA),
+    year_region_first_sae = first(na.omit(year_region_first_sae), default = NA)
+  ) %>%
+  ungroup() %>%
+  group_by(RBD, AGNO) %>%
+  dplyr::summarise(
+    n_students = n(),
+    avg_gpa = mean(gpa_secondary, na.rm = TRUE),
+    avg_att = mean(att_secondary, na.rm = TRUE),
+    is_female = mean(is_female, na.rm = TRUE),
+    is_low_income = mean(is_low_income, na.rm = TRUE),
+    is_private = max(is_private, na.rm = TRUE),
+    avg_lm = mean(prom_lm_actual, na.rm = TRUE),
+    avg_nem = mean(nem_pct, na.rm = TRUE),
+    avg_ranking = mean(ranking_pct, na.rm = TRUE),
+    scored_lm = mean(scored_lm, na.rm = TRUE),
+    applied = mean(applied, na.rm = TRUE),
+    assigned = mean(assigned, na.rm = TRUE),
+    enrolled = mean(enrolled, na.rm = TRUE),
+    num_apps = mean(num_apps_reg[num_apps_reg > 0], na.rm = TRUE),
+    num_valid_apps = mean(num_valid_apps_reg[num_apps_reg > 0], na.rm = TRUE),
+    pct_valid_apps = mean(pct_valid_reg[num_apps_reg > 0], na.rm = TRUE),
+    num_apps_above_prev_cutoff = mean(num_apps_above_prev_cutoff_reg[num_apps_reg > 0], na.rm = TRUE),
+    pct_apps_above_prev_cutoff = mean(pct_apps_above_prev_cutoff_reg[num_apps_reg > 0], na.rm = TRUE),
+    any_apps_above_prev_cutoff = mean(any_apps_above_prev_cutoff_reg[num_apps_reg > 0], na.rm = TRUE),
+    assigned_full = mean(assigned_full, na.rm = TRUE),
+    assigned_not_full = mean(assigned_not_full, na.rm = TRUE),
+    assigned_top1 = mean(assigned_top1, na.rm = TRUE),
+    assigned_top5 = mean(assigned_top5, na.rm = TRUE),
+    assigned_top10 = mean(assigned_top10, na.rm = TRUE),
+    assigned_top25 = mean(assigned_top25, na.rm = TRUE),
+    assigned_top50 = mean(assigned_top50, na.rm = TRUE),
+    assigned_top75 = mean(assigned_top75, na.rm = TRUE),
+    assigned_top90 = mean(assigned_top90, na.rm = TRUE),
+    assigned_top95 = mean(assigned_top95, na.rm = TRUE),
+    assigned_q10 = mean(assigned_selective_q10, na.rm = TRUE),
+    assigned_q20 = mean(assigned_selective_q20, na.rm = TRUE),
+    assigned_q30 = mean(assigned_selective_q30, na.rm = TRUE),
+    assigned_q40 = mean(assigned_selective_q40, na.rm = TRUE),
+    assigned_q50 = mean(assigned_selective_q50, na.rm = TRUE),
+    assigned_q60 = mean(assigned_selective_q60, na.rm = TRUE),
+    assigned_q70 = mean(assigned_selective_q70, na.rm = TRUE),
+    assigned_q80 = mean(assigned_selective_q80, na.rm = TRUE),
+    assigned_q90 = mean(assigned_selective_q90, na.rm = TRUE),
+    assigned_q100 = mean(assigned_selective_q100, na.rm = TRUE),
+    assigned_Q1 = mean(assigned_selective_q10 + assigned_selective_q20, na.rm = TRUE),
+    assigned_Q2 = mean(assigned_selective_q30 + assigned_selective_q40, na.rm = TRUE),
+    assigned_Q3 = mean(assigned_selective_q50 + assigned_selective_q60, na.rm = TRUE),
+    assigned_Q4 = mean(assigned_selective_q70 + assigned_selective_q80, na.rm = TRUE),
+    assigned_Q5 = mean(assigned_selective_q90 + assigned_selective_q100, na.rm = TRUE),
+    COD_REG_RBD = first(na.omit(COD_REG_RBD), default = NA),
+    COD_PRO_RBD = first(na.omit(COD_PRO_RBD), default = NA),
+    COD_COM_RBD = first(na.omit(COD_COM_RBD), default = NA),
+    COD_DEPE = first(na.omit(COD_DEPE), default = NA),
+    year_rbd_first_sae = first(na.omit(year_rbd_first_sae), default = NA),
+    year_region_first_sae = first(na.omit(year_region_first_sae), default = NA)
+  ) %>%
+  ungroup() %>%
+  dplyr::mutate(
+    treated = ifelse(year_rbd_first_sae > 0 & AGNO > year_rbd_first_sae, 1, 0),
+    post_sae = ifelse(AGNO > year_region_first_sae, 1, 0),
+    in_sae = ifelse(year_rbd_first_sae > 0, 1, 0),
+    rbd = RBD,
+    year = AGNO - 1,
+    # year = ifelse(year_sae > 0, year_sae, year_start_at_rbd - 1),
+    num_students = n_students,
+    year_first_sae = coalesce(year_rbd_first_sae, 0L) # did package requires 0 for never-treated, not NA
+  )
+
+
+dr <- dgs %>%
+  filter(year >= start_year & year <= end_year & year_first_sae < 2020) %>%
+  group_by(RBD) %>%
+  dplyr::filter(all(start_year:end_year %in% year)) %>%
+  ungroup()
+```
+
+# Main Effects
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+common_args <- list(
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dr, # force plain data.frame — att_gt can fail on tibble/data.table
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE,
+  control_group = "notyettreated"
+)
+
+models <- map(names(outcomes), function(y) {
+  do.call(att_gt, c(list(yname = y), common_args))
+})
+names(models) <- outcomes # set human-friendly names
+
+# means_pre for pre-treatment sample (use the same outcomes vector)
+means_pre <- dr %>%
+  filter(in_sae == 1, year < year_first_sae) %>%
+  summarise(across(all_of(names(outcomes)), ~ mean(.x, na.rm = TRUE))) %>%
+  rename_with(~ unname(outcomes[.x]), everything()) # rename to display names
+
+# obs: number of observations (same value repeated, but keep as tibble with display names)
+obs <- tibble(!!!setNames(rep(nrow(dr), length(outcomes)), outcomes))
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+latex_code <- make_did_table(models, means_pre = means_pre, obs = obs)
+cat(latex_code)
+```
+
+
+# Heterogeneity
+
+## Gender
+```{r gender_data, echo=FALSE, warning=FALSE, message=FALSE}
+dff <- df %>%
+  filter(GEN_ALU == 2) %>%
+  group_by(RBD) %>%
+  dplyr::mutate(
+    COD_REG_RBD = first(na.omit(COD_REG_RBD), default = NA),
+    COD_PRO_RBD = first(na.omit(COD_PRO_RBD), default = NA),
+    COD_COM_RBD = first(na.omit(COD_COM_RBD), default = NA),
+    COD_DEPE = first(na.omit(COD_DEPE), default = NA),
+    year_rbd_first_sae = first(na.omit(year_rbd_first_sae), default = NA),
+    year_region_first_sae = first(na.omit(year_region_first_sae), default = NA)
+  ) %>%
+  ungroup() %>%
+  group_by(RBD, AGNO) %>%
+  dplyr::summarise(
+    n_students = n(),
+    avg_gpa = mean(prom_gral, na.rm = TRUE),
+    avg_att = mean(att, na.rm = TRUE),
+    is_female = mean(is_female, na.rm = TRUE),
+    is_low_income = mean(is_low_income, na.rm = TRUE),
+    is_private = max(is_private, na.rm = TRUE),
+    avg_lm = mean(prom_lm_actual, na.rm = TRUE),
+    avg_nem = mean(nem_pct, na.rm = TRUE),
+    avg_ranking = mean(ranking_pct, na.rm = TRUE),
+    scored_lm = mean(scored_lm, na.rm = TRUE),
+    applied = mean(applied, na.rm = TRUE),
+    assigned = mean(assigned, na.rm = TRUE),
+    enrolled = mean(enrolled, na.rm = TRUE),
+    num_apps = mean(num_apps_reg[num_apps_reg > 0], na.rm = TRUE),
+    num_valid_apps = mean(num_valid_apps_reg[num_apps_reg > 0], na.rm = TRUE),
+    pct_valid_apps = mean(pct_valid_reg[num_apps_reg > 0], na.rm = TRUE),
+    num_apps_above_prev_cutoff = mean(num_apps_above_prev_cutoff_reg[num_apps_reg > 0], na.rm = TRUE),
+    pct_apps_above_prev_cutoff = mean(pct_apps_above_prev_cutoff_reg[num_apps_reg > 0], na.rm = TRUE),
+    any_apps_above_prev_cutoff = mean(any_apps_above_prev_cutoff_reg[num_apps_reg > 0], na.rm = TRUE),
+    assigned_full = mean(assigned_full, na.rm = TRUE),
+    assigned_not_full = mean(assigned_not_full, na.rm = TRUE),
+    assigned_top1 = mean(assigned_top1, na.rm = TRUE),
+    assigned_top5 = mean(assigned_top5, na.rm = TRUE),
+    assigned_top10 = mean(assigned_top10, na.rm = TRUE),
+    assigned_top25 = mean(assigned_top25, na.rm = TRUE),
+    assigned_top50 = mean(assigned_top50, na.rm = TRUE),
+    assigned_top75 = mean(assigned_top75, na.rm = TRUE),
+    assigned_top90 = mean(assigned_top90, na.rm = TRUE),
+    assigned_top95 = mean(assigned_top95, na.rm = TRUE),
+    assigned_q10 = mean(assigned_q10, na.rm = TRUE),
+    assigned_q20 = mean(assigned_q20, na.rm = TRUE),
+    assigned_q30 = mean(assigned_q30, na.rm = TRUE),
+    assigned_q40 = mean(assigned_q40, na.rm = TRUE),
+    assigned_q50 = mean(assigned_q50, na.rm = TRUE),
+    assigned_q60 = mean(assigned_q60, na.rm = TRUE),
+    assigned_q70 = mean(assigned_q70, na.rm = TRUE),
+    assigned_q80 = mean(assigned_q80, na.rm = TRUE),
+    assigned_q90 = mean(assigned_q90, na.rm = TRUE),
+    assigned_q100 = mean(assigned_q100, na.rm = TRUE),
+    assigned_Q1 = mean(assigned_q10 + assigned_q20, na.rm = TRUE),
+    assigned_Q2 = mean(assigned_q30 + assigned_q40, na.rm = TRUE),
+    assigned_Q3 = mean(assigned_q50 + assigned_q60, na.rm = TRUE),
+    assigned_Q4 = mean(assigned_q70 + assigned_q80, na.rm = TRUE),
+    assigned_Q5 = mean(assigned_q90 + assigned_q100, na.rm = TRUE),
+    COD_REG_RBD = first(na.omit(COD_REG_RBD), default = NA),
+    COD_PRO_RBD = first(na.omit(COD_PRO_RBD), default = NA),
+    COD_COM_RBD = first(na.omit(COD_COM_RBD), default = NA),
+    COD_DEPE = first(na.omit(COD_DEPE), default = NA),
+    year_rbd_first_sae = first(na.omit(year_rbd_first_sae), default = NA),
+    year_region_first_sae = first(na.omit(year_region_first_sae), default = NA)
+  ) %>%
+  ungroup() %>%
+  dplyr::mutate(
+    treated = ifelse(year_rbd_first_sae > 0 & AGNO > year_rbd_first_sae, 1, 0),
+    post_sae = ifelse(AGNO > year_region_first_sae, 1, 0),
+    in_sae = ifelse(year_rbd_first_sae > 0, 1, 0),
+    rbd = RBD,
+    year = AGNO - 4,
+    num_students = n_students,
+    year_first_sae = coalesce(year_rbd_first_sae, 0L) # did package requires 0 for never-treated, not NA
+  ) %>%
+  filter(AGNO >= start_year & AGNO <= end_year) %>%
+  group_by(RBD) %>%
+  dplyr::filter(all(start_year:end_year %in% AGNO)) %>%
+  ungroup()
+
+
+dfm <- df %>%
+  filter(GEN_ALU == 2) %>%
+  group_by(RBD) %>%
+  dplyr::mutate(
+    COD_REG_RBD = first(na.omit(COD_REG_RBD), default = NA),
+    COD_PRO_RBD = first(na.omit(COD_PRO_RBD), default = NA),
+    COD_COM_RBD = first(na.omit(COD_COM_RBD), default = NA),
+    COD_DEPE = first(na.omit(COD_DEPE), default = NA),
+    year_rbd_first_sae = first(na.omit(year_rbd_first_sae), default = NA),
+    year_region_first_sae = first(na.omit(year_region_first_sae), default = NA)
+  ) %>%
+  ungroup() %>%
+  group_by(RBD, AGNO) %>%
+  dplyr::summarise(
+    n_students = n(),
+    avg_gpa = mean(prom_gral, na.rm = TRUE),
+    avg_att = mean(att, na.rm = TRUE),
+    is_female = mean(is_female, na.rm = TRUE),
+    is_low_income = mean(is_low_income, na.rm = TRUE),
+    is_private = max(is_private, na.rm = TRUE),
+    avg_lm = mean(prom_lm_actual, na.rm = TRUE),
+    avg_nem = mean(nem_pct, na.rm = TRUE),
+    avg_ranking = mean(ranking_pct, na.rm = TRUE),
+    scored_lm = mean(scored_lm, na.rm = TRUE),
+    applied = mean(applied, na.rm = TRUE),
+    assigned = mean(assigned, na.rm = TRUE),
+    enrolled = mean(enrolled, na.rm = TRUE),
+    num_apps = mean(num_apps_reg[num_apps_reg > 0], na.rm = TRUE),
+    num_valid_apps = mean(num_valid_apps_reg[num_apps_reg > 0], na.rm = TRUE),
+    pct_valid_apps = mean(pct_valid_reg[num_apps_reg > 0], na.rm = TRUE),
+    num_apps_above_prev_cutoff = mean(num_apps_above_prev_cutoff_reg[num_apps_reg > 0], na.rm = TRUE),
+    pct_apps_above_prev_cutoff = mean(pct_apps_above_prev_cutoff_reg[num_apps_reg > 0], na.rm = TRUE),
+    any_apps_above_prev_cutoff = mean(any_apps_above_prev_cutoff_reg[num_apps_reg > 0], na.rm = TRUE),
+    assigned_full = mean(assigned_full, na.rm = TRUE),
+    assigned_not_full = mean(assigned_not_full, na.rm = TRUE),
+    assigned_top1 = mean(assigned_top1, na.rm = TRUE),
+    assigned_top5 = mean(assigned_top5, na.rm = TRUE),
+    assigned_top10 = mean(assigned_top10, na.rm = TRUE),
+    assigned_top25 = mean(assigned_top25, na.rm = TRUE),
+    assigned_top50 = mean(assigned_top50, na.rm = TRUE),
+    assigned_top75 = mean(assigned_top75, na.rm = TRUE),
+    assigned_top90 = mean(assigned_top90, na.rm = TRUE),
+    assigned_top95 = mean(assigned_top95, na.rm = TRUE),
+    assigned_q10 = mean(assigned_q10, na.rm = TRUE),
+    assigned_q20 = mean(assigned_q20, na.rm = TRUE),
+    assigned_q30 = mean(assigned_q30, na.rm = TRUE),
+    assigned_q40 = mean(assigned_q40, na.rm = TRUE),
+    assigned_q50 = mean(assigned_q50, na.rm = TRUE),
+    assigned_q60 = mean(assigned_q60, na.rm = TRUE),
+    assigned_q70 = mean(assigned_q70, na.rm = TRUE),
+    assigned_q80 = mean(assigned_q80, na.rm = TRUE),
+    assigned_q90 = mean(assigned_q90, na.rm = TRUE),
+    assigned_q100 = mean(assigned_q100, na.rm = TRUE),
+    assigned_Q1 = mean(assigned_q10 + assigned_q20, na.rm = TRUE),
+    assigned_Q2 = mean(assigned_q30 + assigned_q40, na.rm = TRUE),
+    assigned_Q3 = mean(assigned_q50 + assigned_q60, na.rm = TRUE),
+    assigned_Q4 = mean(assigned_q70 + assigned_q80, na.rm = TRUE),
+    assigned_Q5 = mean(assigned_q90 + assigned_q100, na.rm = TRUE),
+    COD_REG_RBD = first(na.omit(COD_REG_RBD), default = NA),
+    COD_PRO_RBD = first(na.omit(COD_PRO_RBD), default = NA),
+    COD_COM_RBD = first(na.omit(COD_COM_RBD), default = NA),
+    COD_DEPE = first(na.omit(COD_DEPE), default = NA),
+    year_rbd_first_sae = first(na.omit(year_rbd_first_sae), default = NA),
+    year_region_first_sae = first(na.omit(year_region_first_sae), default = NA)
+  ) %>%
+  ungroup() %>%
+  dplyr::mutate(
+    treated = ifelse(year_rbd_first_sae > 0 & AGNO > year_rbd_first_sae, 1, 0),
+    post_sae = ifelse(AGNO > year_region_first_sae, 1, 0),
+    in_sae = ifelse(year_rbd_first_sae > 0, 1, 0),
+    rbd = RBD,
+    year = AGNO - 4,
+    num_students = n_students,
+    year_first_sae = coalesce(year_rbd_first_sae, 0L) # did package requires 0 for never-treated, not NA
+  ) %>%
+  filter(AGNO >= start_year & AGNO <= end_year) %>%
+  group_by(RBD) %>%
+  dplyr::filter(all(start_year:end_year %in% AGNO)) %>%
+  ungroup()
+```
+
+```{r gender_estimation, echo=FALSE, message=FALSE, warning=FALSE}
+common_args_f <- list(
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dff,
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+common_args_m <- list(
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dfm,
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+models_f <- map(names(outcomes), function(y) {
+  do.call(att_gt, c(list(yname = y), common_args_f))
+})
+names(models_f) <- paste0(outcomes, " F")
+
+models_m <- map(names(outcomes), function(y) {
+  do.call(att_gt, c(list(yname = y), common_args_m))
+})
+names(models_m) <- paste0(outcomes, " M")
+
+means_f <- dff %>%
+  filter(in_sae == 1, year < year_first_sae) %>%
+  summarise(across(all_of(names(outcomes)), ~ mean(.x, na.rm = TRUE))) %>%
+  rename_with(~ paste0(unname(outcomes[.x]), " F"), everything()) # rename to display names
+
+# obs: number of observations (same value repeated, but keep as tibble with display names)
+obs_f <- tibble(!!!setNames(rep(nrow(dff), length(outcomes)), paste0(outcomes, " F")))
+
+means_m <- dfm %>%
+  filter(in_sae == 1, year < year_first_sae) %>%
+  summarise(across(all_of(names(outcomes)), ~ mean(.x, na.rm = TRUE))) %>%
+  rename_with(~ paste0(unname(outcomes[.x]), " M"), everything()) # rename to display names
+obs_m <- tibble(!!!setNames(
+  rep(nrow(dfm), length(outcomes)), paste0(outcomes, " M")
+))
+
+means_fm <- cbind(
+  means_f,
+  means_m
+)
+obs_fm <- cbind(
+  obs_f, obs_m
+)
+
+models_fm <- c(models_f, models_m)
+names(models_fm) <- make.unique(names(models_fm))
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+latex_code <- make_did_table(models_fm, means_pre = means_fm, obs = obs_fm)
+cat(latex_code)
+```
+
+
+## Quality of School
+
+
+## Vulnerability of School
+```{r ive, echo=FALSE, warning=FALSE, message=FALSE}
+panel_ee <- readRDS("data/panel_ee_2004_2025_homogenized.rds")
+
+ive <- dr %>%
+  dplyr::select(rbd, year, in_sae, COD_REG_RBD) %>%
+  dplyr::filter(year == 2015, in_sae == 1) %>%
+  left_join(panel_ee %>% filter(year == 2015) %>%
+    dplyr::select(rbd, ive_sinae_media), by = "rbd") %>%
+  dplyr::group_by(COD_REG_RBD) %>%
+  dplyr::mutate(
+    ive_p25 = quantile(ive_sinae_media, 0.25, na.rm = TRUE),
+    ive_p50 = quantile(ive_sinae_media, 0.50, na.rm = TRUE),
+    ive_p75 = quantile(ive_sinae_media, 0.75, na.rm = TRUE),
+    ive_p90 = quantile(ive_sinae_media, 0.90, na.rm = TRUE),
+    ive_p99 = quantile(ive_sinae_media, 0.99, na.rm = TRUE)
+  ) %>%
+  ungroup() %>%
+  dplyr::mutate(
+    ive_q0 = ifelse(in_sae == 0 | is.na(ive_sinae_media), 1, 0),
+    ive_q1 = ifelse(in_sae == 1 & !is.na(ive_sinae_media) & ive_sinae_media < ive_p25, 1, 0),
+    ive_q2 = ifelse(in_sae == 1 & !is.na(ive_sinae_media) & ive_sinae_media >= ive_p25 & ive_sinae_media < ive_p50, 1, 0),
+    ive_q3 = ifelse(in_sae == 1 & !is.na(ive_sinae_media) & ive_sinae_media >= ive_p50 & ive_sinae_media < ive_p75, 1, 0),
+    ive_q4 = ifelse(in_sae == 1 & !is.na(ive_sinae_media) & ive_sinae_media >= ive_p75, 1, 0),
+    ive_low = ifelse(in_sae == 1 & !is.na(ive_sinae_media) & ive_sinae_media & ive_sinae_media < ive_p50, 1, 0),
+    ive_high = ifelse(in_sae == 1 & !is.na(ive_sinae_media) & ive_sinae_media & ive_sinae_media >= ive_p50, 1, 0),
+  )
+
+dv <- dr %>%
+  left_join(ive %>% dplyr::select(-in_sae, -year, -COD_REG_RBD), by = "rbd") %>%
+  dplyr::mutate(
+    year_first_sae = ifelse(in_sae == 1, year_first_sae, 0),
+    ive_none = ifelse(is.na(ive_sinae_media) | is.na(ive_low) | is.na(ive_high), 1, 0)
+  )
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+common_args_low <- list(
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dv %>% filter(ive_none == 1 | ive_low == 1),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+common_args_high <- list(
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dv %>% filter(ive_none == 1 | ive_high == 1),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+models_h <- map(names(outcomes), function(y) {
+  do.call(att_gt, c(list(yname = y), common_args_high))
+})
+names(models_h) <- paste0(outcomes, " H")
+
+models_l <- map(names(outcomes), function(y) {
+  do.call(att_gt, c(list(yname = y), common_args_low))
+})
+names(models_l) <- paste0(outcomes, " L")
+
+means_h <- dv %>%
+  filter(in_sae == 1, year < year_first_sae, ive_high == 1) %>%
+  summarise(across(all_of(names(outcomes)), ~ mean(.x, na.rm = TRUE))) %>%
+  rename_with(~ paste0(unname(outcomes[.x]), " H"), everything()) # rename to display names
+
+# obs: number of observations (same value repeated, but keep as tibble with display names)
+obs_h <- tibble(!!!setNames(rep(nrow(dv %>% filter(ive_none == 1 | ive_high == 1)), length(outcomes)), paste0(outcomes, " H")))
+
+means_l <- dv %>%
+  filter(in_sae == 1, year < year_first_sae, ive_low == 1) %>%
+  summarise(across(all_of(names(outcomes)), ~ mean(.x, na.rm = TRUE))) %>%
+  rename_with(~ paste0(unname(outcomes[.x]), " L"), everything()) # rename to display names
+obs_l <- tibble(!!!setNames(rep(nrow(dv %>% filter(ive_none == 1 | ive_low == 1)), length(outcomes)), paste0(outcomes, " L")))
+
+means_fm <- cbind(
+  means_l,
+  means_h
+)
+obs_fm <- cbind(
+  obs_l, obs_h
+)
+
+models_v <- c(models_l, models_h)
+names(models_v) <- make.unique(names(models_v))
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+latex_code <- make_did_table(models_v, means_pre = means_fm, obs = obs_fm)
+cat(latex_code)
+```
+
+## Selectivity of Programs
+### By cumulative position as topX
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+outcomes_ass <- c(
+  assigned = "All",
+  assigned_full = "Full",
+  assigned_not_full = "Not Full",
+  assigned_top10 = "Top 10",
+  assigned_top25 = "Top 25",
+  assigned_top50 = "Top 50",
+  assigned_top75 = "Top 75",
+  assigned_top90 = "Top 90"
+)
+
+common_args <- list(
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dr,
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+models <- map(names(outcomes_ass), function(y) {
+  do.call(att_gt, c(list(yname = y), common_args))
+})
+names(models) <- outcomes_ass # set human-friendly names
+
+# means_pre for pre-treatment sample (use the same outcomes vector)
+means <- dr %>%
+  filter(in_sae == 1, year < year_first_sae) %>%
+  summarise(across(all_of(names(outcomes_ass)), ~ mean(.x, na.rm = TRUE))) %>%
+  rename_with(~ outcomes_ass[.x], everything()) # rename to display names
+
+obs <- tibble(!!!setNames(rep(nrow(dr), length(outcomes_ass)), outcomes_ass))
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+latex_code <- make_did_table(models, means_pre = means, obs = obs)
+cat(latex_code)
+```
+
+### By quantile of selectivity
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+outcomes_ass <- c(
+  assigned = "All",
+  assigned_full = "Full",
+  assigned_not_full = "Not Full",
+  assigned_q10 = "Q10",
+  assigned_q20 = "Q20",
+  assigned_q30 = "Q30",
+  assigned_q40 = "Q40",
+  assigned_q50 = "Q50",
+  assigned_q60 = "Q60",
+  assigned_q70 = "Q70",
+  assigned_q80 = "Q80",
+  assigned_q90 = "Q90",
+  assigned_q100 = "Q100"
+)
+
+common_args <- list(
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dr,
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+models <- map(names(outcomes_ass), function(y) {
+  do.call(att_gt, c(list(yname = y), common_args))
+})
+names(models) <- outcomes_ass # set human-friendly names
+
+# means_pre for pre-treatment sample (use the same outcomes vector)
+means <- dr %>%
+  filter(in_sae == 1, year < year_first_sae) %>%
+  summarise(across(all_of(names(outcomes_ass)), ~ mean(.x, na.rm = TRUE))) %>%
+  rename_with(~ outcomes_ass[.x], everything()) # rename to display names
+
+obs <- tibble(!!!setNames(rep(nrow(dr), length(outcomes_ass)), outcomes_ass))
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+latex_code <- make_did_table(models, means_pre = means, obs = obs)
+cat(latex_code)
+```
+
+### Quintiles
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+outcomes_ass <- c(
+  assigned = "All",
+  assigned_full = "Full",
+  assigned_not_full = "Not Full",
+  assigned_Q1 = "Q1",
+  assigned_Q2 = "Q2",
+  assigned_Q3 = "Q3",
+  assigned_Q4 = "Q4",
+  assigned_Q5 = "Q5"
+)
+
+common_args <- list(
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dr,
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+models <- map(names(outcomes_ass), function(y) {
+  do.call(att_gt, c(list(yname = y), common_args))
+})
+names(models) <- outcomes_ass # set human-friendly names
+
+# means_pre for pre-treatment sample (use the same outcomes vector)
+means <- dr %>%
+  filter(in_sae == 1, year < year_first_sae) %>%
+  summarise(across(all_of(names(outcomes_ass)), ~ mean(.x, na.rm = TRUE))) %>%
+  rename_with(~ outcomes_ass[.x], everything()) # rename to display names
+
+obs <- tibble(!!!setNames(rep(nrow(dr), length(outcomes_ass)), outcomes_ass))
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+latex_code <- make_did_table(models, means_pre = means, obs = obs)
+cat(latex_code)
+```
+
+### Separating by type of public school (Emblematic, Bicentenario, Other)
+```{r define_school_types, echo=FALSE, warning=FALSE, message=FALSE}
+# RBDs for Liceos Emblemáticos
+rbd_emblematicos <- c(
+  8485, 8487, 8488, 8490, 8491, 8492, 8494, 8495, 8498, 8499,
+  8925, 8926, 8927, 8928, 8930, 9073, 9406, 9409, 24638
+)
+
+# RBDs for Liceos Bicentenarios
+rbd_bicentenarios <- c(
+  5, 110, 304, 400, 517, 704, 1194, 1520, 1676, 1967, 2110, 2329,
+  2625, 3247, 3638, 4140, 4163, 4564, 5024, 5218, 5509, 6084, 6302,
+  7129, 7325, 7578, 8105, 8429, 8489, 10253, 10917, 12336, 12980,
+  13202, 13558, 14697, 15837, 16424, 16716, 16748, 16751, 17850,
+  20266, 22434, 22483, 24207, 24240, 24751, 31010, 31037, 31071,
+  31074, 31078, 31103, 31288, 31293, 31294, 31295, 31299, 40114,
+  40289
+)
+
+dh %<>% dplyr::mutate(
+  is_emblematico = ifelse(rbd %in% rbd_emblematicos, 1, 0),
+  is_bicentenario = ifelse(rbd %in% rbd_bicentenarios, 1, 0),
+  is_other_public = ifelse(
+    is_private == 0 & in_sae == 1 & !(rbd %in% rbd_emblematicos) & !(rbd %in% rbd_bicentenarios),
+    1,
+    0
+  ),
+  is_other_school = ifelse(
+    is_emblematico == 0 & is_bicentenario == 0 & is_other_public == 0 & year_first_sae == 0,
+    1,
+    0
+  )
+)
+```
+
+```{r eval=FALSE, echo=FALSE, warning=FALSE, message=FALSE}
+asstop10 <- att_gt(
+  yname = "assigned_top10",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dh,
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+asstop10_e <- att_gt(
+  yname = "assigned_top10",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dh %>% filter(is_emblematico == 1 | is_other_school == 1),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+asstop10_b <- att_gt(
+  yname = "assigned_top10",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dh %>% filter(is_bicentenario == 1 | is_other_school == 1),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+asstop10_o <- att_gt(
+  yname = "assigned_top5",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dh %>% filter(is_bicentenario + is_emblematico == 0),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+aggte(asstop10, type = "simple")
+aggte(asstop10_e, type = "simple")
+aggte(asstop10_b, type = "simple")
+aggte(asstop10_o, type = "simple")
+
+asstop10_e <- att_gt(
+  yname = "assigned_top10",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dh %>% filter(is_emblematico == 1 | is_other_school == 1),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+assQ5_e <- att_gt(
+  yname = "assigned_Q5",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dh %>% filter(is_emblematico == 1 | is_other_school == 1),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+assQ5_b <- att_gt(
+  yname = "assigned_Q5",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dh %>% filter(is_bicentenario == 1 | is_other_school == 1),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+assQ5_o <- att_gt(
+  yname = "assigned_Q5",
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dh %>% filter(is_bicentenario + is_emblematico == 0),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+aggte(assQ5_e, type = "simple")
+aggte(assQ5_b, type = "simple")
+aggte(assQ5_o, type = "simple")
+```
+
+
+## Value added
+
+```{r add_value_added, echo=FALSE, warning=FALSE, message=FALSE}
+va <- readRDS("data/value_added_simce_2m_relative_8b_2016.rds")
+va %<>% dplyr::mutate(
+  va_25 = quantile(va, 0.25, na.rm = TRUE),
+  va_50 = quantile(va, 0.50, na.rm = TRUE),
+  va_75 = quantile(va, 0.75, na.rm = TRUE),
+  va_90 = quantile(va, 0.90, na.rm = TRUE),
+  va_99 = quantile(va, 0.99, na.rm = TRUE)
+) %>%
+  dplyr::mutate(
+    top_25_va = ifelse(!is.na(va) & va >= va_25, 1, 0),
+    top_50_va = ifelse(!is.na(va) & va >= va_50, 1, 0),
+    top_75_va = ifelse(!is.na(va) & va >= va_75, 1, 0),
+    top_90_va = ifelse(!is.na(va) & va >= va_90, 1, 0),
+    top_99_va = ifelse(!is.na(va) & va >= va_99, 1, 0)
+  )
+
+dh <- dr %>%
+  left_join(va %>% dplyr::select(rbd, starts_with("top_")), by = "rbd") %>%
+  dplyr::mutate(year_first_sae = ifelse(in_sae == 1, year_first_sae, 0))
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+common_args_low <- list(
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dh %>% filter(top_50_va == 0),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+common_args_high <- list(
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dh %>% filter(top_50_va == 1),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+models_h <- map(names(outcomes), function(y) {
+  do.call(att_gt, c(list(yname = y), common_args_high))
+})
+names(models_h) <- paste0(outcomes, " H")
+
+models_l <- map(names(outcomes), function(y) {
+  do.call(att_gt, c(list(yname = y), common_args_low))
+})
+names(models_l) <- paste0(outcomes, " L")
+
+means_h <- dh %>%
+  filter(in_sae == 1, year < year_first_sae, top_50_va == 1) %>%
+  summarise(across(all_of(names(outcomes)), ~ mean(.x, na.rm = TRUE))) %>%
+  rename_with(~ paste0(unname(outcomes[.x]), " H"), everything()) # rename to display names
+
+# obs: number of observations (same value repeated, but keep as tibble with display names)
+obs_h <- tibble(!!!setNames(rep(nrow(dh %>% filter(top_50_va == 1)), length(outcomes)), paste0(outcomes, " H")))
+
+means_l <- dh %>%
+  filter(in_sae == 1, year < year_first_sae, top_50_va == 0) %>%
+  summarise(across(all_of(names(outcomes)), ~ mean(.x, na.rm = TRUE))) %>%
+  rename_with(~ paste0(unname(outcomes[.x]), " L"), everything()) # rename to display names
+obs_l <- tibble(!!!setNames(rep(nrow(dh %>% filter(top_50_va == 0)), length(outcomes)), paste0(outcomes, " L")))
+
+means_fm <- cbind(
+  means_l,
+  means_h
+)
+obs_fm <- cbind(
+  obs_l, obs_h
+)
+
+models_v <- c(models_l, models_h)
+names(models_v) <- make.unique(names(models_v))
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+latex_code <- make_did_table(models_v, means_pre = means_fm, obs = obs_fm)
+cat(latex_code)
+```
+
+# Robustness
+
+## Parallel trends
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+common_args <- list(
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dr,
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE,
+  control_group = "notyettreated", # key for your question
+  est_method = "dr" # doubly robust (recommended)
+)
+
+# 3) run att_gt for each outcome and store results in a named list
+models <- map(names(outcomes), function(y) {
+  do.call(att_gt, c(list(yname = y), common_args))
+})
+names(models) <- outcomes # set human-friendly names
+
+# 4) apply aggte with type = "dynamic" to each model
+dyn_models_list <- map(models, ~ aggte(., type = "dynamic"))
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+latex_code <- make_eventstudy_table_pe(dyn_models_list)
+cat(latex_code)
+```
+
+
+
+## Placebo tests
+### Moving treatment year
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+formulas <- lapply(outcomes, function(y) {
+  as.formula(paste0(y, " ~ treated + num_students | rbd + year"))
+})
+names(formulas) <- outcomes
+
+build_placebo_data <- function(shifter, truncation_year = 2015) {
+  out <- dsd %>%
+    dplyr::mutate(
+      scored_lm = coalesce(scored_lm, 0),
+      prom_gral = coalesce(prom_gral, 0),
+      att = coalesce(att, 0),
+      prom_lm_actual = coalesce(lm_pct, 0),
+      applied = coalesce(applied, 0),
+      assigned = coalesce(assigned, 0),
+      enrolled = coalesce(enrolled, 0)
+    ) %>%
+    filter(year_start >= init_year & year_start <= truncation_year) %>% # ensures no true treatment enters placebo post
+    group_by(rbd, year_start) %>%
+    dplyr::summarise(
+      year_first_sae = min(rbd_first_sae),
+      region_first_sae = min(region_first_sae),
+      num_students = n_distinct(mrun),
+      prom_gral = mean(prom_gral, na.rm = TRUE),
+      att = mean(att, na.rm = TRUE),
+      is_female = mean(is_female, na.rm = TRUE),
+      is_low_income = mean(is_low_income, na.rm = TRUE),
+      avg_lm = mean(prom_lm_actual, na.rm = TRUE),
+      scored_lm = mean(scored_lm, na.rm = TRUE),
+      applied = mean(applied, na.rm = TRUE),
+      assigned = mean(assigned, na.rm = TRUE),
+      enrolled = mean(enrolled, na.rm = TRUE),
+      # is_private = max(is_private, na.rm = TRUE)
+    ) %>%
+    dplyr::rename(year = year_start) %>%
+    dplyr::mutate(
+      treated = ifelse(year >= year_first_sae - shifter &
+        year_first_sae < 2026, 1, 0),
+      post_sae = ifelse(year >= region_first_sae, 1, 0),
+      in_sae = ifelse(year_first_sae < 2026, 1, 0)
+    ) %>%
+    dplyr::left_join(s %>% mutate(in_simce = 1), by = c("rbd", "year")) %>%
+    dplyr::mutate(
+      in_simce = coalesce(in_simce, 0),
+      nalu_lect2m_rbd = coalesce(nalu_lect2m_rbd, 0),
+      nalu_mate2m_rbd = coalesce(nalu_mate2m_rbd, 0),
+      prom_lect2m_rbd = coalesce(prom_lect2m_rbd, 0),
+      prom_mate2m_rbd = coalesce(prom_mate2m_rbd, 0)
+    )
+  return(out)
+}
+
+run_placebo_models <- function(shifter, truncation_year = 2015) {
+  dp <- build_placebo_data(shifter, truncation_year)
+
+  map_df(names(formulas), function(outcome) {
+    fml <- formulas[[outcome]]
+
+    # SIMCE outcomes need in_simce == 1
+    data_use <- if (outcome %in% c("prom_lect2m_rbd", "prom_mate2m_rbd")) {
+      dp %>% filter(in_simce == 1)
+    } else {
+      dp
+    }
+
+    # Create a placebo group timing variable by shifting the observed first-treatment year
+    data_use2 <- data_use %>%
+      dplyr::mutate(
+        year_first_sae_placebo = ifelse(in_sae == 1, year_first_sae - shifter, 0)
+      )
+
+    # Estimate using the did package (Callaway & Sant'Anna)
+    est <- att_gt(
+      yname = outcome,
+      tname = "year",
+      idname = "rbd",
+      gname = "year_first_sae_placebo",
+      xformla = ~num_students,
+      data = data_use2,
+      clustervars = clustering_var,
+      panel = TRUE,
+      bstrap = TRUE,
+      biters = 10000,
+      cband = TRUE
+    )
+
+    # Aggregate to overall ATT (simple) and extract coef/se
+    agg <- aggte(est, type = "simple")
+    coef_att <- as.numeric(agg$overall.att)
+    se_att <- as.numeric(agg$overall.se)
+    pval_att <- 2 * pnorm(-abs(coef_att / se_att))
+
+    tibble(
+      shifter = shifter,
+      outcome = outcome,
+      coef = coef_att,
+      p_value = pval_att,
+      se = se_att
+    )
+  })
+}
+```
+
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+shifters <- 1:5
+placebo_results <- map_df(shifters, run_placebo_models)
+actual_results <- run_placebo_models(0, end_year)
+
+placebo_results <- placebo_results %>%
+  mutate(outcome = factor(outcome, levels = outcomes, labels = outcomes))
+
+actual_results <- actual_results %>%
+  mutate(outcome = factor(outcome, levels = outcomes, labels = outcomes))
+```
+
+```{r plot_placebo_shifter, eval=TRUE, echo=FALSE, warning=FALSE, message=FALSE, fig.width=6,fig.height=4, fig.align="center", fig.cap="Payoffs", fig.pos="H"}
+ggplot(placebo_results, aes(x = outcome, y = coef)) +
+  geom_boxplot(fill = "steelblue", alpha = 0.6) +
+  geom_jitter(width = 0.15, alpha = 0.3, color = "steelblue4") +
+  geom_point(
+    data = actual_results,
+    aes(x = outcome, y = coef),
+    color = "firebrick4", alpha = 0.7, size = 3
+  ) +
+  geom_segment(
+    data = actual_results,
+    aes(
+      x = as.numeric(outcome) - 0.4,
+      xend = as.numeric(outcome) + 0.4,
+      y = coef, yend = coef
+    ),
+    color = "firebrick4", alpha = 0.7, linewidth = 0.8
+  ) +
+  geom_linerange(
+    data = actual_results,
+    aes(x = outcome, ymin = coef - se, ymax = coef + se),
+    color = "firebrick4", alpha = 0.7, linewidth = 0.8
+  ) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray40") +
+  theme_minimal(base_size = 14) +
+  labs(
+    x = "Outcome",
+    y = "Estimated Effect"
+  ) +
+  theme(axis.text.x = element_text(angle = 20, hjust = 1))
+```
+
+### Analysis only considering private schools
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+common_args <- list(
+  tname = "year",
+  idname = "rbd",
+  gname = "year_region_first_sae",
+  xformla = ~num_students,
+  data = dr %>% filter(year_first_sae == 0),
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+# 3) run att_gt for each outcome and store results in a named list
+models <- map(names(outcomes), function(y) {
+  do.call(att_gt, c(list(yname = y), common_args))
+})
+names(models) <- outcomes # set human-friendly names
+
+# means_pre for pre-treatment sample (use the same outcomes vector)
+means <- dr %>%
+  filter(year_first_sae == 0, year < year_region_first_sae) %>%
+  summarise(across(all_of(names(outcomes)), ~ mean(.x, na.rm = TRUE))) %>%
+  rename_with(~ unname(outcomes[.x]), everything()) # rename to display names
+
+# obs: number of observations (same value repeated, but keep as tibble with display names)
+obs <- tibble(!!!setNames(rep(nrow(dr %>% filter(year_first_sae == 0)), length(outcomes)), outcomes))
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+latex_code <- make_did_table(models, means_pre = means, obs = obs)
+cat(latex_code)
+```
+
+
+
+## Two-way fixed effects model
+
+```{r staggered_did_estimation, echo=FALSE, warning=FALSE, message=FALSE}
+twfe_models <- map(names(outcomes), function(y) {
+  feols(
+    as.formula(paste0(y, " ~ treated + num_students | rbd + year")),
+    data = dr,
+    vcov = clustering_strategy
+  )
+})
+names(twfe_models) <- unname(outcomes)
+```
+
+```{r staggered_did_table, echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+st <- style.tex("aer")
+
+# rename fixed-effect labels
+st$fixef.suffix <- "" # remove "fixed effects"
+st$fixef.prefix <- "" # remove prefix
+st$fixef.names <- c("RBD", "Year")
+
+out <- capture.output(
+  etable(
+    twfe_models,
+    # --- LaTeX output ---
+    tex = TRUE,
+    style.tex = st,
+    #
+    #   # rename regressors
+    dict = c(
+      "treated" = "Treated",
+      setNames(unname(outcomes), names(outcomes))
+    ),
+    #
+    #   # numeric formatting
+    digits = 3, # valid
+    #   # no scientific notation: handled by digits + fixest default
+    #
+    #   # keep only Observations
+    fitstat = ~n,
+    #
+    drop = c("num_students"),
+    # wrap in table environment
+    title = "Regression Results",
+    label = "tab:reg_results"
+  )
+)
+
+# Replace hlines with booktabs rules
+# out <- clean_etable(out, header = " & \\multicolumn{2}{c}{Project} \\\\ \n \\cmidrule(lr){2-3} ")
+writeLines(out, "tables/twfe_sae_on_outcomes.tex")
+```
+
+\input{tables/twfe_sae_on_outcomes.tex}
+
+# Mechanism: Application Behavior
+## Length and validity of applications
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+outcomes_app <- c(
+  num_apps = "Num. Apps",
+  pct_valid_apps = "Valid Apps",
+  pct_apps_above_prev_cutoff = "Above Cutoff"
+)
+
+common_args <- list(
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dr,
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+# 3) run att_gt for each outcome and store results in a named list
+models <- map(names(outcomes_app), function(y) {
+  do.call(att_gt, c(list(yname = y), common_args))
+})
+names(models) <- outcomes_app # set human-friendly names
+
+# means_pre for pre-treatment sample (use the same outcomes vector)
+means <- dr %>%
+  filter(in_sae == 1, year < year_first_sae) %>%
+  summarise(across(all_of(names(outcomes_app)), ~ mean(.x, na.rm = TRUE))) %>%
+  rename_with(~ outcomes_app[.x], everything()) # rename to display names
+
+# obs: number of observations (same value repeated, but keep as tibble with display names)
+obs <- tibble(!!!setNames(rep(nrow(dr), length(outcomes_app)), outcomes_app))
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+latex_code <- make_did_table(models, means_pre = means, obs = obs)
+cat(latex_code)
+```
+
+
+## Truth-telling
+In general, we find no effect on mistakes or truth-telling behavior.
+```{r data_truth_telling, echo=FALSE, warning=FALSE, message=FALSE}
+dropbox_dir <- "~/Dropbox/"
+data_dir <- paste(dropbox_dir, "mistakes_structural", "R", "replication", "intermediate_data", sep = .Platform$file.sep)
+```
+
+```{r over_confidence, echo=FALSE, warning=FALSE, message=FALSE}
+d22 <- readRDS(paste(data_dir, "2022", "data_2022.rds", sep = .Platform$file.sep))
+
+d22$bottom_true_any <- as.numeric(d22$bottom_true_any)
+dov <- rbind(
+  d22 %>% filter(in_rct == 0 & in_survey == 1 & !is.na(apps_fin)) %>% filter(Progress == 100 & responded_survey == 1 & apps_fin < 10 & pace != "PACE"), # & (applied_to_bottom_true_fin != 1 | is.na(applied_to_bottom_true_fin))
+  d22 %>%
+    filter(in_rct == 1 & in_survey == 1 & !is.na(apps_fin)) %>%
+    filter(Progress == 100 & responded_survey == 1 & apps_fin < 10 & pace != "PACE" & treatment %in% c(1, 4))
+) %>%
+  dplyr::mutate(
+    cutoff_top_true = ifelse(!is.na(cutoff_top_true), as.numeric(cutoff_top_true), NA),
+    truth_teller = ifelse(codigo_carrera_top_true == codigo_carrera_top_reported, 1, 0),
+    misreport_bottom_true = ifelse(!is.na(applied_to_bottom_true_fin), as.numeric(applied_to_bottom_true_fin == 0), 0),
+    over_confidence_exante_lower = ifelse(marca_bottom_true == 25 & overall_ratex_fin < 0.99 & prob_ratex_bottom_true > 0.01, 1, 0),
+    over_confidence_exante_lower = ifelse(is.na(over_confidence_exante_lower), 0, over_confidence_exante_lower),
+    over_confidence_expost_lower = ifelse(marca_bottom_true == 25 & overall_ratex_fin < 0.99 & puntpond_bottom_true > cutoffs_reg_bottom_true & assigned_fin == 0, 1, 0),
+    over_confidence_expost_lower = ifelse(is.na(over_confidence_expost_lower), 0, over_confidence_expost_lower),
+    underconfidence_mistake_exante = ifelse(applied_to_top_true_fin == 0 & prob_ratex_top_true >= 0.01, 1, 0),
+    underconfidence_mistake_expost = ifelse(applied_to_top_true_fin == 0 & puntpond_top_true >= cutoff_top_true, 1, 0)
+  ) %>%
+  dplyr::rename(rbd = RBD, year = ANYO_PROCESO) %>%
+  left_join(dr %>% dplyr::select(rbd, year, treated) %>% dplyr::mutate(year = year + 4), by = c("rbd", "year"))
+
+tp <- lm(applied_to_top_true_fin ~ treated + factor(strata_score) + factor(strata_sexo) + factor(CODIGO_REGION_EGRESO) + factor(DEPENDENCIA), data = dov)
+bt <- lm(applied_to_bottom_true_fin ~ treated + factor(strata_score) + factor(strata_sexo) + factor(CODIGO_REGION_EGRESO) + factor(DEPENDENCIA), data = dov)
+
+tr <- lm(prob_ratex_1_fin ~ treated + factor(strata_score) + factor(strata_sexo) + factor(CODIGO_REGION_EGRESO) + factor(DEPENDENCIA), data = dov)
+or <- lm(overall_ratex_fin ~ treated + factor(strata_score) + factor(strata_sexo) + factor(CODIGO_REGION_EGRESO) + factor(DEPENDENCIA), data = dov)
+bpr <- lm(bias_prob_top_reported ~ treated + factor(strata_score) + factor(strata_sexo) + factor(CODIGO_REGION_EGRESO) + factor(DEPENDENCIA), data = dov)
+bor <- lm(bias_prob_overall ~ treated + factor(strata_score) + factor(strata_sexo) + factor(CODIGO_REGION_EGRESO) + factor(DEPENDENCIA), data = dov)
+
+
+stargazer(tp, bt, tr, or, bpr, bor,
+  type = "latex",
+  column.labels = c("Top", "Bottom", "Top Reported", "Overall", "Top Reported", "Overall"),
+  dep.var.labels.include = FALSE,
+  covariate.labels = c("Treated", "Constant"),
+  omit = c("strata_score", "strata_sexo", "CODIGO_REGION_EGRESO", "DEPENDENCIA"),
+  keep.stat = c("n"),
+  notes.align = "l",
+  no.space = TRUE
+)
+```
+
+# Mechanism: Preferences through Segregation
+Theory: school choice system reduced seggregation in term of peer quality. Before, some schools would concentrate all students with high-performance, while others would concentrate low-performance students. With the SAE, some of the high-performance students would be more evenly spread across schools, thus reducing seggregation in terms of peer quality. If this is the case, we should see an decrease in seggregation in terms of peer quality---measured using the Duncan Index at the district level based on SIMCE scores---in the treated districts after the intervention
+
+## Duncan Index
+```{r run_effect_on_seggregation, echo=FALSE, warning=FALSE, message=FALSE}
+duncan_data <- df %>%
+  filter(!is.na(COD_COM_RBD)) %>%
+  group_by(COD_COM_RBD, year_start) %>%
+  summarise(
+    total = n(),
+    high_lect4b = sum(high_lect4b, na.rm = TRUE),
+    low_lect4b = total - high_lect4b,
+    high_mate4b = sum(high_mate4b, na.rm = TRUE),
+    low_mate4b = total - high_mate4b
+  ) %>%
+  ungroup() %>%
+  mutate(
+    prop_high_lect4b = high_lect4b / total,
+    prop_low_lect4b = low_lect4b / total,
+    prop_high_mate4b = high_mate4b / total,
+    prop_low_mate4b = low_mate4b / total,
+    duncan_lect = 0.5 * (abs(prop_high_lect4b - prop_low_lect4b)),
+    duncan_mate = 0.5 * (abs(prop_high_mate4b - prop_low_mate4b))
+  ) %>%
+  dplyr::rename(year = year_start) %>%
+  as.data.frame()
+
+# merge with dr by rbd and year, where dr uses rbd and year, while duncan data uses
+duncan_data %<>% left_join(dr %>%
+  group_by(COD_COM_RBD) %>%
+  dplyr::summarise(
+    year_first_sae = min(year_first_sae, na.rm = TRUE),
+    in_sae = ifelse(year_first_sae < 2026, 1, 0)
+  ), by = c("COD_COM_RBD" = "COD_COM_RBD"))
+
+# --- Impute missing year_first_sae and in_sae from same cod_com_rbd ---
+com_sae_lookup <- duncan_data %>%
+  filter(!is.na(year_first_sae)) %>%
+  distinct(COD_COM_RBD, .keep_all = TRUE) %>%
+  dplyr::select(COD_COM_RBD, year_first_sae_fill = year_first_sae, in_sae_fill = in_sae)
+
+duncan_data <- duncan_data %>%
+  left_join(com_sae_lookup, by = "COD_COM_RBD") %>%
+  mutate(
+    year_first_sae = coalesce(year_first_sae, year_first_sae_fill),
+    in_sae = coalesce(in_sae, in_sae_fill)
+  ) %>%
+  dplyr::select(-year_first_sae_fill, -in_sae_fill)
+
+# Drop rows with NA COD_COM_RBD (att_gt requires valid ids)
+duncan_data <- duncan_data %>% filter(!is.na(COD_COM_RBD))
+
+
+# Keep only communes observed in all years (balanced panel)
+n_years_needed <- n_distinct(duncan_data$year)
+balanced_coms <- duncan_data %>%
+  group_by(COD_COM_RBD) %>%
+  summarise(n_years = n_distinct(year)) %>%
+  filter(n_years == n_years_needed) %>%
+  pull(COD_COM_RBD)
+duncan_data <- duncan_data %>% filter(COD_COM_RBD %in% balanced_coms)
+
+
+means_pre_d <- duncan_data %>%
+  filter(year < year_first_sae) %>%
+  summarise(
+    "duncan_mate" = mean(duncan_mate, na.rm = TRUE),
+    "duncan_lect" = mean(duncan_lect, na.rm = TRUE)
+  )
+
+obs_d <- duncan_data %>%
+  summarise(
+    "duncan_mate" = n(),
+    "duncan_lect" = n()
+  )
+
+
+duncan_mate <- att_gt(
+  yname = "duncan_mate",
+  tname = "year",
+  idname = "COD_COM_RBD",
+  gname = "year_first_sae",
+  xformla = ~1,
+  data = duncan_data,
+  est_method = "reg",
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 1000,
+  cband = TRUE
+)
+
+duncan_lect <- att_gt(
+  yname = "duncan_lect",
+  tname = "year",
+  idname = "COD_COM_RBD",
+  gname = "year_first_sae",
+  xformla = ~1,
+  data = duncan_data,
+  est_method = "reg",
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 1000,
+  cband = TRUE
+)
+
+aggte(duncan_mate, type = "simple")
+aggte(duncan_lect, type = "simple")
+```
+
+## Exposure and Isolation
+
+```{r exposure_and_isolation, echo=FALSE, warning=FALSE, message=FALSE}
+ds <- df %>%
+  filter(!is.na(COD_COM_RBD)) %>%
+  group_by(RBD, AGNO) %>%
+  dplyr::summarise(
+    COD_REG_RBD = first(COD_REG_RBD),
+    COD_PRO_RBD = first(COD_PRO_RBD),
+    COD_COM_RBD = first(COD_COM_RBD),
+    year_rbd_first_sae = min(year_rbd_first_sae),
+    year_region_first_sae = min(year_region_first_sae),
+    num_low_lect4b = sum(low_lect4b, na.rm = TRUE),
+    num_high_lect4b = sum(high_lect4b, na.rm = TRUE),
+    num_low_mate4b = sum(low_mate4b, na.rm = TRUE),
+    num_high_mate4b = sum(high_mate4b, na.rm = TRUE),
+    total_lect4b = num_low_lect4b + num_high_lect4b,
+    total_mate4b = num_low_mate4b + num_high_mate4b,
+    n_students = n()
+  ) %>%
+  ungroup() %>%
+  dplyr::mutate(
+    treated = ifelse(year_rbd_first_sae > 0 & AGNO > year_rbd_first_sae, 1, 0),
+    post_sae = ifelse(AGNO > year_region_first_sae, 1, 0),
+    in_sae = ifelse(year_rbd_first_sae > 0, 1, 0),
+    rbd = RBD,
+    year = AGNO - 1,
+    num_students = n_students,
+    year_first_sae = coalesce(year_rbd_first_sae, 0L) # did package requires 0 for never-treated, not NA
+  ) %>%
+  ungroup() %>%
+  group_by(COD_COM_RBD, year) %>%
+  dplyr::mutate(
+    total_com_low_lect4b = sum(num_low_lect4b, na.rm = TRUE),
+    total_com_high_lect4b = sum(num_high_lect4b, na.rm = TRUE),
+    total_com_low_mate4b = sum(num_low_mate4b, na.rm = TRUE),
+    total_com_high_mate4b = sum(num_high_mate4b, na.rm = TRUE),
+    p_lh_mate4b = (num_low_mate4b / total_com_low_mate4b) * (num_high_mate4b / total_mate4b),
+    p_lh_lect4b = (num_low_lect4b / total_com_low_lect4b) * (num_high_lect4b / total_lect4b),
+    p_hl_mate4b = (num_high_mate4b / total_com_high_mate4b) * (num_low_mate4b / total_mate4b),
+    p_hl_lect4b = (num_high_lect4b / total_com_high_lect4b) * (num_low_lect4b / total_lect4b),
+    p_ll_mate4b = (num_low_mate4b / total_com_low_mate4b) * (num_low_mate4b / total_mate4b),
+    p_ll_lect4b = (num_low_lect4b / total_com_low_lect4b) * (num_low_lect4b / total_lect4b),
+    p_hh_mate4b = (num_high_mate4b / total_com_high_mate4b) * (num_high_mate4b / total_mate4b),
+    p_hh_lect4b = (num_high_lect4b / total_com_high_lect4b) * (num_high_lect4b / total_lect4b)
+  )
+
+
+dsc <- ds %>%
+  filter(!is.na(COD_COM_RBD)) %>%
+  group_by(COD_COM_RBD, year) %>%
+  dplyr::summarise(
+    p_lh_mate4b = sum(p_lh_mate4b, na.rm = TRUE),
+    p_lh_lect4b = sum(p_lh_lect4b, na.rm = TRUE),
+    p_hl_mate4b = sum(p_hl_mate4b, na.rm = TRUE),
+    p_hl_lect4b = sum(p_hl_lect4b, na.rm = TRUE),
+    p_ll_mate4b = sum(p_ll_mate4b, na.rm = TRUE),
+    p_ll_lect4b = sum(p_ll_lect4b, na.rm = TRUE),
+    p_hh_mate4b = sum(p_hh_mate4b, na.rm = TRUE),
+    p_hh_lect4b = sum(p_hh_lect4b, na.rm = TRUE),
+    year_first_sae = min(year_first_sae, na.rm = TRUE)
+  ) %>%
+  ungroup()
+
+# Fix year_first_sae: take the commune-level min across all years so it's constant per unit
+com_sae <- dsc %>%
+  group_by(COD_COM_RBD) %>%
+  dplyr::summarise(year_first_sae = min(year_first_sae, na.rm = TRUE)) %>%
+  ungroup()
+dsc <- dsc %>%
+  dplyr::select(-year_first_sae) %>%
+  left_join(com_sae, by = "COD_COM_RBD") %>%
+  dplyr::mutate(year_first_sae = ifelse(is.infinite(year_first_sae) | year_first_sae >= 2026, 0, year_first_sae))
+
+# Balance the panel: keep only communes observed in all years
+n_years_needed <- n_distinct(dsc$year)
+balanced_coms <- dsc %>%
+  group_by(COD_COM_RBD) %>%
+  summarise(n_years = n_distinct(year)) %>%
+  filter(n_years == n_years_needed) %>%
+  pull(COD_COM_RBD)
+dsc <- dsc %>% filter(COD_COM_RBD %in% balanced_coms)
+
+att_gt_args <- list(
+  tname = "year",
+  idname = "COD_COM_RBD",
+  gname = "year_first_sae",
+  xformla = ~1,
+  data = dsc,
+  est_method = "reg",
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 1000,
+  cband = TRUE
+)
+
+p_lh_mate <- do.call(att_gt, c(list(yname = "p_lh_mate4b"), att_gt_args))
+p_lh_lect <- do.call(att_gt, c(list(yname = "p_lh_lect4b"), att_gt_args))
+p_hl_mate <- do.call(att_gt, c(list(yname = "p_hl_mate4b"), att_gt_args))
+p_hl_lect <- do.call(att_gt, c(list(yname = "p_hl_lect4b"), att_gt_args))
+p_ll_mate <- do.call(att_gt, c(list(yname = "p_ll_mate4b"), att_gt_args))
+p_ll_lect <- do.call(att_gt, c(list(yname = "p_ll_lect4b"), att_gt_args))
+p_hh_mate <- do.call(att_gt, c(list(yname = "p_hh_mate4b"), att_gt_args))
+p_hh_lect <- do.call(att_gt, c(list(yname = "p_hh_lect4b"), att_gt_args))
+
+aggte(p_lh_mate, type = "simple")
+aggte(p_lh_lect, type = "simple")
+aggte(p_hl_mate, type = "simple")
+aggte(p_hl_lect, type = "simple")
+aggte(p_ll_mate, type = "simple")
+aggte(p_ll_lect, type = "simple")
+aggte(p_hh_mate, type = "simple")
+aggte(p_hh_lect, type = "simple")
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+means_pre_p <- dsc %>%
+  filter(year < year_first_sae) %>%
+  summarise(
+    "p_lh_mate" = mean(p_lh_mate4b, na.rm = TRUE),
+    "p_lh_lect" = mean(p_lh_lect4b, na.rm = TRUE),
+    "p_ll_mate" = mean(p_ll_mate4b, na.rm = TRUE),
+    "p_ll_lect" = mean(p_ll_lect4b, na.rm = TRUE),
+  )
+
+obs_p <- dsc %>%
+  summarise(
+    "p_lh_mate" = n(),
+    "p_lh_lect" = n(),
+    "p_ll_mate" = n(),
+    "p_ll_lect" = n()
+  )
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+means <- cbind(means_pre_d, means_pre_p)
+obs <- cbind(obs_d, obs_p)
+
+models_list <- list(
+  duncan_mate = duncan_mate,
+  duncan_lect = duncan_lect,
+  p_lh_mate = p_lh_mate,
+  p_lh_lect = p_lh_lect,
+  p_ll_mate = p_ll_mate,
+  p_ll_lect = p_ll_lect
+)
+
+latex_code <- make_did_table(models_list, means_pre = means, obs = obs)
+
+cat(latex_code)
+```
+
+
+
+
+
+
+# Effect on seconday education outcomes
+```{r test, echo=FALSE, warning=FALSE, message=FALSE}
+# consider everyone, not only graduates + stayers
+dall <- df %>%
+  filter(year_rbd_first_sae < 2020) %>% # remove schools that started after 2020 or that joined sae later (only 8 RBDs)
+  filter(COD_GRADO == 1) %>% # keep only 9th grade; all stats for outcomes are loaded already
+  group_by(MRUN) %>%
+  slice_min(AGNO, n = 1) %>%
+  ungroup() %>%
+  group_by(RBD) %>%
+  dplyr::mutate(
+    COD_REG_RBD = first(na.omit(COD_REG_RBD), default = NA),
+    COD_PRO_RBD = first(na.omit(COD_PRO_RBD), default = NA),
+    COD_COM_RBD = first(na.omit(COD_COM_RBD), default = NA),
+    COD_DEPE = first(na.omit(COD_DEPE), default = NA),
+    year_rbd_first_sae = first(na.omit(year_rbd_first_sae), default = NA),
+    year_region_first_sae = first(na.omit(year_region_first_sae), default = NA)
+  ) %>%
+  ungroup() %>%
+  group_by(RBD, AGNO) %>%
+  dplyr::summarise(
+    n_students = n(),
+    n_passed_9th_grade = sum(SIT_FIN_R == "P", na.rm = TRUE),
+    n_graduated = sum(RBD == rbd_grad, na.rm = TRUE),
+    n_dropouts = sum(dropped_secondary, na.rm = TRUE),
+    n_graduated_any_rbd = sum(graduated_secondary, na.rm = TRUE),
+    pct_passed_9th_grade = n_passed_9th_grade / n_students,
+    pct_graduated = n_graduated / n_students,
+    pct_dropouts = n_dropouts / n_students,
+    pct_graduated_any_rbd = n_graduated_any_rbd / n_students,
+    avg_gpa = mean(prom_gral, na.rm = TRUE),
+    avg_att = mean(att, na.rm = TRUE),
+    is_female = mean(is_female, na.rm = TRUE),
+    is_low_income = mean(is_low_income, na.rm = TRUE),
+    is_private = max(is_private, na.rm = TRUE),
+    avg_lm = mean(prom_lm_actual, na.rm = TRUE),
+    avg_nem = mean(nem_pct, na.rm = TRUE),
+    avg_ranking = mean(ranking_pct, na.rm = TRUE),
+    scored_lm = mean(scored_lm, na.rm = TRUE),
+    applied = mean(applied, na.rm = TRUE),
+    assigned = mean(assigned, na.rm = TRUE),
+    enrolled = mean(enrolled, na.rm = TRUE),
+    num_apps = mean(num_apps_reg[num_apps_reg > 0], na.rm = TRUE),
+    num_valid_apps = mean(num_valid_apps_reg[num_apps_reg > 0], na.rm = TRUE),
+    pct_valid_apps = mean(pct_valid_reg[num_apps_reg > 0], na.rm = TRUE),
+    num_apps_above_prev_cutoff = mean(num_apps_above_prev_cutoff_reg[num_apps_reg > 0], na.rm = TRUE),
+    pct_apps_above_prev_cutoff = mean(pct_apps_above_prev_cutoff_reg[num_apps_reg > 0], na.rm = TRUE),
+    any_apps_above_prev_cutoff = mean(any_apps_above_prev_cutoff_reg[num_apps_reg > 0], na.rm = TRUE),
+    assigned_full = mean(assigned_full, na.rm = TRUE),
+    assigned_not_full = mean(assigned_not_full, na.rm = TRUE),
+    assigned_top1 = mean(assigned_top1, na.rm = TRUE),
+    assigned_top5 = mean(assigned_top5, na.rm = TRUE),
+    assigned_top10 = mean(assigned_top10, na.rm = TRUE),
+    assigned_top25 = mean(assigned_top25, na.rm = TRUE),
+    assigned_top50 = mean(assigned_top50, na.rm = TRUE),
+    assigned_top75 = mean(assigned_top75, na.rm = TRUE),
+    assigned_top90 = mean(assigned_top90, na.rm = TRUE),
+    assigned_top95 = mean(assigned_top95, na.rm = TRUE),
+    assigned_q10 = mean(assigned_q10, na.rm = TRUE),
+    assigned_q20 = mean(assigned_q20, na.rm = TRUE),
+    assigned_q30 = mean(assigned_q30, na.rm = TRUE),
+    assigned_q40 = mean(assigned_q40, na.rm = TRUE),
+    assigned_q50 = mean(assigned_q50, na.rm = TRUE),
+    assigned_q60 = mean(assigned_q60, na.rm = TRUE),
+    assigned_q70 = mean(assigned_q70, na.rm = TRUE),
+    assigned_q80 = mean(assigned_q80, na.rm = TRUE),
+    assigned_q90 = mean(assigned_q90, na.rm = TRUE),
+    assigned_q100 = mean(assigned_q100, na.rm = TRUE),
+    assigned_Q1 = mean(assigned_q10 + assigned_q20, na.rm = TRUE),
+    assigned_Q2 = mean(assigned_q30 + assigned_q40, na.rm = TRUE),
+    assigned_Q3 = mean(assigned_q50 + assigned_q60, na.rm = TRUE),
+    assigned_Q4 = mean(assigned_q70 + assigned_q80, na.rm = TRUE),
+    assigned_Q5 = mean(assigned_q90 + assigned_q100, na.rm = TRUE),
+    COD_REG_RBD = first(na.omit(COD_REG_RBD), default = NA),
+    COD_PRO_RBD = first(na.omit(COD_PRO_RBD), default = NA),
+    COD_COM_RBD = first(na.omit(COD_COM_RBD), default = NA),
+    COD_DEPE = first(na.omit(COD_DEPE), default = NA),
+    year_rbd_first_sae = first(na.omit(year_rbd_first_sae), default = NA),
+    year_region_first_sae = first(na.omit(year_region_first_sae), default = NA)
+  ) %>%
+  ungroup() %>%
+  dplyr::mutate(
+    treated = ifelse(year_rbd_first_sae > 0 & AGNO > year_rbd_first_sae, 1, 0),
+    post_sae = ifelse(AGNO > year_region_first_sae, 1, 0),
+    in_sae = ifelse(year_rbd_first_sae > 0, 1, 0),
+    rbd = RBD,
+    year = AGNO - 1,
+    num_students = n_students,
+    year_first_sae = coalesce(year_rbd_first_sae, 0L) # did package requires 0 for never-treated, not NA
+  )
+
+dra <- dall %>%
+  filter(AGNO >= start_year & AGNO <= end_year) %>%
+  group_by(RBD) %>%
+  dplyr::filter(all(start_year:end_year %in% AGNO)) %>%
+  ungroup()
+
+outcomes_se <- c(
+  pct_graduated = "Graduate",
+  pct_dropouts = "Dropout",
+  avg_gpa = "GPA",
+  avg_att = "Attendance"
+)
+
+common_args <- list(
+  tname = "year",
+  idname = "rbd",
+  gname = "year_first_sae",
+  xformla = ~num_students,
+  data = dra,
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+# 3) run att_gt for each outcome and store results in a named list
+models <- map(names(outcomes_se), function(y) {
+  do.call(att_gt, c(list(yname = y), common_args))
+})
+names(models) <- outcomes_se # set human-friendly names
+
+# means_pre for pre-treatment sample (use the same outcomes vector)
+means <- dra %>%
+  filter(in_sae == 1, year < year_first_sae) %>%
+  summarise(across(all_of(names(outcomes_se)), ~ mean(.x, na.rm = TRUE))) %>%
+  rename_with(~ outcomes_se[.x], everything()) # rename to display names
+
+# obs: number of observations (same value repeated, but keep as tibble with display names)
+obs <- tibble(!!!setNames(rep(nrow(dra), length(outcomes_se)), outcomes_se))
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+latex_code <- make_did_table(models, means_pre = means, obs = obs)
+cat(latex_code)
+```
+
+# Map
+```{r map, echo=FALSE, warning=FALSE, message=FALSE}
+library(sf)
+
+# 1. Load the Chile map
+chile_map <- st_read("plots/cl.json")
+
+# 2. SAE adoption data (keyed by ISO 3166-2 region codes used in the GeoJSON)
+#    Traditional Chilean numbering: 1=I(Tarapacá) ... 13=RM ... 15=XV(Arica) 16=XVI(Ñuble)
+sae_year <- data.frame(
+  id = c(
+    "CLTA", # 1  Tarapacá            (I)
+    "CLAN", # 2  Antofagasta         (II)
+    "CLAT", # 3  Atacama             (III)
+    "CLCO", # 4  Coquimbo            (IV)
+    "CLVS", # 5  Valparaíso          (V)
+    "CLLI", # 6  O'Higgins           (VI)
+    "CLML", # 7  Maule               (VII)
+    "CLBI", # 8  Bío-Bío             (VIII)
+    "CLAR", # 9  La Araucanía        (IX)
+    "CLLL", # 10 Los Lagos           (X)
+    "CLAI", # 11 Aysén               (XI)
+    "CLMA", # 12 Magallanes          (XII)
+    "CLRM", # 13 Metropolitana       (RM)
+    "CLLR", # 14 Los Ríos            (XIV)
+    "CLAP", # 15 Arica y Parinacota  (XV)
+    "CLNB"
+  ), # 16 Ñuble               (XVI)
+  year = c(
+    2017, 2018, 2018, 2017, 2018, 2017, 2018, 2018,
+    2018, 2017, 2018, 2016, 2019, 2018, 2018, 2018
+  )
+)
+# 3. Merge map with SAE data
+chile_map <- chile_map %>%
+  left_join(sae_year, by = "id")
+
+# 5. Rotate Chile 90° clockwise so north is at the left and south at the right
+rotation_matrix <- matrix(c(0, -1, 1, 0), nrow = 2) # 90° CW rotation
+chile_map_rot <- chile_map
+chile_map_rot$geometry <- chile_map_rot$geometry * rotation_matrix
+
+p <- ggplot(chile_map_rot) +
+  geom_sf(aes(fill = factor(year)), color = "black", size = 0.2) +
+  scale_fill_grey(
+    start = 0.9, end = 0.2,
+    name = "SAE adoption year"
+  ) +
+  theme_void() +
+  theme(
+    legend.position = "bottom",
+    legend.title = element_text(size = 11),
+    legend.text = element_text(size = 10)
+  )
+
+# 6. Save to PDF
+ggsave(
+  "sae_chile_map.pdf",
+  plot = p,
+  width = 12,
+  height = 3
+)
+```

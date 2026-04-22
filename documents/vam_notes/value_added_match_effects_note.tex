@@ -1,0 +1,114 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage[hidelinks]{hyperref}
+
+\title{A Rich Value-Added Model with Match Effects for Chilean High Schools}
+\author{}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\noindent
+This note proposes a richer value-added model (VAM) for the current project. The object of interest is school quality in secondary education when the outcome is later performance on the national admissions exam and the main pre-treatment academic control is lagged SIMCE. The baseline VAM already described in the draft corresponds to a school fixed effect from a regression of test scores on lagged achievement and observables. The natural extension, motivated by Campos and Kearns (2024), Abdulkadiroglu et al.\ (2020), and Abdulkadiroglu, Pathak, and Walters (2026), is to separate \emph{vertical} differences in school quality from \emph{horizontal} differences in how well schools fit students with different prior achievement and backgrounds. In the Chilean setting, this extension is feasible because the administrative records combine lagged SIMCE, high-school covariates, later PSU/PTU/PAES outcomes for takers, and, after SAE adoption, preference, priority, and tie-break information that can be used for validation.
+
+\section*{Preferred Specification}
+
+Let $Y_i$ denote a within-admission-year standardized Math-Language score for student $i$. Standardizing within year is important because the admissions exam changes over time (PSU, PTU, and PAES), and the school-quality object should not depend on level shifts induced by exam redesign. Let $j(i)$ denote the high school attended by student $i$, let $\lambda_{c(i)}$ be graduation- or admissions-cohort fixed effects, let $SIMCE_i$ be the nearest pre-high-school SIMCE measure normalized within grade-year, and let $X_i$ denote predetermined observables.
+
+The proposed student-level VAM is
+\[
+Y_i = \lambda_{c(i)} + \alpha_{j(i)} + g(SIMCE_i) + X_i'\beta + Z_i'\Gamma_{j(i)} + \varepsilon_i,
+\]
+where $g(\cdot)$ is a flexible spline in lagged SIMCE and $Z_i$ is a parsimonious subset of characteristics whose returns are allowed to vary across schools. A practical choice is
+\[
+Z_i = \bigl[s_1(SIMCE_i), s_2(SIMCE_i), Female_i, LowIncome_i\bigr],
+\]
+so that each school has a mean effect $\alpha_j$ plus school-specific slopes on prior achievement and a few key student characteristics.
+
+This specification should be estimated on the student panel, ideally restricting the main VAM sample to cohorts and schools for which lagged SIMCE is available with reasonable coverage. Because school-level taker counts can be thin in some cells, the school-specific slopes in $\Gamma_j$ should be estimated with shrinkage or partial pooling rather than with an unrestricted set of noisy interactions. A useful implementation is to estimate a rich interacted model and then apply empirical-Bayes shrinkage to the school-specific slope estimates before constructing school rankings or heterogeneity bins.
+
+\section*{Interpretation and Match Effects}
+
+The key payoff from the richer specification is that it separates average school effectiveness from systematic match quality. Write potential achievement at school $j$ as
+\[
+A_{ij} = a_i + (\alpha_j - \bar{\alpha}) + Z_i'(\Gamma_j - \bar{\Gamma}) + u_{ij},
+\]
+where $a_i$ is student ability net of the school attended, $\alpha_j - \bar{\alpha}$ is the vertical school effect for a reference student, and
+\[
+M_{ij} = Z_i'(\Gamma_j - \bar{\Gamma})
+\]
+is the \emph{observed} match component. Under this decomposition, $\alpha_j$ measures how much school $j$ raises outcomes for the average student in the normalization group, while $M_{ij}$ measures whether school $j$ is especially effective for students with a particular prior-achievement profile or socioeconomic background.
+
+This is the natural reduced-form analog of the generalized value-added models in Campos and Kearns (2024) and Abdulkadiroglu et al.\ (2020). It is also consistent with the distinction in Abdulkadiroglu, Pathak, and Walters (2026) between vertical school quality and horizontal match effects. The main limitation is conceptual: OLS can only recover \emph{observed} match effects. Truly idiosyncratic student-school match quality in the residual $u_{ij}$ is not identified from selection-on-observables alone. Recovering that component requires quasi-random assignment, lottery variation, or a stronger structural model of assignment and potential outcomes.
+
+\section*{Validation Strategy}
+
+The richer VAM should be treated as an extension, not as a replacement for the simpler fixed-effect approach, unless it passes validation. The best validation design available in this project is to use oversubscribed SAE settings where assignments depend on priority groups and random tie-breaks. In those subsamples, one can adapt the forecast-bias logic in Deming et al.\ (2014) and Campos and Kearns (2024): construct student-specific fitted gains from the VAM, then test whether lottery- or tie-break-induced changes in predicted quality map one-for-one into realized changes in exam outcomes.
+
+Concretely, let $\widehat{Q}_i$ denote the VAM-predicted quality of the assigned school, including both $\hat{\alpha}_{j(i)}$ and the observed match component $Z_i'\hat{\Gamma}_{j(i)}$. In oversubscribed environments, random assignment variation can be used as an instrument for $\widehat{Q}_i$ in a forecast-bias regression of realized outcomes on predicted quality. A forecast coefficient close to one is reassuring. A coefficient far from one, or systematic overidentification failures across lotteries or tie-break cells, would indicate that the rich VAM is still contaminated by selection. If the validation sample is too thin, the note's recommendation is conservative: keep the rich VAM as a descriptive heterogeneity tool and continue to use the simpler school fixed-effect VAM as the main quality classifier.
+
+\section*{Missing PSU Scores and the Selection Problem}
+
+PSU/PTU/PAES scores are observed only for students who take the national exam. This is a real issue, not a detail that can be ignored. It is useful to distinguish two estimands.
+
+\paragraph{Taker estimand.}
+The first estimand is school quality for the subpopulation of exam takers. This object is directly identified from the observed-score sample and is already policy relevant if the paper's mechanism is about postsecondary participation and centralized admissions behavior.
+
+\paragraph{All-student estimand.}
+The second estimand is school quality for all enrolled students, including non-takers. This object is only identified under additional assumptions. A workable assumption set is:
+\begin{enumerate}
+    \item conditional on lagged SIMCE and predetermined covariates, exam taking is independent of latent potential exam outcomes;
+    \item there is sufficient overlap in test-taking propensities across relevant student cells and schools;
+    \item school assignment, SAE exposure, or lottery offers do not materially shift score availability after conditioning on those observables.
+\end{enumerate}
+
+These assumptions are hopefully testable in part. In the current workspace, exam taking is clearly related to observables such as income status, GPA, and attendance, so complete-case estimation without an explicit selection argument is not credible for the all-student estimand. The recommended diagnostics are therefore:
+\begin{enumerate}
+    \item estimate a take-up model for the indicator that the student has a valid Math-Language score as a function of lagged SIMCE, gender, income status, prior GPA, attendance, school sector, and cohort effects;
+    \item inspect propensity-score overlap and trim cells with no common support;
+    \item test whether SAE exposure or quasi-random offer variation changes exam taking conditional on baseline covariates;
+    \item if those tests are reassuring, estimate the rich VAM for all students using inverse-probability weighting or a doubly robust correction;
+    \item if take-up responds to treatment or if overlap is poor, present the taker estimand as the main object and report bounds or sensitivity analysis for the all-student estimand.
+\end{enumerate}
+
+The practical recommendation is therefore straightforward. Estimate the taker VAM directly. Treat the all-student VAM as a secondary object that requires an explicit missing-outcome model. If the diagnostics support selection on observables, use IPW or doubly robust reweighting. If they do not, do not force point identification.
+
+\section*{Recommendation}
+
+For this project, the best progression is: first, retain the current simple school fixed-effect VAM as the baseline quality measure; second, add the richer model with school-specific returns to lagged SIMCE and a few predetermined covariates; third, validate the richer model using SAE randomness where feasible; and fourth, keep all claims about match effects limited to the observed component unless random assignment evidence is strong. This approach imports the main insight from the recent literature: match effects can be incorporated in a disciplined way, but richer models are only persuasive when they survive validation and when missing-score selection is handled explicitly.
+
+\section*{References}
+
+\begin{thebibliography}{99}
+
+\bibitem{abdulk2020}
+Abdulkadiroglu, Atila, Parag A. Pathak, Jonathan Schellenberg, and Christopher R. Walters. 2020.
+``Do Parents Value School Effectiveness?''
+\emph{American Economic Review} 110(5): 1502--1539.
+
+\bibitem{apw2026}
+Abdulkadiroglu, Atila, Parag A. Pathak, and Christopher R. Walters. 2026.
+``Who Gets What in Education: Can School Matching Improve Student Achievement?''
+\emph{NBER Working Paper} 34936.
+
+\bibitem{camposkearns2024}
+Campos, Christopher, and Caitlin Kearns. 2024.
+``The Impact of Public School Choice: Evidence from Los Angeles' Zones of Choice.''
+\emph{Quarterly Journal of Economics} 139(2): 769--826.
+
+\bibitem{deming2014}
+Deming, David J., Justine S. Hastings, Thomas J. Kane, and Douglas O. Staiger. 2014.
+``School Choice, School Quality, and Postsecondary Attainment.''
+\emph{American Economic Review} 104(3): 991--1013.
+
+\bibitem{kutscher2023}
+Kutscher, Macarena, Shanjukta Nath, and Sergio Urzua. 2023.
+``Centralized Admission Systems and School Segregation: Evidence from a National Reform.''
+\emph{Journal of Public Economics} 221: 104863.
+
+\end{thebibliography}
+
+\end{document}

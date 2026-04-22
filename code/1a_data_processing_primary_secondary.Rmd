@@ -1,0 +1,2108 @@
+---
+title: "Data Processing"
+output:
+  pdf_document:
+    keep_tex:  true
+    latex_engine: xelatex
+  html_document: default
+header-includes:
+   - \usepackage{floatrow}
+   - \floatsetup[figure]{capposition=top}
+---
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# Clean ---------------------------------------------------------------
+rm(list = ls())
+
+# Libraries ---------------------------------------------------------------
+library(dplyr)
+library(tidyr)
+library(magrittr)
+library(ggplot2)
+library(stargazer)
+library(knitr)
+library(kableExtra)
+library(stringr)
+library(readr)
+library(fixest)
+library(data.table)
+options(knitr.table.format = "latex")
+
+my_colors <- RColorBrewer::brewer.pal(4, "Pastel1")[1:2]
+myblue <- "#2F5597"
+myred <- "#B2182B"
+
+# Set directory paths -----------------------------------------------------------
+# Get Home directory
+homedir <- Sys.getenv("HOME")
+setwd("~/Dropbox/Education - On going projects/Code/R")
+dropbox_dir <- paste(homedir, "/Dropbox/", sep = "")
+data_dir <- paste(dropbox_dir, "SAE - Datos", sep = "")
+```
+
+# Data on Rendimiento
+```{r}
+r02 <- read.csv(file = paste(data_dir, "/Rendimiento/Rendimiento-2002/Rendimiento por estudiante 2002.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+r03 <- read.csv(file = paste(data_dir, "/Rendimiento/Rendimiento-2003/Rendimiento por estudiante 2003.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+r04 <- read.csv(file = paste(data_dir, "/Rendimiento/Rendimiento-2004/Rendimiento por estudiante 2004.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+r05 <- read.csv(file = paste(data_dir, "/Rendimiento/Rendimiento-2005/Rendimiento por estudiante 2005.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+r06 <- read.csv(file = paste(data_dir, "/Rendimiento/Rendimiento-2006/Rendimiento por estudiante 2006.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+r07 <- read.csv(file = paste(data_dir, "/Rendimiento/Rendimiento-2007/Rendimiento por estudiante 2007.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+r08 <- read.csv(file = paste(data_dir, "/Rendimiento/Rendimiento-2008/Rendimiento por estudiante 2008.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+r09 <- read.csv(file = paste(data_dir, "/Rendimiento/Rendimiento-2009/Rendimiento por estudiante 2009.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+r10 <- read.csv(file = paste(data_dir, "/Rendimiento/Rendimiento-2010/Rendimiento por estudiante 2010.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+r11 <- read.csv(file = paste(data_dir, "/Rendimiento/Rendimiento-2011/Rendimiento por estudiante 2011.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+r12 <- read.csv(file = paste(data_dir, "/Rendimiento/Rendimiento-2012/Rendimiento por estudiante 2012.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+r13 <- read.csv(file = paste(data_dir, "/Rendimiento/Rendimiento-2013/Rendimiento por estudiante 2013.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+r14 <- read.csv(file = paste(data_dir, "/Rendimiento/Rendimiento-2014/Rendimiento por estudiante 2014.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+r15 <- read.csv(file = paste(data_dir, "/Rendimiento/Rendimiento-2015/Rendimiento por estudiante 2015.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+r16 <- read.csv(file = paste(data_dir, "/Rendimiento/Rendimiento-2016/Rendimiento por estudiante 2016.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+r17 <- read.csv(file = paste(data_dir, "/Rendimiento/Rendimiento-2017/Rendimiento por estudiante 2017.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+r18 <- read.csv(file = paste(data_dir, "/Rendimiento/Rendimiento-2018/Rendimiento por estudiante 2018.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+r19 <- read.csv(file = paste(data_dir, "/Rendimiento/Rendimiento-2019/Rendimiento por estudiante 2019.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+r20 <- read.csv(file = paste(data_dir, "/Rendimiento/Rendimiento-2020/Rendimiento por estudiante 2020.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+r21 <- read.csv(file = paste(data_dir, "/Rendimiento/Rendimiento-2021/Rendimiento por estudiante 2021.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+r22 <- read.csv(file = paste(data_dir, "/Rendimiento/Rendimiento-2022/Rendimiento por estudiante 2022.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+r23 <- read.csv(file = paste(data_dir, "/Rendimiento/Rendimiento-2023/Rendimiento por estudiante 2023.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+r24 <- read.csv(file = paste(data_dir, "/Rendimiento/Rendimiento-2024/Rendimiento por estudiante 2024.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+
+cols <- c("AGNO", "RBD", "NOM_RBD", "COD_DEPE", "MRUN", "COD_ENSE", "COD_GRADO", "PROM_GRAL", "ASISTENCIA", "SIT_FIN_R")
+r02 <- r02[, cols]
+r03 <- r03[, cols]
+r04 <- r04[, cols]
+r05 <- r05[, cols]
+r06 %<>% dplyr::rename(AGNO = ï..AGNO)
+r06 <- r06[, cols]
+r07 <- r07[, cols]
+r08 <- r08[, cols]
+r09 <- r09[, cols]
+r10 <- r10[, cols]
+r11 <- r11[, cols]
+colnames(r12) <- toupper(colnames(r12))
+r12 <- r12[, cols]
+r13 <- r13[, cols]
+r14 %<>% dplyr::rename(AGNO = ï..AGNO)
+r14 <- r14[, cols]
+r15 <- r15[, cols]
+colnames(r16) <- toupper(colnames(r16))
+r16 %<>% dplyr::rename(AGNO = Ï..AGNO)
+r16 <- r16[, cols]
+colnames(r17) <- toupper(colnames(r17))
+r17 <- r17[, cols]
+r18 %<>% dplyr::rename(AGNO = ï..AGNO)
+r18 <- r18[, cols]
+r19 %<>% dplyr::rename(AGNO = ï..AGNO)
+r19 <- r19[, cols]
+r20 %<>% dplyr::rename(AGNO = ï..AGNO)
+r20 <- r20[, cols]
+r21 %<>% dplyr::rename(AGNO = ï..AGNO)
+r21 <- r21[, cols]
+r22 %<>% dplyr::rename(AGNO = ï..AGNO)
+r22 <- r22[, cols]
+r23 %<>% dplyr::rename(AGNO = ï..AGNO)
+r23 <- r23[, cols]
+r24 %<>% dplyr::rename(AGNO = ï..AGNO)
+r24 <- r24[, cols]
+
+r <- rbind(r02, r03, r04, r05, r06, r07, r08, r09, r10, r11, r12, r13, r14, r15, r16, r17, r18, r19, r20, r21, r22, r23, r24)
+rm(r02, r03, r04, r05, r06, r07, r08, r09, r10, r11, r12, r13, r14, r15, r16, r17, r18, r19, r20, r21, r22, r23, r24)
+gc(reset = TRUE)
+
+r %<>% dplyr::mutate(PROM_GRAL = str_replace(PROM_GRAL, ",", ".") %>% as.numeric())
+
+r %<>% dplyr::mutate(NIVEL = case_when(
+  COD_ENSE == 110 & COD_GRADO == 1 ~ "1",
+  COD_ENSE == 110 & COD_GRADO == 2 ~ "2",
+  COD_ENSE == 110 & COD_GRADO == 3 ~ "3",
+  COD_ENSE == 110 & COD_GRADO == 4 ~ "4",
+  COD_ENSE == 110 & COD_GRADO == 5 ~ "5",
+  COD_ENSE == 110 & COD_GRADO == 6 ~ "6",
+  COD_ENSE == 110 & COD_GRADO == 7 ~ "7",
+  COD_ENSE == 110 & COD_GRADO == 8 ~ "8",
+  COD_ENSE == 160 & COD_GRADO == 1 ~ "Alfabetización",
+  COD_ENSE == 160 & COD_GRADO == 2 ~ "1-2-3-4",
+  COD_ENSE == 160 & COD_GRADO == 3 ~ "5-6",
+  COD_ENSE == 160 & COD_GRADO == 4 ~ "7-8",
+  COD_ENSE == 160 & COD_GRADO == 5 ~ "Técnico",
+  COD_ENSE == 161 & COD_GRADO == 1 ~ "Alfabetización",
+  COD_ENSE == 161 & COD_GRADO == 2 ~ "1-2-3-4",
+  COD_ENSE == 161 & COD_GRADO == 3 ~ "5-6",
+  COD_ENSE == 161 & COD_GRADO == 4 ~ "7-8",
+  COD_ENSE == 161 & COD_GRADO == 5 ~ "Técnico",
+  COD_ENSE == 163 & COD_GRADO == 1 ~ "Alfabetización",
+  COD_ENSE == 163 & COD_GRADO == 2 ~ "1-2-3-4",
+  COD_ENSE == 163 & COD_GRADO == 3 ~ "5-6",
+  COD_ENSE == 163 & COD_GRADO == 4 ~ "7-8",
+  COD_ENSE == 163 & COD_GRADO == 5 ~ "Técnico",
+  COD_ENSE == 165 & COD_GRADO == 1 ~ "1-2-3-4",
+  COD_ENSE == 165 & COD_GRADO == 2 ~ "5-6",
+  COD_ENSE == 165 & COD_GRADO == 3 ~ "7-8",
+  COD_ENSE == 167 & COD_GRADO == 2 ~ "5-6",
+  COD_ENSE == 167 & COD_GRADO == 3 ~ "7-8",
+  COD_ENSE == 310 & COD_GRADO == 1 ~ "9",
+  COD_ENSE == 310 & COD_GRADO == 2 ~ "10",
+  COD_ENSE == 310 & COD_GRADO == 3 ~ "11",
+  COD_ENSE == 310 & COD_GRADO == 4 ~ "12",
+  COD_ENSE == 360 & COD_GRADO == 1 ~ "9",
+  COD_ENSE == 360 & COD_GRADO == 2 ~ "10",
+  COD_ENSE == 360 & COD_GRADO == 3 ~ "11",
+  COD_ENSE == 360 & COD_GRADO == 4 ~ "12",
+  COD_ENSE == 361 & COD_GRADO == 1 ~ "9-10",
+  COD_ENSE == 361 & COD_GRADO == 3 ~ "10-11-12",
+  COD_ENSE == 363 & COD_GRADO == 1 ~ "9-10",
+  COD_ENSE == 363 & COD_GRADO == 3 ~ "10-11-12",
+  COD_ENSE == 410 & COD_GRADO == 1 ~ "9",
+  COD_ENSE == 410 & COD_GRADO == 2 ~ "10",
+  COD_ENSE == 410 & COD_GRADO == 3 ~ "11",
+  COD_ENSE == 410 & COD_GRADO == 4 ~ "12",
+  COD_ENSE == 460 & COD_GRADO == 1 ~ "9-10",
+  COD_ENSE == 460 & COD_GRADO == 3 ~ "11",
+  COD_ENSE == 460 & COD_GRADO == 4 ~ "12",
+  COD_ENSE == 461 & COD_GRADO == 1 ~ "9-10",
+  COD_ENSE == 461 & COD_GRADO == 3 ~ "11",
+  COD_ENSE == 461 & COD_GRADO == 4 ~ "12",
+  COD_ENSE == 463 & COD_GRADO == 1 ~ "9-10",
+  COD_ENSE == 463 & COD_GRADO == 3 ~ "11",
+  COD_ENSE == 463 & COD_GRADO == 4 ~ "12",
+  COD_ENSE == 510 & COD_GRADO == 1 ~ "9",
+  COD_ENSE == 510 & COD_GRADO == 2 ~ "10",
+  COD_ENSE == 510 & COD_GRADO == 3 ~ "11",
+  COD_ENSE == 510 & COD_GRADO == 4 ~ "12",
+  COD_ENSE == 560 & COD_GRADO == 1 ~ "9-10",
+  COD_ENSE == 560 & COD_GRADO == 3 ~ "11",
+  COD_ENSE == 560 & COD_GRADO == 4 ~ "12",
+  COD_ENSE == 561 & COD_GRADO == 1 ~ "9-10",
+  COD_ENSE == 561 & COD_GRADO == 3 ~ "11",
+  COD_ENSE == 561 & COD_GRADO == 4 ~ "12",
+  COD_ENSE == 563 & COD_GRADO == 1 ~ "9-10",
+  COD_ENSE == 563 & COD_GRADO == 3 ~ "11",
+  COD_ENSE == 563 & COD_GRADO == 4 ~ "12",
+  COD_ENSE == 610 & COD_GRADO == 1 ~ "9",
+  COD_ENSE == 610 & COD_GRADO == 2 ~ "10",
+  COD_ENSE == 610 & COD_GRADO == 3 ~ "11",
+  COD_ENSE == 610 & COD_GRADO == 4 ~ "12",
+  COD_ENSE == 660 & COD_GRADO == 1 ~ "9-10",
+  COD_ENSE == 660 & COD_GRADO == 3 ~ "11",
+  COD_ENSE == 660 & COD_GRADO == 4 ~ "12",
+  COD_ENSE == 661 & COD_GRADO == 1 ~ "9-10",
+  COD_ENSE == 661 & COD_GRADO == 3 ~ "11",
+  COD_ENSE == 661 & COD_GRADO == 4 ~ "12",
+  COD_ENSE == 663 & COD_GRADO == 1 ~ "9-10",
+  COD_ENSE == 663 & COD_GRADO == 3 ~ "11",
+  COD_ENSE == 663 & COD_GRADO == 4 ~ "12",
+  COD_ENSE == 710 & COD_GRADO == 1 ~ "9",
+  COD_ENSE == 710 & COD_GRADO == 2 ~ "10",
+  COD_ENSE == 710 & COD_GRADO == 3 ~ "11",
+  COD_ENSE == 710 & COD_GRADO == 4 ~ "12",
+  COD_ENSE == 760 & COD_GRADO == 1 ~ "9-10",
+  COD_ENSE == 760 & COD_GRADO == 3 ~ "11",
+  COD_ENSE == 760 & COD_GRADO == 4 ~ "12",
+  COD_ENSE == 761 & COD_GRADO == 1 ~ "9-10",
+  COD_ENSE == 761 & COD_GRADO == 3 ~ "11",
+  COD_ENSE == 761 & COD_GRADO == 4 ~ "12",
+  COD_ENSE == 763 & COD_GRADO == 1 ~ "9-10",
+  COD_ENSE == 763 & COD_GRADO == 3 ~ "11",
+  COD_ENSE == 763 & COD_GRADO == 4 ~ "12",
+  COD_ENSE == 810 & COD_GRADO == 1 ~ "9",
+  COD_ENSE == 810 & COD_GRADO == 2 ~ "10",
+  COD_ENSE == 810 & COD_GRADO == 3 ~ "11",
+  COD_ENSE == 810 & COD_GRADO == 4 ~ "12",
+  COD_ENSE == 860 & COD_GRADO == 1 ~ "9-10",
+  COD_ENSE == 860 & COD_GRADO == 3 ~ "11",
+  COD_ENSE == 860 & COD_GRADO == 4 ~ "12",
+  COD_ENSE == 861 & COD_GRADO == 1 ~ "9-10",
+  COD_ENSE == 861 & COD_GRADO == 3 ~ "11",
+  COD_ENSE == 861 & COD_GRADO == 4 ~ "12",
+  COD_ENSE == 863 & COD_GRADO == 1 ~ "9-10",
+  COD_ENSE == 863 & COD_GRADO == 3 ~ "11",
+  COD_ENSE == 863 & COD_GRADO == 4 ~ "12",
+  COD_ENSE == 910 & COD_GRADO == 1 ~ "9",
+  COD_ENSE == 910 & COD_GRADO == 2 ~ "10",
+  COD_ENSE == 910 & COD_GRADO == 3 ~ "11",
+  COD_ENSE == 910 & COD_GRADO == 4 ~ "12",
+  COD_ENSE == 963 & COD_GRADO == 3 ~ "11",
+  COD_ENSE == 963 & COD_GRADO == 4 ~ "12",
+  TRUE ~ "Otro"
+))
+
+saveRDS(r, "data/panel_performance_2002_2024.rds")
+```
+
+# Data on Enrollment
+```{r}
+m04 <- read.csv(file = paste(data_dir, "/Matricula/2004/Matricula_2004.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m05 <- read.csv(file = paste(data_dir, "/Matricula/2005/Matricula_2005.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m06 <- read.csv(file = paste(data_dir, "/Matricula/2006/Matricula_2006.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m07 <- read.csv(file = paste(data_dir, "/Matricula/2007/Matricula_2007.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m08 <- read.csv(file = paste(data_dir, "/Matricula/2008/Matricula_2008.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m09 <- read.csv(file = paste(data_dir, "/Matricula/2009/Matricula_2009.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m10 <- read.csv(file = paste(data_dir, "/Matricula/2010/Matricula_2010.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m11 <- read.csv(file = paste(data_dir, "/Matricula/2011/Matricula_2011.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m12 <- read.csv(file = paste(data_dir, "/Matricula/2012/Matricula_2012.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m13 <- read.csv(file = paste(data_dir, "/Matricula/2013/Matricula_2013.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m14 <- read.csv(file = paste(data_dir, "/Matricula/2014/Matricula_2014.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m15 <- read.csv(file = paste(data_dir, "/Matricula/2015/Matricula_2015.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m16 <- read.csv(file = paste(data_dir, "/Matricula/2016/Matricula_2016.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m17 <- read.csv(file = paste(data_dir, "/Matricula/2017/Matricula_2017.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m18 <- read.csv(file = paste(data_dir, "/Matricula/2018/Matricula_2018.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m19 <- read.csv(file = paste(data_dir, "/Matricula/2019/Matricula_2019.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m20 <- read.csv(file = paste(data_dir, "/Matricula/2020/Matricula_2020.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m21 <- read.csv(file = paste(data_dir, "/Matricula/2021/Matricula_2021.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m22 <- read.csv(file = paste(data_dir, "/Matricula/2022/Matricula_2022.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m23 <- read.csv(file = paste(data_dir, "/Matricula/2023/Matricula_2023.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m24 <- read.csv(file = paste(data_dir, "/Matricula/2024/Matricula_2024.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m25 <- read.csv(file = paste(data_dir, "/Matricula/2025/Matricula_2025.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+```
+
+```{r}
+colnames(m04) <- toupper(colnames(m04))
+colnames(m05) <- toupper(colnames(m05))
+colnames(m06) <- toupper(colnames(m06))
+colnames(m07) <- toupper(colnames(m07))
+colnames(m08) <- toupper(colnames(m08))
+colnames(m09) <- toupper(colnames(m09))
+colnames(m10) <- toupper(colnames(m10))
+colnames(m11) <- toupper(colnames(m11))
+colnames(m12) <- toupper(colnames(m12))
+colnames(m13) <- toupper(colnames(m13))
+colnames(m14) <- toupper(colnames(m14))
+colnames(m15) <- toupper(colnames(m15))
+colnames(m16) <- toupper(colnames(m16))
+colnames(m17) <- toupper(colnames(m17))
+colnames(m18) <- toupper(colnames(m18))
+colnames(m19) <- toupper(colnames(m19))
+colnames(m20) <- toupper(colnames(m20))
+colnames(m21) <- toupper(colnames(m21))
+colnames(m22) <- toupper(colnames(m22))
+colnames(m23) <- toupper(colnames(m23))
+colnames(m24) <- toupper(colnames(m24))
+colnames(m25) <- toupper(colnames(m25))
+
+m16 %<>% dplyr::rename(AGNO = Ï..AGNO)
+m18 %<>% dplyr::rename(AGNO = Ï..AGNO)
+m19 %<>% dplyr::rename(AGNO = Ï..AGNO)
+m20 %<>% dplyr::rename(AGNO = Ï..AGNO)
+m21 %<>% dplyr::rename(AGNO = Ï..AGNO)
+m22 %<>% dplyr::rename(AGNO = Ï..AGNO)
+m23 %<>% dplyr::rename(AGNO = Ï..AGNO)
+m24 %<>% dplyr::rename(AGNO = Ï..AGNO)
+m25 %<>% dplyr::rename(AGNO = Ï..AGNO)
+```
+
+```{r}
+cols <- intersect(colnames(m25), colnames(m04))
+m04 <- m04[, cols]
+m05 <- m05[, cols]
+m06 <- m06[, cols]
+m07 <- m07[, cols]
+m08 <- m08[, cols]
+m09 <- m09[, cols]
+m10 <- m10[, cols]
+m11 <- m11[, cols]
+m12 <- m12[, cols]
+m13 <- m13[, cols]
+m14 <- m14[, cols]
+m15 <- m15[, cols]
+m16 <- m16[, cols]
+m17 <- m17[, cols]
+m18 <- m18[, cols]
+m19 <- m19[, cols]
+m20 <- m20[, cols]
+m21 <- m21[, cols]
+m22 <- m22[, cols]
+m23 <- m23[, cols]
+m24 <- m24[, cols]
+m25 <- m25[, cols]
+
+m <- rbind(m04, m05, m06, m07, m08, m09, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19, m20, m21, m22, m23, m24, m25)
+rm(m04, m05, m06, m07, m08, m09, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19, m20, m21, m22, m23, m24, m25)
+gc(reset = TRUE)
+
+saveRDS(m, "data/panel_enrollment_k12_2004_2025.rds")
+```
+
+# Egresados y notas
+```{r}
+m04 <- read.csv(file = paste(data_dir, "/Egresados EM/Egresados-EM-2004/Egresados-EM-2004.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m05 <- read.csv(file = paste(data_dir, "/Egresados EM/Egresados-EM-2005/Egresados-EM-2005.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m06 <- read.csv(file = paste(data_dir, "/Egresados EM/Egresados-EM-2006/Egresados-EM-2006.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m07 <- read.csv(file = paste(data_dir, "/Egresados EM/Egresados-EM-2007/Egresados-EM-2007.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m08 <- read.csv(file = paste(data_dir, "/Egresados EM/Egresados-EM-2008/Egresados-EM-2008.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m09 <- read.csv(file = paste(data_dir, "/Egresados EM/Egresados-EM-2009/Egresados-EM-2009.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m10 <- read.csv(file = paste(data_dir, "/Egresados EM/Egresados-EM-2010/Egresados-EM-2010.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m11 <- read.csv(file = paste(data_dir, "/Egresados EM/Egresados-EM-2011/Egresados-EM-2011.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m12 <- read.csv(file = paste(data_dir, "/Egresados EM/Egresados-EM-2012/Egresados-EM-2012.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m13 <- read.csv(file = paste(data_dir, "/Egresados EM/Egresados-EM-2013/Egresados-EM-2013.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m14 <- read.csv(file = paste(data_dir, "/Egresados EM/Egresados-EM-2014/Egresados-EM-2014.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m15 <- read.csv(file = paste(data_dir, "/Egresados EM/Egresados-EM-2015/Egresados-EM-2015.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m16 <- read.csv(file = paste(data_dir, "/Egresados EM/Egresados-EM-2016/Egresados-EM-2016.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m17 <- read.csv(file = paste(data_dir, "/Egresados EM/Egresados-EM-2017/Egresados-EM-2017.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m18 <- read.csv(file = paste(data_dir, "/Egresados EM/Egresados-EM-2018/Egresados-EM-2018.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m19 <- read.csv(file = paste(data_dir, "/Egresados EM/Egresados-EM-2019/Egresados-EM-2019.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m20 <- read.csv(file = paste(data_dir, "/Egresados EM/Egresados-EM-2020/Egresados-EM-2020.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m21 <- read.csv(file = paste(data_dir, "/Egresados EM/Egresados-EM-2021/Egresados-EM-2021.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m22 <- read.csv(file = paste(data_dir, "/Egresados EM/Egresados-EM-2022/Egresados-EM-2022.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m23 <- read.csv(file = paste(data_dir, "/Egresados EM/Egresados-EM-2023/Egresados-EM-2023.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+m24 <- read.csv(file = paste(data_dir, "/Egresados EM/Egresados-EM-2024/Egresados-EM-2024.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+```
+
+```{r}
+cols <- intersect(colnames(m24), colnames(m04))
+m04 <- m04[, cols]
+m05 <- m05[, cols]
+m06 <- m06[, cols]
+m07 <- m07[, cols]
+m08 <- m08[, cols]
+m09 <- m09[, cols]
+m10 <- m10[, cols]
+m11 <- m11[, cols]
+m12 <- m12[, cols]
+m13 <- m13[, cols]
+m14 <- m14[, cols]
+m15 <- m15[, cols]
+m16 <- m16[, cols]
+m17 <- m17[, cols]
+m18 <- m18[, cols]
+m19 <- m19[, cols]
+m20 <- m20[, cols]
+m21 <- m21[, cols]
+m22 <- m22[, cols]
+m23 <- m23[, cols]
+m24 <- m24[, cols]
+
+
+m <- rbind(m04, m05, m06, m07, m08, m09, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19, m20, m21, m22, m23, m24)
+rm(m04, m05, m06, m07, m08, m09, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19, m20, m21, m22, m23, m24)
+gc(reset = TRUE)
+
+colnames(m) <- tolower(colnames(m))
+
+saveRDS(m, "data/panel_graduation_k12_2004_2024.rds")
+```
+
+# SAE
+```{r}
+b16r <- read.csv(file = paste(data_dir, "/SAE/2016/B1_Postulantes_etapa_regular_2016_Admisión_2017_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+b16c <- read.csv(file = paste(data_dir, "/SAE/2016/B2_Postulantes_etapa_complementaria_2016_Admisión_2017_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+b17r <- read.csv(file = paste(data_dir, "/SAE/2017/B1_Postulantes_etapa_regular_2017_Admisión_2018_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+b17c <- read.csv(file = paste(data_dir, "/SAE/2017/B2_Postulantes_etapa_complementaria_2017_Admisión_2018_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+b18r <- read.csv(file = paste(data_dir, "/SAE/2018/B1_Postulantes_etapa_regular_2018_Admisión_2019_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+b18c <- read.csv(file = paste(data_dir, "/SAE/2018/B2_Postulantes_etapa_complementaria_2018_Admisión_2019_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+b19r <- read.csv(file = paste(data_dir, "/SAE/2019/B1_Postulantes_etapa_regular_2019_Admisión_2020_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+b19c <- read.csv(file = paste(data_dir, "/SAE/2019/B2_Postulantes_etapa_complementaria_2019_Admisión_2020_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+b20r <- read.csv(file = paste(data_dir, "/SAE/2020/B1_Postulantes_etapa_regular_2020_Admisión_2021_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+b20c <- read.csv(file = paste(data_dir, "/SAE/2020/B2_Postulantes_etapa_complementaria_2020_Admisión_2021_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+b21r <- read.csv(file = paste(data_dir, "/SAE/2021/B1_Postulantes_etapa_regular_2021_Admisión_2022_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+b21c <- read.csv(file = paste(data_dir, "/SAE/2021/B2_Postulantes_etapa_complementaria_2021_Admisión_2022_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+b22r <- read.csv(file = paste(data_dir, "/SAE/2022/B1_Postulantes_etapa_regular_2022_Admisión_2023_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+b22c <- read.csv(file = paste(data_dir, "/SAE/2022/B2_Postulantes_etapa_complementaria_2022_Admisión_2023_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+b23r <- read.csv(file = paste(data_dir, "/SAE/2023/B1_Postulantes_etapa_regular_2023_Admisión_2024_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+b23c <- read.csv(file = paste(data_dir, "/SAE/2023/B2_Postulantes_etapa_complementaria_2023_Admisión_2024_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+b24r <- read.csv(file = paste(data_dir, "/SAE/2024/B1_Postulantes_etapa_regular_2024_Admisión_2025_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+b24c <- read.csv(file = paste(data_dir, "/SAE/2024/B2_Postulantes_etapa_complementaria_2024_Admisión_2025_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+
+b17r %<>% dplyr::rename(mrun = ï..mrun)
+b17c %<>% dplyr::rename(mrun = ï..mrun)
+b18r %<>% dplyr::rename(mrun = ï..mrun)
+b18c %<>% dplyr::rename(mrun = ï..mrun)
+b19r %<>% dplyr::rename(mrun = ï..mrun)
+b19c %<>% dplyr::rename(mrun = ï..mrun)
+b20r %<>% dplyr::rename(mrun = ï..mrun)
+b20c %<>% dplyr::rename(mrun = ï..mrun)
+b21r %<>% dplyr::rename(mrun = ï..mrun)
+b21c %<>% dplyr::rename(mrun = ï..mrun)
+b22r %<>% dplyr::rename(mrun = ï..mrun)
+b22c %<>% dplyr::rename(mrun = ï..mrun)
+b23r %<>% dplyr::rename(mrun = ï..mrun)
+b23c %<>% dplyr::rename(mrun = ï..mrun)
+
+b16 <- bind_rows(
+  b16r %>% dplyr::mutate(participate_reg = 1),
+  b16c %>% filter(!mrun %in% b16r$mrun) %>% dplyr::mutate(participate_reg = 0)
+) %>%
+  left_join(b16c %>% dplyr::select(mrun) %>% dplyr::mutate(participate_comp = 1), by = "mrun") %>%
+  dplyr::mutate(participate_comp = coalesce(participate_comp, 0))
+b17 <- bind_rows(
+  b17r %>% dplyr::mutate(participate_reg = 1),
+  b17c %>% filter(!mrun %in% b17r$mrun) %>% dplyr::mutate(participate_reg = 0)
+) %>%
+  left_join(b17c %>% dplyr::select(mrun) %>% dplyr::mutate(participate_comp = 1), by = "mrun") %>%
+  dplyr::mutate(participate_comp = coalesce(participate_comp, 0))
+b18 <- bind_rows(
+  b18r %>% dplyr::mutate(participate_reg = 1),
+  b18c %>% filter(!mrun %in% b18r$mrun) %>% dplyr::mutate(participate_reg = 0)
+) %>%
+  left_join(b18c %>% dplyr::select(mrun) %>% dplyr::mutate(participate_comp = 1), by = "mrun") %>%
+  dplyr::mutate(participate_comp = coalesce(participate_comp, 0))
+b19 <- bind_rows(
+  b19r %>% dplyr::mutate(participate_reg = 1),
+  b19c %>% filter(!mrun %in% b19r$mrun) %>% dplyr::mutate(participate_reg = 0)
+) %>%
+  left_join(b19c %>% dplyr::select(mrun) %>% dplyr::mutate(participate_comp = 1), by = "mrun") %>%
+  dplyr::mutate(participate_comp = coalesce(participate_comp, 0))
+b20 <- bind_rows(
+  b20r %>% dplyr::mutate(participate_reg = 1),
+  b20c %>% filter(!mrun %in% b20r$mrun) %>% dplyr::mutate(participate_reg = 0)
+) %>%
+  left_join(b20c %>% dplyr::select(mrun) %>% dplyr::mutate(participate_comp = 1), by = "mrun") %>%
+  dplyr::mutate(participate_comp = coalesce(participate_comp, 0))
+b21 <- bind_rows(
+  b21r %>% dplyr::mutate(participate_reg = 1),
+  b21c %>% filter(!mrun %in% b21r$mrun) %>% dplyr::mutate(participate_reg = 0)
+) %>%
+  left_join(b21c %>% dplyr::select(mrun) %>% dplyr::mutate(participate_comp = 1), by = "mrun") %>%
+  dplyr::mutate(participate_comp = coalesce(participate_comp, 0))
+b22 <- bind_rows(
+  b22r %>% dplyr::mutate(participate_reg = 1),
+  b22c %>% filter(!mrun %in% b22r$mrun) %>% dplyr::mutate(participate_reg = 0)
+) %>%
+  left_join(b22c %>% dplyr::select(mrun) %>% dplyr::mutate(participate_comp = 1), by = "mrun") %>%
+  dplyr::mutate(participate_comp = coalesce(participate_comp, 0))
+b23 <- bind_rows(
+  b23r %>% dplyr::mutate(participate_reg = 1),
+  b23c %>% filter(!mrun %in% b23r$mrun) %>% dplyr::mutate(participate_reg = 0)
+) %>%
+  left_join(b23c %>% dplyr::select(mrun) %>% dplyr::mutate(participate_comp = 1), by = "mrun") %>%
+  dplyr::mutate(participate_comp = coalesce(participate_comp, 0))
+b24 <- bind_rows(
+  b24r %>% dplyr::mutate(participate_reg = 1),
+  b24c %>% filter(!mrun %in% b24r$mrun) %>% dplyr::mutate(participate_reg = 0)
+) %>%
+  left_join(b24c %>% dplyr::select(mrun) %>% dplyr::mutate(participate_comp = 1), by = "mrun") %>%
+  dplyr::mutate(participate_comp = coalesce(participate_comp, 0))
+
+rm(b16r, b16c, b17r, b17c, b18r, b18c, b19r, b19c, b20r, b20c, b21r, b21c, b22r, b22c, b23r, b23c, b24r, b24c)
+gc(reset = TRUE)
+```
+
+```{r}
+c16r <- read.csv(file = paste(data_dir, "/SAE/2016/C1_Postulaciones_etapa_regular_2016_Admisión_2017_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+c16c <- read.csv(file = paste(data_dir, "/SAE/2016/C2_Postulaciones_etapa_complementaria_2016_Admisión_2017_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+c17r <- read.csv(file = paste(data_dir, "/SAE/2017/C1_Postulaciones_etapa_regular_2017_Admisión_2018_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+c17c <- read.csv(file = paste(data_dir, "/SAE/2017/C2_Postulaciones_etapa_complementaria_2017_Admisión_2018_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+c18r <- read.csv(file = paste(data_dir, "/SAE/2018/C1_Postulaciones_etapa_regular_2018_Admisión_2019_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+c18c <- read.csv(file = paste(data_dir, "/SAE/2018/C2_Postulaciones_etapa_complementaria_2018_Admisión_2019_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+c19r <- read.csv(file = paste(data_dir, "/SAE/2019/C1_Postulaciones_etapa_regular_2019_Admisión_2020_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+c19c <- read.csv(file = paste(data_dir, "/SAE/2019/C2_Postulaciones_etapa_complementaria_2019_Admisión_2020_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+c20r <- read.csv(file = paste(data_dir, "/SAE/2020/C1_Postulaciones_etapa_regular_2020_Admisión_2021_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+c20c <- read.csv(file = paste(data_dir, "/SAE/2020/C2_Postulaciones_etapa_complementaria_2020_Admisión_2021_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+c21r <- read.csv(file = paste(data_dir, "/SAE/2021/C1_Postulaciones_etapa_regular_2021_Admisión_2022_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+c21c <- read.csv(file = paste(data_dir, "/SAE/2021/C2_Postulaciones_etapa_complementaria_2021_Admisión_2022_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+c22r <- read.csv(file = paste(data_dir, "/SAE/2022/C1_Postulaciones_etapa_regular_2022_Admisión_2023_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+c22c <- read.csv(file = paste(data_dir, "/SAE/2022/C2_Postulaciones_etapa_complementaria_2022_Admisión_2023_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+c23r <- read.csv(file = paste(data_dir, "/SAE/2023/C1_Postulaciones_etapa_regular_2023_Admisión_2024_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+c23c <- read.csv(file = paste(data_dir, "/SAE/2023/C2_Postulaciones_etapa_complementaria_2023_Admisión_2024_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+c24r <- read.csv(file = paste(data_dir, "/SAE/2024/C1_Postulaciones_etapa_regular_2024_Admisión_2025_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+c24c <- read.csv(file = paste(data_dir, "/SAE/2024/C2_Postulaciones_etapa_complementaria_2024_Admisión_2025_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+
+c17r %<>% dplyr::rename(mrun = ï..mrun)
+c17c %<>% dplyr::rename(mrun = ï..mrun)
+c18r %<>% dplyr::rename(mrun = ï..mrun)
+c18c %<>% dplyr::rename(mrun = ï..mrun)
+c19r %<>% dplyr::rename(mrun = ï..mrun)
+c19c %<>% dplyr::rename(mrun = ï..mrun)
+c20r %<>% dplyr::rename(mrun = ï..mrun)
+c20c %<>% dplyr::rename(mrun = ï..mrun)
+c21r %<>% dplyr::rename(mrun = ï..mrun)
+c21c %<>% dplyr::rename(mrun = ï..mrun)
+c22r %<>% dplyr::rename(mrun = ï..mrun)
+c22c %<>% dplyr::rename(mrun = ï..mrun)
+c23r %<>% dplyr::rename(mrun = ï..mrun)
+c23c %<>% dplyr::rename(mrun = ï..mrun)
+
+c16r %<>% dplyr::mutate(
+  cod_nivel = nivel,
+  prioridad_matriculado = ifelse(tipo_prioridad == 1, 1, 0),
+  prioridad_hermano = ifelse(tipo_prioridad == 2, 1, 0),
+  prioridad_hijo_funcionario = ifelse(tipo_prioridad == 5, 1, 0),
+  prioridad_exalumno = ifelse(tipo_prioridad == 6, 1, 0)
+)
+c16c %<>% dplyr::mutate(
+  cod_nivel = nivel,
+  prioridad_matriculado = ifelse(tipo_prioridad == 1, 1, 0),
+  prioridad_hermano = ifelse(tipo_prioridad == 2, 1, 0),
+  prioridad_hijo_funcionario = ifelse(tipo_prioridad == 5, 1, 0),
+  prioridad_exalumno = ifelse(tipo_prioridad == 6, 1, 0)
+)
+
+c16r %<>%
+  pivot_wider(
+    id_cols = c(mrun), # or whatever uniquely identifies each student
+    names_from = preferencia_postulante,
+    values_from = c(
+      rbd, cod_nivel,
+      prioridad_matriculado, prioridad_hermano,
+      prioridad_hijo_funcionario, prioridad_exalumno,
+      agregada_por_continuidad,
+      loteria_original
+    ),
+    names_glue = "{.value}_{preferencia_postulante}"
+  ) %>%
+  rename_with(~ paste0(.x, "_reg"), -mrun)
+c16c %<>%
+  pivot_wider(
+    id_cols = c(mrun), # or whatever uniquely identifies each student
+    names_from = preferencia_postulante,
+    values_from = c(
+      rbd, cod_nivel,
+      prioridad_matriculado, prioridad_hermano,
+      prioridad_hijo_funcionario, prioridad_exalumno,
+      agregada_por_continuidad,
+      loteria_original
+    ),
+    names_glue = "{.value}_{preferencia_postulante}"
+  ) %>%
+  rename_with(~ paste0(.x, "_comp"), -mrun)
+
+c17r %<>%
+  pivot_wider(
+    id_cols = c(mrun), # or whatever uniquely identifies each student
+    names_from = preferencia_postulante,
+    values_from = c(
+      rbd, cod_nivel,
+      prioridad_matriculado, prioridad_hermano,
+      prioridad_hijo_funcionario, prioridad_exalumno,
+      agregada_por_continuidad,
+      loteria_original,
+      es_pie, orden_pie, orden_alta_exigencia_transicion
+    ),
+    names_glue = "{.value}_{preferencia_postulante}"
+  ) %>%
+  rename_with(~ paste0(.x, "_reg"), -mrun)
+c17c %<>%
+  pivot_wider(
+    id_cols = c(mrun), # or whatever uniquely identifies each student
+    names_from = preferencia_postulante,
+    values_from = c(
+      rbd, cod_nivel,
+      prioridad_matriculado, prioridad_hermano,
+      prioridad_hijo_funcionario, prioridad_exalumno,
+      agregada_por_continuidad,
+      loteria_original
+    ),
+    names_glue = "{.value}_{preferencia_postulante}"
+  ) %>%
+  rename_with(~ paste0(.x, "_comp"), -mrun)
+c17 <- bind_rows(
+  c17r %>% dplyr::mutate(apply_reg = 1),
+  c17c %>% filter(!mrun %in% c17r$mrun) %>% dplyr::mutate(apply_reg = 0)
+) %>%
+  left_join(c17c %>% dplyr::select(mrun) %>% dplyr::mutate(apply_comp = 1), by = "mrun") %>%
+  dplyr::mutate(apply_comp = coalesce(apply_comp, 0))
+
+c18r %<>%
+  pivot_wider(
+    id_cols = c(mrun), # or whatever uniquely identifies each student
+    names_from = preferencia_postulante,
+    values_from = c(
+      rbd, cod_nivel,
+      prioridad_matriculado, prioridad_hermano,
+      prioridad_hijo_funcionario, prioridad_exalumno,
+      agregada_por_continuidad,
+      loteria_original,
+      es_pie, orden_pie, orden_alta_exigencia_transicion
+    ),
+    names_glue = "{.value}_{preferencia_postulante}"
+  ) %>%
+  rename_with(~ paste0(.x, "_reg"), -mrun)
+c18c %<>%
+  pivot_wider(
+    id_cols = c(mrun), # or whatever uniquely identifies each student
+    names_from = preferencia_postulante,
+    values_from = c(
+      rbd, cod_nivel,
+      prioridad_matriculado, prioridad_hermano,
+      prioridad_hijo_funcionario, prioridad_exalumno,
+      agregada_por_continuidad,
+      loteria_original
+    ),
+    names_glue = "{.value}_{preferencia_postulante}"
+  ) %>%
+  rename_with(~ paste0(.x, "_comp"), -mrun)
+c18 <- bind_rows(
+  c18r %>% dplyr::mutate(apply_reg = 1),
+  c18c %>% filter(!mrun %in% c18r$mrun) %>% dplyr::mutate(apply_reg = 0)
+) %>%
+  left_join(c18c %>% dplyr::select(mrun) %>% dplyr::mutate(apply_comp = 1), by = "mrun") %>%
+  dplyr::mutate(apply_comp = coalesce(apply_comp, 0))
+
+c19r %<>%
+  pivot_wider(
+    id_cols = c(mrun), # or whatever uniquely identifies each student
+    names_from = preferencia_postulante,
+    values_from = c(
+      rbd, cod_nivel,
+      prioridad_matriculado, prioridad_hermano,
+      prioridad_hijo_funcionario, prioridad_exalumno,
+      agregada_por_continuidad,
+      loteria_original,
+      es_pie, orden_pie, orden_alta_exigencia_transicion
+    ),
+    names_glue = "{.value}_{preferencia_postulante}"
+  ) %>%
+  rename_with(~ paste0(.x, "_reg"), -mrun)
+c19c %<>%
+  pivot_wider(
+    id_cols = c(mrun), # or whatever uniquely identifies each student
+    names_from = preferencia_postulante,
+    values_from = c(
+      rbd, cod_nivel,
+      prioridad_matriculado, prioridad_hermano,
+      prioridad_hijo_funcionario, prioridad_exalumno,
+      agregada_por_continuidad,
+      loteria_original
+    ),
+    names_glue = "{.value}_{preferencia_postulante}"
+  ) %>%
+  rename_with(~ paste0(.x, "_comp"), -mrun)
+c19 <- bind_rows(
+  c19r %>% dplyr::mutate(apply_reg = 1),
+  c19c %>% filter(!mrun %in% c19r$mrun) %>% dplyr::mutate(apply_reg = 0)
+) %>%
+  left_join(c19c %>% dplyr::select(mrun) %>% dplyr::mutate(apply_comp = 1), by = "mrun") %>%
+  dplyr::mutate(apply_comp = coalesce(apply_comp, 0))
+
+c20r %<>%
+  pivot_wider(
+    id_cols = c(mrun), # or whatever uniquely identifies each student
+    names_from = preferencia_postulante,
+    values_from = c(
+      rbd, cod_nivel,
+      prioridad_matriculado, prioridad_hermano,
+      prioridad_hijo_funcionario, prioridad_exalumno,
+      agregada_por_continuidad,
+      loteria_original,
+      es_pie, orden_pie, orden_alta_exigencia_transicion
+    ),
+    names_glue = "{.value}_{preferencia_postulante}"
+  ) %>%
+  rename_with(~ paste0(.x, "_reg"), -mrun)
+c20c %<>%
+  pivot_wider(
+    id_cols = c(mrun), # or whatever uniquely identifies each student
+    names_from = preferencia_postulante,
+    values_from = c(
+      rbd, cod_nivel,
+      prioridad_matriculado, prioridad_hermano,
+      prioridad_hijo_funcionario, prioridad_exalumno,
+      agregada_por_continuidad,
+      loteria_original
+    ),
+    names_glue = "{.value}_{preferencia_postulante}"
+  ) %>%
+  rename_with(~ paste0(.x, "_comp"), -mrun)
+c20 <- bind_rows(
+  c20r %>% dplyr::mutate(apply_reg = 1),
+  c20c %>% filter(!mrun %in% c20r$mrun) %>% dplyr::mutate(apply_reg = 0)
+) %>%
+  left_join(c20c %>% dplyr::select(mrun) %>% dplyr::mutate(apply_comp = 1), by = "mrun") %>%
+  dplyr::mutate(apply_comp = coalesce(apply_comp, 0))
+
+c21r %<>%
+  pivot_wider(
+    id_cols = c(mrun), # or whatever uniquely identifies each student
+    names_from = preferencia_postulante,
+    values_from = c(
+      rbd, cod_nivel,
+      prioridad_matriculado, prioridad_hermano,
+      prioridad_hijo_funcionario, prioridad_exalumno,
+      agregada_por_continuidad,
+      loteria_original,
+      es_pie, orden_pie, orden_alta_exigencia_transicion
+    ),
+    names_glue = "{.value}_{preferencia_postulante}"
+  ) %>%
+  rename_with(~ paste0(.x, "_reg"), -mrun)
+c21c %<>%
+  pivot_wider(
+    id_cols = c(mrun), # or whatever uniquely identifies each student
+    names_from = preferencia_postulante,
+    values_from = c(
+      rbd, cod_nivel,
+      prioridad_matriculado, prioridad_hermano,
+      prioridad_hijo_funcionario, prioridad_exalumno,
+      agregada_por_continuidad,
+      loteria_original
+    ),
+    names_glue = "{.value}_{preferencia_postulante}"
+  ) %>%
+  rename_with(~ paste0(.x, "_comp"), -mrun)
+c21 <- bind_rows(
+  c21r %>% dplyr::mutate(apply_reg = 1),
+  c21c %>% filter(!mrun %in% c21r$mrun) %>% dplyr::mutate(apply_reg = 0)
+) %>%
+  left_join(c21c %>% dplyr::select(mrun) %>% dplyr::mutate(apply_comp = 1), by = "mrun") %>%
+  dplyr::mutate(apply_comp = coalesce(apply_comp, 0))
+
+
+c22r %<>%
+  pivot_wider(
+    id_cols = c(mrun), # or whatever uniquely identifies each student
+    names_from = preferencia_postulante,
+    values_from = c(
+      rbd, cod_nivel,
+      prioridad_matriculado, prioridad_hermano,
+      prioridad_hijo_funcionario, prioridad_exalumno,
+      agregada_por_continuidad,
+      loteria_original,
+      es_pie, orden_pie, orden_alta_exigencia_transicion
+    ),
+    names_glue = "{.value}_{preferencia_postulante}"
+  ) %>%
+  rename_with(~ paste0(.x, "_reg"), -mrun)
+c22c %<>%
+  pivot_wider(
+    id_cols = c(mrun), # or whatever uniquely identifies each student
+    names_from = preferencia_postulante,
+    values_from = c(
+      rbd, cod_nivel,
+      prioridad_matriculado, prioridad_hermano,
+      prioridad_hijo_funcionario, prioridad_exalumno,
+      agregada_por_continuidad,
+      loteria_original
+    ),
+    names_glue = "{.value}_{preferencia_postulante}"
+  ) %>%
+  rename_with(~ paste0(.x, "_comp"), -mrun)
+c22 <- bind_rows(
+  c22r %>% dplyr::mutate(apply_reg = 1),
+  c22c %>% filter(!mrun %in% c22r$mrun) %>% dplyr::mutate(apply_reg = 0)
+) %>%
+  left_join(c22c %>% dplyr::select(mrun) %>% dplyr::mutate(apply_comp = 1), by = "mrun") %>%
+  dplyr::mutate(apply_comp = coalesce(apply_comp, 0))
+
+c23r %<>%
+  pivot_wider(
+    id_cols = c(mrun), # or whatever uniquely identifies each student
+    names_from = preferencia_postulante,
+    values_from = c(
+      rbd, cod_nivel,
+      prioridad_matriculado, prioridad_hermano,
+      prioridad_hijo_funcionario, prioridad_exalumno,
+      agregada_por_continuidad,
+      loteria_original,
+      es_pie, orden_pie, orden_alta_exigencia_transicion
+    ),
+    names_glue = "{.value}_{preferencia_postulante}"
+  ) %>%
+  rename_with(~ paste0(.x, "_reg"), -mrun)
+c23c %<>%
+  pivot_wider(
+    id_cols = c(mrun), # or whatever uniquely identifies each student
+    names_from = preferencia_postulante,
+    values_from = c(
+      rbd, cod_nivel,
+      prioridad_matriculado, prioridad_hermano,
+      prioridad_hijo_funcionario, prioridad_exalumno,
+      agregada_por_continuidad,
+      loteria_original
+    ),
+    names_glue = "{.value}_{preferencia_postulante}"
+  ) %>%
+  rename_with(~ paste0(.x, "_comp"), -mrun)
+c23 <- bind_rows(
+  c23r %>% dplyr::mutate(apply_reg = 1),
+  c23c %>% filter(!mrun %in% c23r$mrun) %>% dplyr::mutate(apply_reg = 0)
+) %>%
+  left_join(c23c %>% dplyr::select(mrun) %>% dplyr::mutate(apply_comp = 1), by = "mrun") %>%
+  dplyr::mutate(apply_comp = coalesce(apply_comp, 0))
+
+c24r %<>%
+  pivot_wider(
+    id_cols = c(mrun), # or whatever uniquely identifies each student
+    names_from = preferencia_postulante,
+    values_from = c(
+      rbd, cod_nivel,
+      prioridad_matriculado, prioridad_hermano,
+      prioridad_hijo_funcionario, prioridad_exalumno,
+      agregada_por_continuidad,
+      loteria_original,
+      es_pie, orden_pie, orden_alta_exigencia_transicion
+    ),
+    names_glue = "{.value}_{preferencia_postulante}"
+  ) %>%
+  rename_with(~ paste0(.x, "_reg"), -mrun)
+
+c24c %<>%
+  pivot_wider(
+    id_cols = c(mrun), # or whatever uniquely identifies each student
+    names_from = preferencia_postulante,
+    values_from = c(
+      rbd, cod_nivel,
+      prioridad_matriculado, prioridad_hermano,
+      prioridad_hijo_funcionario, prioridad_exalumno,
+      agregada_por_continuidad,
+      loteria_original
+    ),
+    names_glue = "{.value}_{preferencia_postulante}"
+  ) %>%
+  rename_with(~ paste0(.x, "_comp"), -mrun)
+c24 <- bind_rows(
+  c24r %>% dplyr::mutate(apply_reg = 1),
+  c24c %>% filter(!mrun %in% c24r$mrun) %>% dplyr::mutate(apply_reg = 0)
+) %>%
+  left_join(c24c %>% dplyr::select(mrun) %>% dplyr::mutate(apply_comp = 1), by = "mrun") %>%
+  dplyr::mutate(apply_comp = coalesce(apply_comp, 0))
+
+rm(c16r, c16c, c17r, c17c, c18r, c18c, c19r, c19c, c20r, c20c, c21r, c21c, c22r, c22c, c23r, c23c, c24r, c24c)
+gc(reset = TRUE)
+```
+
+```{r}
+d16r <- read.csv(file = paste(data_dir, "/SAE/2016/D1_Resultados_etapa_regular_2016_Admisión_2017_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+d16c <- read.csv(file = paste(data_dir, "/SAE/2016/D2_Resultados_etapa_complementaria_2016_Admisión_2017_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+d17r <- read.csv(file = paste(data_dir, "/SAE/2017/D1_Resultados_etapa_regular_2017_Admisión_2018_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+d17c <- read.csv(file = paste(data_dir, "/SAE/2017/D2_Resultados_etapa_complementaria_2017_Admisión_2018_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+d18r <- read.csv(file = paste(data_dir, "/SAE/2018/D1_Resultados_etapa_regular_2018_Admisión_2019_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+d18c <- read.csv(file = paste(data_dir, "/SAE/2018/D2_Resultados_etapa_complementaria_2018_Admisión_2019_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+d19r <- read.csv(file = paste(data_dir, "/SAE/2019/D1_Resultados_etapa_regular_2019_Admisión_2020_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+d19c <- read.csv(file = paste(data_dir, "/SAE/2019/D2_Resultados_etapa_complementaria_2019_Admisión_2020_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+d20r <- read.csv(file = paste(data_dir, "/SAE/2020/D1_Resultados_etapa_regular_2020_Admisión_2021_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+d20c <- read.csv(file = paste(data_dir, "/SAE/2020/D2_Resultados_etapa_complementaria_2020_Admisión_2021_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+d21r <- read.csv(file = paste(data_dir, "/SAE/2021/D1_Resultados_etapa_regular_2021_Admisión_2022_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+d21c <- read.csv(file = paste(data_dir, "/SAE/2021/D2_Resultados_etapa_complementaria_2021_Admisión_2022_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+d22r <- read.csv(file = paste(data_dir, "/SAE/2022/D1_Resultados_etapa_regular_2022_Admisión_2023_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+d22c <- read.csv(file = paste(data_dir, "/SAE/2022/D2_Resultados_etapa_complementaria_2022_Admisión_2023_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+d23r <- read.csv(file = paste(data_dir, "/SAE/2023/D1_Resultados_etapa_regular_2023_Admisión_2024_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+d23c <- read.csv(file = paste(data_dir, "/SAE/2023/D2_Resultados_etapa_complementaria_2023_Admisión_2024_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+d24r <- read.csv(file = paste(data_dir, "/SAE/2024/D1_Resultados_etapa_regular_2024_Admisión_2025_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+d24c <- read.csv(file = paste(data_dir, "/SAE/2024/D2_Resultados_etapa_complementaria_2024_Admisión_2025_PUBL.csv", sep = ""), sep = ";", fileEncoding = "latin1")
+
+d16r %<>% dplyr::mutate(cod_nivel = nivel)
+d16c %<>% dplyr::mutate(cod_nivel = nivel)
+d18r %<>% dplyr::rename(mrun = ï..mrun)
+d18c %<>% dplyr::rename(mrun = ï..mrun)
+d19r %<>% dplyr::rename(mrun = ï..mrun)
+d19c %<>% dplyr::rename(mrun = ï..mrun)
+d20r %<>% dplyr::rename(mrun = ï..mrun)
+d20c %<>% dplyr::rename(mrun = ï..mrun)
+d21r %<>% dplyr::rename(mrun = ï..mrun)
+d21c %<>% dplyr::rename(mrun = ï..mrun)
+d22r %<>% dplyr::rename(mrun = ï..mrun)
+d22c %<>% dplyr::rename(mrun = ï..mrun)
+d23r %<>% dplyr::rename(mrun = ï..mrun)
+d23c %<>% dplyr::rename(mrun = ï..mrun)
+
+cols_r <- intersect(colnames(d24r), colnames(d16r))
+cols_c <- intersect(colnames(d24c), colnames(d16c))
+
+d16 <- d16r %>%
+  dplyr::select(cols) %>%
+  dplyr::mutate(assigned_reg = 1) %>%
+  dplyr::rename(
+    cod_nivel_reg = cod_nivel,
+    rbd_admitido_reg = rbd_admitido
+  ) %>%
+  left_join(d16c %>%
+    dplyr::select(cols) %>%
+    dplyr::mutate(assigned_comp = 1) %>%
+    dplyr::rename(
+      cod_nivel_comp = cod_nivel,
+      rbd_admitido_comp = rbd_admitido
+    ), by = "mrun") %>%
+  bind_rows(d16c %>%
+    dplyr::select(cols) %>%
+    filter(!mrun %in% d16r$mrun) %>%
+    dplyr::mutate(
+      assigned_reg = 0,
+      assigned_comp = 1
+    ) %>%
+    dplyr::rename(
+      cod_nivel_comp = cod_nivel,
+      rbd_admitido_comp = rbd_admitido
+    )) %>%
+  dplyr::mutate(
+    assigned_reg = coalesce(assigned_reg, 0),
+    assigned_comp = coalesce(assigned_comp, 0)
+  )
+
+
+d17 <- d17r %>%
+  dplyr::select(cols) %>%
+  dplyr::mutate(assigned_reg = 1) %>%
+  dplyr::rename(
+    cod_nivel_reg = cod_nivel,
+    rbd_admitido_reg = rbd_admitido
+  ) %>%
+  left_join(d17c %>%
+    dplyr::select(cols) %>%
+    dplyr::mutate(assigned_comp = 1) %>%
+    dplyr::rename(
+      cod_nivel_comp = cod_nivel,
+      rbd_admitido_comp = rbd_admitido
+    ), by = "mrun") %>%
+  bind_rows(d17c %>%
+    dplyr::select(cols) %>%
+    filter(!mrun %in% d17r$mrun) %>%
+    dplyr::mutate(
+      assigned_reg = 0,
+      assigned_comp = 1
+    ) %>%
+    dplyr::rename(
+      cod_nivel_comp = cod_nivel,
+      rbd_admitido_comp = rbd_admitido
+    )) %>%
+  dplyr::mutate(
+    assigned_reg = coalesce(assigned_reg, 0),
+    assigned_comp = coalesce(assigned_comp, 0)
+  )
+
+d18 <- d18r %>%
+  dplyr::select(cols) %>%
+  dplyr::mutate(assigned_reg = 1) %>%
+  dplyr::rename(
+    cod_nivel_reg = cod_nivel,
+    rbd_admitido_reg = rbd_admitido
+  ) %>%
+  left_join(d18c %>%
+    dplyr::select(cols) %>%
+    dplyr::mutate(assigned_comp = 1) %>%
+    dplyr::rename(
+      cod_nivel_comp = cod_nivel,
+      rbd_admitido_comp = rbd_admitido
+    ), by = "mrun") %>%
+  bind_rows(d18c %>%
+    dplyr::select(cols) %>%
+    filter(!mrun %in% d18r$mrun) %>%
+    dplyr::mutate(
+      assigned_reg = 0,
+      assigned_comp = 1
+    ) %>%
+    dplyr::rename(
+      cod_nivel_comp = cod_nivel,
+      rbd_admitido_comp = rbd_admitido
+    )) %>%
+  dplyr::mutate(
+    assigned_reg = coalesce(assigned_reg, 0),
+    assigned_comp = coalesce(assigned_comp, 0)
+  )
+
+d19 <- d19r %>%
+  dplyr::select(cols) %>%
+  dplyr::mutate(assigned_reg = 1) %>%
+  dplyr::rename(
+    cod_nivel_reg = cod_nivel,
+    rbd_admitido_reg = rbd_admitido
+  ) %>%
+  left_join(d19c %>%
+    dplyr::select(cols) %>%
+    dplyr::mutate(assigned_comp = 1) %>%
+    dplyr::rename(
+      cod_nivel_comp = cod_nivel,
+      rbd_admitido_comp = rbd_admitido
+    ), by = "mrun") %>%
+  bind_rows(d19c %>%
+    dplyr::select(cols) %>%
+    filter(!mrun %in% d19r$mrun) %>%
+    dplyr::mutate(
+      assigned_reg = 0,
+      assigned_comp = 1
+    ) %>%
+    dplyr::rename(
+      cod_nivel_comp = cod_nivel,
+      rbd_admitido_comp = rbd_admitido
+    )) %>%
+  dplyr::mutate(
+    assigned_reg = coalesce(assigned_reg, 0),
+    assigned_comp = coalesce(assigned_comp, 0)
+  )
+
+d20 <- d20r %>%
+  dplyr::select(cols) %>%
+  dplyr::mutate(assigned_reg = 1) %>%
+  dplyr::rename(
+    cod_nivel_reg = cod_nivel,
+    rbd_admitido_reg = rbd_admitido
+  ) %>%
+  left_join(d20c %>%
+    dplyr::select(cols) %>%
+    dplyr::mutate(assigned_comp = 1) %>%
+    dplyr::rename(
+      cod_nivel_comp = cod_nivel,
+      rbd_admitido_comp = rbd_admitido
+    ), by = "mrun") %>%
+  bind_rows(d20c %>%
+    dplyr::select(cols) %>%
+    filter(!mrun %in% d20r$mrun) %>%
+    dplyr::mutate(
+      assigned_reg = 0,
+      assigned_comp = 1
+    ) %>%
+    dplyr::rename(
+      cod_nivel_comp = cod_nivel,
+      rbd_admitido_comp = rbd_admitido
+    )) %>%
+  dplyr::mutate(
+    assigned_reg = coalesce(assigned_reg, 0),
+    assigned_comp = coalesce(assigned_comp, 0)
+  )
+
+d21 <- d21r %>%
+  dplyr::select(cols) %>%
+  dplyr::mutate(assigned_reg = 1) %>%
+  dplyr::rename(
+    cod_nivel_reg = cod_nivel,
+    rbd_admitido_reg = rbd_admitido
+  ) %>%
+  left_join(d21c %>%
+    dplyr::select(cols) %>%
+    dplyr::mutate(assigned_comp = 1) %>%
+    dplyr::rename(
+      cod_nivel_comp = cod_nivel,
+      rbd_admitido_comp = rbd_admitido
+    ), by = "mrun") %>%
+  bind_rows(d21c %>%
+    dplyr::select(cols) %>%
+    filter(!mrun %in% d21r$mrun) %>%
+    dplyr::mutate(
+      assigned_reg = 0,
+      assigned_comp = 1
+    ) %>%
+    dplyr::rename(
+      cod_nivel_comp = cod_nivel,
+      rbd_admitido_comp = rbd_admitido
+    )) %>%
+  dplyr::mutate(
+    assigned_reg = coalesce(assigned_reg, 0),
+    assigned_comp = coalesce(assigned_comp, 0)
+  )
+
+d22 <- d22r %>%
+  dplyr::select(cols) %>%
+  dplyr::mutate(assigned_reg = 1) %>%
+  dplyr::rename(
+    cod_nivel_reg = cod_nivel,
+    rbd_admitido_reg = rbd_admitido
+  ) %>%
+  left_join(d22c %>%
+    dplyr::select(cols) %>%
+    dplyr::mutate(assigned_comp = 1) %>%
+    dplyr::rename(
+      cod_nivel_comp = cod_nivel,
+      rbd_admitido_comp = rbd_admitido
+    ), by = "mrun") %>%
+  bind_rows(d22c %>%
+    dplyr::select(cols) %>%
+    filter(!mrun %in% d22r$mrun) %>%
+    dplyr::mutate(
+      assigned_reg = 0,
+      assigned_comp = 1
+    ) %>%
+    dplyr::rename(
+      cod_nivel_comp = cod_nivel,
+      rbd_admitido_comp = rbd_admitido
+    )) %>%
+  dplyr::mutate(
+    assigned_reg = coalesce(assigned_reg, 0),
+    assigned_comp = coalesce(assigned_comp, 0)
+  )
+
+d23 <- d23r %>%
+  dplyr::select(cols) %>%
+  dplyr::mutate(assigned_reg = 1) %>%
+  dplyr::rename(
+    cod_nivel_reg = cod_nivel,
+    rbd_admitido_reg = rbd_admitido
+  ) %>%
+  left_join(d23c %>%
+    dplyr::select(cols) %>%
+    dplyr::mutate(assigned_comp = 1) %>%
+    dplyr::rename(
+      cod_nivel_comp = cod_nivel,
+      rbd_admitido_comp = rbd_admitido
+    ), by = "mrun") %>%
+  bind_rows(d23c %>%
+    dplyr::select(cols) %>%
+    filter(!mrun %in% d23r$mrun) %>%
+    dplyr::mutate(
+      assigned_reg = 0,
+      assigned_comp = 1
+    ) %>%
+    dplyr::rename(
+      cod_nivel_comp = cod_nivel,
+      rbd_admitido_comp = rbd_admitido
+    )) %>%
+  dplyr::mutate(
+    assigned_reg = coalesce(assigned_reg, 0),
+    assigned_comp = coalesce(assigned_comp, 0)
+  )
+
+d24 <- d24r %>%
+  dplyr::select(cols) %>%
+  dplyr::mutate(assigned_reg = 1) %>%
+  dplyr::rename(
+    cod_nivel_reg = cod_nivel,
+    rbd_admitido_reg = rbd_admitido
+  ) %>%
+  left_join(d24c %>%
+    dplyr::select(cols) %>%
+    dplyr::mutate(assigned_comp = 1) %>%
+    dplyr::rename(
+      cod_nivel_comp = cod_nivel,
+      rbd_admitido_comp = rbd_admitido
+    ), by = "mrun") %>%
+  bind_rows(d24c %>%
+    dplyr::select(cols) %>%
+    filter(!mrun %in% d24r$mrun) %>%
+    dplyr::mutate(
+      assigned_reg = 0,
+      assigned_comp = 1
+    ) %>%
+    dplyr::rename(
+      cod_nivel_comp = cod_nivel,
+      rbd_admitido_comp = rbd_admitido
+    )) %>%
+  dplyr::mutate(
+    assigned_reg = coalesce(assigned_reg, 0),
+    assigned_comp = coalesce(assigned_comp, 0)
+  )
+```
+
+```{r}
+bcd16 <- b16 %>%
+  left_join(c16, by = "mrun") %>%
+  left_join(d16, by = "mrun") %>%
+  dplyr::mutate(year = 2016) %>%
+  dplyr::mutate(
+    lat_con_error = as.character(lat_con_error),
+    lon_con_error = as.character(lon_con_error)
+  )
+bcd17 <- b17 %>%
+  left_join(c17, by = "mrun") %>%
+  left_join(d17, by = "mrun") %>%
+  dplyr::mutate(year = 2017) %>%
+  dplyr::mutate(
+    lat_con_error = as.character(lat_con_error),
+    lon_con_error = as.character(lon_con_error)
+  )
+bcd18 <- b18 %>%
+  left_join(c18, by = "mrun") %>%
+  left_join(d18, by = "mrun") %>%
+  dplyr::mutate(year = 2018) %>%
+  dplyr::mutate(
+    lat_con_error = as.character(lat_con_error),
+    lon_con_error = as.character(lon_con_error)
+  )
+bcd19 <- b19 %>%
+  left_join(c19, by = "mrun") %>%
+  left_join(d19, by = "mrun") %>%
+  dplyr::mutate(year = 2019) %>%
+  dplyr::mutate(
+    lat_con_error = as.character(lat_con_error),
+    lon_con_error = as.character(lon_con_error)
+  )
+bcd20 <- b20 %>%
+  left_join(c20, by = "mrun") %>%
+  left_join(d20, by = "mrun") %>%
+  dplyr::mutate(year = 2020) %>%
+  dplyr::mutate(
+    lat_con_error = as.character(lat_con_error),
+    lon_con_error = as.character(lon_con_error)
+  )
+bcd21 <- b21 %>%
+  left_join(c21, by = "mrun") %>%
+  left_join(d21, by = "mrun") %>%
+  dplyr::mutate(year = 2021) %>%
+  dplyr::mutate(
+    lat_con_error = as.character(lat_con_error),
+    lon_con_error = as.character(lon_con_error)
+  )
+bcd22 <- b22 %>%
+  left_join(c22, by = "mrun") %>%
+  left_join(d22, by = "mrun") %>%
+  dplyr::mutate(year = 2022) %>%
+  dplyr::mutate(
+    lat_con_error = as.character(lat_con_error),
+    lon_con_error = as.character(lon_con_error)
+  )
+bcd23 <- b23 %>%
+  left_join(c23, by = "mrun") %>%
+  left_join(d23, by = "mrun") %>%
+  dplyr::mutate(year = 2023) %>%
+  dplyr::mutate(
+    lat_con_error = as.character(lat_con_error),
+    lon_con_error = as.character(lon_con_error)
+  )
+bcd24 <- b24 %>%
+  left_join(c24, by = "mrun") %>%
+  left_join(d24, by = "mrun") %>%
+  dplyr::mutate(year = 2024) %>%
+  dplyr::mutate(
+    lat_con_error = as.character(lat_con_error),
+    lon_con_error = as.character(lon_con_error)
+  )
+
+rm(b16r, b17r, b18r, b19r, b20r, b21r, b22r, b23r, b24r)
+rm(c16r, c17r, c18r, c19r, c20r, c21r, c22r, c23r, c24r)
+rm(d16r, d17r, d18r, d19r, d20r, d21r, d22r, d23r, d24r)
+
+rm(b16c, b17c, b18c, b19c, b20c, b21c, b22c, b23c, b24c)
+rm(c16c, c17c, c18c, c19c, c20c, c21c, c22c, c23c, c24c)
+rm(d16c, d17c, d18c, d19c, d20c, d21c, d22c, d23c, d24c)
+
+rm(b16, b17, b18, b19, b20, b21, b22, b23, b24)
+rm(c16, c17, c18, c19, c20, c21, c22, c23, c24)
+rm(d16, d17, d18, d19, d20, d21, d22, d23, d24)
+rm(bcd_list)
+gc(reset = TRUE)
+
+bcd <- bind_rows(bcd16, bcd17, bcd18, bcd19, bcd20, bcd21, bcd22, bcd23, bcd24)
+saveRDS(bcd, "data/panel_sae_2016_2024.rds")
+
+rm(bcd16, bcd17, bcd18, bcd19, bcd20, bcd21, bcd22, bcd23, bcd24)
+gc(reset = TRUE)
+```
+
+
+
+
+
+
+
+
+# Create panel of students progressions throughout primary and secondary education
+```{r function_to_remove_duplicates, echo=FALSE, warning=FALSE, message=FALSE}
+id_cols <- c("MRUN", "AGNO", "RBD", "COD_ENSE", "COD_GRADO")
+
+keep_best_record <- function(df, id_cols = c("MRUN", "AGNO", "RBD", "COD_ENSE", "COD_GRADO")) {
+  missing_id_cols <- setdiff(id_cols, names(df))
+  if (length(missing_id_cols) > 0) {
+    stop("These id_cols are not in df: ", paste(missing_id_cols, collapse = ", "))
+  }
+
+  df <- df[stats::complete.cases(df[, id_cols, drop = FALSE]), , drop = FALSE]
+  df <- df %>%
+    dplyr::mutate(.orig_row = dplyr::row_number())
+
+  if (nrow(df) <= 1) {
+    return(df %>% dplyr::select(-dplyr::all_of(".orig_row")))
+  }
+
+  dup_mask <- duplicated(df[, id_cols, drop = FALSE]) |
+    duplicated(df[, id_cols, drop = FALSE], fromLast = TRUE)
+
+  if (!any(dup_mask)) {
+    return(df %>% dplyr::select(-dplyr::all_of(".orig_row")))
+  }
+
+  unique_rows <- df[!dup_mask, , drop = FALSE]
+  dup_rows <- df[dup_mask, , drop = FALSE]
+  other_cols <- setdiff(names(dup_rows), c(id_cols, ".orig_row"))
+
+  if (length(other_cols) == 0) {
+    best_dups <- dup_rows %>%
+      dplyr::group_by(dplyr::across(dplyr::all_of(id_cols))) %>%
+      dplyr::slice(1) %>%
+      dplyr::ungroup()
+  } else {
+    row_freq <- dup_rows %>%
+      dplyr::group_by(dplyr::across(dplyr::all_of(c(id_cols, other_cols)))) %>%
+      dplyr::summarise(.row_freq = dplyr::n(), .groups = "drop")
+
+    dup_rows <- dup_rows %>%
+      dplyr::mutate(.na_count = rowSums(is.na(dplyr::pick(dplyr::all_of(other_cols)))))
+
+    best_dups <- dup_rows %>%
+      dplyr::left_join(row_freq, by = c(id_cols, other_cols)) %>%
+      dplyr::group_by(dplyr::across(dplyr::all_of(id_cols))) %>%
+      dplyr::arrange(.data$.na_count, dplyr::desc(.data$.row_freq), .data$.orig_row, .by_group = TRUE) %>%
+      dplyr::slice(1) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(-dplyr::all_of(c(".na_count", ".row_freq")))
+  }
+
+  dplyr::bind_rows(unique_rows, best_dups) %>%
+    dplyr::arrange(.data$.orig_row) %>%
+    dplyr::select(-dplyr::all_of(".orig_row"))
+}
+```
+
+```{r function_remove_duplicates_mrun_agno, echo=FALSE, warning=FALSE, message=FALSE}
+resolve_mrun_agno_duplicates <- function(df) {
+  stopifnot(all(c("MRUN", "AGNO") %in% names(df)))
+
+  has_sit <- "SIT_FIN_R" %in% names(df)
+  has_nivel <- "NIVEL" %in% names(df)
+  has_rbd <- "RBD" %in% names(df)
+  has_att <- "ASISTENCIA" %in% names(df)
+  has_gen <- "GEN_ALU" %in% names(df)
+  has_age <- "EDAD_ALU" %in% names(df)
+  has_cod <- all(c("COD_ENSE", "COD_GRADO") %in% names(df))
+
+  n <- nrow(df)
+  df$.row_id <- seq_len(n)
+
+  # --- Derive a numeric grade level (1-12) ---
+  if (has_nivel) {
+    df$.grado <- suppressWarnings(as.numeric(gsub("-.*", "", df$NIVEL)))
+  } else if (has_cod) {
+    df$.grado <- ifelse(
+      df$COD_ENSE == 110, as.numeric(df$COD_GRADO),
+      ifelse(df$COD_ENSE %in% c(310, 410, 510, 610, 710, 810, 910),
+        as.numeric(df$COD_GRADO) + 8, NA_real_
+      )
+    )
+  } else {
+    df$.grado <- NA_real_
+  }
+
+  # --- Identify duplicated (MRUN, AGNO) pairs ---
+  key <- paste(df$MRUN, df$AGNO, sep = "_")
+  dup_mask <- duplicated(key) | duplicated(key, fromLast = TRUE)
+
+  if (!any(dup_mask)) {
+    df$.grado <- NULL
+    df$.row_id <- NULL
+    return(df)
+  }
+
+  n_dup <- sum(dup_mask)
+  cat(sprintf(
+    "  Resolving %d duplicated (MRUN, AGNO) rows out of %d total...\n",
+    n_dup, n
+  ))
+
+  unique_df <- df[!dup_mask, , drop = FALSE]
+  dup_df <- df[dup_mask, , drop = FALSE]
+
+  # --- Build reference lookup from non-duplicated records ---
+  ref_key <- paste(unique_df$MRUN, unique_df$AGNO, sep = "_")
+  ref_grado <- setNames(unique_df$.grado, ref_key)
+  if (has_rbd) ref_rbd <- setNames(unique_df$RBD, ref_key)
+
+  # Modal gender per MRUN from non-dup records
+  if (has_gen) {
+    gen_tbl <- table(unique_df$MRUN, unique_df$GEN_ALU)
+    modal_gen <- setNames(
+      apply(gen_tbl, 1, function(x) as.integer(names(which.max(x)))),
+      rownames(gen_tbl)
+    )
+  }
+
+  # Age lookup from non-dup records
+  if (has_age) {
+    ref_age <- setNames(
+      suppressWarnings(as.numeric(unique_df$EDAD_ALU)),
+      ref_key
+    )
+  }
+
+  # Tenure: how many non-dup years each MRUN attended each RBD
+  if (has_rbd) {
+    tenure_tbl <- table(paste(unique_df$MRUN, unique_df$RBD, sep = "_"))
+  }
+
+  # --- Lookup keys for adjacent years ---
+  prev1_key <- paste(dup_df$MRUN, dup_df$AGNO - 1L, sep = "_")
+  next1_key <- paste(dup_df$MRUN, dup_df$AGNO + 1L, sep = "_")
+  prev2_key <- paste(dup_df$MRUN, dup_df$AGNO - 2L, sep = "_")
+  next2_key <- paste(dup_df$MRUN, dup_df$AGNO + 2L, sep = "_")
+
+  prev1_g <- unname(ref_grado[prev1_key])
+  next1_g <- unname(ref_grado[next1_key])
+  prev2_g <- unname(ref_grado[prev2_key])
+  next2_g <- unname(ref_grado[next2_key])
+
+  if (has_rbd) {
+    prev1_r <- unname(ref_rbd[prev1_key])
+    next1_r <- unname(ref_rbd[next1_key])
+    prev2_r <- unname(ref_rbd[prev2_key])
+    next2_r <- unname(ref_rbd[next2_key])
+  }
+
+  g <- dup_df$.grado
+
+  # ===== SCORE 1: SIT_FIN_R quality =====
+  if (has_sit) {
+    s <- dup_df$SIT_FIN_R
+    sit_score <- ifelse(s == "P", 4L,
+      ifelse(s == "R", 3L,
+        ifelse(!is.na(s) & s != "T", 2L,
+          ifelse(is.na(s), 1L, 0L)
+        )
+      )
+    )
+  } else {
+    sit_score <- rep(0L, n_dup)
+  }
+
+  # ===== SCORE 2: Grade-level trajectory =====
+  nivel_score <- rep(0L, n_dup)
+  # Promotion from prev year (grado == prev + 1): +2
+  nivel_score <- nivel_score +
+    ifelse(!is.na(g) & !is.na(prev1_g) & g == prev1_g + 1L, 2L, 0L)
+  # Retention from prev year (same grade): +1
+  nivel_score <- nivel_score +
+    ifelse(!is.na(g) & !is.na(prev1_g) & g == prev1_g, 1L, 0L)
+  # Consistent with next year's promotion (grado == next - 1): +2
+  nivel_score <- nivel_score +
+    ifelse(!is.na(g) & !is.na(next1_g) & g == next1_g - 1L, 2L, 0L)
+  # Retention into next year (grado == next): +1
+  nivel_score <- nivel_score +
+    ifelse(!is.na(g) & !is.na(next1_g) & g == next1_g, 1L, 0L)
+  # 2-year fallback (only if 1-year ref is missing): +1
+  nivel_score <- nivel_score +
+    ifelse(!is.na(g) & is.na(prev1_g) & !is.na(prev2_g) &
+      g == prev2_g + 2L, 1L, 0L) +
+    ifelse(!is.na(g) & is.na(next1_g) & !is.na(next2_g) &
+      g == next2_g - 2L, 1L, 0L)
+
+  # ===== SCORE 3: School (RBD) continuity =====
+  rbd_score <- rep(0L, n_dup)
+  if (has_rbd) {
+    r <- dup_df$RBD
+    rbd_score <- rbd_score +
+      ifelse(!is.na(r) & !is.na(prev1_r) & r == prev1_r, 2L, 0L) +
+      ifelse(!is.na(r) & !is.na(next1_r) & r == next1_r, 2L, 0L)
+    # 2-year fallback (lower weight)
+    rbd_score <- rbd_score +
+      ifelse(!is.na(r) & is.na(prev1_r) & !is.na(prev2_r) & r == prev2_r, 1L, 0L) +
+      ifelse(!is.na(r) & is.na(next1_r) & !is.na(next2_r) & r == next2_r, 1L, 0L)
+  }
+
+  # ===== SCORE 4: Tenure at school (years at same RBD in non-dup records) =====
+  tenure_score <- rep(0L, n_dup)
+  if (has_rbd) {
+    tk <- paste(dup_df$MRUN, dup_df$RBD, sep = "_")
+    tenure_score <- as.integer(ifelse(tk %in% names(tenure_tbl),
+      tenure_tbl[tk], 0L
+    ))
+  }
+
+  # ===== SCORE 5: Gender consistency =====
+  gen_score <- rep(0L, n_dup)
+  if (has_gen) {
+    dup_gen <- suppressWarnings(as.integer(dup_df$GEN_ALU))
+    dup_modal <- unname(modal_gen[as.character(dup_df$MRUN)])
+    gen_score <- ifelse(!is.na(dup_gen) & !is.na(dup_modal) & dup_gen == dup_modal, 1L, 0L)
+  }
+
+  # ===== SCORE 6: Age trajectory =====
+  age_score <- rep(0L, n_dup)
+  if (has_age) {
+    dup_age <- suppressWarnings(as.numeric(dup_df$EDAD_ALU))
+    prev1_a <- unname(ref_age[prev1_key])
+    next1_a <- unname(ref_age[next1_key])
+    # age == prev_age + 1
+    age_score <- age_score +
+      ifelse(!is.na(dup_age) & !is.na(prev1_a) & dup_age == prev1_a + 1, 1L, 0L)
+    # age == next_age - 1
+    age_score <- age_score +
+      ifelse(!is.na(dup_age) & !is.na(next1_a) & dup_age == next1_a - 1, 1L, 0L)
+  }
+
+  # ===== SCORE 7: Data completeness (fewer NAs) =====
+  data_cols <- setdiff(
+    names(dup_df),
+    c(".row_id", ".grado")
+  )
+  na_count <- rowSums(is.na(dup_df[, data_cols, drop = FALSE]))
+
+  # ===== SCORE 8: Attendance =====
+  if (has_att) {
+    att <- suppressWarnings(as.numeric(gsub(",", ".", dup_df$ASISTENCIA)))
+    att[is.na(att)] <- 0
+  } else {
+    att <- rep(0, n_dup)
+  }
+
+  # --- Combine scores and pick the best row per group ---
+  dup_df$.s1 <- sit_score
+  dup_df$.s2 <- nivel_score
+  dup_df$.s3 <- rbd_score
+  dup_df$.s4 <- tenure_score
+  dup_df$.s5 <- gen_score
+  dup_df$.s6 <- age_score
+  dup_df$.s7 <- na_count
+  dup_df$.s8 <- att
+
+  best_dups <- dup_df %>%
+    dplyr::group_by(MRUN, AGNO) %>%
+    dplyr::arrange(
+      dplyr::desc(.s1), # SIT_FIN_R quality
+      dplyr::desc(.s2), # NIVEL continuity
+      dplyr::desc(.s3), # RBD continuity
+      dplyr::desc(.s4), # school tenure
+      dplyr::desc(.s5), # gender consistency
+      dplyr::desc(.s6), # age trajectory
+      .s7, # fewer NAs
+      dplyr::desc(.s8), # higher attendance
+      .row_id, # original order
+      .by_group = TRUE
+    ) %>%
+    dplyr::slice(1) %>%
+    dplyr::ungroup()
+
+  n_removed <- nrow(dup_df) - nrow(best_dups)
+  cat(sprintf(
+    "  Kept %d rows, removed %d duplicates.\n",
+    nrow(best_dups), n_removed
+  ))
+
+  # --- Recombine and clean up ---
+  temp_cols <- c(".row_id", ".grado", ".s1", ".s2", ".s3", ".s4", ".s5", ".s6", ".s7", ".s8")
+
+  dplyr::bind_rows(unique_df, best_dups) %>%
+    dplyr::arrange(.row_id) %>%
+    dplyr::select(-dplyr::any_of(temp_cols))
+}
+```
+
+```{r process_enrollment, echo=FALSE, warning=FALSE, message=FALSE}
+df <- readRDS("data/panel_enrollment_k12_2004_2025.rds")
+df %<>% filter(!is.na(MRUN) & !is.na(AGNO) & !is.na(RBD) & !is.na(COD_GRADO) & !is.na(COD_ENSE))
+
+# keep only MRUN from students who started high-school after 2010 and 2021
+# start_mruns <- unique(df$MRUN[df$AGNO >= 2010 & df$COD_GRADO == 1 & df$COD_ENSE > 300])
+# df <- df[df$MRUN %in% start_mruns, , drop = FALSE]
+# remove records from PreK
+df %<>% filter(COD_ENSE > 10)
+
+df <- keep_best_record(df, id_cols = id_cols)
+saveRDS(df, "data/panel_9-12_2010_2021_v4.rds")
+gc()
+```
+
+```{r add_performance, echo=FALSE, warning=FALSE, message=FALSE}
+df <- readRDS("data/panel_9-12_2010_2021_v4.rds")
+per <- readRDS("data/panel_performance_2002_2024.rds")
+
+# keep high-school only and complete cases for main identifiers
+per %<>% filter(!is.na(MRUN) & !is.na(AGNO) & !is.na(RBD) & !is.na(COD_GRADO) & !is.na(COD_ENSE)) %>%
+  filter(MRUN %in% unique(df$MRUN))
+
+per <- keep_best_record(per, id_cols = id_cols)
+
+df <- df %>%
+  left_join(
+    per %>% dplyr::select(-NOM_RBD, -COD_DEPE),
+    by = id_cols
+  )
+rm(per)
+saveRDS(df, "data/panel_9-12_2010_2021_v4.rds")
+gc()
+```
+
+```{r add_secondary_graduation, echo=FALSE, warning=FALSE, message=FALSE}
+df <- readRDS("data/panel_9-12_2010_2021_v4.rds")
+grd <- readRDS("data/panel_graduation_k12_2004_2024.rds")
+
+grd %<>% dplyr::rename(AGNO = ï..AGNO)
+grd %<>% filter(!is.na(MRUN) & !is.na(AGNO) & !is.na(RBD) & !is.na(COD_GRADO) & !is.na(COD_ENSE)) %>%
+  filter(MRUN %in% unique(df$MRUN))
+grd <- keep_best_record(grd, id_cols = id_cols)
+grd$PROM_NOTAS <- suppressWarnings(as.numeric(sub(",", ".", grd$PROM_NOTAS_ALU, fixed = TRUE)))
+
+df %<>% left_join(
+  grd %>% dplyr::select(-setdiff(intersect(colnames(df), colnames(grd)), id_cols), -PROM_NOTAS_ALU),
+  by = id_cols
+)
+
+rm(grd)
+gc()
+
+df <- resolve_mrun_agno_duplicates(df)
+
+saveRDS(df, "data/panel_9-12_2010_2021_v4.rds")
+```
+
+```{r add_ee, echo=FALSE, warning=FALSE, message=FALSE}
+df <- readRDS("data/panel_9-12_2010_2021_v4.rds")
+panel_ee <- readRDS("data/panel_ee_2004_2025_homogenized.rds")
+
+df %<>% dplyr::select(-COD_PRO_RBD) %>%
+  left_join(
+    panel_ee %>%
+      dplyr::select(rbd, year, cod_pro_rbd, ive_sinae_basica, ive_sinae_media, in_sae, grade_min_sae, grade_max_sae, grade_min_enr, grade_max_enr) %>%
+      dplyr::rename(
+        RBD = rbd,
+        AGNO = year,
+        COD_PRO_RBD = cod_pro_rbd,
+        IVE_SINAE_BASICA = ive_sinae_basica,
+        IVE_SINAE_MEDIA = ive_sinae_media,
+        rbd_grade_min_sae = grade_min_sae,
+        rbd_grade_max_sae = grade_max_sae,
+        rbd_grade_min_enr = grade_min_enr,
+        rbd_grade_max_enr = grade_max_enr,
+        in_sae = in_sae
+      ),
+    by = c("RBD" = "RBD", "AGNO" = "AGNO")
+  )
+
+grade_mapping <- readRDS("data/mapping_cod_ense_grado_to_grade.rds")
+
+df %<>%
+  left_join(
+    grade_mapping %>% dplyr::select(COD_ENSE, COD_GRADO, grade_min, grade_max, year_min, year_max),
+    by = c("COD_ENSE", "COD_GRADO")
+  ) %>%
+  filter((AGNO >= year_min & AGNO <= year_max) | is.na(year_min)) %>%
+  dplyr::select(-year_min, -year_max)
+
+rm(grade_mapping)
+
+# --- Fill missing NIVEL ---
+# Step 1: From existing NIVEL values within the same (COD_ENSE, COD_GRADO)
+nivel_lookup <- df %>%
+  filter(!is.na(NIVEL)) %>%
+  distinct(COD_ENSE, COD_GRADO, NIVEL)
+
+# Keep only unambiguous mappings (one NIVEL per combo)
+nivel_lookup <- nivel_lookup %>%
+  group_by(COD_ENSE, COD_GRADO) %>%
+  filter(n() == 1L) %>%
+  ungroup() %>%
+  dplyr::rename(.nivel_fill = NIVEL)
+
+df <- df %>%
+  left_join(nivel_lookup, by = c("COD_ENSE", "COD_GRADO")) %>%
+  dplyr::mutate(NIVEL = ifelse(is.na(NIVEL) & !is.na(.nivel_fill), .nivel_fill, NIVEL)) %>%
+  dplyr::select(-.nivel_fill)
+
+rm(nivel_lookup)
+
+# Step 2: From grade_min / grade_max for still-missing values
+df <- df %>%
+  dplyr::mutate(NIVEL = ifelse(
+    is.na(NIVEL) & !is.na(grade_min),
+    ifelse(grade_min == grade_max,
+      as.character(grade_min),
+      paste0(grade_min, "-", grade_max)
+    ),
+    NIVEL
+  ))
+saveRDS(df, "data/panel_9-12_2010_2021_v4.rds")
+```
+
+```{r add_additional_variables, echo=FALSE, warning=FALSE, message=FALSE}
+library(data.table)
+
+df <- readRDS("data/panel_9-12_2010_2021_v4.rds")
+setDT(df)
+setkey(df, MRUN, AGNO)
+
+# --- rid, continue, switch (vectorised, no grouping overhead) ---
+df[, rid := seq_len(.N), by = MRUN]
+prev_rbd <- shift(df$RBD, 1L)
+same_mrun <- df$MRUN == shift(df$MRUN, 1L)
+same_mrun[1L] <- FALSE
+df[, continue := fifelse(same_mrun, fifelse(RBD == prev_rbd, 1L, 0L), NA_integer_)]
+df[, switch := fifelse(same_mrun & !is.na(prev_rbd) & RBD != prev_rbd, 1L, 0L)]
+rm(prev_rbd, same_mrun)
+gc()
+
+# --- Row-level indicator flags (no grouping, modify by reference) ---
+df[, `:=`(
+  is_special_education = as.integer(COD_ENSE > 200L & COD_ENSE < 300L),
+  is_primary = as.integer(COD_ENSE == 110L),
+  is_secondary_hc = as.integer(COD_ENSE == 310L),
+  is_secondary_tp_commerce = as.integer(COD_ENSE == 410L),
+  is_secondary_tp_industrial = as.integer(COD_ENSE == 510L),
+  is_secondary_tp_technical = as.integer(COD_ENSE == 610L),
+  is_secondary_tp_agriculture = as.integer(COD_ENSE == 710L),
+  is_secondary_tp_marine = as.integer(COD_ENSE == 810L),
+  is_secondary_art = as.integer(COD_ENSE == 910L),
+  is_adult_primary = as.integer(COD_ENSE >= 160L & COD_ENSE < 170L),
+  is_adult_secondary_hc = as.integer(COD_ENSE != 310L & COD_ENSE >= 300L & COD_ENSE < 400L),
+  is_adult_secondary_tp_commerce = as.integer(COD_ENSE != 410L & COD_ENSE >= 400L & COD_ENSE < 500L),
+  is_adult_secondary_tp_industrial = as.integer(COD_ENSE != 510L & COD_ENSE >= 500L & COD_ENSE < 600L),
+  is_adult_secondary_tp_technical = as.integer(COD_ENSE != 610L & COD_ENSE >= 600L & COD_ENSE < 700L),
+  is_adult_secondary_tp_agriculture = as.integer(COD_ENSE != 710L & COD_ENSE >= 700L & COD_ENSE < 800L),
+  is_adult_secondary_tp_marine = as.integer(COD_ENSE != 810L & COD_ENSE >= 800L & COD_ENSE < 900L),
+  is_adult_secondary_art = as.integer(COD_ENSE != 910L & COD_ENSE >= 900L & COD_ENSE < 1000L)
+)]
+
+df[, `:=`(
+  is_any_primary                  = as.integer(is_primary == 1L | is_adult_primary == 1L),
+  is_any_secondary_hc             = as.integer(is_secondary_hc == 1L | is_adult_secondary_hc == 1L),
+  is_any_secondary_tp_commerce    = as.integer(is_secondary_tp_commerce == 1L | is_adult_secondary_tp_commerce == 1L),
+  is_any_secondary_tp_industrial  = as.integer(is_secondary_tp_industrial == 1L | is_adult_secondary_tp_industrial == 1L),
+  is_any_secondary_tp_technical   = as.integer(is_secondary_tp_technical == 1L | is_adult_secondary_tp_technical == 1L),
+  is_any_secondary_tp_agriculture = as.integer(is_secondary_tp_agriculture == 1L | is_adult_secondary_tp_agriculture == 1L),
+  is_any_secondary_tp_marine      = as.integer(is_secondary_tp_marine == 1L | is_adult_secondary_tp_marine == 1L),
+  is_any_secondary_art            = as.integer(is_secondary_art == 1L | is_adult_secondary_art == 1L)
+)]
+
+df[, is_any_secondary := as.integer(
+  is_any_secondary_hc == 1L | is_any_secondary_tp_commerce == 1L |
+    is_any_secondary_tp_industrial == 1L | is_any_secondary_tp_technical == 1L |
+    is_any_secondary_tp_agriculture == 1L | is_any_secondary_tp_marine == 1L |
+    is_any_secondary_art == 1L
+)]
+
+gc()
+
+# --- Grouped summaries (by MRUN, modify by reference) ---
+# Split into batches to limit peak memory from temporaries
+
+# Batch 1: only_regular_* flags
+df[, `:=`(
+  only_regular_hc             = as.integer(all(is_primary == 1L | is_secondary_hc == 1L)),
+  only_regular_tp             = as.integer(all(is_primary == 1L | is_secondary_tp_commerce == 1L | is_secondary_tp_industrial == 1L | is_secondary_tp_technical == 1L | is_secondary_tp_agriculture == 1L | is_secondary_tp_marine == 1L)),
+  only_regular_tp_commerce    = as.integer(all(is_primary == 1L | is_secondary_tp_commerce == 1L)),
+  only_regular_tp_industrial  = as.integer(all(is_primary == 1L | is_secondary_tp_industrial == 1L)),
+  only_regular_tp_technical   = as.integer(all(is_primary == 1L | is_secondary_tp_technical == 1L)),
+  only_regular_tp_agriculture = as.integer(all(is_primary == 1L | is_secondary_tp_agriculture == 1L)),
+  only_regular_tp_marine      = as.integer(all(is_primary == 1L | is_secondary_tp_marine == 1L)),
+  only_regular_art            = as.integer(all(is_primary == 1L | is_secondary_art == 1L))
+), by = MRUN]
+
+# Batch 2: graduation, grade counts, all-level stats
+df[, `:=`(
+  graduated_primary      = as.integer(any(SIT_FIN_R == "P" & NIVEL == 6L)),
+  graduated_secondary    = as.integer(any(MARCA_EGRESO == 1L)),
+  num_grades             = .N,
+  num_grades_completed   = sum(SIT_FIN_R == "P", na.rm = TRUE),
+  num_grades_failed      = sum(SIT_FIN_R == "R", na.rm = TRUE),
+  num_grades_transfered  = sum(SIT_FIN_R == "T", na.rm = TRUE),
+  stayer_all             = as.integer(all(RBD == first(RBD))),
+  switches_all           = sum(switch),
+  rbd_initial_grade_all  = first(RBD),
+  rbd_last_grade_all     = last(RBD),
+  gpa_all                = mean(PROM_GRAL, na.rm = TRUE),
+  att_all                = mean(ASISTENCIA, na.rm = TRUE)
+), by = MRUN]
+
+df[, `:=`(
+  dropped_primary   = 1L - graduated_primary,
+  dropped_secondary = 1L - graduated_secondary
+)]
+
+# Batch 3: Primary-level stats (only for groups that have primary rows)
+# Initialize columns as NA, then fill for qualifying groups
+df[, `:=`(
+  stayer_primary             = NA_integer_,
+  switches_primary           = NA_real_,
+  rbd_initial_grade_primary  = NA_integer_,
+  rbd_last_grade_primary     = NA_integer_,
+  gpa_primary                = NA_real_,
+  att_primary                = NA_real_
+)]
+
+# Compute a helper: does this MRUN have any primary rows?
+df[, .has_primary := as.integer(any(is_any_primary == 1L)), by = MRUN]
+
+df[.has_primary == 1L, `:=`(
+  stayer_primary = as.integer(all(RBD[is_any_primary == 1L] == first(RBD[is_any_primary == 1L]))),
+  switches_primary = sum(switch[is_any_primary == 1L]),
+  rbd_initial_grade_primary = first(RBD[is_any_primary == 1L]),
+  rbd_last_grade_primary = last(RBD[is_any_primary == 1L]),
+  gpa_primary = mean(PROM_GRAL[is_any_primary == 1L], na.rm = TRUE),
+  att_primary = mean(ASISTENCIA[is_any_primary == 1L], na.rm = TRUE)
+), by = MRUN]
+
+df[, .has_primary := NULL]
+
+# Batch 4: Secondary-level stats (only for groups that have secondary rows)
+df[, `:=`(
+  stayer_secondary             = NA_integer_,
+  switches_secondary           = NA_real_,
+  rbd_initial_grade_secondary  = NA_integer_,
+  rbd_last_grade_secondary     = NA_integer_,
+  gpa_secondary                = NA_real_,
+  att_secondary                = NA_real_
+)]
+
+df[, .has_secondary := as.integer(any(is_any_secondary == 1L)), by = MRUN]
+
+df[.has_secondary == 1L, `:=`(
+  stayer_secondary = as.integer(all(RBD[is_any_secondary == 1L] == first(RBD[is_any_secondary == 1L]))),
+  switches_secondary = sum(switch[is_any_secondary == 1L]),
+  rbd_initial_grade_secondary = first(RBD[is_any_secondary == 1L]),
+  rbd_last_grade_secondary = last(RBD[is_any_secondary == 1L]),
+  gpa_secondary = mean(PROM_GRAL[is_any_secondary == 1L], na.rm = TRUE),
+  att_secondary = mean(ASISTENCIA[is_any_secondary == 1L], na.rm = TRUE)
+), by = MRUN]
+
+df[, .has_secondary := NULL]
+gc()
+
+# --- could_complete_secondary ---
+max_data_year <- 2025L
+
+df[, `:=`(
+  .earliest_possible_finish = min(
+    fifelse(!is.na(grade_min), AGNO + (12L - grade_min), NA_integer_),
+    na.rm = TRUE
+  ),
+  .already_completed = as.integer(any(graduated_secondary == 1L, na.rm = TRUE))
+), by = MRUN]
+
+df[, could_complete_secondary := as.integer(
+  .already_completed == 1L | .earliest_possible_finish <= max_data_year
+)]
+
+df[, c(".earliest_possible_finish", ".already_completed") := NULL]
+
+# Convert back to data.frame and save
+setDF(df)
+saveRDS(df, "data/panel_9-12_2010_2021_v4.rds")
+```
+
+```{r add_sae, echo=FALSE, warning=FALSE, message=FALSE}
+df <- readRDS("data/panel_9-12_2010_2021_v4.rds")
+sae <- readRDS("data/panel_sae_2016_2024.rds")
+
+sae %<>%
+  # filter(cod_nivel > 0) %>%
+  dplyr::select(
+    mrun, nivel, es_mujer, prioritario, alto_rendimiento,
+    participate_reg, participate_comp,
+    apply_reg, apply_comp,
+    assigned_reg, assigned_comp,
+    rbd_admitido_reg, rbd_admitido_comp,
+    cod_nivel_reg, cod_nivel_comp, cod_nivel, year
+  ) %>%
+  dplyr::mutate(cod_nivel = coalesce(cod_nivel, nivel)) %>%
+  dplyr::rename(MRUN = mrun, year_sae = year) %>%
+  dplyr::mutate(
+    AGNO = year_sae + 1,
+    participated_sae = ifelse(any(participate_reg == 1 | participate_comp == 1), 1, 0),
+    applied_sae = ifelse(any(apply_reg == 1 | apply_comp == 1), 1, 0),
+    assigned_sae = ifelse(any(assigned_reg == 1 | assigned_comp == 1), 1, 0)
+  )
+
+df %<>% left_join(sae, by = c("MRUN", "AGNO")) %>%
+  dplyr::mutate(
+    enrolled_sae_reg = ifelse(RBD == rbd_admitido_reg, 1, 0),
+    enrolled_sae_comp = ifelse(RBD == rbd_admitido_comp, 1, 0),
+    enrolled_sae = ifelse(any(enrolled_sae_reg == 1 | enrolled_sae_comp == 1), 1, 0),
+    participated_sae = coalesce(participated_sae, 0),
+    applied_sae = coalesce(applied_sae, 0),
+    assigned_sae = coalesce(assigned_sae, 0),
+    enrolled_sae = coalesce(enrolled_sae, 0)
+  )
+
+
+yfs <- rbind(
+  sae %>%
+    dplyr::distinct(
+      rbd_admitido_reg, year_sae
+    ) %>% dplyr::rename(RBD = rbd_admitido_reg),
+  sae %>%
+    dplyr::distinct(
+      rbd_admitido_comp, year_sae
+    ) %>% dplyr::rename(RBD = rbd_admitido_comp)
+) %>%
+  group_by(RBD) %>%
+  dplyr::summarise(year_rbd_first_sae = min(year_sae, na.rm = TRUE)) %>%
+  ungroup()
+
+df %<>% left_join(yfs, by = "RBD")
+df %<>% group_by(COD_REG_RBD) %>%
+  dplyr::mutate(year_region_first_sae = min(year_rbd_first_sae, na.rm = TRUE)) %>%
+  ungroup()
+
+df %<>% dplyr::mutate(year_rbd_first_sae = coalesce(year_rbd_first_sae, 0))
+
+rm(sae, yfs)
+gc()
+saveRDS(df, "data/panel_9-12_2010_2021_v4.rds")
+```
+
+```{r add_demre, echo=FALSE, warning=FALSE, message=FALSE}
+df <- readRDS("data/panel_9-12_2010_2021_v4.rds")
+
+# Load demre, immediately filter to MRUNs in df to reduce memory
+demre <- readRDS("data/data_students_2004_2025.rds")
+demre <- demre[demre$mrun %in% df$MRUN, ]
+gc()
+
+# Select needed columns first (less memory during group_by/sort), then slice_min
+demre %<>%
+  dplyr::select(
+    mrun, year, egreso_yyyy, rbd, promedio_notas, nem, ranking,
+    ends_with("_actual"), ends_with("_anterior"), bea, pace, ingreso,
+    codigo_carrera_matricula, ends_with("_seleccion"),
+    starts_with("is_"), applied, assigned, enrolled, scored_lm, scored_any,
+    starts_with("num_apps"), starts_with("num_valid")
+  ) %>%
+  dplyr::rename(year_grad_sua = egreso_yyyy, rbd_grad_sua = rbd) %>%
+  group_by(mrun) %>%
+  slice_min(year, n = 1) %>%
+  ungroup() %>%
+  dplyr::rename(MRUN = mrun, year_higher_ed_admission = year)
+
+df %<>% left_join(demre, by = "MRUN")
+rm(demre)
+gc()
+
+df %<>% dplyr::mutate(
+  num_apps_reg = coalesce(num_apps_reg, 0),
+  num_apps_bea = coalesce(num_apps_bea, 0),
+  num_apps_pace = coalesce(num_apps_pace, 0),
+  num_apps_genero = coalesce(num_apps_genero, 0),
+  num_valid_apps_reg = coalesce(num_valid_apps_reg, 0),
+  num_valid_apps_bea = coalesce(num_valid_apps_bea, 0),
+  num_valid_apps_pace = coalesce(num_valid_apps_pace, 0),
+  num_valid_apps_genero = coalesce(num_valid_apps_genero, 0),
+  num_apps_above_prev_cutoff_reg = coalesce(num_apps_above_prev_cutoff_reg, 0),
+  pct_valid_reg = ifelse(num_apps_reg > 0, num_valid_apps_reg / num_apps_reg, NA),
+  pct_valid_bea = ifelse(num_apps_bea > 0, num_valid_apps_bea / num_apps_bea, NA),
+  pct_valid_pace = ifelse(num_apps_pace > 0, num_valid_apps_pace / num_apps_pace, NA),
+  pct_valid_genero = ifelse(num_apps_genero > 0, num_valid_apps_genero / num_apps_genero, NA),
+  pct_apps_above_prev_cutoff_reg = ifelse(num_apps_reg > 0, num_apps_above_prev_cutoff_reg / num_apps_reg, NA),
+  any_apps_above_prev_cutoff_reg = ifelse(num_apps_reg > 0, ifelse(num_apps_above_prev_cutoff_reg > 0, 1, 0), NA)
+)
+
+# Use data.table for percent_rank operations (in-place, no grouped copies)
+library(data.table)
+setDT(df)
+df[prom_lm_actual > 0, lm_pct := (frank(prom_lm_actual, ties.method = "min") - 1L) / (.N - 1L), by = year_higher_ed_admission]
+df[nem > 0, nem_pct := (frank(nem, ties.method = "min") - 1L) / (.N - 1L), by = year_higher_ed_admission]
+df[ranking > 0, ranking_pct := (frank(ranking, ties.method = "min") - 1L) / (.N - 1L), by = year_higher_ed_admission]
+setDF(df)
+
+df %<>% dplyr::mutate(
+  prom_gral = coalesce(PROM_GRAL, 0),
+  att = coalesce(ASISTENCIA, 0),
+  scored_lm = coalesce(scored_lm, 0),
+  prom_lm_actual = coalesce(lm_pct, 0),
+  applied = coalesce(applied, 0),
+  assigned = coalesce(assigned, 0),
+  enrolled = coalesce(enrolled, 0),
+  nem_pct = coalesce(nem_pct, 0),
+  ranking_pct = coalesce(ranking_pct, 0),
+  is_private = ifelse(COD_DEPE == 4, 1, 0)
+)
+saveRDS(df, "data/panel_9-12_2010_2021_v4.rds")
+```
+
+```{r add_car, echo=FALSE, warning=FALSE, message=FALSE}
+# Read and convert in-place (NO copy)
+df <- readRDS("data/panel_9-12_2010_2021_v4.rds")
+setDT(df) # modifies in-place, 0 extra memory
+
+# Read car and slim it immediately
+car <- readRDS("data/panel_programs_2012_2025.rds")
+setDT(car)
+setnames(car, c("YEAR", "codigo_demre"), c("year", "codigo_carrera_seleccion"), skip_absent = TRUE)
+keep_cols <- c(
+  "codigo_carrera_seleccion", "year", "full_reg",
+  grep("^selective_q.*_reg$|^top.*_reg$", names(car), value = TRUE)
+)
+car <- car[, ..keep_cols]
+# Deduplicate car keys to ensure unique lookup
+car <- unique(car, by = c("codigo_carrera_seleccion", "year"))
+setkeyv(car, c("codigo_carrera_seleccion", "year"))
+
+# --- Lookup-based merge: add columns to df by reference, NO full join copy ---
+# Build the match index once (one integer vector, ~8 bytes per row of df)
+idx <- car[
+  data.table(
+    codigo_carrera_seleccion = df$codigo_carrera_seleccion,
+    year = df$year_higher_ed_admission
+  ),
+  on = .(codigo_carrera_seleccion, year),
+  which = TRUE
+]
+
+# Add each car column to df by reference via the index
+car_value_cols <- setdiff(names(car), c("codigo_carrera_seleccion", "year"))
+for (col in car_value_cols) {
+  set(df, j = col, value = car[[col]][idx])
+}
+rm(car, idx)
+gc()
+
+# Compute assigned_* columns one at a time via set() to avoid temporaries
+reg_cols <- grep("^(selective_q|top|full).*_reg$", names(df), value = TRUE)
+is_na_assigned <- is.na(df$assigned)
+for (rc in reg_cols) {
+  if (grepl("selective_q", rc)) {
+    out_name <- paste0("assigned_", sub("selective_", "", sub("_reg$", "", rc)))
+  } else if (grepl("^top", rc)) {
+    out_name <- paste0("assigned_", sub("_reg$", "", rc))
+  } else if (grepl("^full", rc)) {
+    out_name <- "assigned_full_"
+  } else {
+    next
+  }
+  out_name <- paste0("assigned_", sub("_reg$", "", rc))
+  val <- df$assigned * df[[rc]]
+  val[is_na_assigned | is.na(df[[rc]])] <- 0
+  set(df, j = out_name, value = val)
+}
+rm(val, is_na_assigned)
+
+# assigned_not_full separately
+set(df,
+  j = "assigned_not_full",
+  value = {
+    v <- df$assigned * (1 - df$full_reg)
+    v[is.na(v)] <- 0
+    v
+  }
+)
+if ("assigned_full_" %in% names(df)) set(df, j = "assigned_full_", value = NULL)
+
+setDF(df)
+gc()
+
+saveRDS(df, "data/panel_9-12_2010_2021_v4.rds")
+```
+
+```{r add_value_added, echo=FALSE, warning=FALSE, message=FALSE}
+df <- readRDS("data/panel_9-12_2010_2021_v4.rds")
+setDT(df)
+
+va <- readRDS("data/value_added_simce_2m_relative_8b_2016.rds")
+setDT(va)
+
+# Compute quantile thresholds (scalar, no grouping needed)
+q_vals <- quantile(va$va, c(0.25, 0.50, 0.75, 0.90, 0.99), na.rm = TRUE)
+va[!is.na(va), `:=`(
+  top_25_va = as.integer(va >= q_vals[1]),
+  top_50_va = as.integer(va >= q_vals[2]),
+  top_75_va = as.integer(va >= q_vals[3]),
+  top_90_va = as.integer(va >= q_vals[4]),
+  top_99_va = as.integer(va >= q_vals[5])
+)]
+
+# Index lookup — no join copy
+setkey(va, rbd)
+idx <- va[.(df$RBD), on = .(rbd), which = TRUE]
+
+top_cols <- grep("^top_.*_va$", names(va), value = TRUE)
+for (col in top_cols) {
+  set(df, j = col, value = va[[col]][idx])
+}
+rm(va, idx, q_vals)
+
+setDF(df)
+gc()
+
+saveRDS(df, "data/panel_9-12_2010_2021_v4.rds")
+```
+
+```{r add_simce4b, echo=FALSE, warning=FALSE, message=FALSE}
+df <- readRDS("data/panel_9-12_2010_2021_v4.rds")
+setDT(df)
+
+s4b <- readRDS("data/panel_simce_4b.rds")
+setDT(s4b)
+
+# Rename columns in s4b: append _4b to cols that don't already have it
+s4b_cols <- setdiff(names(s4b), "mrun")
+new_names <- fifelse(grepl("4b", s4b_cols), s4b_cols, paste0(s4b_cols, "_4b"))
+setnames(s4b, s4b_cols, new_names)
+setnames(s4b, c("mrun", "year_4b"), c("MRUN", "AGNO"), skip_absent = TRUE)
+
+# Index lookup — no join copy
+setkeyv(s4b, c("MRUN", "AGNO"))
+idx <- s4b[.(df$MRUN, df$AGNO), on = .(MRUN, AGNO), which = TRUE]
+
+merge_cols <- setdiff(names(s4b), c("MRUN", "AGNO"))
+for (col in merge_cols) {
+  set(df, j = col, value = s4b[[col]][idx])
+}
+rm(s4b, idx, merge_cols, s4b_cols, new_names)
+gc()
+
+# Low-score indicators
+set(df, j = "low_lect4b", value = as.integer(df$ptje_lect4b_alu <= df$median_lect4b))
+set(df, j = "low_mate4b", value = as.integer(df$ptje_mate4b_alu <= df$median_mate4b))
+
+setDF(df)
+saveRDS(df, "data/panel_9-12_2010_2021_v4.rds")
+```

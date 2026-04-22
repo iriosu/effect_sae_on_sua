@@ -1,0 +1,53 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{hyperref}
+\usepackage{natbib}
+
+\bibpunct[, ]{(}{)}{,}{a}{}{,}
+\def\bibfont{\small}
+\def\bibsep{\smallskipamount}
+\def\bibhang{24pt}
+\def\newblock{\ }
+\def\BIBand{and}
+
+\title{Revised Literature Review Draft}
+\author{}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Literature}
+Our work relates to four connected strands of the literature.
+
+\subsection{School Choice and Student Outcomes}
+A large empirical literature studies how expanding school choice affects student outcomes. Early work exploited cross-district or cross-municipality variation in competitive pressure and reached mixed conclusions on achievement, school quality, and productivity~\citep{hoxby2000,hoxby2003,hsieh2006,rothstein2007}. Later work used lotteries or oversubscription rules to estimate the individual effects of attending preferred schools, high-achieving peers, or higher-quality schools~\citep{cullen2006,abdulkadiroglu2011,deming2014,muralidharan2015}. These papers have been central to understanding the effects of school choice on achievement and postsecondary attainment, but they mostly study either local expansions of choice or the individual effect of attending a preferred school rather than a nationwide transition to centralized assignment.
+
+The closest paper to ours in this strand is \citet{camposkearns2024}, who study Los Angeles's Zones of Choice and show that expanding school choice improved achievement and four-year college enrollment, with effects driven largely by competition-induced improvements in school quality. Our paper shares their interest in downstream outcomes, but differs in two important respects. First, Chile's reform replaced decentralized, school-level admissions with a nationwide centralized clearinghouse and simultaneously eliminated school screening. Second, we study whether exposure to centralized assignment in secondary school affects students' later behavior and outcomes in a separate centralized college admissions system.
+
+\subsection{Centralized and Coordinated School Assignment}
+A parallel literature studies centralized or coordinated school assignment systems, in which families submit rank-ordered lists and a central clearinghouse assigns students to schools using a matching algorithm. A first branch characterizes the incentive, stability, and efficiency properties of alternative mechanisms~\citep{abdulkadiroglu2003,kesten2010,pathak2017}. A second analyzes large urban implementations and redesigns, showing how assignment rules affect strategic reporting, match outcomes, and student welfare~\citep{abdulkadiroglu2005,abdulkadiroglu2009,abdulkadiroglu2017}. A third uses administrative data from centralized clearinghouses to estimate preferences and welfare and to study how information and outside options shape behavior and distributional consequences~\citep{agarwal2018,arteaga2022smart,akbarpour2022}.
+
+Recent empirical work studies the broader consequences of centralized assignment reforms. \citet{terrier2026} show that England's move from Immediate Acceptance to Deferred Acceptance reduced disadvantaged students' access to high-value-added and selective schools in competitive local authorities. For Chile, \citet{correa2021} document the design and implementation of the \emph{Sistema de Admisión Escolar} (SAE), while \citet{urzua2023} study the transition to SAE and show how it affected school segregation and socioeconomic composition. \citet{hahmpark2024} show in New York City that middle-school assignments causally affect subsequent high-school applications and assignments, highlighting that exposure to one centralized assignment stage can shape behavior in the next. Our paper complements this literature by examining whether Chile's nationwide move to centralized school choice altered later college applications, admissions, and enrollment.
+
+\subsection{Centralized College Admissions, Information, and Application Behavior}
+Our paper is also related to a literature on centralized college admissions. One branch studies how the design of admission mechanisms and policies shapes strategic behavior and allocation outcomes~\citep{chenkoesten2013,fu2014,rios2021improving,kapor2024}. Another emphasizes the role of information frictions and subjective beliefs. \citet{hastingsweinstein2008} show that targeted information can materially improve choices in public-school assignment. In centralized matching markets, \citet{kaporneilsonzimmerman2020} and \citet{larroucau2024} show that subjective beliefs about admission probabilities are central for understanding application behavior, welfare, and the effects of information policies.
+
+A related line of work studies the consequences of centralized admission reforms in higher education. \citet{moriguchinaritatanaka2024} analyze Japan's historical move to nationally centralized meritocratic admissions and document persistent long-run tradeoffs between meritocratic selection and equal access. This literature is useful for our paper because the outcomes we study arise in a centralized college admissions system, but our focus is different. Rather than changing the college mechanism itself, we study whether earlier exposure to centralized school assignment changes how students later navigate a centralized college admissions market.
+
+\subsection{Contribution}
+Our paper contributes to these literatures in three ways. First, we study a nationwide institutional transformation that replaced decentralized, school-level admissions with a centralized deferred-acceptance clearinghouse. This setting complements existing evidence, which has largely focused on local reforms, specific districts, or changes in assignment rules within already centralized environments.
+
+Second, we examine a different set of outcomes than most of the school-choice literature. By linking administrative records across secondary and postsecondary education, we can trace whether exposure to centralized school assignment affects students' later applications, assignments, and enrollment in a separate nationwide centralized college admissions system.
+
+Third, our paper helps connect two assignment stages that are usually studied separately. Relative to \citet{urzua2023}, we move from school composition and segregation to downstream college-admissions outcomes. Relative to \citet{camposkearns2024} and \citet{terrier2026}, we focus less on contemporaneous K--12 achievement effects and more on how centralized school assignment propagates to postsecondary choices. And relative to \citet{hahmpark2024}, we extend the idea of sequential assignment effects beyond K--12 by showing how a centralized school-choice reform can affect behavior and outcomes in a later centralized college market.
+
+\bibliographystyle{../informs2014}
+\bibliography{references}
+
+\end{document}

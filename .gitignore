@@ -1,4 +1,21 @@
 */data/
+.DS_Store
+**/.DS_Store
+*.log
+.codex
+.vscode/
+
+# Data files
+*.rds
+*.rda
+*.RData
+*.csv
+*.dta
+*.xlsx
+*.xls
+*.parquet
+*.feather
+*.sav
 
 
 
