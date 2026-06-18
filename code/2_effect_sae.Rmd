@@ -606,10 +606,7 @@ setDF(df)
 
 ```{r create_df_by_rbd, echo=FALSE, message=FALSE, warning=FALSE}
 dgs <- df %>%
-  # dplyr::filter(RBD == rbd_grad & stayer_since_entry == 1) %>%
-  # dplyr::filter(stayer_since_entry == 1) %>%
-  # dplyr::filter(rbd_grad_entry_level == grade_level & grade_level >= 7) %>%
-  dplyr::filter(stayer_secondary == 1 & grade_level >= 9) %>%
+  dplyr::filter(stayer_secondary == 1 & grade_level >= rbd_grad_entry_level) %>% # only include stayers since entry (exclude those who entered but dropped out later)
   group_by(MRUN) %>%
   slice_min(AGNO, n = 1) %>%
   ungroup() %>%
@@ -688,7 +685,13 @@ dgs <- df %>%
     year_first_sae = coalesce(year_rbd_first_sae, 0L) # did package requires 0 for never-treated, not NA
   )
 
+dgs %>%
+  filter(year >= start_year & year_first_sae < 2020) %>%
+  group_by(year, year_first_sae) %>%
+  dplyr::summarise(n_rbd = n_distinct(RBD), n_students = sum(n_students)) %>%
+  as.data.frame()
 
+end_year <- 2021
 dr <- dgs %>%
   filter(year >= start_year & year <= end_year & year_first_sae < 2020) %>%
   group_by(RBD) %>%

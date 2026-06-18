@@ -226,3 +226,21 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Overleaf Connect
+.overleafconnect
+*.aux
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+*.bbl
+*.blg
+*.out
+*.toc
+*.pdf
+*.nav
+*.snm
+*.vrb
+*.lot
+*.lof
+%OUTDIR%/
