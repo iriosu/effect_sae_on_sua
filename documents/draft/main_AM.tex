@@ -1,0 +1,518 @@
+\documentclass[11pt]{article}
+\usepackage{amsmath,amssymb,amssymb} 
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage[normalem]{ulem}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+
+%\usepackage{eqndefns-left}
+\usepackage{natbib}
+\usepackage{bbm}
+ \bibpunct[, ]{(}{)}{,}{a}{}{,}%
+ \def\bibfont{\small}%
+ \def\bibsep{\smallskipamount}%
+ \def\bibhang{24pt}%
+ \def\newblock{\ }%
+ \def\BIBand{and}%
+
+\renewcommand{\baselinestretch}{1.45}
+
+\newcommand{\ind}[1]{\mathbbm{1}\{#1\}}
+
+\definecolor{mygreen}{RGB}{0,128,0}
+\definecolor{myblue}{RGB}{0,100,128}
+\newcommand{\nacho}[1]{{\color{mygreen}[#1]}}
+\newcommand{\marar}[1]{{\color{myblue}[#1]}}
+\newcommand{\mararout}[1]{{\color{myblue}\sout{#1}}}
+
+\usepackage{booktabs}
+\usepackage{makecell}
+\usepackage{multirow}
+\usepackage{url}
+
+\title{Effect of Centralized School Choice on College Admissions Outcomes}
+\author{Ignacio Rios, Tomas Larroucau}
+\date{}
+
+
+
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Centralized school choice systems are increasingly adopted worldwide, yet their longer-term consequences for students' educational trajectories remain poorly understood. This paper examines the causal effect of implementing a centralized school assignment system in secondary education on subsequent college admissions outcomes. We exploit the staggered, region-by-region rollout of Chile's centralized school choice system, which provides quasi-experimental variation in exposure across cohorts, and estimate dynamic treatment effects to accommodate variation in treatment timing. Linking administrative records from secondary and postsecondary education, we find that centralized school choice significantly increases the likelihood that students apply to, are admitted to, and enroll in programs within the centralized college admissions system. These gains are concentrated among female students, students from socioeconomically vulnerable schools, and students from lower-performing schools. We further show that the improvements are driven by admissions to less selective and historically under-subscribed programs, with some displacement in highly selective programs. The results are robust across specifications, placebo tests, and sample restrictions. Together, our findings demonstrate that centralized school choice can meaningfully expand access to higher education, particularly for students historically underserved by decentralized admissions.
+\end{abstract}
+% \section{Things to do}
+
+% \begin{itemize}
+%     \item Consider outcomes outside the centralized system, e.g., enrollment in institutions outside the centralized system.
+%     \item Covid
+%     \item Inverse probability weighting (Abadie 2005)
+%     \item Effect on house prices
+%     \item Effect on number of applications to schools and heterogeneity on that.
+% \end{itemize}
+
+\section{Introduction}
+
+Centralized school choice systems have become a defining feature of modern education policy, with nearly 40\% of countries relying on centralized clearinghouses to assign students to secondary schools~\cite{ccas_2024}. These systems are designed to reduce discriminatory admissions practices, lower application costs, improve information provision, and replace fragmented school-level procedures with a transparent and standardized mechanism. By eliminating uncoordinated offers, early contracting, and inefficient reassignment of seats, centralized assignment promises both greater fairness and improved allocative efficiency~\citep{Roth1990}. 
+
+Despite these advantages, the adoption of centralized assignment has been politically contentious. In Chile, for example, opponents argued that the centralized system would undermine parental autonomy and restrict families' ability to choose their children's schools~\citep{rebolledo2018}. Similar debates have emerged in other countries, where concerns about bureaucratic overreach, loss of control, or reduced flexibility have shaped public opinion~\citep{fox5ny_lottery_2022, sfstandard_lottery_2026, guardian_brighton_lottery_2017}. Beyond these political dynamics, the expected effects of centralized school choice on downstream outcomes such as college applications, admissions, and enrollment are unclear. Eliminating selective screening and allowing students to apply through a centralized platform that increases competition at the school level may improve academic preparation~\citep{camposkearns2024} and information provision~\citep{arteaga2022smart}, but it may also weaken school--student match quality~\citep{KaufmanRosenbaum1992, cullen2006, LightStrayer2000}. 
+
+% A growing number of education systems have adopted centralized school assignment mechanisms, often implemented through clearinghouses that coordinate admissions across schools. These systems aim to reduce discriminatory admissions practices, lower application costs, and replace fragmented school-level procedures with transparent and standardized allocation mechanisms \citep{ccas_2024}. By eliminating uncoordinated offers and early contracting, centralized assignment can improve both fairness and allocative efficiency. At the same time, the impact of centralized school choice on students' educational outcomes remains theoretically ambiguous. Removing school-level screening may expand access to higher-quality schools for disadvantaged students, but it may also weaken incentives for academic effort or reduce the quality of student--school matches \citep{RebolledoOlea2018}.
+
+% Empirically identifying these effects is challenging because such reforms are typically implemented once and at scale, often alongside other policy changes, which complicates the construction of credible counterfactuals. As a result, much of the existing literature has focused on short-run outcomes such as sorting patterns, access to preferred schools, or parental satisfaction, leaving open questions about the downstream consequences of centralized assignment for longer-term educational trajectories. \citep{ccas_2024}
+
+Studying the effects of centralized school choice---and the mechanisms through which these reforms operate---is empirically challenging. Reforms of this type are typically implemented once, at a local level, and without natural comparison groups, making it difficult to construct valid counterfactuals and assess their broader implications. Moreover, centralized assignment often coincides with other policy changes---such as funding reforms, accountability shifts, or curricular adjustments---that further complicate identification.  As a result, the existing literature has largely focused on district-level reforms to analyze short-run effects on sorting, access, or satisfaction, leaving open the question of how centralized school choice shapes students' postsecondary trajectories.
+
+In this paper, we address these challenges by exploiting the staggered implementation of Chile's centralized school choice system (SAE), which was rolled out region by region between 2016 and 2020 following the Ministry of Education’s pseudo-random selection of regions for early adoption. 
+This staggered rollout provides a unique opportunity to study the causal effect of centralized school choice on college admissions outcomes because it creates quasi-experimental variation in exposure across regions and cohorts. Regions that have not yet implemented the reform provide a natural comparison group for those that have already adopted it, helping disentangle the effect of the policy from broader trends affecting students' higher-education trajectories.
+The setting is particularly well suited for this analysis because Chile's college admissions system is itself centralized for the most selective institutions, allowing us to trace how changes in secondary-school assignment propagate into higher-education choices.
+
+Our findings reveal four main results. First, centralized school choice significantly increases the likelihood that students apply to, are admitted to, and enroll in programs within the centralized college admissions system. Second, these effects are heterogeneous: the gains are concentrated among female students, students from high-vulnerability schools, and students from lower-performing schools. Third, the improvements are driven primarily by admissions to less selective and historically under-subscribed programs, with some evidence of displacement in highly selective programs. Finally, the results are robust across alternative specifications, placebo tests, parallel-trends diagnostics, and sample restrictions. Together, these findings show that centralized school choice can meaningfully expand access to higher education, particularly for students historically underserved by decentralized admissions.
+
+
+The remainder of the paper is organized as follows. 
+Section~\ref{sec:literature} discusses the most closely related literature. Section~\ref{sec:background} provides institutional background on Chile's school and college admissions systems. Section~\ref{sec:results} presents the main results. Section~\ref{sec:conclusion} concludes.
+
+
+
+
+\section{Literature}\label{sec:literature}
+Our work relates to three main strands of the literature.
+
+\subsection{School Choice and Student Outcomes}
+A large empirical literature examines how expanding school choice---i.e., relaxing traditional neighborhood-based assignment policies and allowing families to select among multiple schools, including magnet and voucher programs, open-enrollment initiatives, and inter-district choice---affects student outcomes. Early work focused on cross-district or cross-municipality variation in competitive pressure, with mixed findings on achievement, school quality and productivity~\citep{hoxby2000, hoxby2003, hsieh2006, rothstein2007}. Other studies exploit lotteries or oversubscription rules to estimate the individual effects of attending preferred schools~\citep{cullen2006, abdulkadiroglu2011, deming2014, muralidharan2015}. These papers typically evaluate short-run impacts on test scores, peer composition, or satisfaction, and do not study how centralized assignment shapes longer-term educational trajectories.
+The study most closely related to ours is \citet{camposkearns2024}, who analyze Los Angeles’s Zones of Choice (ZOC), a district-level reform that created small local choice markets while retaining neighborhood boundaries elsewhere. The authors show that student outcomes in ZOC markets increased markedly, narrowing achievement and college enrollment gaps between ZOC neighborhoods and the rest of the district. Furthermore, the authors identify competition-induced improvements in school quality as the central mechanism behind the effects of the reform. 
+
+
+
+
+\subsection{Centralized School Choice.}
+A parallel literature studies the design and consequences of \emph{centralized} school choice systems, in which families submit rank-ordered preference lists and a central clearinghouse assigns students to schools using a matching algorithm. Starting with \citet{abdulkadiroglu2003}, who formalize school choice as a mechanism design problem and compare the properties of the two most widely used assignment rules—\emph{deferred acceptance} and \emph{immediate acceptance}—this literature has developed along several complementary lines. 
+First, a large theoretical literature studies the incentive, efficiency, and stability properties of alternative matching mechanisms and the strategic behavior they induce \citep{abdulkadiroglu2003,kesten2010,pathak2017}. Second, a set of papers evaluates the implementation of centralized assignment systems in large urban school districts, documenting how changes in the mechanism affect equilibrium behavior, strategic reporting of preferences, and assignment outcomes \citep{abdulkadiroglu2005,abdulkadiroglu2009}. Third, a growing empirical literature uses administrative data from centralized clearinghouses to estimate students’ preferences over schools and to evaluate welfare and distributional consequences of school choice systems \citep{hastings2008,agarwal2018}. Recent work also studies how centralized assignment reforms affect broader outcomes such as access to high-quality schools, school segregation, and students’ educational trajectories \citep{neilson2021, gazmuri2024}. 
+
+Within this literature, the paper most closely related to ours is \cite{urzua2023}, which studies Chile’s transition to a centralized school‑choice system and employs a similar staggered difference‑in‑differences strategy to estimate the reform's effects on schools' socioeconomic composition and within‑school segregation. Our analysis complements theirs by tracing the reform's downstream effects on college‑admissions outcomes, asking whether changes in assignment and school composition altered students' application behavior and admission outcomes.
+
+% Urzúa et al. find no overall improvement in low‑SES representation and document increased within‑school segregation in areas with high residential segregation or many private schools, driven in part by high‑SES families’ migration to private institutions. This addition highlights why your paper’s focus on college admissions is a natural and important complement to their work.
+
+\subsection{Centralized College Admissions.}
+Finally, our work is also related to a literature studying the drivers of outcomes in \emph{centralized college admissions systems}. 
+One strand of this literature focuses on the \emph{design of the assignment mechanism}. In particular, this work studies how different elements of the allocation process---including the algorithm used~\citep{Calsamiglia2020}, exam-retaking and re-application policies~\citep{larroucau2025, rios2026}, tie-breaking rules~\citep{abdulkadiroglu2009, Arnosti2015, Ashlagi2019}, affirmative action policies~\citep{rios2021improving,Baswana2019,otero23}, the timing of allocations~\citep{Luflade2017, GongLiang2022}, and the aftermarket~\citep{Kapor2024}---affect the theoretical properties of the mechanism, students' strategic behavior, and equilibrium allocation outcomes~\citep{chenkoesten2013,fu2014,neilson2021}. 
+
+Another strand studies the role of information frictions and beliefs in shaping students’ application behavior. In many centralized systems, students lack complete information about program characteristics, hold biased beliefs about their admission probabilities, or are unaware of alternative programs that may be a better fit. As a result, they may submit suboptimal preference lists, mis‑rank programs, or fail to update their plans in response to new information. Empirical work has documented how targeted information and advising can improve match quality: \citet{hastings2008} and \citet{agarwal2018} show that information interventions improve application behavior and outcomes; \citet{Narita2019} exploits a staggered rollout of school choice information to estimate learning dynamics and inertia; and \citet{larroucau2024} studies how beliefs about admission probabilities shape strategic ranking behavior across heterogeneous students. More generally, this literature highlights how informational constraints interact with the mechanism to shape final match quality and downstream outcomes.
+
+Within this strand of the literature, the most closely related to ours are papers that use quasi‑experimental variation in assignment rules to document effects on downstream educational outcomes. \citet{terrier2024} exploit England's 2008 nationwide ban on the Immediate Acceptance (IA) mechanism, which forced local authorities to switch to Deferred Acceptance (DA), and use a difference‑in‑differences design to show that the transition to DA reduced low‑SES students' access to high value‑added and selective schools and widened socioeconomic gaps in school quality. They attribute this to a competition‑for‑top‑schools effect: under IA, high‑SES families had strategically avoided oversubscribed schools, but once DA removed those strategic incentives they flooded back, crowding out disadvantaged applicants — an effect concentrated in competitive local authorities with many selective schools. \citet{kaporneilsonzimmerman2020} similarly find that when parents hold incorrect beliefs about admission chances, DA can dominate IA in welfare terms, with gains concentrated among low‑SES families, suggesting that the information environment is a key moderator of mechanism performance. Moving to longer‑run outcomes, \citet{cullenjacobleviit2006} exploit lottery variation in Chicago's school choice program and find little effect of winning a choice lottery on academic achievement, while \citet{demingetal2014} use a similar design in Charlotte‑Mecklenburg and find positive effects on postsecondary attainment for low‑income students when assignment mechanisms successfully place them in higher‑quality schools. Taken together, these papers suggest that centralizing school choice reshapes the distribution of school quality across socioeconomic groups and can affect students' long‑run trajectories, but that the direction and magnitude of effects depend critically on the degree of competition for desirable seats and on whether selective admissions criteria interact with strategic behavior in ways that systematically disadvantage less sophisticated families.
+
+
+
+
+
+
+
+% Together, this body of work highlights how the design of centralized matching mechanisms shapes both the strategic environment faced by families and the allocation of students across schools, with important implications for equity and efficiency in education markets.
+
+
+\subsection{Contribution}
+Our work contributes to and extends these literatures in two important ways. First, much of the existing empirical work on school choice evaluates policy changes implemented at the district or local level that expand families' ability to choose among schools. In contrast, the reform we study represents a nationwide institutional transformation: the introduction of the \emph{Sistema de Admisión Escolar} (SAE), which replaced decentralized, school-level admissions processes with a unified centralized clearinghouse based on a deferred-acceptance algorithm. This reform eliminated discretionary selection practices by schools and standardized admissions rules across all publicly funded institutions. As a result, it provides a unique setting to study how a large-scale transition to centralized assignment affects student behavior and outcomes.
+
+Second, our paper examines a different set of outcomes than most of the existing literature. While prior work on school choice and centralized assignment primarily focuses on short-run outcomes such as test scores, peer composition, or access to preferred schools, our data allow us to link administrative records across secondary and postsecondary education. This linkage enables us to study how exposure to centralized school assignment during secondary education affects students’ subsequent participation and outcomes in a separate nationwide centralized college admissions system.
+
+More broadly, the literature on centralized college admissions emphasizes that outcomes depend critically on institutional design and students’ application behavior within the system. In contrast, our analysis highlights how experiences \emph{prior} to college admissions can shape behavior in centralized matching environments. Specifically, we study whether participation in a centralized school choice clearinghouse during secondary education affects students’ application, admission, and enrollment outcomes when they later participate in centralized college admissions. By linking these two centralized markets, our paper shows how earlier exposure to centralized choice institutions can influence behavior and outcomes in subsequent matching environments.
+
+% Finally, the mechanisms differ. In ZOC, competitive pressures among schools are the primary driver of improvements: schools respond to expanded choice by increasing quality. In contrast, SAE’s effects arise from eliminating selective screening, reducing information frictions, and standardizing assignment rules. 
+
+\section{Background}\label{sec:background}
+
+\subsection{School Choice.}
+
+Before the reform, admissions to Chile's public and publicly subsidized (voucher) schools were conducted through fully decentralized processes. Each school operated its own admissions procedure, often relying on discretionary and exclusionary practices such as interviews with parents and students, unofficial entrance exams, and reviews of past academic records. Because offers were not coordinated, families frequently faced pressure to accept early admissions without knowing whether more preferred schools would later admit them, and declined seats were rarely efficiently reassigned. Many schools also used first-come, first-served queues, leading parents to wait overnight to secure a seat \citep{correa2021}. Finally, the combination of schools' ability to select students on arbitrary criteria and a voucher system that permits additional copayments likely contributed to widespread cream‑skimming and the pronounced socioeconomic segregation that characterized the Chilean school system~\citep{gazmuri2024}. 
+
+In 2015, the Chilean Congress enacted the \emph{School Inclusion Law}, which fundamentally restructured school admissions. The law eliminated copayments in publicly subsidized schools, prohibited any form of selection based on academic, social, religious, or economic criteria, and mandated the use of a centralized assignment system. The law also established three priority groups—siblings of current students, children of school employees, and returning students—that must be served in strict order when seats are oversubscribed, with ties within each group broken using a random tie-breaker~\citep{correa2021}. In addition, it introduced quotas for students with special educational needs, high academic performers, and disadvantaged students.
+This newly established centralized system, which covers all grades from prekindergarten through 12th across all regions, collects families' ranked preferences through an online platform, provides standardized information about schools,\footnote{\cite{arteaga2022smart} find that providing families with estimated admission probabilities substantially improves their application and their admission outcomes.} and assigns each student to at most one school using a variant of the deferred acceptance (DA) algorithm~\citep{correa2021}. 
+
+\subsection{College Admissions.} 
+Chile's college admissions system is semi–centralized, with the most selective universities participating in a single centralized admissions system and the remaining institutions conducting their admissions independently. 
+
+Applicants are evaluated solely based on scores that come from (i) a national entrance exam, which includes mandatory Mathematics and Language components and optional subject tests in Sciences or History; and (ii) their high-school performance, captured by a grade-based score (NEM) and a rank-based score reflecting a student's standing within their graduating cohort. Knowing their scores, students apply through a centralized online platform by submitting a rank-ordered list of up to ten university–major programs. After applications are submitted, the clearinghouse verifies eligibility requirements, computes each applicant's program-specific scores based on weights previously announced by each university, and ranks applicants accordingly.
+Final assignments are produced using a variant of DA that assigns each applicant to the highest-ranked program on their list for which they qualify and have an application score above the program's clearing cutoff~\citep{rios2021}.
+Once results are released, students may choose whether to enroll in the program to which they were assigned or instead matriculate outside the centralized system. 
+
+\subsection{Data.} 
+A distinctive feature of our dataset is that it allows us to follow each student continuously from secondary school into higher education, enabling the construction of outcomes that capture the full academic pipeline. 
+
+\paragraph{Secondary education.} 
+Our dataset includes rich administrative records covering the full secondary-school trajectory of each student. For every school-year, we observe enrollment, attendance, graduation, and level grades. Once the region became part of the centralized school assignment system (SAE), we additionally observe families' reported preferences over schools, school capacities, the priority-based orderings used to process applications (combining priority groups with random tie-breakers), and the resulting assignment outcomes. These data allow us to reconstruct each student's academic history from the beginning of secondary education through completion of 12th grade.
+
+
+\paragraph{Tertiary education.} 
+We complement these records with comprehensive information on students' postsecondary trajectories. For every year, we observe enrollment and graduation outcomes in any higher-education institution, regardless of whether the institution participates in the centralized admissions system. For students who do participate in the centralized process, we additionally observe their standardized test scores, high-school–based admission scores, rank-ordered program applications, and program-level admission results. This combination of centralized and non-centralized data provides a complete view of students' opportunities and choices in the tertiary sector.
+
+\paragraph{Outcomes.} 
+\marar{Our empirical strategy aggregates these individual records to the school--cohort level, so we compute a set of outcomes for each school and cohort. These are: the cohort's average high-school GPA; its average LM score; the share who apply to the centralized college admissions system; the share who receive an assignment; and the share who enroll in a program within the system. The LM score is a student's percentile rank among all students taking the mandatory Language and Mathematics (\emph{Lenguaje y Matemática}, LM) components of the national entrance exam in the same admission year, with students who do not take the exam assigned a value of zero. The class average therefore reflects both how many students take the exam and where those who take it place in the national distribution.} Together, these outcomes summarize both academic preparation and postsecondary decision-making.
+
+\paragraph{Sample.} 
+Our analysis focuses on students who completed all four years of secondary education (grades 9--12) in the same institution and on time. Restricting the sample in this way avoids conflating treatment effects with mobility across schools or grade repetition. \marar{Because the reform could itself affect which students satisfy these restrictions, we verify that our findings are robust to relaxing them: re-estimating on the broader sample of students who attended at most one publicly funded school, keyed to their graduating cohort, leaves the effects on application, admission, and enrollment essentially unchanged.} Furthermore, we begin following students in 9th grade since this is the typical entry point into secondary education and the grade at which most students would have been admitted when the centralized school choice system (SAE) was introduced. 
+
+Unless otherwise stated, we restrict attention to cohorts that entered 9th grade between 2012 and 2021. Focusing on cohorts that entered 9th grade in 2012 ensures that, by the time they applied to college, the nationwide free-tuition policy---which first applied to students enrolling in 2016---was already fully in place, eliminating concerns that differential exposure to the reform could drive our results. At the same time, restricting the sample to cohorts up to 2021 ensures that these students participated in the 2025 college admissions process---the last year for which we have data---allowing us to observe and measure their postsecondary outcomes.
+
+
+\subsection{Empirical Strategy}
+
+The introduction of the centralized school choice system in Chile provides a natural setting to identify the causal effects of centralized assignment on school-level outcomes. Beginning in 2016, the Ministry of Education implemented the centralized school choice system (SAE) through a phased regional rollout that was planned to take four years. The Magallanes region was selected as the initial pilot in 2016, while the Metropolitan Region---given its size---was incorporated \marar{last, in 2019}. Among the remaining regions, \marar{four} entered the system in 2017 and the \marar{remaining ten} in 2018. \marar{Regions did not join earlier or later based on their students' college outcomes, so the changes that follow adoption reflect the reform rather than differences that were already there.} Importantly, the timing of adoption was not announced in advance, limiting the scope for parents to adjust their behavior in anticipation. Figure~\ref{fig: adoption SAE 9th grade} reports the implementation year for 9th‑grade admissions in each region.
+
+\begin{figure}\label{fig: adoption SAE 9th grade}
+    \centering
+    \includegraphics[width=1\linewidth]{figures/sae_chile_map.pdf}
+    \caption{Implementation Year for 9th-grade}
+\end{figure}
+
+The combination of (i) staggered rollout across regions, (ii) partially random and unanticipated assignment of regions to early versus late adoption cohorts, and (iii) the exclusion of private schools from the centralized system---creating a clear treated–control comparison across school types within regions and over time---yields an ideal environment for a staggered difference-in-differences (DiD) design. Specifically, we estimate dynamic treatment effects under staggered adoption using the framework of \citet{callaway2021}. Let $Y_{it}(0)$ and $Y_{it}(1)$ denote the potential outcomes for unit $i$ at time $t$ in the absence and presence of treatment, and let $G_i = g$ indicate that unit $i$ first becomes treated in period $g$. \marar{A unit $i$ is a school and $t$ indexes a cohort of entering students; each school and cohort together form one graduating class, and $Y_{it}$ is that class's average outcome.} For each cohort $g$ and time $t \ge g$, the causal parameter of interest is the group--time average treatment effect,
+\[
+ATT(g,t) = \mathbb{E}\!\left[\,Y_{it}(1) - Y_{it}(0)\mid G_i = g\,\right].
+\]
+Based on these estimates, the overall effect of the policy change can be estimated using simple aggregated ATT that captures the weighted average of all group-time average treatment effects with weights proportional to the group size, i.e., 
+\[
+\marar{\bar{ATT} = \sum_{g\in G} \sum_{t=g}^{T} ATT(g,t)\cdot \omega(g,t)}
+\]
+where $\omega(g,t)$ is the proportion of observations coming from cohort $g$ and period $t$. Unless otherwise stated, the estimates reported in the remainder of the paper are simple aggregated ATTs. \marar{We cluster standard errors at the region level, since whole regions enter the system at once.}
+
+\marar{Within this framework, we use the doubly robust estimator, comparing the change in outcomes at a treated school with the change at comparison schools over the same years, and adjusting for cohort size. Every region has joined by 2019, so the before-reform comparison comes from public schools not yet in the system, and the after-reform comparison from the private schools, which never join. Comparing each school with its own past means fixed differences between public and private schools, such as their students' family incomes, cancel out, so the estimate reflects how outcomes change rather than how the two kinds of school differ to begin with. The design identifies a causal effect under the assumption that, absent the reform, outcomes at treated schools would have followed the same path as at the comparison schools. We assess this with the pre-reform event-study estimates in Table~\ref{tab: parallel trends assumption} and with a placebo test, reported in Section~\ref{sec: placebo}, that finds no change at private schools when their region adopts, supporting their use as the after-reform counterfactual. Identification also requires that families did not anticipate the reform, supported by the unannounced timing and by setting aside the transition classes described next.}
+
+\marar{SAE's staggered rollout reached all of a school's grades only after several years, so classes formed one to three years before the treatment date completed secondary school in classrooms partly filled by SAE-admitted students. A class formed one year before the treatment date, for example, was in tenth grade when SAE arrived, and SAE could place newly admitted students in its grade-11 and grade-12 classrooms. We set these transition classes aside, so that each group-time comparison is between fully-treated classes and classes that graduated before any SAE-admitted student entered the school; Appendix~\ref{app: measurement} gives the details.}
+
+
+
+% As in~\cite{urzua2023}, we use a two
+% we estimate a two-way fixed-effects model of the form:
+% \begin{equation}\label{eq: main did specification}
+%     y_{st} = \alpha_s + \lambda_t +
+%     \beta W_{st} + X_{st}\gamma + \varepsilon_{st},
+% \end{equation}
+% where $y_{st}$ denotes the outcome for school $s$ and year $t$; $\alpha_s$ and $\lambda_t$ are school and year fixed effects, respectively; $X_{st}$ includes time-varying school characteristics, such as enrollment size; and $\varepsilon_{st}$ is an error term. 
+% The main variable of interest is $W_{st}$, which is an indicator equal to one if school $s$ is part of SAE in year $t$, and zero otherwise.
+
+
+
+
+\section{Results}\label{sec:results}
+
+Table~\ref{tab: main results} reports our main results. In each case, we control for the number of students in the cohort and report double robust standard errors \marar{clustered at the region level}. 
+
+\input{tables/staggered_did_sae_on_outcomes_AM.tex}
+
+We observe that the average impact of the policy is positive and significant for several outcomes. Students who graduated from a treated school after the implementation of the policy were \marar{10.19\%} more likely to apply to the centralized college admissions system relative to their average in the pre-treatment period. Similarly, treated students were \marar{16.77\%} more likely to be assigned and \marar{17.74\%} more likely to enroll in a program that is part of the centralized college admissions system. Furthermore, we observe no significant effect on average high-school GPA.
+
+\subsection{Heterogeneity}
+
+\subsubsection{Gender.} Table~\ref{tab: did results by gender} reports the estimated aggregated treatment effects for each outcome of interest, separately by gender. Consistent with Table~\ref{tab: main results}, we find no effect on high‑school GPA. By contrast, we find positive and significant effects on the remaining outcomes for both genders, with the effect on female students being especially strong: their probability of applying to the centralized admissions system increases by \marar{14.22\%}, the probability of being admitted to at least one program in the system rises by \marar{21.19\%}, and the probability of enrolling in a program within the system increases by \marar{26.04\%}.
+
+\input{tables/did_by_gender_AM}
+
+\subsubsection{School Vulnerability.} The most commonly used measure of schools' socioeconomic vulnerability in Chile is the \emph{Índice de Vulnerabilidad Escolar (IVE-SINAE)}, which measures the fraction of students enrolled in a school who are classified as socioeconomically vulnerable. The classification relies on administrative records and survey data on students' household conditions, including income, parental education, employment status, housing conditions, and participation in social assistance programs. 
+
+To examine whether the reform's effects vary with schools' socioeconomic vulnerability, we split treated schools into two groups based on their IVE-SINAE: \emph{low vulnerability} (below the median) and \emph{high vulnerability} (above the median). Never-treated schools (i.e., private schools) do not report this metric, so we estimate the average treatment effect separately for low- and high-vulnerability schools, and in both cases include private schools in the sample. Importantly, \citet{urzua2023} show that the introduction of Chile's centralized school choice system did not generate meaningful changes in the socioeconomic composition of schools. This stability implies that the IVE-SINAE distribution across schools remained largely unaffected by the reform, allowing us to use pre-reform vulnerability levels as a valid basis for classifying schools throughout our analysis.
+
+\marar{Table~\ref{tab: did by vulnerability} shows that the gains in application, admission, and enrollment are concentrated in high-vulnerability schools. For these students, application rates rise by 26.37\%, admission rates by 46.52\%, and enrollment rates by 52.67\% relative to the pre-treatment period. In low-vulnerability schools, by contrast, we find no significant effect on application or enrollment, and only a modest increase in admission (4.93\%). These patterns indicate that the reform expanded access primarily for students in the most socioeconomically disadvantaged schools. We also find a small negative effect on average GPA in high-vulnerability schools. This does not reflect a decline in achievement: grades rose across all schools over this period, and these treated schools raised them less than their comparison group, in a pattern that coincides with the pandemic-era changes to grading.}
+
+\input{tables/did_by_vulnerability_AM}
+
+\subsubsection[School Performance.]{\mararout{School Performance.}} \mararout{Students in 10th grade take a nationwide standardized exam—the \emph{Sistema de Medición de la Calidad de la Educación} (SIMCE)—which assesses mastery of the official curriculum. SIMCE scores are widely used as a proxy for school quality. To examine whether the reform's effects vary with school quality, we use schools' SIMCE performance in 2015---specifically, the average of the Math and Verbal components for 10th-grade students---and classify schools that eventually become treated into two groups: (i) \textit{high-quality} schools, with an average score above the median, and (ii) \textit{low-quality} schools, with an average score below the median.}
+
+\mararout{Table~\ref{tab: did by simce} reports the estimated aggregated treatment effects for each outcome of interest, separately by school quality. The positive effects on applications, admissions, and enrollment are primarily driven by students from low-quality schools. For these outcomes, the aggregated average treatment effect is positive and statistically significant, with application, assignment, and enrollment rates increasing by 25\%, 28.72\%, and 33.33\% relative to the pre-treatment period, respectively. In contrast, we find no statistically significant effects among students from high-performing schools.}
+
+
+{\color{myblue}\input{tables/did_by_simce}}
+
+\subsubsection{School Value Added.} 
+An alternative measure of school quality commonly used in the literature~\citep{arteaga2022smart, camposkearns2024} is \emph{value added}, which isolates the school's causal contribution to student achievement, net of differences in the types of students they enroll. Specifically, this measure corresponds to the estimated school fixed effect from a regression of students' test scores on prior achievement and observable characteristics, where the inclusion of lagged scores serves to control for baseline ability and prior inputs. Under this approach, the school fixed effect captures the average gain in outcomes that can be attributed to attending a given school, relative to others, holding constant students' initial conditions (see Appendix~\ref{app: value added estimation} for details). Using this metric, we classify schools that eventually become treated into two groups: (i) \textit{high--value-added} schools, with estimated fixed effects above the median, and (ii) \textit{low--value-added} schools, with fixed effects below the median.
+
+Table~\ref{tab: did by value added} reports the estimated aggregated treatment effects for each outcome of interest, separately by school value added. \marar{We observe a consistent pattern of positive and statistically significant effects on applications, assignments, and enrollments among students from low--value-added schools, with application rates rising by 25.84\%, admission by 44.61\%, and enrollment by 50.62\%. Among high--value-added schools, by contrast, we find no significant effect on application or enrollment, and only a modest increase in admission (4.85\%).} \marar{As in high-vulnerability schools, we find a small negative effect on high-school GPA among students attending low--value-added schools. As discussed above, this reflects grades rising less than in the comparison group rather than a decline in achievement.}
+
+\input{tables/did_by_value_added_AM}
+
+\subsubsection{Program Selectivity.} 
+The results in Table~\ref{tab: main results} indicate that transitioning from decentralized to centralized admissions increased the probability of being assigned to a program within the centralized college admissions system. However, programs differ substantially in their quality and selectivity: some are highly competitive, while others routinely fail to fill their regular seats. Identifying which types of programs drive the overall improvement is essential for assessing potential congestion effects that could bias the estimated impact of the reform. In particular, if the reform disproportionately benefits students from schools that joined SAE---especially when they apply to selective programs---these students may displace applicants who did not experience the policy change. Such displacement would generate a congestion effect that could upwardly bias the estimated treatment effect.
+
+To investigate this possibility, Table~\ref{tab: results by program selectivity} reports the estimated aggregated treatment effects on the probability of admission to a program within the centralized system, disaggregated by whether the program filled its seats and by its selectivity level, \marar{with the latter based on the program's regular-process cutoff, reported for the top 10\%, 25\%, 50\%, 75\%, and 90\% most selective programs.}\footnote{Only 53\% of programs in the centralized system filled their seats in 2025.}
+
+\input{tables/did_by_program_selectivity_AM}
+
+\marar{We find no effect on programs that fill their seats, but a positive and significant effect among programs that do not. The same pattern holds by selectivity: the effect is negative for the most selective programs (the top 10\%), not significant through the top 25\%, and positive and significant for the less selective programs that make up the rest of the distribution (the top 50\%, 75\%, and 90\%).}
+
+Taken together, these results indicate that the overall improvement in assignment probabilities is driven by increased admissions to less selective programs that routinely operate below capacity. This pattern suggests that the reform does not generate meaningful congestion in highly selective programs and is therefore unlikely to induce substantial congestion-related bias in the estimated treatment effects, consistent with other interventions in the Chilean higher education system~\citep{larroucau2025}.
+
+
+\subsection{Robustness Checks}
+This section provides a series of robustness checks that validate and strengthen the results discussed above.
+
+\subsubsection{Parallel Trends.} 
+Critical to the validity of our empirical strategy is a cohort-specific parallel trends assumption, which states that, in the absence of treatment, the evolution of potential outcomes for cohort $g$ would have mirrored that of units that remain untreated in period $t$.\footnote{In implementing the parallel trends test, we use units that are \emph{not yet treated} as the comparison group rather than units that are never treated. As emphasized by \citet{callaway2021}, never-treated units need not provide a valid counterfactual for treated cohorts when they differ systematically in observable characteristics. In our setting, never-treated students attend private schools and have substantially higher-income, making them unsuitable as a comparison group for assessing pre-treatment trends. By contrast, not-yet-treated units are drawn from the same population of eventually treated cohorts and therefore provide a more credible basis for evaluating whether treated and comparison units followed similar trends prior to treatment.}
+ 
+
+To test this assumption, we follow \cite{callaway2021} and estimate event-time average treatment effects for each relative period $e = t-g$, where $g$ denotes the cohort's first treatment period. For each event time, the estimator identifies
+\[
+ATT(e) = \mathbb{E}\!\left[\,Y_{it}(1) - Y_{it}(0)\mid t-g = e\,\right]
+\]
+by comparing treated units to those that are yet-to-be-treated in period $t$. Under the cohort-specific parallel trends assumption, all pre-treatment effects must be zero, implying the joint null hypothesis $ATT(e) = 0$ for all $e < 0$. 
+
+Table~\ref{tab: parallel trends assumption} reports the estimated event-time average treatment effects for each relative period across all outcomes. Most of the pre-treatment coefficients are small and statistically indistinguishable from zero. The only exceptions occur at event times $-7$ and $-1$ for the assignment outcome. In contrast, after the policy change, we observe positive and statistically significant effects for most post-treatment periods. Taken together, these results are consistent with the parallel trends assumption in the pre-treatment period.
+
+\input{tables/parallel_trends_sae_on_outcomes_AM.tex}
+
+
+\subsubsection{Placebo Tests.}\label{sec: placebo}
+
+\paragraph{Private Schools.} A key feature of our setting is the presence of a group of never‑treated.  Since SAE only includes publicly funded schools (i.e., public and voucher), private schools are never exposed to the system. If congestion or spillover effects generated by the reform are limited, outcomes for private schools should remain unchanged when their region joins the centralized system, even though these schools themselves do not participate. In other words, treating regional adoption as a “placebo treatment’’ for private schools should yield no detectable effects.
+
+We implement this placebo by estimating the simple aggregated ATT restricting the sample to private schools only, assuming as treatment period the one when SAE was implemented in the school's region. Table~\ref{tab: did only private} shows that none of the estimated coefficients is statistically significant. This pattern indicates that private‑school outcomes did not change when public and voucher schools in their region entered SAE, consistent with the absence of meaningful spillover or congestion effects operating through the centralized admissions market.
+
+\input{tables/staggered_did_sae_on_outcomes_only_private.tex}
+
+\paragraph{Timing.} 
+
+Another key feature of our setting is the staggered rollout of SAE across regions, which allows us to construct a placebo–timing test by artificially shifting each region's adoption year to an earlier period.
+To implement this, we assign a placebo implementation year that precedes the true one by a fixed number of years and restrict the sample to periods strictly before the actual adoption date, ensuring that all observations remain untreated. We then re‑estimate the $ATT(t,g)$ for each placebo shift. If the identifying assumptions hold and there are no differential pre‑trends, these placebo treatments should yield no significant effects—or effects that are much smaller than those obtained using the true implementation year. 
+
+\begin{figure}[htp!]
+    \centering
+    \includegraphics[width=0.75\linewidth]{figures/plot_placebo_shifter-1.pdf}
+    \caption{Caption}
+    \label{fig: placebo timing}
+\end{figure}
+
+For each outcome, Figure~\ref{fig: placebo timing} displays boxplots with the estimates obtained considering different shifts in the time of implementation of SAE, and also includes (in red) the estimates obtained with the actual year of implementation. We observe that the latter is significantly higher than the former for all the outcomes considered, suggesting that the estimated effects do not arise when the policy is artificially assigned to earlier years. This pattern is consistent with the absence of differential pre‑trends and reinforces the interpretation that our main estimates capture the causal impact of SAE rather than spurious pre‑existing dynamics.
+
+
+\subsubsection[Two-Way Fixed Effects]{\mararout{Two-Way Fixed Effects}}
+\mararout{A natural approach to evaluate the effect of the reform is to estimate a two-way fixed-effects (TWFE) model of the form:}
+{\color{myblue}\begin{equation}\label{eq: two way fixed effect model}
+    Y_{it} = \alpha_i + \lambda_t +
+    \beta W_{it} + X_{it}\gamma + \varepsilon_{it},
+\end{equation}}
+\mararout{where \mbox{$Y_{it}$} denotes the outcome for unit \mbox{$i$} and year \mbox{$t$}; \mbox{$\alpha_i$} and \mbox{$\lambda_t$} are school and year fixed effects, respectively; \mbox{$X_{it}$} includes time-varying school characteristics, such as enrollment size; and \mbox{$\varepsilon_{it}$} is an error term. The main variable of interest is \mbox{$W_{it}$}, which is an indicator equal to one if school \mbox{$i$} is part of SAE in year \mbox{$t$}, and zero otherwise.}
+
+\mararout{Although it is intuitive and has been used in prior literature,}\footnote{For instance,~\cite{urzua2023} use this strategy to estimate the effect of the reform on the composition of schools.}\mararout{ a growing body of literature shows that this approach is inappropriate with multiple periods and staggered treatment adoption}~\citep{borusyak2018, dechaisemartin2020, goodmanbacon2021, sun2021}\mararout{.}\footnote{TWFE constructs its identifying variation by comparing newly treated units not only to never-treated or not-yet-treated units—which provide valid counterfactuals—but also to units that have already been treated. Because already-treated units no longer represent untreated potential outcomes, these comparisons embed treatment effect dynamics and contaminate the estimated coefficient. As a result, the TWFE estimator can combine heterogeneous cohort- and time-specific treatment effects using weights that are difficult to interpret and may even be negative, leading to estimates that do not correspond to any meaningful average treatment effect.}\mararout{ Nevertheless, Table~\ref{tab: twfe regression} in Appendix~\ref{app: additional results}, which reports the TWFE estimates for completeness, shows results that are broadly consistent with the estimates reported in Table~\ref{tab: main results}.}
+
+\section{Discussion}\label{sec: discussion}
+
+The results presented in the previous section show that exposure to the centralized school choice system leads to meaningful increases in  applications, assignments, and enrollment. In this section, we explore potential mechanisms that may help explain these patterns. 
+To organize the discussion, we follow the framework in~\cite{larroucau2024}, where a student's optimal application list depends on three primitives: preferences over programs, beliefs about admission probabilities, and strategic behavior. Centralized school choice can affect college applications and outcomes through each of these channels. 
+First, it may shift students' preferences over degree programs, for instance through peer effects: changes in the academic composition of schools may reshape aspirations, information about college options, or beliefs about expected returns to different programs.
+Second, it may alter students' beliefs about admission probabilities—either because their actual application scores change (shifting true admission chances) or because exposure to a centralized system reduces biases in perceived admission chances (e.g., over- or under-confidence). 
+Third, exposure to a centralized school‑choice system may alter students’ strategic behavior in later centralized admissions, giving them practical experience that improves application choices and reduces incentives to misreport preferences. We now discuss each of these mechanisms in more details.\footnote{This discussion is not intended to provide an exhaustive account of all possible drivers of the observed effects. Other channels—such as changes in students' awareness of available programs or their knowledge of program characteristics—may also play a role but are beyond the scope of our empirical tests. Our goal is to offer suggestive evidence on mechanisms that are plausibly at play and consistent with the institutional features of the reform. } 
+
+% We focus on two channels that are especially salient in this context: (i) increased familiarity with centralized application and assignment processes, and (ii) peer effects operating through changes in school composition induced by the reform. This discussion is not intended to provide an exhaustive account of all possible drivers of the observed effects; rather, it aims to offer suggestive evidence on two mechanisms that are plausibly at play and consistent with the institutional features of the reform.
+
+
+
+
+
+\subsection{Effect through Changes in Preferences}
+Participation in a centralized, deferred-acceptance-based school-choice system can reshape students' preferences when they later apply to college through several channels. By coordinating applications and reallocating seats via priorities and lotteries, centralization alters both the perceived and realized probability of attending higher-quality secondary schools. For some students, this raises awareness and the expected returns to more ambitious college pathways and makes selective options appear attainable. In addition, exposure to higher-quality peers and teachers can increase aspirations, transmit application know-how, and foster norms around effort and postsecondary investment.
+
+A key way to summarize these mechanisms is through changes in the degree and nature of segregation in the secondary system. \citet{urzua2023} show that Chile's centralized school choice reform did not generate meaningful changes in the socioeconomic composition of schools, with effects concentrated in areas characterized by high residential segregation or a strong private-school sector. However, their analysis focuses on socioeconomic segregation and does not examine the \emph{academic} composition of schools. This distinction is central in our context: a less segregated distribution of student ability implies that high-achieving students are more evenly spread across schools, increasing the likelihood that any given student is exposed to strong peers, higher expectations, and information about selective college options.
+A large literature on peer effects shows that exposure to higher-achieving classmates can shape academic outcomes and educational trajectories through channels such as information transmission, encouragement, and the formation of norms around effort and postsecondary investment~\citep{hoxby2000b, Sacerdote2001, CarrellSacerdoteWest2013}. Thus, improvements in academic peer quality can plausibly increase students’ propensity to apply to, gain admission to, and ultimately enroll in college.\footnote{In Appendix~\ref{app: additional results} we examine whether participation in the centralized school-choice system affected the different types of admission-probability errors identified by \cite{larroucau2024}; we find no statistically significant effects. }
+
+To examine whether the introduction of the centralized school choice system altered the \emph{academic} composition of schools, we study changes in segregation by ability using students' fourth-grade SIMCE scores in Math and Verbal as a measure of prior academic achievement. We construct three standard segregation indices at the district level: the Duncan index, which captures the unevenness in the distribution of low- and high-achieving students (relative to their district-year median) across schools; the exposure index ($P_{LH}$), which measures the average share of high-achieving peers faced by low-achieving students; and the isolation index ($P_{LL}$), which captures the extent to which low-achieving students are concentrated in schools with other low-achieving peers. Higher exposure and lower isolation indicate greater academic integration. Formal definitions and computational details for these indices are provided in Appendix~\ref{app: segregation measures}. We then estimate the effect of the reform on each segregation measure using a staggered Difference-in-Differences design at the district level, exploiting the sequential rollout of the centralized system across regions.
+
+Table~\ref{tab: did segregation} reports the estimated average treatment effects. We find that joining the centralized school choice system leads to a negative and statistically significant effect on the Duncan index for both Math and Verbal SIMCE scores, indicating a reduction in segregation by academic ability. Consistent with this pattern, all coefficients are positive for $P_{LH}$ and negative for $P_{LL}$, i.e., the treatment increases the exposure of low-achieving students to high-achieving peers and decreases their isolation.
+Taken together, these results point to a systematic decline in segregation by academic ability following the reform. 
+% Such improvements in academic integration are consistent with the peer-effects mechanism discussed above: greater exposure to higher-achieving classmates may have contributed to the increases in college applications, admissions, and enrollment documented earlier.
+
+\input{tables/did_segregation_AM}
+
+\subsection{Effect through Changes in Admission Probabilities and Beliefs}
+Exposure to a centralized school-choice system may shape both students’ feasible choice sets and their beliefs about admission prospects when they later apply to college. On the one hand, centralized assignment can improve the match between students and secondary schools, allowing some students to attend higher-quality or better-fitting institutions. These improvements can translate into gains in academic achievement and preparation, thereby expanding the set of college options for which students are academically competitive and shifting revealed preferences toward more selective programs. On the other hand, participation in a centralized allocation mechanism may directly affect students' beliefs about admission probabilities. Through exposure to peers, school environments, and guidance from teachers, students may update their expectations about the likelihood of admission to different programs. In addition, the experience of participating in a system that explicitly links choices to probabilistic outcomes—through priorities,  and lotteries—may make the role of admission probabilities more salient, encouraging students to seek out and incorporate such information when forming their college application strategies.
+
+We next examine the empirical relevance of these mechanisms. On the one hand, the results in Table~\ref{tab: main results} show no detectable effects on GPA or on the average score between the Math and Verbal components of the college entrance exam, suggesting that the mechanism operating through improvements in academic achievement and preparation is unlikely to be at play. Consistent with this interpretation, Table~\ref{tab: results by program selectivity} indicates that the observed gains in admissions are concentrated in less selective programs, providing no evidence of a shift toward more selective options.
+On the other hand, Table~\ref{tab: effect on truthful reporting} shows that participation in the centralized school-choice system has no significant effect on students’ admission probabilities or on their biases when reporting their top choice or overall application. Overall, these results suggest that the policy does not meaningfully affect either students’ feasible sets—through academic preparation—or their beliefs about admission chances.
+
+\input{tables/effect_truthful_reporting_AM}
+
+\subsection{Effect through Changes in Application Behavior}
+
+Participation in a centralized school-choice system also provides students with hands-on experience navigating a large, rule-based matching process, including submitting ranked preference lists, complying with deadlines, and interpreting assignment outcomes generated by a deferred-acceptance algorithm. This experience and the acquired procedural knowledge can reduce the cognitive and psychological costs of engaging with a similar system at the college level, particularly for students who might otherwise perceive the application process as complex or opaque. Furthermore, it may increase confidence in the system itself—both in its fairness and in the absence of costs or penalties from unsuccessful applications—thereby encouraging students to apply in the first place.
+
+Beyond increasing participation, exposure to centralized assignment may also improve the quality of students' applications. First, familiarity with preference-based mechanisms may encourage students to submit longer and more complete application lists, as they better understand that applying to additional programs is typically costless and does not reduce admission chances at more preferred options. Second, procedural learning may reduce avoidable mistakes, such as applying to programs for which minimum requirements are not met, by improving students' ability to interpret eligibility criteria and admission thresholds. Finally, experience with a strategy-proof mechanism may promote more accurate preference revelation, as students learn that truthful reporting is optimal and need not be distorted by strategic concerns. Taken together, these channels suggest that centralized school choice can improve both the likelihood of applying and the quality of application decisions.
+
+\input{tables/did_app_breadth_quality_AM}
+
+\marar{Table~\ref{tab: application quality} reports the aggregated treatment effects on several measures of college application breadth and quality, including the share of students who apply to at least one, three, or five programs, the share of submitted applications that are valid (i.e., programs for which the student met all admission requirements), and the share for which the student's application score exceeded the previous year's cutoff.\footnote{Students often rely on previous-year cutoffs to assess their chances of admission, as these are publicly available and tend to be relatively stable from one year to the next, particularly among selective programs~\citep{larroucau2024}.} Although greater familiarity with the mechanism might be expected to lengthen students' application lists, we find instead that centralized school choice draws more students into the application process while leading them to submit shorter and more valid lists. There is a positive and statistically significant effect on the share of students applying to at least one and to at least three programs, and a negative effect on the share applying to five or more. Figure~\ref{fig: app breadth} traces this pattern across the full range of list lengths, with positive effects at low thresholds that become negative at higher ones. We further find a positive and statistically significant effect on the share of valid applications, whereas the share of applications with scores above the previous year's cutoff is unchanged. The shorter lists reflect fewer applications to programs for which students did not meet the admission requirements rather than the loss of eligible options, as the share of valid applications rises even as lists become shorter, and are therefore consistent with the higher admission rates reported in Table~\ref{tab: main results}.}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.8\textwidth]{figures/effect_uniform_errorbars.pdf}
+\caption{\marar{Effect of centralized school choice on the share of a class applying to at least $k$ college programs}}
+\label{fig: app breadth}
+\end{figure}
+Furthermore, Table~\ref{tab: effect on truthful reporting} examines whether prior exposure affects preference revelation in the college admissions process. We find a positive and statistically significant effect on truthful reporting of the top-ranked option, indicating that students are more likely to report their most-preferred program first. In contrast, we find no effect on truthful reporting at the bottom of the preference list. 
+
+Taken together, these results indicate that exposure to centralized school choice improves students' understanding of the mechanism and the quality of their college applications, \marar{leading to higher participation and a greater likelihood of admission}.
+
+
+
+\section{Conclusions}\label{sec:conclusion}
+We provide the first nationwide evidence on how transitioning from decentralized to centralized school assignment shapes students' subsequent behavior and outcomes in a separate centralized college admissions process. Leveraging the staggered and partially randomized rollout of Chile's \textit{Sistema de Admisión Escolar} (SAE), we estimate dynamic treatment effects that isolate the causal impact of centralized school choice on the full pipeline from secondary schooling to higher education. Two findings stand out. First, exposure to centralized school assignment substantially increases the likelihood that students apply to, are admitted to, and enroll in programs within the centralized college admissions system. Second, these gains are concentrated among students historically underserved by decentralized admissions---female students, students from socioeconomically vulnerable schools, and students from lower-performing schools---indicating that centralized assignment can meaningfully reduce downstream inequities in access to higher education.
+
+Beyond documenting average effects, our analysis sheds light on the mechanisms through which centralized school choice affects postsecondary trajectories. We show that the improvements are driven by increased admissions to less selective and historically under-subscribed programs, with no evidence of displacement in highly selective programs. This pattern suggests that centralized assignment expands participation without generating congestion in the most competitive segments of the market. The absence of effects on high-school GPA and entrance-exam performance further indicates that the reform operates primarily through changes in information, expectations, and application behavior rather than through improvements in academic preparation. Together, these results highlight the importance of institutional design in shaping how students navigate sequential matching environments and demonstrate that early exposure to transparent, standardized assignment processes can influence later decisions in related markets.
+
+From a policy perspective, our findings underscore the broader value of coordinated choice systems in education markets. Centralized assignment not only reduces inefficiencies and inequities in school admissions but also appears to alter students' engagement with subsequent centralized processes, expanding access to higher education for groups that have historically faced barriers in decentralized settings. These insights are particularly relevant for policymakers considering reforms to school or college admissions systems, as they suggest that the benefits of centralized assignment extend beyond the immediate allocation problem and can propagate across educational stages. More broadly, our results point to promising avenues for future work on how early institutional experiences shape behavior in later matching environments, how information and transparency affect students' strategic decisions, and how coordinated systems can be designed to promote equity and efficiency across the educational pipeline.
+
+
+\bibliographystyle{informs2014}   
+\bibliography{sample}
+
+\section{Appendix}
+
+\marar{
+\subsection{Value Added Estimation}\label{app: value added estimation}
+
+We estimate each school's value added as the school fixed effect $\theta_s$ from the regression
+\[
+y_{is} = \beta_1\,a^m_i + \beta_2\,a^r_i + X_i'\gamma + \theta_s + \varepsilon_{is},
+\]
+where $y_{is}$ is the standardized tenth-grade Math score of student $i$ in school $s$, and $a^m_i$ and $a^r_i$ are the student's standardized eighth-grade Math and Reading scores, which measure prior achievement. The vector $X_i$ collects gender, mother's education, family income, an indicator for ever having repeated a grade, and fixed effects for the student's commune of residence. All scores are standardized within test year to mean zero and unit variance.
+
+We estimate the headline measure on the 2016 tenth-grade cohort, which entered ninth grade in 2015, before SAE reached any region. Value added is therefore predetermined with respect to the reform: it is fixed before treatment and unaffected by the policy or by the change in student composition it induces. Among schools that eventually enter SAE, we split at the within-region median of value added, classifying schools with fixed effects below the median as low--value-added and those at or above it as high--value-added. This is the split used in Table~\ref{tab: did by value added}.
+
+Conditioning on prior achievement makes this measure stronger than the value added typically used to study centralized assignment. Studies of centralized assignment in Chile measure school quality at entry grades, where students have no prior test score, so their value added conditions only on contemporaneous socioeconomic characteristics \citep{botbolgazmuri2026}. Our treated cohort is observed on a standardized test both before (eighth grade) and after (tenth grade) school entry, so prior achievement enters the regression directly, following \citet{abdulkadiroglu2020}. The lagged score absorbs selection on incoming ability that socioeconomic controls alone cannot, so the school fixed effect more credibly reflects a school's causal contribution to learning \citep{kanestaiger2008, chettyfriedmanrockoff2014}.
+
+As a robustness check, we construct an alternative measure that drops the socioeconomic controls and retains only prior achievement and gender. Because it relies on a leaner set of covariates, this measure can be pooled over the pre-reform cohorts from 2010 to 2016, so each school's fixed effect draws on multiple cohorts rather than a single one. The two measures rank schools very similarly, with a correlation above 0.80. Table~\ref{tab: did by value added robust} repeats the heterogeneity analysis using this multi-cohort measure. The gains in application, admission, and enrollment remain concentrated in low--value-added schools, if anything slightly larger, and high--value-added schools continue to show no significant effect.
+}
+
+\input{tables/did_by_value_added_robust_AM}
+
+\marar{\subsection{Segregation Measures}\label{app: segregation measures}
+
+We measure segregation by academic ability across schools within each district (\emph{comuna}), using standard segregation indices \citep{duncan1955, masseydenton1988}. The indices are computed on all ninth-grade entrants, aggregated to the district-cohort level. Using fourth-grade SIMCE scores in Math and Verbal, we classify each entrant as high- or low-achieving in each subject according to whether their score is above the district-year median.
+
+Consider a district and cohort, and index its schools by $s$. Let $h_s$ and $l_s$ be the numbers of high- and low-achieving students in school $s$, let $n_s = h_s + l_s$, and let $H = \sum_s h_s$ and $L = \sum_s l_s$ be the district-cohort totals. The Duncan index is
+\[
+  D = \frac{1}{2}\sum_s \left| \frac{h_s}{H} - \frac{l_s}{L} \right| .
+\]
+It equals $0$ under no segregation, when every school has the same mix of high- and low-achieving
+students as the district, and $1$ under complete segregation, when each school enrolls only one
+group. The exposure index $P_{LH}$ and the isolation index $P_{LL}$ are
+\[
+  P_{LH} = \sum_s \frac{l_s}{L}\,\frac{h_s}{n_s},
+  \qquad
+  P_{LL} = \sum_s \frac{l_s}{L}\,\frac{l_s}{n_s} .
+\]
+$P_{LH}$ is the average share of high-achieving peers faced by low-achieving students, and
+$P_{LL}$ the average share of low-achieving peers. Since a low-achieving student's peers are
+either high- or low-achieving, $P_{LH} + P_{LL} = 1$, and the estimated effect on one index
+equals the negative of the effect on the other.
+
+Each index is computed separately for Math and Verbal. District-cohort cells with students
+from only one group, or with fewer than ten students who have a fourth-grade score, are dropped.
+The reform's effect on each index is then estimated with the staggered difference-in-differences
+estimator used for the main results \citep{callaway2021}, taking the district as the unit of
+observation and clustering standard errors by region.
+
+Prior work on Chilean school segregation applies the Duncan index to socioeconomic status:
+\citet{urzua2023} and \citet{botbolgazmuri2026} for the same admissions reform studied here, and
+\citet{gazmuri2024} for the earlier voucher reform. Our analysis instead measures segregation by
+academic ability and complements the Duncan index with the exposure and isolation indices, which
+characterize the peer environment of low-achieving students.}
+
+\subsection{Additional Results}\label{app: additional results}
+
+\input{tables/did_by_quantile_selectivity_AM}
+
+
+
+\input{tables/twfe_sae_on_outcomes}
+
+
+% Provenance: counts verified by full replication from raw data (RUN-033) and the classification census (RUN-036, cert_census.csv); explorations/2026-06-10_repair_ignacio/R/08_full_replication.R and R/11_panel_certification.R reproduce every number. The pre-base-universe funnel rows (9,709,049 / 7,611,366 / 4,403,732 and the 72.1M record count) are from RUN-045, R/17_base_universe_funnel.R (output/run_17_base_funnel.log).
+\subsection{Panel Construction: Sample Filters and Treatment Classification}\label{app: panel construction}
+
+\begin{table}[ht]
+    \centering
+    \caption{Sample filters. The first row reports the full national enrollment panel; each subsequent row applies one filter to the students remaining after the row above it and reports the resulting count. Counts are unique students.}
+    \label{tab: panel filters}
+    \small
+    \begin{tabular}{p{11.8cm}r}
+    \toprule
+    Filter & Students remaining \\
+    \midrule
+    National enrollment panel (all students, all levels and program types, 2004--2025) & 9,709,049 \\
+    Enrolled in at least one year between 2010 and 2024 & 7,611,366 \\
+    Entire school career in regular primary and secondary education, in a single secondary track (academic or vocational) & 4,403,732 \\
+    At least one record in grades 9--12 between 2010 and 2024 (the base universe) & 2,763,367 \\
+    Completed all four grades (9--12) at the entry school; never enrolled at another school in grades 9--12 & 1,384,496 \\
+    Graduated from secondary school & 1,369,988 \\
+    Graduated on time (graduation year $=$ entry year $+$ 3) & 1,290,514 \\
+    Entered 9th grade between 2012 and 2021 & 1,065,135 \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+The filters begin from the national student-level enrollment records, which track every student at every school in Chile from 2004 to 2025, across all levels and program types (72.1 million enrollment records on 9,709,049 students). Three restrictions define the base universe. We keep students enrolled at least once between 2010 and 2024, the observation window of the analysis. We keep students whose entire school career takes place in regular primary and regular secondary education within a single secondary track, academic or vocational: this removes students who ever appear in adult education, special education, or the arts track, and students who switch between the academic and vocational tracks. Last, we keep students with at least one record in grades 9--12. The 2,763,367 students remaining form the base universe; four further filters define the estimation sample.
+
+First, we keep students who completed all four grades at their entry school and never enrolled at another school in grades 9--12. Single-school completers make the class assignment unambiguous: a student who switches schools belongs to no single graduating class.
+
+Second, we keep students who graduated from secondary school. College-application outcomes are defined only for students who reached the end of secondary school.
+
+Third, we keep students who graduated on time, meaning their graduation year equals their entry year plus three. On-time graduation keeps each class together facing a single college-admissions cycle, and matches the sample definition stated in the \textit{Sample} paragraph of Section~\ref{sec:background}.
+
+Fourth, we keep students who entered 9th grade between 2012 and 2021. The 2012 lower bound ensures that every cohort reached college after the free-tuition policy (\textit{gratuidad}) was fully in place, so differential exposure to that reform cannot drive comparisons; the 2021 upper bound keeps the last cohort observable in the 2025 admissions process, the final year for which we have data.
+
+The single-school, graduation, and on-time filters condition on behavior that, for treated classes, occurs after treatment; the unconditional sample of all 9th-grade entrants is a planned robustness check.
+
+\paragraph{Aggregation to classes.}
+Students passing all filters are grouped into graduating classes, defined by the combination of school and entry year (the school--cohort cells of the main text). For each class we record the number of students and the simple average of each outcome over its members. The result is 25,855 classes at 2,888 schools. Classes are dated by their admission-process year---the calendar year in which the class's 9th-grade seats were assigned, that is, the year before entry---because the reform changes how seats are assigned.
+
+\paragraph{Treatment dates.}
+SAE was rolled out by region. Admission processes for 9th grade were first run in 2016 in Magallanes; in 2017 in Tarapacá, Coquimbo, O'Higgins, and Los Lagos; in 2018 in ten of the eleven remaining regions; and in 2019 in the Metropolitan region. These legislated dates are verified against the SAE administrative records: in all 16 regions, the first 9th-grade assignment appears exactly in the legislated year. Every publicly funded school---municipal (\textit{municipal DAEM} and \textit{corporaci\'on municipal}, \texttt{COD\_DEPE} 1--2), subsidized private (\textit{particular subvencionado}, \texttt{COD\_DEPE} 3), or delegated-administration (\textit{corporaci\'on de administraci\'on delegada}, \texttt{COD\_DEPE} 5)---carries its region's date: from that date onward, its 9th-grade vacancies were by law offered through the platform, regardless of the school's own behavior. Private fee-paying schools (\textit{particular pagado}, \texttt{COD\_DEPE} 4) never participate in SAE---none of the 395 such schools in the panel ever appears in the SAE records---and are classified as never treated.
+
+\paragraph{Classification.}
+Classes at private fee-paying schools are never treated; comparing every other class's admission-process year with its school's treatment date places it in exactly one of the remaining three groups of Table~\ref{tab: panel classification}. In total, 2,493 schools eventually carry a treatment date and 395 never do.
+
+\begin{table}[ht]
+    \centering
+    \caption{Classification of classes by treatment status. Each class (school $\times$ entry year) is classified by comparing its admission-process year with its school's treatment date. Counts are computed from the estimation sample of Table~\ref{tab: panel filters}.}
+    \label{tab: panel classification}
+    \small
+    \begin{tabular}{p{9.8cm}rr}
+    \toprule
+    Group & Classes & Students \\
+    \midrule
+    Treated (seats assigned in or after the school's treatment date) & 6,630 & 257,015 \\
+    Transition band, set aside (seats assigned one to three years before) & 6,707 & 273,185 \\
+    Pre-treatment (seats assigned four or more years before) & 8,917 & 393,021 \\
+    Never treated (private fee-paying schools) & 3,601 & 141,914 \\
+    \midrule
+    Total & 25,855 & 1,065,135 \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+\paragraph{Why the transition band is set aside.}
+Classes whose seats were assigned one to three years before the platform's arrival completed part of secondary school after it. First, for the class formed one year before, SAE could place new students into its grade-11 and grade-12 classrooms, and for the class formed two years before, into its grade-12 classrooms, once the platform covered all grades. Those mid-stream entrants never enter our class averages---the single-school filter excludes them---but the students we do measure earned their final-year grades and formed their application plans in classrooms partly assembled by the platform. Second, for these same classes, the platform also allowed original class members to leave mid-stream, so the set of students who remain single-school completers was itself partly determined under the new regime. Third, these classes overlapped in school with SAE-admitted cohorts below them: three, two, and one years of overlap for classes formed one, two, and three years before the treatment date, and zero for classes formed four or more years before. The class formed four years before the treatment date is therefore the last to graduate before any SAE-admitted student entered the school, and serves as the within-school reference. The band is not dropped: in estimation it is set aside through the anticipation parameter of \citet{callaway2021}, set to three, so band classes are never used as untreated comparisons and never counted in the treatment-effect aggregates, while their coefficients remain visible in the event-study exhibits.
+
+\subsection{Measurement: What Is Compared}\label{app: measurement}
+
+\paragraph{The reference class.}
+Each eventually treated school contributes one fixed reference point: its class formed four years before its treatment date---established in Section~\ref{app: panel construction} as the last class to graduate before any SAE-admitted student entered the school. Every other class of the same school, earlier or later, is measured as the change in its outcome relative to this reference class. Because the comparison is within school, everything permanent about a school---its selectivity, location, reputation---cancels out of the measurement.
+
+\paragraph{The comparison group.}
+The change at treated schools is compared with the change, over the same calendar years, at schools whose admissions the platform did not yet (or never did) govern. A publicly funded school serves as a comparison in a given admission-process year only while that year is at least four years before its own treatment date---its own transition band is set aside symmetrically. Never-treated private fee-paying schools are always available as comparisons. Because the rollout spans only 2016 to 2019, by the time the first treated classes exist, no publicly funded school in the country remains four or more years away from its own treatment date. The comparison for every post-treatment contrast is therefore the 395 never-treated private schools; the not-yet-treated publicly funded schools serve as comparisons for the pre-treatment placebo checks (the event-study leads). Two implications follow: (i) the post-treatment estimates rest on private schools providing a valid picture of how outcomes would have evolved absent the reform---within-school changes, not levels, so permanent public--private differences do not enter; (ii) the placebo test on private schools (their outcomes should not move when their region adopts the platform) is the direct check of this comparison and is a planned exhibit of the revised results.
+
+\paragraph{The difference in differences.}
+For each adoption wave and each class vintage---classes formed the same number of years before or after their school's treatment date---the estimate is the average change (relative to the reference class) at treated schools, minus the average change over the same calendar years at comparison schools. The first difference removes everything permanent about each school; the second removes everything common to all schools in those calendar years---the free-tuition policy, the COVID-19 disruptions, changes to the admission test---because comparison schools lived through the same years. Before differencing, comparison schools are aligned with treated schools on class size, both by reweighting and by regression adjustment, following the doubly robust implementation of \citet{callaway2021}.
+
+\paragraph{Aggregation.}
+The overall effect is the average of these wave-by-vintage contrasts over all treated classes, each contrast weighted by the number of classes it represents. The event-study exhibits report the same contrasts averaged instead by years since treatment: the pre-treatment side shows the placebo contrasts (these should be near zero), the post-treatment side shows the effect by years of exposure, and the transition-band cells are displayed but never enter the overall average.
+
+\paragraph{What the estimate means.}
+The resulting number is the average effect of being assembled under the centralized platform on class-average outcomes, across all classes whose 9th-grade seats the platform legally governed---including classes barely touched in practice (for example, at schools to which the platform never assigned a single 9th-grade student). To the extent the platform left such classes unaffected, including them dilutes the average toward zero; the estimate is in this sense conservative.
+
+\paragraph{Uncertainty.}
+Standard errors come from a multiplier bootstrap with 10,000 replications, clustered at the school level: each school is treated as one independent unit, and all of its classes may be arbitrarily correlated. Because adoption timing varies at the regional level, region-level inference (a wild cluster bootstrap over the 16 regions) is a planned robustness check.
+
+\end{document}
