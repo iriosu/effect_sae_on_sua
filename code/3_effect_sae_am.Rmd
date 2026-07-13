@@ -1,0 +1,620 @@
+---
+title: "Effect of SAE on SUA - staggered DiD, any-track design"
+output:
+  pdf_document:
+    keep_tex:  true
+    latex_engine: xelatex
+  html_document: default
+header-includes:
+   - \usepackage{floatrow}
+   - \floatsetup[figure]{capposition=top}
+---
+
+```{r setup, include=FALSE}
+# Paths below are relative to code/. knitr sets the working directory to this
+# file's folder when knitting, so the file runs anywhere without editing paths.
+knitr::opts_knit$set(root.dir = normalizePath("."))
+options(vsc.plot = TRUE)
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# Clean ---------------------------------------------------------------
+rm(list = ls())
+
+# Libraries ---------------------------------------------------------------
+# region Libraries_and_settings
+library(dplyr)
+library(purrr)
+library(data.table)
+library(fixest)
+library(did)
+library(knitr)
+
+options(knitr.table.format = "latex")
+
+# Design: CS-DiD on graduating classes (school x 9th-grade entry cohort), the
+# regional 9th-grade door as onset, never-treated = private-paid schools only.
+# Inference is region-clustered; stars read off the normal (16 regions).
+anticipation <- 2
+biters <- 10000
+seed <- 20260610
+gate_df <- 15 # 16 regions - 1, for the conservative cluster-t robustness
+
+start_year <- 2010
+end_year <- 2024
+entry_min <- 2012
+entry_max <- 2021
+
+media <- c(310, 410, 510, 610, 710, 810) # secondary tracks
+hs <- 1:4
+
+outcomes <- c(
+  gpa_secondary  = "GPA",
+  prom_lm_actual = "Average LM",
+  applied        = "Applied",
+  assigned       = "Assigned",
+  enrolled       = "Enrolled"
+)
+# endregion
+```
+
+```{r functions_to_estimate, echo=FALSE, message=FALSE, warning=FALSE}
+# region estimation_helpers
+
+# One att_gt fit for one outcome. `cluster` is "region" (headline) or "id" (school).
+# Returns the model plus BOTH aggregations, computed here on purpose: aggte's
+# bootstrap draws its multipliers from the RNG state att_gt leaves behind, so
+# the sequence seed -> att_gt -> aggte(simple) -> aggte(dynamic) must run as a
+# unit per outcome. Aggregating later (or reordering the two calls) leaves the
+# point estimates untouched but changes the bootstrap standard errors.
+fit_did <- function(dfc, y, cluster = "region") {
+  dd <- data.frame(
+    id = as.numeric(dfc$rbd),
+    tt = as.numeric(dfc$year),
+    G = as.numeric(dfc$gC2),
+    region = as.numeric(dfc$region),
+    num_students = as.numeric(dfc$num_students),
+    yy = as.numeric(dfc[[y]])
+  )
+
+  set.seed(seed)
+  m <- att_gt(
+    yname = "yy",
+    tname = "tt",
+    idname = "id",
+    gname = "G",
+    xformla = ~num_students,
+    data = dd,
+    control_group = "notyettreated",
+    anticipation = anticipation,
+    base_period = "universal",
+    allow_unbalanced_panel = TRUE,
+    est_method = "dr",
+    clustervars = cluster,
+    panel = TRUE,
+    bstrap = TRUE,
+    biters = biters,
+    cband = TRUE
+  )
+
+  list(
+    model = m,
+    simple = suppressWarnings(aggte(m, type = "simple", na.rm = TRUE)),
+    dynamic = tryCatch(suppressWarnings(aggte(m, type = "dynamic", na.rm = TRUE)),
+      error = function(e) NULL
+    )
+  )
+}
+
+# Collapse the per-student base to the class (school x cohort) panel the DiD is
+# fit on. year is the process clock: 9th-grade entry minus one.
+collapse_coh <- function(base, cols = names(outcomes)) {
+  coh <- base[, c(.(num_students = .N), lapply(.SD, mean, na.rm = TRUE)),
+    by = .(rbd, AGNO_9th), .SDcols = cols
+  ]
+  coh[, year := AGNO_9th - 1L]
+  coh <- merge(coh, sch[, .(rbd, gC2, depe, region)], by = "rbd", all.x = TRUE)
+
+  # a door beyond the panel is not observed as treated
+  coh[gC2 > max(year), gC2 := 0]
+  coh[]
+}
+
+# Baseline for the "% effect among the treated" row: treated classes' own pre-period.
+pre_mean <- function(coh, y) coh[gC2 > 0 & year < gC2, mean(get(y), na.rm = TRUE)]
+
+# Between-school split (vulnerability, value-added): treated schools are sorted
+# Low/High by a school-level index `idx` (data.table: rbd, v) relative to the
+# within-region median computed over treated schools; treated schools with a
+# missing index are dropped (neither arm). Never-treated private-paid schools
+# (gC2 == 0) are the COMMON control in both arms, so the two arms sum back to
+# the headline. Class means stay the full-class means: the split only
+# reassigns schools, so `coh` (= coh_all) is reused, not re-collapsed.
+split_arms <- function(coh, idx) {
+  s <- unique(coh[, .(rbd = as.numeric(rbd), region, gC2)])
+  s <- merge(s, idx, by = "rbd", all.x = TRUE)
+  med <- s[gC2 > 0 & !is.na(v), .(med = median(v)), by = region]
+  s <- merge(s, med, by = "region", all.x = TRUE)
+  s[, low := as.integer(gC2 > 0 & !is.na(v) & !is.na(med) & v < med)]
+  s[, high := as.integer(gC2 > 0 & !is.na(v) & !is.na(med) & v >= med)]
+
+  # split integrity: low/high partition the treated-with-index schools,
+  # never overlap, and both arms span more than one region
+  stopifnot(
+    s[low == 1L & high == 1L, .N] == 0L,
+    s[low == 1L, .N] + s[high == 1L, .N] == s[gC2 > 0 & !is.na(v), .N],
+    s[low == 1L | gC2 == 0, uniqueN(region)] > 1L,
+    s[high == 1L | gC2 == 0, uniqueN(region)] > 1L
+  )
+
+  cc <- merge(coh, s[, .(rbd, low, high)], by = "rbd", all.x = TRUE)
+  cc[is.na(low), low := 0L]
+  cc[is.na(high), high := 0L]
+  list(low = cc[gC2 == 0 | low == 1L], high = cc[gC2 == 0 | high == 1L])
+}
+# endregion
+```
+
+```{r functions_to_tabulate, echo=FALSE, message=FALSE, warning=FALSE}
+# region make_did_table
+make_did_table <- function(models,
+                           caption = "Regression Results",
+                           label = "tab: main results",
+                           digits = 3,
+                           means_pre = NULL,
+                           obs = NULL) {
+  # Helper: significance stars off the normal (region-clustered SE)
+  star_fun <- function(att, se) {
+    pval <- 2 * pnorm(-abs(att / se))
+    ifelse(pval < 0.01, "$^{***}$",
+      ifelse(pval < 0.05, "$^{**}$",
+        ifelse(pval < 0.10, "$^{*}$", "")
+      )
+    )
+  }
+
+  aggs <- lapply(models, function(m) m$simple)
+  atts <- sapply(aggs, function(x) x$overall.att)
+  ses <- sapply(aggs, function(x) x$overall.se)
+
+  stars <- mapply(star_fun, atts, ses)
+  att_fmt <- sprintf(paste0("%.", digits, "f%s"), atts, stars)
+  se_fmt <- sprintf(paste0("(%.", digits, "f)"), ses)
+
+  k <- length(models)
+  col_header <- paste(names(models), collapse = " & ")
+  col_numbers <- paste0("(", 1:k, ")", collapse = " & ")
+  att_row <- paste(att_fmt, collapse = " & ")
+  se_row <- paste(se_fmt, collapse = " & ")
+  means_row <- paste(sprintf(paste0("%.", digits, "f"), means_pre), collapse = " & ")
+  obs_row <- paste(format(obs, big.mark = ","), collapse = " & ")
+
+  paste0(
+    "\\begin{table}[htbp]\n",
+    "   \\caption{", caption, "}\\label{", label, "}\n",
+    "   \\centerline{\\scalebox{0.85}{\\begin{tabular}{l", strrep("c", k), "}\n",
+    "      \\toprule\n",
+    "                   & ", col_header, "\\\\\n",
+    "                   & ", col_numbers, "\\\\\n",
+    "      \\midrule\n",
+    "      Treated & ", att_row, "\\\\\n",
+    "       & ", se_row, "\\\\\n",
+    "      \\midrule\n",
+    "      Mean (pre-treatment) & ", means_row, "\\\\\n",
+    "      Observations & ", obs_row, "\\\\\n",
+    "      \\bottomrule\n",
+    "   \\end{tabular}}}\n",
+    "\\end{table}\n"
+  )
+}
+# endregion
+
+# region make_did_pair_table
+# Two-arm layout for the heterogeneity tables (Female|Male, Low|High): one
+# 2-column group per outcome, sub-labels repeated under each group. Rows are
+# the same simple-ATT rows as make_did_table, with stars off the normal.
+make_did_pair_table <- function(models_a, models_b,
+                                sub_labels,
+                                caption = "Regression Results",
+                                label = "tab: het results",
+                                digits = 3,
+                                means_pre_a = NULL,
+                                means_pre_b = NULL,
+                                obs_a = NULL,
+                                obs_b = NULL) {
+  star_fun <- function(att, se) {
+    pval <- 2 * pnorm(-abs(att / se))
+    ifelse(pval < 0.01, "$^{***}$",
+      ifelse(pval < 0.05, "$^{**}$",
+        ifelse(pval < 0.10, "$^{*}$", "")
+      )
+    )
+  }
+  simple <- function(models) {
+    aggs <- lapply(models, function(m) m$simple)
+    atts <- sapply(aggs, function(x) x$overall.att)
+    ses <- sapply(aggs, function(x) x$overall.se)
+    list(
+      att = sprintf(paste0("%.", digits, "f%s"), atts, mapply(star_fun, atts, ses)),
+      se = sprintf(paste0("(%.", digits, "f)"), ses)
+    )
+  }
+  a <- simple(models_a)
+  b <- simple(models_b)
+
+  k <- length(models_a)
+  interleave <- function(x, y) as.vector(rbind(x, y)) # a1 b1 a2 b2 ...
+  fmt <- function(x) sprintf(paste0("%.", digits, "f"), x)
+  est_row <- paste(interleave(a$att, b$att), collapse = " & ")
+  se_row <- paste(interleave(a$se, b$se), collapse = " & ")
+  pre_row <- paste(interleave(fmt(means_pre_a), fmt(means_pre_b)), collapse = " & ")
+  obs_row <- paste(
+    rep(c(format(obs_a, big.mark = ","), format(obs_b, big.mark = ",")), k),
+    collapse = " & "
+  )
+
+  groups <- paste0("      & \\multicolumn{2}{c}{", names(models_a), "}", collapse = "\n")
+  cmid <- paste0("\\cmidrule(lr){", seq(2, 2 * k, 2), "-", seq(3, 2 * k + 1, 2), "}", collapse = "")
+  sub <- paste(rep(paste(sub_labels[1], "&", sub_labels[2]), k), collapse = "& ")
+  col_numbers <- paste0("(", 1:(2 * k), ")", collapse = " & ")
+
+  paste0(
+    "\\begin{table}[htp!]\n",
+    "   \\caption{", caption, "}\\label{", label, "}\n",
+    "   \\centerline{\\scalebox{0.85}{\n",
+    "   \\begin{tabular}{l", strrep("c", 2 * k), "}\n",
+    "      \\toprule\n",
+    groups, " \\\\\n",
+    "      ", cmid, "\n",
+    "                   & ", sub, " \\\\\n",
+    "                   & ", col_numbers, "\\\\\n",
+    "      \\midrule\n",
+    "      Treated & ", est_row, "\\\\\n",
+    "       & ", se_row, "\\\\\n",
+    "                   \\midrule\n",
+    "      Mean pre-treatment & ", pre_row, "\\\\\n",
+    "      Observations & ", obs_row, "\\\\\n",
+    "      \\bottomrule\n",
+    "   \\end{tabular}   \n",
+    "   }}\n\n",
+    "\\end{table}\n"
+  )
+}
+# endregion
+
+# region make_eventstudy_table
+# Bold marks significance at the 95% uniform band (multiplier bootstrap, region).
+# Display clock: the anticipation band (calendar -2, -1) and the base (-3) are
+# set aside, so displayed event time -k is the k-th clean cohort before the
+# reference (calendar -3-k); post periods are calendar event time.
+make_eventstudy_table <- function(models,
+                                  caption = "Event-Study Estimates",
+                                  label = "tab: parallel trends assumption",
+                                  digits = 3,
+                                  display = data.frame(
+                                    disp = c(-5:-1, 0:4),
+                                    cal = c(-8:-4, 0:4)
+                                  )) {
+  dyn <- lapply(models, function(m) m$dynamic)
+
+  body <- ""
+  for (i in seq_len(nrow(display))) {
+    att_cells <- character(0)
+    se_cells <- character(0)
+
+    for (d in dyn) {
+      j <- which(d$egt == display$cal[i])
+      stopifnot(length(j) == 1L) # every model must carry the full display grid
+      att <- d$att.egt[j]
+      se <- d$se.egt[j]
+      uniform_sig <- isTRUE(abs(att) > d$crit.val.egt * se) # crit.val.egt is one scalar per model
+
+      cell <- sprintf(paste0("%.", digits, "f"), att)
+      att_cells <- c(att_cells, if (uniform_sig) paste0("\\textbf{", cell, "}") else cell)
+      se_cells <- c(se_cells, sprintf(paste0("(%.", digits, "f)"), se))
+    }
+
+    body <- paste0(
+      body,
+      "      Event time ", display$disp[i], " & ", paste(att_cells, collapse = " & "), "\\\\\n",
+      "       & ", paste(se_cells, collapse = " & "), "\\\\\n"
+    )
+  }
+
+  k <- length(models)
+  paste0(
+    "\\begin{table}[htbp]\n",
+    "   \\caption{", caption, "}\\label{", label, "}\n",
+    "   \\centerline{\\scalebox{0.85}{\\begin{tabular}{l", strrep("c", k), "}\n",
+    "      \\toprule\n",
+    "                   & ", paste(names(models), collapse = " & "), "\\\\\n",
+    "                   & ", paste0("(", 1:k, ")", collapse = " & "), "\\\\\n",
+    "      \\midrule\n",
+    body,
+    "      \\bottomrule\n",
+    "   \\end{tabular}}}\n",
+    "\\end{table}\n"
+  )
+}
+# endregion
+```
+
+```{r sample_selection, echo=FALSE, warning=FALSE, message=FALSE}
+# --- Step 1: read the panel and drop columns we don't need ---
+# This shrinks memory BEFORE any subset copy.
+df <- readRDS("data/panel_9-12_2010_2021.rds")
+setDT(df)
+
+keep_cols <- c(
+  "MRUN", "AGNO", "RBD", "GEN_ALU", "COD_GRADO", "COD_ENSE",
+  "COD_REG_RBD", "COD_DEPE",
+  "year_rbd_first_sae", "graduated_secondary",
+  names(outcomes)
+)
+keep_cols <- intersect(keep_cols, names(df))
+drop_cols <- setdiff(names(df), keep_cols)
+if (length(drop_cols) > 0L) df[, (drop_cols) := NULL]
+rm(drop_cols, keep_cols)
+gc()
+
+# --- Step 2: the school / door table ---
+# The door is REGIONAL: a school's onset is the first year any school in its
+# region opened 9th grade under SAE. Never-treated = private-paid (COD_DEPE 4).
+# One row per school off the unique 4-column projection: first non-NA region,
+# MODAL dependency. The row multiplicities feeding the modal matter: adding
+# columns to the unique() flips borderline schools' depe, which moves schools
+# in/out of the never-treated control group and every ATT with it.
+sch <- unique(df[, .(RBD, year_rbd_first_sae, COD_REG_RBD, COD_DEPE)])[, .(
+  yfs    = { v <- year_rbd_first_sae[!is.na(year_rbd_first_sae)]; if (length(v)) as.numeric(v[1L]) else 0 },
+  region = { v <- COD_REG_RBD[!is.na(COD_REG_RBD)]; if (length(v)) as.integer(v[1L]) else NA_integer_ },
+  depe   = { v <- COD_DEPE[!is.na(COD_DEPE)]; if (length(v)) as.integer(names(which.max(table(v)))) else NA_integer_ }
+), by = .(rbd = RBD)]
+
+sae <- readRDS("data/sae_data_2016_2023.rds")
+setDT(sae)
+
+# first year each school appears with a 9th grade under SAE, then the region's minimum
+nine <- sae[COD_ENSE %in% media & COD_GRADO == 1L, .(g9 = as.numeric(min(AGNO))), by = .(rbd = RBD)]
+sch <- merge(sch, nine, by = "rbd", all.x = TRUE)
+sch <- merge(sch, sch[!is.na(g9) & !is.na(region), .(g9r = min(g9)), by = region],
+  by = "region", all.x = TRUE
+)
+
+# unknown dependency falls back to "eligible if it ever ran SAE"
+sch[, elig := fifelse(!is.na(depe), as.integer(depe != 4L), as.integer(yfs > 0 | !is.na(g9)))]
+sch[, gC2 := fifelse(elig == 1L & !is.na(g9r), as.numeric(g9r), 0)]
+rm(sae, nine)
+gc()
+
+# --- Step 3: the per-student base ---
+# Any-track: keep students whose whole record is primary (110) or a regular
+# secondary track. Then keep the 4-year same-school stayers, anchored on 9th grade.
+any_track <- df[, .(only_regular = all(COD_ENSE == 110L | COD_ENSE %in% media)), by = MRUN]
+reg_any <- any_track[only_regular == TRUE, MRUN]
+
+hs0 <- df[
+  MRUN %in% reg_any & AGNO >= start_year & AGNO <= end_year &
+    COD_ENSE %in% media & COD_GRADO %in% hs,
+  .(MRUN, AGNO, RBD, COD_GRADO)
+]
+setorder(hs0, MRUN, AGNO, COD_GRADO)
+
+# the 9th-grade school and entry year define the class a student belongs to
+anchor <- hs0[COD_GRADO == 1L, .(rbd = RBD[1L], AGNO_9th = AGNO[1L]), by = MRUN]
+hs0 <- merge(hs0, anchor[, .(MRUN, rbd)], by = "MRUN")
+
+per <- hs0[, .(ng = uniqueN(COD_GRADO[RBD == rbd]), nsch = uniqueN(RBD)), by = MRUN]
+per <- merge(per, anchor, by = "MRUN")
+stayers <- per[ng == 4L & nsch == 1L, .(MRUN, rbd, AGNO_9th)]
+
+grad_year <- hs0[MRUN %in% stayers$MRUN, .(grad_year = max(AGNO)), by = MRUN]
+
+# outcomes and gender are per-student constants: take the first non-NA
+student <- df[
+  MRUN %in% stayers$MRUN,
+  lapply(.SD, function(x) {
+    v <- x[!is.na(x)]
+    if (length(v)) as.numeric(v[1L]) else NA_real_
+  }),
+  by = MRUN,
+  .SDcols = c(names(outcomes), "graduated_secondary", "GEN_ALU")
+]
+
+base <- merge(stayers, student, by = "MRUN")
+base <- merge(base, grad_year, by = "MRUN")
+base <- base[graduated_secondary == 1]
+base <- base[grad_year == AGNO_9th + 3L] # on-time graduation
+base <- base[AGNO_9th >= entry_min & AGNO_9th <= entry_max]
+
+rm(df, any_track, hs0, anchor, per, stayers, grad_year, student)
+gc()
+
+# --- Step 4: the class-level panel every table is fit on ---
+coh_all <- collapse_coh(base)
+```
+
+# Headline
+
+```{r headline_estimation, echo=FALSE, warning=FALSE, message=FALSE}
+models <- map(names(outcomes), ~ fit_did(coh_all, .x, cluster = "region"))
+names(models) <- unname(outcomes)
+
+means_pre <- map_dbl(names(outcomes), ~ pre_mean(coh_all, .x))
+obs <- rep(nrow(coh_all), length(outcomes))
+```
+
+```{r headline_table, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+out <- make_did_table(
+  models,
+  caption = " Regression Results",
+  label = "tab: main results",
+  means_pre = means_pre,
+  obs = obs
+)
+writeLines(out, "tables/staggered_did_sae_on_outcomes_AM.tex")
+cat(out)
+```
+
+## Parallel trends
+
+```{r event_study_table, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+out <- make_eventstudy_table(
+  models,
+  caption = paste0(
+    "Event-Study Estimates (Panel A), REGION-clustered inference. Dynamic ATT from CS-DiD, anticipation = 2, ",
+    "universal base; all regular secondary tracks. Displayed event time $-k$ is the $k$-th clean cohort before the ",
+    "reference (calendar $-3-k$); the anticipation band (calendar $-2$ to $-1$) is set aside. Bold: significant at the ",
+    "95\\% uniform confidence band computed from a multiplier bootstrap clustered at the region level (16 regions). ",
+    "Region-clustered standard errors in parentheses. A pre-treatment cell in bold indicates a joint pre-trend ",
+    "violation at the region-clustered uniform band. Event time $+4$ is identified by Magallanes only."
+  ),
+  label = "tab: parallel trends assumption"
+)
+writeLines(out, "tables/parallel_trends_sae_on_outcomes_AM.tex")
+cat(out)
+```
+
+# Heterogeneity
+
+## By gender
+
+```{r gender_estimation, echo=FALSE, warning=FALSE, message=FALSE}
+# Class means recomputed within each sex, so num_students is the subgroup class
+# size (GEN_ALU: 2 = female, 1 = male; unknown-sex students are dropped).
+female <- base[GEN_ALU == 2]
+male <- base[GEN_ALU == 1]
+
+# split integrity: female/male/unknown partition the base, and F != M
+# (catches the copy-paste bug where both panels filter the same sex)
+stopifnot(
+  nrow(female) + nrow(male) + base[is.na(GEN_ALU) | GEN_ALU == 0, .N] == nrow(base),
+  nrow(female) != nrow(male)
+)
+
+coh_f <- collapse_coh(female)
+coh_m <- collapse_coh(male)
+
+models_f <- map(names(outcomes), ~ fit_did(coh_f, .x, cluster = "region"))
+models_m <- map(names(outcomes), ~ fit_did(coh_m, .x, cluster = "region"))
+names(models_f) <- names(models_m) <- unname(outcomes)
+
+means_pre_f <- map_dbl(names(outcomes), ~ pre_mean(coh_f, .x))
+means_pre_m <- map_dbl(names(outcomes), ~ pre_mean(coh_m, .x))
+```
+
+```{r gender_table, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+out <- make_did_pair_table(
+  models_f, models_m,
+  sub_labels = c("Female", "Male"),
+  caption = paste0(
+    "Effect on Outcomes by Gender. Callaway--Sant'Anna staggered DiD on graduating ",
+    "classes (school $\\times$ 9th-grade-entry cohort, 2012--2021), all regular ",
+    "secondary tracks; class means computed separately over female and male students ",
+    "(students with unknown sex are dropped). Anticipation $=2$, universal base ",
+    "($e=-3$); doubly robust, with the subgroup class size as control. ",
+    "Standard errors clustered at the region level (16 regions, the level of treatment ",
+    "assignment); significance from the region-clustered multiplier bootstrap (normal reference). ",
+    "$^{*}p<0.1$; $^{**}p<0.05$; $^{***}p<0.01$."
+  ),
+  label = "tab: did results by gender",
+  means_pre_a = means_pre_f, means_pre_b = means_pre_m,
+  obs_a = nrow(coh_f), obs_b = nrow(coh_m)
+)
+writeLines(out, "tables/did_by_gender_AM.tex")
+cat(out)
+```
+
+## By vulnerability
+
+```{r vulnerability_estimation, echo=FALSE, warning=FALSE, message=FALSE}
+# Between-school split on the 2015 IVE-SINAE vulnerability index (secondary),
+# joined at the school; the arms come off split_arms (within-region median over
+# treated schools, privates as common control).
+ee <- readRDS("data/panel_ee_2004_2025_homogenized.rds")
+setDT(ee)
+ive15 <- unique(ee[year == 2015L, .(rbd = as.numeric(rbd), v = as.numeric(ive_sinae_media))])
+ive15 <- ive15[!is.na(rbd)]
+rm(ee)
+gc()
+
+arms_v <- split_arms(coh_all, ive15)
+
+models_vl <- map(names(outcomes), ~ fit_did(arms_v$low, .x, cluster = "region"))
+models_vh <- map(names(outcomes), ~ fit_did(arms_v$high, .x, cluster = "region"))
+names(models_vl) <- names(models_vh) <- unname(outcomes)
+
+means_pre_vl <- map_dbl(names(outcomes), ~ pre_mean(arms_v$low, .x))
+means_pre_vh <- map_dbl(names(outcomes), ~ pre_mean(arms_v$high, .x))
+```
+
+```{r vulnerability_table, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+out <- make_did_pair_table(
+  models_vl, models_vh,
+  sub_labels = c("Low", "High"),
+  caption = paste0(
+    "Effect on Outcomes by Vulnerability. Callaway--Sant'Anna staggered DiD on graduating ",
+    "classes (school $\\times$ 9th-grade-entry cohort, 2012--2021), all regular secondary ",
+    "tracks. A between-school split: treated schools are sorted into Low/High vulnerability ",
+    "by the 2015 IVE-SINAE index relative to the within-region median computed over treated ",
+    "schools; treated schools with a missing index are dropped. Never-treated private-paid ",
+    "schools serve as the common control in both columns. Class means use the full class size ",
+    "as control. Anticipation $=2$, universal base ($e=-3$); doubly robust. ",
+    "Standard errors clustered at the region level (16 regions, the level of treatment ",
+    "assignment); significance from the region-clustered multiplier bootstrap (normal reference). ",
+    "$^{*}p<0.1$; $^{**}p<0.05$; $^{***}p<0.01$."
+  ),
+  label = "tab: did by vulnerability",
+  means_pre_a = means_pre_vl, means_pre_b = means_pre_vh,
+  obs_a = nrow(arms_v$low), obs_b = nrow(arms_v$high)
+)
+writeLines(out, "tables/did_by_vulnerability_AM.tex")
+cat(out)
+```
+
+## By school value-added
+
+```{r value_added_estimation, echo=FALSE, warning=FALSE, message=FALSE}
+# Same machinery with the split variable swapped: the 2016 SES-adjusted growth
+# value-added (the school fixed effect from a regression of standardized
+# 10th-grade mathematics on standardized 8th-grade mathematics and reading,
+# student sex, mother's education, household income, prior grade repetition,
+# and residential-commune fixed effects).
+va <- fread("data/va_2016_gazmuri.csv")
+va <- va[!is.na(rbd) & !is.na(va), .(rbd = as.numeric(rbd), v = as.numeric(va))]
+
+arms_va <- split_arms(coh_all, va)
+
+models_val <- map(names(outcomes), ~ fit_did(arms_va$low, .x, cluster = "region"))
+models_vah <- map(names(outcomes), ~ fit_did(arms_va$high, .x, cluster = "region"))
+names(models_val) <- names(models_vah) <- unname(outcomes)
+
+means_pre_val <- map_dbl(names(outcomes), ~ pre_mean(arms_va$low, .x))
+means_pre_vah <- map_dbl(names(outcomes), ~ pre_mean(arms_va$high, .x))
+```
+
+```{r value_added_table, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+out <- make_did_pair_table(
+  models_val, models_vah,
+  sub_labels = c("Low", "High"),
+  caption = paste0(
+    "Effect on Outcomes by School Value-Added. Callaway--Sant'Anna staggered DiD on graduating ",
+    "classes (school $\\times$ 9th-grade-entry cohort, 2012--2021), all regular secondary tracks. ",
+    "A between-school split: treated schools are sorted into Low/High value-added by a 2016 ",
+    "SES-adjusted growth value-added measure (the school fixed effect from a regression of ",
+    "standardized 10th-grade mathematics on standardized 8th-grade mathematics and reading, ",
+    "student sex, mother's education, household income, prior grade repetition, and ",
+    "residential-commune fixed effects) relative to the within-region median computed over ",
+    "treated schools; treated schools with a missing measure are dropped. Never-treated ",
+    "private-paid schools serve as the common control in both columns. Class means use the full ",
+    "class size as control. Anticipation $=2$, universal base ($e=-3$); doubly robust. Standard ",
+    "errors clustered at the region level (16 regions, the level of treatment assignment); ",
+    "significance from the region-clustered multiplier bootstrap (normal reference). ",
+    "$^{*}p<0.1$; $^{**}p<0.05$; $^{***}p<0.01$."
+  ),
+  label = "tab: did by value added",
+  means_pre_a = means_pre_val, means_pre_b = means_pre_vah,
+  obs_a = nrow(arms_va$low), obs_b = nrow(arms_va$high)
+)
+writeLines(out, "tables/did_by_value_added_AM.tex")
+cat(out)
+```
