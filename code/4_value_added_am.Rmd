@@ -1,0 +1,162 @@
+---
+title: "School Value-Added (2016)"
+output:
+  pdf_document:
+    keep_tex:  true
+    latex_engine: xelatex
+  html_document: default
+header-includes:
+   - \usepackage{floatrow}
+   - \floatsetup[figure]{capposition=top}
+---
+
+```{r setup, include=FALSE}
+# Paths below are relative to code/. knitr sets the working directory to this
+# file's folder when knitting, so the file runs anywhere without editing paths.
+knitr::opts_knit$set(root.dir = normalizePath("."))
+options(vsc.plot = TRUE)
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# Clean ---------------------------------------------------------------
+rm(list = ls())
+
+# Libraries ---------------------------------------------------------------
+# region Libraries_and_settings
+library(dplyr)
+library(data.table)
+library(fixest)
+library(knitr)
+
+options(knitr.table.format = "latex")
+
+# Design: SES-adjusted school value-added for the 2016 10th-grade cohort. The
+# school fixed effect from a regression of standardized 10th-grade mathematics
+# on standardized 8th-grade mathematics and reading, sex, mother's education,
+# household income, prior grade repetition, and residential-commune fixed
+# effects. Complete-case over the control set. The output feeds the
+# value-added split in 3_effect_sae_am.Rmd.
+simce_year <- 2016
+# endregion
+```
+
+```{r functions_to_standardize, echo=FALSE, message=FALSE, warning=FALSE}
+# region standardization_helpers
+
+# standardize within year
+zyr <- function(x, g) {
+  x <- as.numeric(x)
+  (x - ave(x, g, FUN = function(v) mean(v, na.rm = TRUE))) /
+    ave(x, g, FUN = function(v) sd(v, na.rm = TRUE))
+}
+
+# 0, 99 and 999 are non-response codes in the parent questionnaire
+to_na <- function(x) {
+  x <- suppressWarnings(as.numeric(x))
+  x[x %in% c(0, 99, 999)] <- NA
+  x
+}
+# endregion
+```
+
+# Scores
+
+```{r cohort_scores, echo=FALSE, warning=FALSE, message=FALSE}
+# 2016 10th-grade SIMCE takers, one row per student; mathematics is the outcome
+m2 <- readRDS("data/panel_simce_2m.rds")
+setDT(m2)
+m2 <- m2[
+  agno == simce_year & !is.na(mrun) & !is.na(rbd),
+  .(mrun = as.numeric(mrun), idalumno = as.numeric(idalumno), rbd = as.numeric(rbd),
+    gen_alu, mate2m = ptje_mate2m_alu)
+]
+setorder(m2, mrun)
+m2 <- m2[, .SD[1L], by = mrun]
+
+# gen_alu stores 2 or "Mujeres" for female depending on the vintage
+m2[, female := as.integer(gen_alu %in% c("2", "Mujeres"))]
+
+# 8th-grade priors: the first SIMCE 8B record per student
+b8 <- readRDS("data/panel_simce_8b.rds")
+setDT(b8)
+b8 <- b8[!is.na(mrun), .(mrun = as.numeric(mrun), agno8b = agno,
+                         mate8b = ptje_mate8b_alu, lect8b = ptje_lect8b_alu)]
+setorder(b8, mrun, agno8b)
+b8 <- b8[, .SD[1L], by = mrun]
+```
+
+# Controls
+
+```{r panel_controls, echo=FALSE, warning=FALSE, message=FALSE}
+# --- Step 1: read the panel and drop columns we don't need ---
+# This shrinks memory BEFORE any subset copy.
+df <- readRDS("data/panel_9-12_2010_2021.rds")
+setDT(df)
+
+keep_cols <- c("MRUN", "AGNO", "SIT_FIN_R", "COD_COM_ALU")
+keep_cols <- intersect(keep_cols, names(df))
+drop_cols <- setdiff(names(df), keep_cols)
+if (length(drop_cols) > 0L) df[, (drop_cols) := NULL]
+rm(drop_cols, keep_cols)
+gc()
+
+# --- Step 2: repetition and residential commune ---
+# repeated = ever repeated a grade over the student's full record; for this
+# cohort those records sit in grades 1-8 (they were promoted through to reach
+# 10th by 2016), so it is a pre-treatment control. Residential commune: the
+# 2016 record, else the first non-missing one.
+df[, mrunN := as.numeric(MRUN)]
+sub <- df[mrunN %in% m2$mrun]
+
+rep_ever <- sub[, .(repeated = as.integer(any(SIT_FIN_R == "R", na.rm = TRUE))), by = mrunN]
+com16 <- sub[AGNO == simce_year & !is.na(COD_COM_ALU), .(comuna_stu = as.integer(COD_COM_ALU[1L])), by = mrunN]
+comfb <- sub[!is.na(COD_COM_ALU), .(comuna_fb = as.integer(COD_COM_ALU[1L])), by = mrunN]
+comm <- merge(comfb, com16, by = "mrunN", all = TRUE)
+comm[, comuna_stu := fifelse(is.na(comuna_stu), comuna_fb, comuna_stu)]
+comm[, comuna_fb := NULL]
+
+cov <- merge(rep_ever, comm, by = "mrunN", all = TRUE)
+setnames(cov, "mrunN", "mrun")
+rm(df, sub, rep_ever, com16, comfb, comm)
+gc()
+
+# --- Step 3: mother's education (p08) and household income (p10) ---
+# From the 2016 parent questionnaire, joined by idalumno
+cp <- fread("data/simce2m2016_cpad_privada_final_SEG.csv", sep = "|",
+            select = c("idalumno", "cpad_p08", "cpad_p10"))
+cp[, `:=`(idalumno = as.numeric(idalumno),
+          educ_madre = to_na(cpad_p08), income = to_na(cpad_p10))]
+
+# idalumno must be unique before the student-level join
+stopifnot(!anyDuplicated(cp$idalumno))
+```
+
+# Value-added
+
+```{r value_added_estimation, echo=FALSE, warning=FALSE, message=FALSE}
+d <- merge(m2, b8, by = "mrun", all.x = TRUE)
+d <- merge(d, cov, by = "mrun", all.x = TRUE)
+d <- merge(d, cp[, .(idalumno, educ_madre, income)], by = "idalumno", all.x = TRUE)
+rm(m2, b8, cov, cp)
+gc()
+
+# Scores standardized once on the full 2016-with-scores cohort; the regression
+# then runs on the complete cases over the control set (listwise).
+d[, `:=`(mate2m_z = zyr(mate2m, simce_year),
+         mate8b_z = zyr(mate8b, agno8b),
+         lect8b_z = zyr(lect8b, agno8b))]
+
+cc <- d[!is.na(mate2m_z) & !is.na(mate8b_z) & !is.na(lect8b_z) & !is.na(female) &
+          !is.na(educ_madre) & !is.na(income) & !is.na(repeated) & !is.na(comuna_stu)]
+
+m <- feols(
+  mate2m_z ~ mate8b_z + lect8b_z + female +
+    i(educ_madre) + i(income) + repeated + i(comuna_stu) | rbd,
+  data = cc
+)
+
+fe <- fixef(m)$rbd
+va <- data.table(rbd = as.numeric(names(fe)), va = as.numeric(fe))
+
+fwrite(va, "data/va_2016_gazmuri.csv")
+```
