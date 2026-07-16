@@ -1,0 +1,73 @@
+\section{Background}\label{sec:background}
+
+\subsection{School Choice.}
+
+Before the reform, admissions to Chile's public and publicly subsidized (voucher) schools were conducted through fully decentralized processes. Each school operated its own admissions procedure, often relying on discretionary and exclusionary practices such as interviews with parents and students, unofficial entrance exams, and reviews of past academic records. Because offers were not coordinated, families frequently faced pressure to accept early admissions without knowing whether more preferred schools would later admit them, and declined seats were rarely efficiently reassigned. Many schools also used first-come, first-served queues, leading parents to wait overnight to secure a seat \citep{correa2021}. Finally, the combination of schools' ability to select students on arbitrary criteria and a voucher system that permits additional copayments likely contributed to widespread cream‑skimming and the pronounced socioeconomic segregation that characterized the Chilean school system~\citep{gazmuri2024}. 
+
+In 2015, the Chilean Congress enacted the \emph{School Inclusion Law}, which fundamentally restructured school admissions. The law eliminated copayments in publicly subsidized schools, prohibited any form of selection based on academic, social, religious, or economic criteria, and mandated the use of a centralized assignment system. The law also established three priority groups—siblings of current students, children of school employees, and returning students—that must be served in strict order when seats are oversubscribed, with ties within each group broken using a random tie-breaker~\citep{correa2021}. In addition, it introduced quotas for students with special educational needs, high academic performers, and disadvantaged students.
+This newly established centralized system, which covers all grades from prekindergarten through 12th across all regions, collects families' ranked preferences through an online platform, provides standardized information about schools,\footnote{\cite{arteaga2022smart} find that providing families with estimated admission probabilities substantially improves their application and their admission outcomes.} and assigns each student to at most one school using a variant of the deferred acceptance (DA) algorithm~\citep{correa2021}. 
+
+\subsection{College Admissions.} 
+Chile's college admissions system is semi–centralized, with the most selective universities participating in a single centralized admissions system and the remaining institutions conducting their admissions independently. 
+
+Applicants are evaluated solely based on scores that come from (i) a national entrance exam, which includes mandatory Mathematics and Language components and optional subject tests in Sciences or History; and (ii) their high-school performance, captured by a grade-based score (NEM) and a rank-based score reflecting a student's standing within their graduating cohort. Knowing their scores, students apply through a centralized online platform by submitting a rank-ordered list of up to ten university–major programs. After applications are submitted, the clearinghouse verifies eligibility requirements, computes each applicant's program-specific scores based on weights previously announced by each university, and ranks applicants accordingly.
+Final assignments are produced using a variant of DA that assigns each applicant to the highest-ranked program on their list for which they qualify and have an application score above the program's clearing cutoff~\citep{rios2021}.
+Once results are released, students may choose whether to enroll in the program to which they were assigned or instead matriculate outside the centralized system. 
+
+\subsection{Data.} 
+A distinctive feature of our dataset is that it allows us to follow each student continuously from secondary school into higher education, enabling the construction of outcomes that capture the full academic pipeline. 
+
+\paragraph{Secondary education.} 
+Our dataset includes rich administrative records covering the full secondary-school trajectory of each student. For every school-year, we observe enrollment, attendance, graduation, and level grades. Once the region became part of the centralized school assignment system (SAE), we additionally observe families' reported preferences over schools, school capacities, the priority-based orderings used to process applications (combining priority groups with random tie-breakers), and the resulting assignment outcomes. These data allow us to reconstruct each student's academic history from the beginning of secondary education through completion of 12th grade.
+
+
+\paragraph{Tertiary education.} 
+We complement these records with comprehensive information on students' postsecondary trajectories. For every year, we observe enrollment and graduation outcomes in any higher-education institution, regardless of whether the institution participates in the centralized admissions system. For students who do participate in the centralized process, we additionally observe their standardized test scores, high-school–based admission scores, rank-ordered program applications, and program-level admission results. This combination of centralized and non-centralized data provides a complete view of students' opportunities and choices in the tertiary sector.
+
+\paragraph{Outcomes.} 
+\marar{Our empirical strategy aggregates these individual records to the school--cohort level, so we compute a set of outcomes for each school and cohort. These are: the cohort's average high-school GPA; its average LM score; the share who apply to the centralized college admissions system; the share who receive an assignment; and the share who enroll in a program within the system. The LM score is a student's percentile rank among all students taking the mandatory Language and Mathematics (\emph{Lenguaje y Matemática}, LM) components of the national entrance exam in the same admission year, with students who do not take the exam assigned a value of zero. The class average therefore reflects both how many students take the exam and where those who take it place in the national distribution.} Together, these outcomes summarize both academic preparation and postsecondary decision-making.
+
+\paragraph{Sample.} 
+Our analysis focuses on students who completed all four years of secondary education (grades 9--12) in the same institution and on time. Restricting the sample in this way avoids conflating treatment effects with mobility across schools or grade repetition. \marar{Because the reform could itself affect which students satisfy these restrictions, we verify that our findings are robust to relaxing them: re-estimating on the broader sample of students who attended at most one publicly funded school, keyed to their graduating cohort, leaves the effects on application, admission, and enrollment essentially unchanged.} Furthermore, we begin following students in 9th grade since this is the typical entry point into secondary education and the grade at which most students would have been admitted when the centralized school choice system (SAE) was introduced. 
+
+Unless otherwise stated, we restrict attention to cohorts that entered 9th grade between 2012 and 2021. Focusing on cohorts that entered 9th grade in 2012 ensures that, by the time they applied to college, the nationwide free-tuition policy---which first applied to students enrolling in 2016---was already fully in place, eliminating concerns that differential exposure to the reform could drive our results. At the same time, restricting the sample to cohorts up to 2021 ensures that these students participated in the 2025 college admissions process---the last year for which we have data---allowing us to observe and measure their postsecondary outcomes.
+
+
+\subsection{Empirical Strategy}\label{sec: empirical strategy}
+
+The introduction of the centralized school choice system in Chile provides a natural setting to identify the causal effects of centralized assignment on school-level outcomes. Beginning in 2016, the Ministry of Education implemented the centralized school choice system (SAE) through a phased regional rollout that was planned to take four years. The Magallanes region was selected as the initial pilot in 2016, while the Metropolitan Region---given its size---was incorporated \marar{last, in 2019}. Among the remaining regions, \marar{four} entered the system in 2017 and the \marar{remaining ten} in 2018. \marar{Regions did not join earlier or later based on their students' college outcomes, so the changes that follow adoption reflect the reform rather than differences that were already there.} Importantly, the timing of adoption was not announced in advance, limiting the scope for parents to adjust their behavior in anticipation. Figure~\ref{fig: adoption SAE 9th grade} reports the implementation year for 9th‑grade admissions in each region.
+
+\begin{figure}\label{fig: adoption SAE 9th grade}
+    \centering
+    \includegraphics[width=1\linewidth]{figures/sae_chile_map.pdf}
+    \caption{Implementation Year for 9th-grade}
+\end{figure}
+
+The combination of (i) staggered rollout across regions, (ii) partially random and unanticipated assignment of regions to early versus late adoption cohorts, and (iii) the exclusion of private schools from the centralized system---creating a clear treated–control comparison across school types within regions and over time---yields an ideal environment for a staggered difference-in-differences (DiD) design. Specifically, we estimate dynamic treatment effects under staggered adoption using the framework of \citet{callaway2021}. Let $Y_{it}(0)$ and $Y_{it}(1)$ denote the potential outcomes for unit $i$ at time $t$ in the absence and presence of treatment, and let $G_i = g$ indicate that unit $i$ first becomes treated in period $g$. \marar{A unit $i$ is a school and $t$ indexes a cohort of entering students; each school and cohort together form one graduating class, and $Y_{it}$ is that class's average outcome.} For each cohort $g$ and time $t \ge g$, the causal parameter of interest is the group--time average treatment effect,
+\[
+ATT(g,t) = \mathbb{E}\!\left[\,Y_{it}(1) - Y_{it}(0)\mid G_i = g\,\right].
+\]
+Based on these estimates, the overall effect of the policy change can be estimated using simple aggregated ATT that captures the weighted average of all group-time average treatment effects with weights proportional to the group size, i.e., 
+\[
+\marar{\bar{ATT} = \sum_{g\in G} \sum_{t=g}^{T} ATT(g,t)\cdot \omega(g,t)}
+\]
+where $\omega(g,t)$ is the proportion of observations coming from cohort $g$ and period $t$. Unless otherwise stated, the estimates reported in the remainder of the paper are simple aggregated ATTs. \marar{We cluster standard errors at the region level, since whole regions enter the system at once.}
+
+\marar{Within this framework, we use the doubly robust estimator, comparing the change in outcomes at a treated school with the change at comparison schools over the same years, and adjusting for cohort size. Every region has joined by 2019, so the before-reform comparison comes from public schools not yet in the system, and the after-reform comparison from the private schools, which never join. Comparing each school with its own past means fixed differences between public and private schools, such as their students' family incomes, cancel out, so the estimate reflects how outcomes change rather than how the two kinds of school differ to begin with. The design identifies a causal effect under the assumption that, absent the reform, outcomes at treated schools would have followed the same path as at the comparison schools. We assess this with the pre-reform event-study estimates in Table~\ref{tab: parallel trends assumption} and with a placebo test, reported in Section~\ref{sec: placebo}, that finds no change at private schools when their region adopts, supporting their use as the after-reform counterfactual. Identification also requires that families did not anticipate the reform, supported by the unannounced timing and by setting aside the transition classes described next.}
+
+\marar{SAE's staggered rollout reached all of a school's grades only in the years after its treatment date, so classes formed one or two years before that date completed secondary school in classrooms partly filled by SAE-admitted students. A class formed one year before the treatment date, for example, was in tenth grade when SAE arrived, and SAE could place newly admitted students in its grade-11 and grade-12 classrooms; for a class formed two years before, it could do so in its grade-12 classrooms. We set these two transition classes aside, so that each group-time comparison is between fully-treated classes and classes that completed all four grades in classrooms without SAE-admitted students. The class formed three years before the treatment date is the most recent such class, since it graduated before SAE reached the upper grades of its school, and it serves as the within-school reference; Appendix~\ref{app: measurement} gives the details.}
+
+
+
+% As in~\cite{urzua2023}, we use a two
+% we estimate a two-way fixed-effects model of the form:
+% \begin{equation}\label{eq: main did specification}
+%     y_{st} = \alpha_s + \lambda_t +
+%     \beta W_{st} + X_{st}\gamma + \varepsilon_{st},
+% \end{equation}
+% where $y_{st}$ denotes the outcome for school $s$ and year $t$; $\alpha_s$ and $\lambda_t$ are school and year fixed effects, respectively; $X_{st}$ includes time-varying school characteristics, such as enrollment size; and $\varepsilon_{st}$ is an error term. 
+% The main variable of interest is $W_{st}$, which is an indicator equal to one if school $s$ is part of SAE in year $t$, and zero otherwise.
+
+
+
+

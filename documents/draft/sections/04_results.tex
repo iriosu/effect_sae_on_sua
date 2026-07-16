@@ -1,0 +1,103 @@
+\section{Results}\label{sec:results}
+
+Table~\ref{tab: main results} reports our main results. In each case, we control for the number of students in the cohort and report double robust standard errors \marar{clustered at the region level}. 
+
+\input{tables/staggered_did_sae_on_outcomes_AM.tex}
+
+We observe that the average impact of the policy is positive and significant for several outcomes. Students who graduated from a treated school after the implementation of the policy were \marar{10.44\%} more likely to apply to the centralized college admissions system relative to their average in the pre-treatment period. Similarly, treated students were \marar{15.44\%} more likely to be assigned and \marar{15.54\%} more likely to enroll in a program that is part of the centralized college admissions system. \marar{In addition, we estimate a modest decline in the average LM score of 3.94\% relative to its pre-treatment mean; Section~\ref{sec: discussion} discusses the interpretation of this composite measure. Finally, average high-school GPA shows no statistically significant change, an estimate we report but do not interpret causally.}
+
+\subsection{Heterogeneity}
+
+\subsubsection{Gender.}
+
+\input{tables/did_by_gender_AM}
+
+\noindent Table~\ref{tab: did results by gender} reports the estimated aggregated treatment effects for each outcome of interest, separately by gender. \marar{The gains are concentrated among female students: their probability of applying to the centralized admissions system increases by 16.93\%, the probability of being admitted to at least one program in the system rises by 22.40\%, and the probability of enrolling in a program within the system increases by 24.33\%. For male students, the corresponding estimates on application, admission, and enrollment are positive but smaller, and only the effect on admission is significant, at the 10\% level. The average LM score declines for both genders, although the decline is marginally significant only for male students.}
+
+\subsubsection{School Vulnerability.} The most commonly used measure of schools' socioeconomic vulnerability in Chile is the \emph{Índice de Vulnerabilidad Escolar (IVE-SINAE)}, which measures the fraction of students enrolled in a school who are classified as socioeconomically vulnerable. The classification relies on administrative records and survey data on students' household conditions, including income, parental education, employment status, housing conditions, and participation in social assistance programs. 
+
+To examine whether the reform's effects vary with schools' socioeconomic vulnerability, we split treated schools into two groups based on their IVE-SINAE: \emph{low vulnerability} (below the median) and \emph{high vulnerability} (above the median). Never-treated schools (i.e., private schools) do not report this metric, so we estimate the average treatment effect separately for low- and high-vulnerability schools, and in both cases include private schools in the sample. Importantly, \citet{urzua2023} show that the introduction of Chile's centralized school choice system did not generate meaningful changes in the socioeconomic composition of schools. This stability implies that the IVE-SINAE distribution across schools remained largely unaffected by the reform, allowing us to use pre-reform vulnerability levels as a valid basis for classifying schools throughout our analysis.
+
+\input{tables/did_by_vulnerability_AM}
+
+\noindent \marar{Table~\ref{tab: did by vulnerability} shows that the gains in application, admission, and enrollment are concentrated in high-vulnerability schools. For these students, application rates rise by 24.84\%, admission rates by 41.03\%, and enrollment rates by 45.37\% relative to the pre-treatment period. In low-vulnerability schools, by contrast, we find a small but significant increase in application (4.18\%) and no significant effect on admission or enrollment. These patterns indicate that the reform expanded access primarily for students in the most socioeconomically disadvantaged schools. The decline in the average LM score, in turn, appears only in low-vulnerability schools---6.95\% relative to the pre-treatment mean---while the estimate for high-vulnerability schools is small and insignificant.}
+
+\subsubsection[School Performance.]{\mararout{School Performance.}} \mararout{Students in 10th grade take a nationwide standardized exam—the \emph{Sistema de Medición de la Calidad de la Educación} (SIMCE)—which assesses mastery of the official curriculum. SIMCE scores are widely used as a proxy for school quality. To examine whether the reform's effects vary with school quality, we use schools' SIMCE performance in 2015---specifically, the average of the Math and Verbal components for 10th-grade students---and classify schools that eventually become treated into two groups: (i) \textit{high-quality} schools, with an average score above the median, and (ii) \textit{low-quality} schools, with an average score below the median.}
+
+\mararout{Table~\ref{tab: did by simce} reports the estimated aggregated treatment effects for each outcome of interest, separately by school quality. The positive effects on applications, admissions, and enrollment are primarily driven by students from low-quality schools. For these outcomes, the aggregated average treatment effect is positive and statistically significant, with application, assignment, and enrollment rates increasing by 25\%, 28.72\%, and 33.33\% relative to the pre-treatment period, respectively. In contrast, we find no statistically significant effects among students from high-performing schools.}
+
+
+{\color{myblue}\input{tables/did_by_simce}}
+
+\subsubsection{School Value Added.} 
+An alternative measure of school quality commonly used in the literature~\citep{arteaga2022smart, camposkearns2024} is \emph{value added}, which isolates the school's causal contribution to student achievement, net of differences in the types of students they enroll. Specifically, this measure corresponds to the estimated school fixed effect from a regression of students' test scores on prior achievement and observable characteristics, where the inclusion of lagged scores serves to control for baseline ability and prior inputs. Under this approach, the school fixed effect captures the average gain in outcomes that can be attributed to attending a given school, relative to others, holding constant students' initial conditions (see Appendix~\ref{app: value added estimation} for details). Using this metric, we classify schools that eventually become treated into two groups: (i) \textit{high--value-added} schools, with estimated fixed effects \marar{at or above the within-region median among these schools}, and (ii) \textit{low--value-added} schools, with fixed effects \marar{below that median}.
+
+\input{tables/did_by_value_added_AM}
+
+\noindent Table~\ref{tab: did by value added} reports the estimated aggregated treatment effects for each outcome of interest, separately by school value added. \marar{We observe a consistent pattern of positive and statistically significant effects on application, admission, and enrollment among students from low--value-added schools, with application rates rising by 23.78\%, admission by 38.85\%, and enrollment by 41.14\% relative to their pre-treatment means. Among high--value-added schools, the corresponding estimates are positive but substantially smaller, and only the effect on application is statistically significant (3.75\%, at the 5\% level). The average LM score declines by 7.14\% among students from high--value-added schools, with no significant change among those from low--value-added schools.}
+
+\subsubsection{Program Selectivity.} 
+The results in Table~\ref{tab: main results} indicate that transitioning from decentralized to centralized admissions increased the probability of being assigned to a program within the centralized college admissions system. However, programs differ substantially in their quality and selectivity: some are highly competitive, while others routinely fail to fill their regular seats. Identifying which types of programs drive the overall improvement is essential for assessing potential congestion effects that could bias the estimated impact of the reform. In particular, if the reform disproportionately benefits students from schools that joined SAE---especially when they apply to selective programs---these students may displace applicants who did not experience the policy change. Such displacement would generate a congestion effect that could upwardly bias the estimated treatment effect.
+
+To investigate this possibility, Table~\ref{tab: results by program selectivity} reports the estimated aggregated treatment effects on the probability of admission to a program within the centralized system, disaggregated by whether the program filled its seats and by its selectivity level, \marar{with the latter based on the program's regular-process cutoff, reported for the top 10\%, 25\%, 50\%, 75\%, and 90\% most selective programs.}\footnote{Only 53\% of programs in the centralized system filled their seats in 2025.}
+
+\input{tables/did_by_program_selectivity_AM}
+
+\marar{We find no effect on programs that fill their seats, but a positive and significant effect among programs that do not. The same pattern holds by selectivity: the effect is negative and significant for the most selective programs (the top 10\%), not significant through the top 25\%, and positive and significant for the less selective programs that make up the rest of the distribution (the top 50\%, 75\%, and 90\%).}
+
+Taken together, these results indicate that the overall improvement in assignment probabilities is driven by increased admissions to less selective programs that routinely operate below capacity. This pattern suggests that the reform does not generate meaningful congestion in highly selective programs and is therefore unlikely to induce substantial congestion-related bias in the estimated treatment effects, consistent with other interventions in the Chilean higher education system~\citep{larroucau2025}.
+
+
+\subsection{Robustness Checks}
+This section provides a series of robustness checks that validate and strengthen the results discussed above.
+
+\subsubsection{Parallel Trends.} 
+Critical to the validity of our empirical strategy is a cohort-specific parallel trends assumption, which states that, in the absence of treatment, the evolution of potential outcomes for cohort $g$ would have mirrored that of units that remain untreated in period $t$.\footnote{In implementing the parallel trends test, we use units that are \emph{not yet treated} as the comparison group \marar{together with} units that are never treated. As emphasized by \citet{callaway2021}, never-treated units need not provide a valid counterfactual for treated cohorts when they differ systematically in observable characteristics. In our setting, never-treated students attend private schools and have substantially higher-income, making them \marar{insufficient on their own} for assessing pre-treatment trends. By contrast, not-yet-treated units are drawn from the same population of eventually treated cohorts and therefore provide a more credible basis for evaluating whether treated and comparison units followed similar trends prior to treatment.\marar{ The placebo test in Section~\ref{sec: placebo} directly assesses whether private schools provide a valid comparison in the post-treatment periods.}}
+ 
+
+To test this assumption, we follow \cite{callaway2021} and estimate event-time average treatment effects for each relative period $e = t-g$, where $g$ denotes the cohort's first treatment period. For each event time, the estimator identifies
+\[
+ATT(e) = \mathbb{E}\!\left[\,Y_{it}(1) - Y_{it}(0)\mid t-g = e\,\right]
+\]
+by comparing treated units to \marar{schools not yet treated in period $t$ and to never-treated private schools}. Under the cohort-specific parallel trends assumption, all \marar{clean} pre-treatment effects must be zero, implying the joint null hypothesis $ATT(e) = 0$ for \marar{the clean leads $e \le -4$; event time $-3$ is the reference period, and the two transition classes at event times $-2$ and $-1$ are set aside, as described in Section~\ref{sec: empirical strategy}}.
+
+\marar{Table~\ref{tab: parallel trends assumption} reports the event-time estimates for all outcomes, separating the clean pre-treatment leads, the transition band, and the post-treatment periods; bold entries indicate estimates whose region-clustered 95\% uniform confidence band excludes zero. The clean leads are small and statistically indistinguishable from zero for the average LM score, application, admission, and enrollment, with one exception: at the deepest lead, event time $-8$, the three application outcomes show significant negative estimates. That lead is identified from a single cohort of the Metropolitan region, the last to adopt, and we return to it below. Several GPA leads are significant, consistent with our decision to report that outcome without a causal interpretation. Within the transition band, the average LM score declines at event time $-1$; these classes are partially exposed by construction, so this estimate reflects the effect phasing in rather than a pre-existing trend. After treatment, application, admission, and enrollment are positive in every period from event time $0$ to $3$ and significant in most; the estimates at event time $4$ come from Magallanes alone, the first region to adopt.}
+
+\marar{The last row reports an exact randomization-inference $p$-value for the joint null that all clean leads are zero, computed by comparing the observed leads with those obtained under all 1,001 admissible reassignments of the 2017 adoption wave among the fourteen regions that adopted in 2017 or 2018, holding Magallanes and the Metropolitan region at their actual dates. For every outcome the observed pre-trends are typical of this distribution ($p$ between 0.46 and 0.84), and the $p$-values are unchanged when event time $-8$ is excluded, so the single significant deep lead cannot drive the test.}
+
+\input{tables/parallel_trends_sae_on_outcomes_AM.tex}
+
+
+\subsubsection{Placebo Tests.}\label{sec: placebo}
+
+\paragraph{Private Schools.} A key feature of our setting is the presence of a group of never‑treated.  Since SAE only includes publicly funded schools (i.e., public and voucher), private schools are never exposed to the system. If congestion or spillover effects generated by the reform are limited, outcomes for private schools should remain unchanged when their region joins the centralized system, even though these schools themselves do not participate. In other words, treating regional adoption as a “placebo treatment’’ for private schools should yield no detectable effects.
+
+We implement this placebo by estimating the simple aggregated ATT restricting the sample to private schools only, assuming as treatment period the one when SAE was implemented in the school's region. Table~\ref{tab: did only private} shows that none of the estimated coefficients is statistically significant. This pattern indicates that private‑school outcomes did not change when public and voucher schools in their region entered SAE, consistent with the absence of meaningful spillover or congestion effects operating through the centralized admissions market.
+
+\input{tables/staggered_did_sae_on_outcomes_only_private.tex}
+
+\paragraph{Timing.} 
+
+Another key feature of our setting is the staggered rollout of SAE across regions, which allows us to construct a placebo–timing test by artificially shifting each region's adoption year to an earlier period.
+To implement this, we assign a placebo implementation year that precedes the true one by a fixed number of years and restrict the sample to periods strictly before the actual adoption date, ensuring that all observations remain untreated. We then re‑estimate the $ATT(t,g)$ for each placebo shift. If the identifying assumptions hold and there are no differential pre‑trends, these placebo treatments should yield no significant effects—or effects that are much smaller than those obtained using the true implementation year. 
+
+\begin{figure}[htp!]
+    \centering
+    \includegraphics[width=0.75\linewidth]{figures/plot_placebo_shifter-1.pdf}
+    \caption{Caption}
+    \label{fig: placebo timing}
+\end{figure}
+
+For each outcome, Figure~\ref{fig: placebo timing} displays boxplots with the estimates obtained considering different shifts in the time of implementation of SAE, and also includes (in red) the estimates obtained with the actual year of implementation. We observe that the latter is significantly higher than the former for all the outcomes considered, suggesting that the estimated effects do not arise when the policy is artificially assigned to earlier years. This pattern is consistent with the absence of differential pre‑trends and reinforces the interpretation that our main estimates capture the causal impact of SAE rather than spurious pre‑existing dynamics.
+
+
+\subsubsection[Two-Way Fixed Effects]{\mararout{Two-Way Fixed Effects}}
+\mararout{A natural approach to evaluate the effect of the reform is to estimate a two-way fixed-effects (TWFE) model of the form:}
+{\color{myblue}\begin{equation}\label{eq: two way fixed effect model}
+    Y_{it} = \alpha_i + \lambda_t +
+    \beta W_{it} + X_{it}\gamma + \varepsilon_{it},
+\end{equation}}
+\mararout{where \mbox{$Y_{it}$} denotes the outcome for unit \mbox{$i$} and year \mbox{$t$}; \mbox{$\alpha_i$} and \mbox{$\lambda_t$} are school and year fixed effects, respectively; \mbox{$X_{it}$} includes time-varying school characteristics, such as enrollment size; and \mbox{$\varepsilon_{it}$} is an error term. The main variable of interest is \mbox{$W_{it}$}, which is an indicator equal to one if school \mbox{$i$} is part of SAE in year \mbox{$t$}, and zero otherwise.}
+
+\mararout{Although it is intuitive and has been used in prior literature,}\footnote{For instance,~\cite{urzua2023} use this strategy to estimate the effect of the reform on the composition of schools.}\mararout{ a growing body of literature shows that this approach is inappropriate with multiple periods and staggered treatment adoption}~\citep{borusyak2018, dechaisemartin2020, goodmanbacon2021, sun2021}\mararout{.}\footnote{TWFE constructs its identifying variation by comparing newly treated units not only to never-treated or not-yet-treated units—which provide valid counterfactuals—but also to units that have already been treated. Because already-treated units no longer represent untreated potential outcomes, these comparisons embed treatment effect dynamics and contaminate the estimated coefficient. As a result, the TWFE estimator can combine heterogeneous cohort- and time-specific treatment effects using weights that are difficult to interpret and may even be negative, leading to estimates that do not correspond to any meaningful average treatment effect.}\mararout{ Nevertheless, Table~\ref{tab: twfe regression} in Appendix~\ref{app: additional results}, which reports the TWFE estimates for completeness, shows results that are broadly consistent with the estimates reported in Table~\ref{tab: main results}.}
+

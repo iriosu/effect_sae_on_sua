@@ -1,0 +1,149 @@
+\section{Appendix}
+
+\marar{
+\subsection{Value Added Estimation}\label{app: value added estimation}
+
+We estimate each school's value added as the school fixed effect $\theta_s$ from the regression
+\[
+y_{is} = \beta_1\,a^m_i + \beta_2\,a^r_i + X_i'\gamma + \theta_s + \varepsilon_{is},
+\]
+where $y_{is}$ is the standardized tenth-grade Math score of student $i$ in school $s$, and $a^m_i$ and $a^r_i$ are the student's standardized eighth-grade Math and Reading scores, which measure prior achievement. The vector $X_i$ collects gender, mother's education, family income, an indicator for ever having repeated a grade, and fixed effects for the student's commune of residence. All scores are standardized within test year to mean zero and unit variance.
+
+We estimate the headline measure on the 2016 tenth-grade cohort, which entered ninth grade in 2015, before SAE reached any region. Value added is therefore predetermined with respect to the reform: it is fixed before treatment and unaffected by the policy or by the change in student composition it induces. Among schools that eventually enter SAE, we split at the within-region median of value added, classifying schools with fixed effects below the median as low--value-added and those at or above it as high--value-added. This is the split used in Table~\ref{tab: did by value added}.
+
+Conditioning on prior achievement makes this measure stronger than the value added typically used to study centralized assignment. Studies of centralized assignment in Chile measure school quality at entry grades, where students have no prior test score, so their value added conditions only on contemporaneous socioeconomic characteristics \citep{botbolgazmuri2026}. Our treated cohort is observed on a standardized test both before (eighth grade) and after (tenth grade) school entry, so prior achievement enters the regression directly, following \citet{abdulkadiroglu2020}. The lagged score absorbs selection on incoming ability that socioeconomic controls alone cannot, so the school fixed effect more credibly reflects a school's causal contribution to learning \citep{kanestaiger2008, chettyfriedmanrockoff2014}.
+
+As a robustness check, we construct an alternative measure that drops the socioeconomic controls and retains only prior achievement and gender. Because it relies on a leaner set of covariates, this measure can be pooled over the pre-reform cohorts from 2010 to 2016, so each school's fixed effect draws on multiple cohorts rather than a single one. The two measures rank schools very similarly, with a correlation above 0.80. Table~\ref{tab: did by value added robust} repeats the heterogeneity analysis using this multi-cohort measure. The gains in application, admission, and enrollment remain concentrated in low--value-added schools, if anything slightly larger, and high--value-added schools continue to show no significant effect.
+}
+
+\input{tables/did_by_value_added_robust_AM}
+
+\marar{\subsection{Segregation Measures}\label{app: segregation measures}
+
+We measure segregation by academic ability across schools within each district (\emph{comuna}), using standard segregation indices \citep{duncan1955, masseydenton1988}. The indices are computed on all ninth-grade entrants, aggregated to the district-cohort level. Using fourth-grade SIMCE scores in Math and Verbal, we classify each entrant as high- or low-achieving in each subject according to whether their score is above the district-year median.
+
+Consider a district and cohort, and index its schools by $s$. Let $h_s$ and $l_s$ be the numbers of high- and low-achieving students in school $s$, let $n_s = h_s + l_s$, and let $H = \sum_s h_s$ and $L = \sum_s l_s$ be the district-cohort totals. The Duncan index is
+\[
+  D = \frac{1}{2}\sum_s \left| \frac{h_s}{H} - \frac{l_s}{L} \right| .
+\]
+It equals $0$ under no segregation, when every school has the same mix of high- and low-achieving
+students as the district, and $1$ under complete segregation, when each school enrolls only one
+group. The exposure index $P_{LH}$ and the isolation index $P_{LL}$ are
+\[
+  P_{LH} = \sum_s \frac{l_s}{L}\,\frac{h_s}{n_s},
+  \qquad
+  P_{LL} = \sum_s \frac{l_s}{L}\,\frac{l_s}{n_s} .
+\]
+$P_{LH}$ is the average share of high-achieving peers faced by low-achieving students, and
+$P_{LL}$ the average share of low-achieving peers. Since a low-achieving student's peers are
+either high- or low-achieving, $P_{LH} + P_{LL} = 1$, and the estimated effect on one index
+equals the negative of the effect on the other.
+
+Each index is computed separately for Math and Verbal. District-cohort cells with students
+from only one group, or with fewer than ten students who have a fourth-grade score, are dropped.
+The reform's effect on each index is then estimated with the staggered difference-in-differences
+estimator used for the main results \citep{callaway2021}, taking the district as the unit of
+observation and clustering standard errors by region.
+
+Prior work on Chilean school segregation applies the Duncan index to socioeconomic status:
+\citet{urzua2023} and \citet{botbolgazmuri2026} for the same admissions reform studied here, and
+\citet{gazmuri2024} for the earlier voucher reform. Our analysis instead measures segregation by
+academic ability and complements the Duncan index with the exposure and isolation indices, which
+characterize the peer environment of low-achieving students.}
+
+\subsection{Additional Results}\label{app: additional results}
+
+\input{tables/did_by_quantile_selectivity_AM}
+
+
+
+\input{tables/twfe_sae_on_outcomes}
+
+
+% Provenance: counts verified by full replication from raw data (RUN-033) and the classification census (RUN-036, cert_census.csv); explorations/2026-06-10_repair_ignacio/R/08_full_replication.R and R/11_panel_certification.R reproduce every number. The pre-base-universe funnel rows (9,709,049 / 7,611,366 / 4,403,732 and the 72.1M record count) are from RUN-045, R/17_base_universe_funnel.R (output/run_17_base_funnel.log).
+\subsection{Panel Construction: Sample Filters and Treatment Classification}\label{app: panel construction}
+
+\begin{table}[ht]
+    \centering
+    \caption{Sample filters. The first row reports the full national enrollment panel; each subsequent row applies one filter to the students remaining after the row above it and reports the resulting count. Counts are unique students.}
+    \label{tab: panel filters}
+    \small
+    \begin{tabular}{p{11.8cm}r}
+    \toprule
+    Filter & Students remaining \\
+    \midrule
+    National enrollment panel (all students, all levels and program types, 2004--2025) & 9,709,049 \\
+    Enrolled in at least one year between 2010 and 2024 & 7,611,366 \\
+    Entire school career in regular primary and secondary education, in a single secondary track (academic or vocational) & 4,403,732 \\
+    At least one record in grades 9--12 between 2010 and 2024 (the base universe) & 2,763,367 \\
+    Completed all four grades (9--12) at the entry school; never enrolled at another school in grades 9--12 & 1,384,496 \\
+    Graduated from secondary school & 1,369,988 \\
+    Graduated on time (graduation year $=$ entry year $+$ 3) & 1,290,514 \\
+    Entered 9th grade between 2012 and 2021 & 1,065,135 \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+The filters begin from the national student-level enrollment records, which track every student at every school in Chile from 2004 to 2025, across all levels and program types (72.1 million enrollment records on 9,709,049 students). Three restrictions define the base universe. We keep students enrolled at least once between 2010 and 2024, the observation window of the analysis. We keep students whose entire school career takes place in regular primary and regular secondary education within a single secondary track, academic or vocational: this removes students who ever appear in adult education, special education, or the arts track, and students who switch between the academic and vocational tracks. Last, we keep students with at least one record in grades 9--12. The 2,763,367 students remaining form the base universe; four further filters define the estimation sample.
+
+First, we keep students who completed all four grades at their entry school and never enrolled at another school in grades 9--12. Single-school completers make the class assignment unambiguous: a student who switches schools belongs to no single graduating class.
+
+Second, we keep students who graduated from secondary school. College-application outcomes are defined only for students who reached the end of secondary school.
+
+Third, we keep students who graduated on time, meaning their graduation year equals their entry year plus three. On-time graduation keeps each class together facing a single college-admissions cycle, and matches the sample definition stated in the \textit{Sample} paragraph of Section~\ref{sec:background}.
+
+Fourth, we keep students who entered 9th grade between 2012 and 2021. The 2012 lower bound ensures that every cohort reached college after the free-tuition policy (\textit{gratuidad}) was fully in place, so differential exposure to that reform cannot drive comparisons; the 2021 upper bound keeps the last cohort observable in the 2025 admissions process, the final year for which we have data.
+
+The single-school, graduation, and on-time filters condition on behavior that, for treated classes, occurs after treatment; the unconditional sample of all 9th-grade entrants is a planned robustness check.
+
+\paragraph{Aggregation to classes.}
+Students passing all filters are grouped into graduating classes, defined by the combination of school and entry year (the school--cohort cells of the main text). For each class we record the number of students and the simple average of each outcome over its members. The result is 25,855 classes at 2,888 schools. Classes are dated by their admission-process year---the calendar year in which the class's 9th-grade seats were assigned, that is, the year before entry---because the reform changes how seats are assigned.
+
+\paragraph{Treatment dates.}
+SAE was rolled out by region. Admission processes for 9th grade were first run in 2016 in Magallanes; in 2017 in Tarapacá, Coquimbo, O'Higgins, and Los Lagos; in 2018 in ten of the eleven remaining regions; and in 2019 in the Metropolitan region. These legislated dates are verified against the SAE administrative records: in all 16 regions, the first 9th-grade assignment appears exactly in the legislated year. Every publicly funded school---municipal (\textit{municipal DAEM} and \textit{corporaci\'on municipal}, \texttt{COD\_DEPE} 1--2), subsidized private (\textit{particular subvencionado}, \texttt{COD\_DEPE} 3), or delegated-administration (\textit{corporaci\'on de administraci\'on delegada}, \texttt{COD\_DEPE} 5)---carries its region's date: from that date onward, its 9th-grade vacancies were by law offered through the platform, regardless of the school's own behavior. Private fee-paying schools (\textit{particular pagado}, \texttt{COD\_DEPE} 4) never participate in SAE---none of the 395 such schools in the panel ever appears in the SAE records---and are classified as never treated.
+
+\paragraph{Classification.}
+Classes at private fee-paying schools are never treated; comparing every other class's admission-process year with its school's treatment date places it in exactly one of the remaining three groups of Table~\ref{tab: panel classification}. In total, 2,493 schools eventually carry a treatment date and 395 never do.
+
+\begin{table}[ht]
+    \centering
+    \caption{Classification of classes by treatment status. Each class (school $\times$ entry year) is classified by comparing its admission-process year with its school's treatment date. Counts are computed from the estimation sample of Table~\ref{tab: panel filters}.}
+    \label{tab: panel classification}
+    \small
+    \begin{tabular}{p{9.8cm}rr}
+    \toprule
+    Group & Classes & Students \\
+    \midrule
+    Treated (seats assigned in or after the school's treatment date) & 6,630 & 257,015 \\
+    Transition band, set aside (seats assigned one to three years before) & 6,707 & 273,185 \\
+    Pre-treatment (seats assigned four or more years before) & 8,917 & 393,021 \\
+    Never treated (private fee-paying schools) & 3,601 & 141,914 \\
+    \midrule
+    Total & 25,855 & 1,065,135 \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+\paragraph{Why the transition band is set aside.}
+Classes whose seats were assigned one to three years before the platform's arrival completed part of secondary school after it. First, for the class formed one year before, SAE could place new students into its grade-11 and grade-12 classrooms, and for the class formed two years before, into its grade-12 classrooms, once the platform covered all grades. Those mid-stream entrants never enter our class averages---the single-school filter excludes them---but the students we do measure earned their final-year grades and formed their application plans in classrooms partly assembled by the platform. Second, for these same classes, the platform also allowed original class members to leave mid-stream, so the set of students who remain single-school completers was itself partly determined under the new regime. Third, these classes overlapped in school with SAE-admitted cohorts below them: three, two, and one years of overlap for classes formed one, two, and three years before the treatment date, and zero for classes formed four or more years before. The class formed four years before the treatment date is therefore the last to graduate before any SAE-admitted student entered the school, and serves as the within-school reference. The band is not dropped: in estimation it is set aside through the anticipation parameter of \citet{callaway2021}, set to three, so band classes are never used as untreated comparisons and never counted in the treatment-effect aggregates, while their coefficients remain visible in the event-study exhibits.
+
+\subsection{Measurement: What Is Compared}\label{app: measurement}
+
+\paragraph{The reference class.}
+Each eventually treated school contributes one fixed reference point: its class formed four years before its treatment date---established in Section~\ref{app: panel construction} as the last class to graduate before any SAE-admitted student entered the school. Every other class of the same school, earlier or later, is measured as the change in its outcome relative to this reference class. Because the comparison is within school, everything permanent about a school---its selectivity, location, reputation---cancels out of the measurement.
+
+\paragraph{The comparison group.}
+The change at treated schools is compared with the change, over the same calendar years, at schools whose admissions the platform did not yet (or never did) govern. A publicly funded school serves as a comparison in a given admission-process year only while that year is at least four years before its own treatment date---its own transition band is set aside symmetrically. Never-treated private fee-paying schools are always available as comparisons. Because the rollout spans only 2016 to 2019, by the time the first treated classes exist, no publicly funded school in the country remains four or more years away from its own treatment date. The comparison for every post-treatment contrast is therefore the 395 never-treated private schools; the not-yet-treated publicly funded schools serve as comparisons for the pre-treatment placebo checks (the event-study leads). Two implications follow: (i) the post-treatment estimates rest on private schools providing a valid picture of how outcomes would have evolved absent the reform---within-school changes, not levels, so permanent public--private differences do not enter; (ii) the placebo test on private schools (their outcomes should not move when their region adopts the platform) is the direct check of this comparison and is a planned exhibit of the revised results.
+
+\paragraph{The difference in differences.}
+For each adoption wave and each class vintage---classes formed the same number of years before or after their school's treatment date---the estimate is the average change (relative to the reference class) at treated schools, minus the average change over the same calendar years at comparison schools. The first difference removes everything permanent about each school; the second removes everything common to all schools in those calendar years---the free-tuition policy, the COVID-19 disruptions, changes to the admission test---because comparison schools lived through the same years. Before differencing, comparison schools are aligned with treated schools on class size, both by reweighting and by regression adjustment, following the doubly robust implementation of \citet{callaway2021}.
+
+\paragraph{Aggregation.}
+The overall effect is the average of these wave-by-vintage contrasts over all treated classes, each contrast weighted by the number of classes it represents. The event-study exhibits report the same contrasts averaged instead by years since treatment: the pre-treatment side shows the placebo contrasts (these should be near zero), the post-treatment side shows the effect by years of exposure, and the transition-band cells are displayed but never enter the overall average.
+
+\paragraph{What the estimate means.}
+The resulting number is the average effect of being assembled under the centralized platform on class-average outcomes, across all classes whose 9th-grade seats the platform legally governed---including classes barely touched in practice (for example, at schools to which the platform never assigned a single 9th-grade student). To the extent the platform left such classes unaffected, including them dilutes the average toward zero; the estimate is in this sense conservative.
+
+\paragraph{Uncertainty.}
+Standard errors come from a multiplier bootstrap with 10,000 replications, clustered at the school level: each school is treated as one independent unit, and all of its classes may be arbitrarily correlated. Because adoption timing varies at the regional level, region-level inference (a wild cluster bootstrap over the 16 regions) is a planned robustness check.
+
