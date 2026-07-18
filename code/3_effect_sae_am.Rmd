@@ -20,6 +20,7 @@ library(magrittr)
 library(purrr)
 library(data.table)
 library(did)
+library(fixest)
 
 start_year <- 2012
 end_year <- 2021
@@ -30,6 +31,7 @@ clustering_var <- "region"
 home <- ifelse(Sys.getenv("USERPROFILE") != "", Sys.getenv("USERPROFILE"), path.expand("~"))
 data_path <- file.path(home, "Dropbox", "Effect SAE on SUA", "data")
 dir.create("tables", showWarnings = FALSE)
+dir.create("figures", showWarnings = FALSE)
 
 outcomes <- c(
   gpa_secondary  = "GPA",
@@ -60,7 +62,8 @@ class_panel <- function(students, cols = names(outcomes)) {
 
 # helper: simple aggregated ATT table, coefficients with region-clustered
 # bootstrap SEs, pre-treatment means over treated classes, one column per outcome
-did_table <- function(res, means_pre, nobs, caption, label, file) {
+did_table <- function(res, means_pre, nobs, caption, label, file,
+                      pre_label = "Mean (pre-treatment)") {
   att <- map_dbl(res, "overall.att")
   se  <- map_dbl(res, "overall.se")
   p   <- 2 * pnorm(-abs(att / se))
@@ -72,7 +75,7 @@ did_table <- function(res, means_pre, nobs, caption, label, file) {
     row_tex("Treated", paste0(fmt(att), star(p))),
     row_tex("", paste0("(", fmt(se), ")")),
     "      \\midrule\n",
-    row_tex("Mean (pre-treatment)", fmt(means_pre)),
+    row_tex(pre_label, fmt(means_pre)),
     row_tex("Observations", rep(format(nobs, big.mark = ","), length(res))),
     "      \\bottomrule\n   \\end{tabular}}}\n\\end{table}\n")
   writeLines(tab, file)
@@ -104,6 +107,54 @@ did_table_pair <- function(res_a, res_b, lab_a, lab_b, means_a, means_b, n_a, n_
   writeLines(tab, file)
   tab
 }
+
+# helper: paired table in the circulated draft's layout ("Mean pre-treatment"
+# row; htp! float; one multicolumn header line per outcome) -- used by the two
+# value-added tables; generic in the number of outcomes
+did_table_pair_draft <- function(res_a, res_b, lab_a, lab_b, means_a, means_b, n_a, n_b,
+                                 caption, label, file) {
+  att_a <- map_dbl(res_a, "overall.att"); se_a <- map_dbl(res_a, "overall.se")
+  att_b <- map_dbl(res_b, "overall.att"); se_b <- map_dbl(res_b, "overall.se")
+  p_a <- 2 * pnorm(-abs(att_a / se_a))
+  p_b <- 2 * pnorm(-abs(att_b / se_b))
+  k <- length(res_a)
+  interleave <- function(a, b) as.vector(rbind(a, b))
+  tab <- paste0(
+    "\\begin{table}[htp!]\n   \\caption{", caption, "}\\label{", label, "}\n",
+    "   \\centerline{\\scalebox{0.85}{\n   \\begin{tabular}{l", strrep("c", 2 * k), "}\n      \\toprule\n",
+    paste0("      & \\multicolumn{2}{c}{", names(res_a), "}", collapse = "\n"), " \\\\\n",
+    "      ", paste0("\\cmidrule(lr){", 2 * seq_len(k), "-", 2 * seq_len(k) + 1, "}", collapse = ""), "\n",
+    "                   & ", paste(rep(c(lab_a, lab_b), k), collapse = " & "), " \\\\\n",
+    "                   & ", paste0("(", seq_len(2 * k), ")", collapse = " & "), "\\\\\n      \\midrule\n",
+    row_tex("Treated", interleave(paste0(fmt(att_a), star(p_a)), paste0(fmt(att_b), star(p_b)))),
+    row_tex("", interleave(paste0("(", fmt(se_a), ")"), paste0("(", fmt(se_b), ")"))),
+    "      \\midrule\n",
+    row_tex("Mean pre-treatment", interleave(fmt(means_a), fmt(means_b))),
+    row_tex("Observations", rep(c(format(n_a, big.mark = ","), format(n_b, big.mark = ",")), k)),
+    "      \\bottomrule\n   \\end{tabular}\n   }}\n\\end{table}\n")
+  writeLines(tab, file)
+  tab
+}
+
+# helper: fit the CS-DiD once per outcome on a class panel and return the
+# simple aggregates. `cols` is a named vector (panel column -> table label);
+# the same seed inside every fit keeps results independent of run order.
+fit_simple <- function(panel, cols) {
+  common_args$data <- panel
+  out <- map(names(cols), function(y) {
+    set.seed(20260610)
+    m <- do.call(att_gt, c(list(yname = y), common_args))
+    suppressWarnings(aggte(m, type = "simple", na.rm = TRUE))
+  })
+  names(out) <- cols
+  out
+}
+
+# helper: treated classes' own pre-period means over the given columns
+pre_means <- function(panel, cols) {
+  panel[year_region_sae > 0 & year < year_region_sae,
+        sapply(.SD, mean, na.rm = TRUE), .SDcols = cols]
+}
 ```
 
 ## Data and treatment
@@ -114,10 +165,16 @@ did_table_pair <- function(res_a, res_b, lab_a, lab_b, means_a, means_b, n_a, n_
 df <- readRDS(file.path(data_path, "panel_9-12_2010_2021.rds"))
 setDT(df)
 df <- df[, .(MRUN, AGNO, RBD, COD_GRADO, COD_ENSE, year_rbd_first_sae,
-             graduated_secondary, COD_REG_RBD, COD_DEPE, GEN_ALU,
+             year_region_first_sae, graduated_secondary, COD_REG_RBD, COD_DEPE,
+             COD_COM_RBD, COD_COM_ALU, SIT_FIN_R, GEN_ALU,
              gpa_secondary, scored_lm, prom_lm_actual, applied, assigned, enrolled,
              assigned_full, assigned_not_full, assigned_top10, assigned_top25,
-             assigned_top50, assigned_top75, assigned_top90)]
+             assigned_top50, assigned_top75, assigned_top90,
+             assigned_selective_q10, assigned_selective_q20, assigned_selective_q30,
+             assigned_selective_q40, assigned_selective_q50, assigned_selective_q60,
+             assigned_selective_q70, assigned_selective_q80, assigned_selective_q90,
+             assigned_selective_q100,
+             num_apps_reg, num_valid_apps_reg, num_apps_above_prev_cutoff_reg)]
 
 sch <- unique(df[, .(RBD, year_rbd_first_sae, COD_REG_RBD, COD_DEPE)])[, .(
   yfs    = { v <- year_rbd_first_sae[!is.na(year_rbd_first_sae)]; if (length(v)) as.numeric(v[1]) else 0 },
@@ -160,9 +217,12 @@ setkey(stayers, MRUN)
 grad <- hs1[MRUN %in% stayers$MRUN, .(grad_year = max(AGNO)), by = MRUN]
 sel_flags <- c("assigned_full", "assigned_not_full", "assigned_top10", "assigned_top25",
                "assigned_top50", "assigned_top75", "assigned_top90")
+dec_flags <- paste0("assigned_selective_q", seq(10, 100, 10))
+app_counts <- c("num_apps_reg", "num_valid_apps_reg", "num_apps_above_prev_cutoff_reg")
 vals <- df[MRUN %in% stayers$MRUN,
            lapply(.SD, function(x) { v <- x[!is.na(x)]; if (length(v)) as.numeric(v[1]) else NA_real_ }),
-           by = MRUN, .SDcols = c(names(outcomes), sel_flags, "graduated_secondary", "GEN_ALU")]
+           by = MRUN, .SDcols = c(names(outcomes), sel_flags, dec_flags, app_counts,
+                                  "graduated_secondary", "GEN_ALU")]
 students <- merge(stayers, vals, by = "MRUN")
 students <- merge(students, grad, by = "MRUN")
 students <- students[graduated_secondary == 1 & grad_year == AGNO_9th + 3 &
@@ -389,4 +449,533 @@ means_pre_sel <- dr_sel[year_region_sae > 0 & year < year_region_sae,
 cat(did_table(models_sel, means_pre_sel, nrow(dr_sel), "Regression Results by Program Selectivity",
               "tab: results by program selectivity",
               "tables/did_by_program_selectivity_AM.tex"))
+```
+
+## Heterogeneity: school value added
+
+Treated schools split at the within-region median of school value added, taken
+over treated schools (treated schools with no measure are dropped);
+never-treated private schools are the common control in both arms. The main
+measure is the SES-adjusted value added on the 2016 10th-grade cohort: the
+school fixed effect from a regression of standardized 10th-grade mathematics on
+standardized 8th-grade mathematics and reading, sex, mother's education and
+family income (both from the parent questionnaire), grade repetition, and
+residential commune. The robustness measure pools the 2010--2016 cohorts and
+keeps only prior achievement and sex.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+zscore_by <- function(x, g) {
+  x <- as.numeric(x)
+  (x - ave(x, g, FUN = function(v) mean(v, na.rm = TRUE))) /
+    ave(x, g, FUN = function(v) sd(v, na.rm = TRUE))
+}
+to_na099 <- function(x) { x <- suppressWarnings(as.numeric(x)); x[x %in% c(0, 99, 999)] <- NA; x }
+
+m2s <- readRDS(file.path(data_path, "panel_simce_2m.rds"))
+setDT(m2s)
+m2s <- m2s[agno >= 2010 & agno <= 2016 & !is.na(mrun) & !is.na(rbd),
+           .(mrun = as.numeric(mrun), idalumno = as.numeric(idalumno),
+             rbd = as.numeric(rbd), agno, gen_alu, mate2m = ptje_mate2m_alu)]
+b8 <- readRDS(file.path(data_path, "panel_simce_8b.rds"))
+setDT(b8)
+b8 <- b8[!is.na(mrun), .(mrun = as.numeric(mrun), agno8b = agno,
+                         mate8b = ptje_mate8b_alu, lect8b = ptje_lect8b_alu)]
+setorder(b8, mrun, agno8b)
+b8 <- b8[, .SD[1L], by = mrun]
+
+# multi-cohort measure: earliest 10th-grade record per student, 2010-2016
+m2m <- copy(m2s)
+setorder(m2m, mrun, agno)
+m2m <- m2m[, .SD[1L], by = mrun]
+m2m[, female := as.integer(gen_alu %in% c("2", "Mujeres"))]
+dva <- merge(m2m, b8, by = "mrun", all.x = TRUE)
+dva[, `:=`(mate2m_z = zscore_by(mate2m, agno), mate8b_z = zscore_by(mate8b, agno8b),
+           lect8b_z = zscore_by(lect8b, agno8b))]
+# fixef.rm = "none": keep singleton-FE schools (one estimable student) so the
+# value-added school set matches the certified split; newer fixest drops them
+fe_multi <- fixef(feols(mate2m_z ~ mate8b_z + lect8b_z + female | rbd,
+                        data = dva, fixef.rm = "none", notes = FALSE, warn = FALSE))$rbd
+va_multi <- data.table(rbd = as.numeric(names(fe_multi)), va = as.numeric(fe_multi))
+
+# SES-adjusted measure: the 2016 cohort, with mother's education and income
+# from the parent questionnaire, ever-repeated and residential commune from the
+# student panel; complete case on all controls
+m2g <- m2s[agno == 2016]
+setorder(m2g, mrun)
+m2g <- m2g[, .SD[1L], by = mrun]
+m2g[, female := as.integer(gen_alu %in% c("2", "Mujeres"))]
+sub <- df[as.numeric(MRUN) %in% m2g$mrun]
+rep_ever <- sub[, .(repeated = as.integer(any(SIT_FIN_R == "R", na.rm = TRUE))),
+                by = .(mrun = as.numeric(MRUN))]
+com16 <- sub[AGNO == 2016 & !is.na(COD_COM_ALU),
+             .(comuna_stu = as.integer(COD_COM_ALU[1L])), by = .(mrun = as.numeric(MRUN))]
+comfb <- sub[!is.na(COD_COM_ALU),
+             .(comuna_fb = as.integer(COD_COM_ALU[1L])), by = .(mrun = as.numeric(MRUN))]
+covs <- merge(comfb, com16, by = "mrun", all = TRUE)
+covs[, comuna_stu := fifelse(is.na(comuna_stu), comuna_fb, comuna_stu)]
+covs <- merge(covs[, .(mrun, comuna_stu)], rep_ever, by = "mrun", all = TRUE)
+cp <- fread(file.path(data_path, "simce2m2016_cpad_privada_final_SEG.csv"), sep = "|",
+            select = c("idalumno", "cpad_p08", "cpad_p10"), showProgress = FALSE)
+cp[, `:=`(idalumno = as.numeric(idalumno),
+          educ_madre = to_na099(cpad_p08), income = to_na099(cpad_p10))]
+stopifnot(!anyDuplicated(cp$idalumno))   # a duplicate would row-explode the join
+dG <- merge(m2g, b8, by = "mrun", all.x = TRUE)
+dG <- merge(dG, covs, by = "mrun", all.x = TRUE)
+dG <- merge(dG, cp[, .(idalumno, educ_madre, income)], by = "idalumno", all.x = TRUE)
+dG[, `:=`(mate2m_z = zscore_by(mate2m, agno), mate8b_z = zscore_by(mate8b, agno8b),
+          lect8b_z = zscore_by(lect8b, agno8b))]
+dG <- dG[!is.na(mate2m_z) & !is.na(mate8b_z) & !is.na(lect8b_z) & !is.na(female) &
+           !is.na(educ_madre) & !is.na(income) & !is.na(repeated) & !is.na(comuna_stu)]
+fe_gaz <- fixef(feols(mate2m_z ~ mate8b_z + lect8b_z + female + i(educ_madre) +
+                        i(income) + repeated + i(comuna_stu) | rbd,
+                      data = dG, fixef.rm = "none", notes = FALSE, warn = FALSE))$rbd
+va_gaz <- data.table(rbd = as.numeric(names(fe_gaz)), va = as.numeric(fe_gaz))
+rm(m2s, m2m, m2g, b8, dva, dG, sub, rep_ever, com16, comfb, covs, cp)
+
+# split treated schools at the within-region median over treated schools
+va_split <- function(vadt) {
+  s <- unique(dr[, .(rbd = as.numeric(rbd), region, year_region_sae)])
+  s <- merge(s, vadt, by = "rbd", all.x = TRUE)
+  med <- s[year_region_sae > 0 & !is.na(va), .(region_median = median(va)), by = region]
+  s <- merge(s, med, by = "region", all.x = TRUE)
+  s[, low  := as.integer(year_region_sae > 0 & !is.na(va) & !is.na(region_median) & va <  region_median)]
+  s[, high := as.integer(year_region_sae > 0 & !is.na(va) & !is.na(region_median) & va >= region_median)]
+  s[, .(rbd, low, high)]
+}
+va_arms <- function(vadt) {
+  dv <- merge(dr, va_split(vadt), by = "rbd", all.x = TRUE)
+  dv[is.na(low), low := 0L]
+  dv[is.na(high), high := 0L]
+  list(low = dv[year_region_sae == 0 | low == 1],
+       high = dv[year_region_sae == 0 | high == 1])
+}
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+arms_g <- va_arms(va_gaz)
+models_vg_low  <- fit_simple(arms_g$low,  outcomes)
+models_vg_high <- fit_simple(arms_g$high, outcomes)
+cat(did_table_pair_draft(models_vg_low, models_vg_high, "Low", "High",
+                    pre_means(arms_g$low, names(outcomes)),
+                    pre_means(arms_g$high, names(outcomes)),
+                    nrow(arms_g$low), nrow(arms_g$high),
+                    "Effect on Outcomes by School Value Added",
+                    "tab: did by value added", "tables/did_by_value_added_AM.tex"))
+```
+
+## Robustness: school value added, multi-cohort measure
+
+Same split with the multi-cohort (2010--2016) value added that keeps only prior
+achievement and sex.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+arms_m <- va_arms(va_multi)
+models_vm_low  <- fit_simple(arms_m$low,  outcomes)
+models_vm_high <- fit_simple(arms_m$high, outcomes)
+cat(did_table_pair_draft(models_vm_low, models_vm_high, "Low", "High",
+                    pre_means(arms_m$low, names(outcomes)),
+                    pre_means(arms_m$high, names(outcomes)),
+                    nrow(arms_m$low), nrow(arms_m$high),
+                    "Effect on Outcomes by School Value Added (robustness: multi-cohort measure with prior achievement only)",
+                    "tab: did by value added robust", "tables/did_by_value_added_robust_AM.tex"))
+```
+
+## Parallel trends: event study
+
+Dynamic ATT off the headline panel, same fits and configuration as the headline
+table. Calendar event time; the reference period is event time $-3$; the
+anticipation band ($-2$, $-1$) is set aside in estimation but displayed. Bold
+marks cells outside the 95% uniform (simultaneous) confidence band from the
+region-clustered multiplier bootstrap. The joint pre-trend $p$-values are the
+randomization-inference $p$ over the clean leads, pinned from the 1,001
+exact rollout permutations (explorations/2026-07-10_randomization_inference,
+`ri_full_pvalues.csv`); they are not recomputed at knit time.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+# deliberate refit of the headline models (same seed -> identical fits): the
+# headline chunk keeps only the simple aggregates, and we leave it untouched
+pt_args <- common_args
+pt_args$data <- dr
+es <- map(names(outcomes), function(y) {
+  set.seed(20260610)
+  m  <- do.call(att_gt, c(list(yname = y), pt_args))
+  ed <- suppressWarnings(aggte(m, type = "dynamic", na.rm = TRUE))
+  data.table(e = ed$egt, att = ed$att.egt, se = ed$se.egt,
+             bold = abs(ed$att.egt) > ed$crit.val.egt * ed$se.egt)
+})
+names(es) <- names(outcomes)
+
+# randomization-inference joint pre-trend p over the clean leads (1,001 exact
+# rollout permutations; explorations/2026-07-10_randomization_inference,
+# ri_full_pvalues.csv). The RI run predates P(Take Exam)'s promotion to the
+# outcome set, so that cell is blank until ri_full.R is extended to scored_lm.
+ri_pretrend <- c(gpa_secondary = 0.464, scored_lm = NA_real_,
+                 prom_lm_actual = 0.746, applied = 0.836,
+                 assigned = 0.680, enrolled = 0.558)
+
+es_cell <- function(y, k) {
+  r <- es[[y]][e == k]
+  if (nrow(r) == 0) return("")
+  x <- fmt(r$att)
+  if (isTRUE(r$bold)) x <- paste0("\\textbf{", x, "}")
+  x
+}
+es_se <- function(y, k) {
+  r <- es[[y]][e == k]
+  if (nrow(r) == 0) "" else paste0("(", fmt(r$se), ")")
+}
+es_rows <- function(ks) paste0(vapply(ks, function(k) paste0(
+  row_tex(paste("Event time", k), vapply(names(outcomes), es_cell, "", k = k)),
+  row_tex("", vapply(names(outcomes), es_se, "", k = k))), ""), collapse = "")
+span_row <- function(txt) paste0("      \\multicolumn{", length(outcomes) + 1,
+                                 "}{l}{\\textit{", txt, "}}\\\\\n")
+
+tab_es <- paste0(
+  "\\begin{table}[htbp]\n   \\caption{Parallel Trends Assumption: Event-Study Average ATT}",
+  "\\label{tab: parallel trends assumption}\n",
+  "   \\centerline{\\scalebox{0.85}{\n   \\begin{tabular}{l", strrep("c", length(outcomes)), "}\n      \\toprule\n",
+  "                   & ", paste(outcomes, collapse = " & "), "\\\\\n",
+  "                   & ", paste0("(", seq_along(outcomes), ")", collapse = " & "), "\\\\\n      \\midrule\n",
+  span_row("Clean pre-treatment leads"),
+  es_rows(-8:-4),
+  span_row("Reference period: event time $-3$ (normalized to zero)"),
+  span_row("Transition band (set aside in estimation; partial exposure by construction)"),
+  es_rows(-2:-1),
+  "      \\midrule\n",
+  span_row("Post-treatment"),
+  es_rows(0:4),
+  "      \\midrule\n",
+  row_tex("Joint pre-trend $p$-value",
+          vapply(names(outcomes), function(y) {
+            v <- ri_pretrend[[y]]
+            if (is.na(v)) "" else fmt(v)
+          }, "")),
+  "      \\bottomrule\n   \\end{tabular}\n   }}\n\\end{table}\n")
+writeLines(tab_es, "tables/parallel_trends_sae_on_outcomes_AM.tex")
+cat(tab_es)
+```
+
+## Placebo: only private schools
+
+The headline design run on the never-treated private classes alone,
+pseudo-treated at their region's 9th-grade door. Private classes in the
+Metropolitan region keep no door and serve as the never-treated comparison, so
+late pseudo-cohorts still have valid comparisons under the two-year
+anticipation band.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+dr_pl <- dr[year_region_sae == 0]
+doors <- unique(dr[year_region_sae > 0, .(region, door = year_region_sae)])
+stopifnot(!anyDuplicated(doors$region))
+dr_pl <- merge(dr_pl, doors, by = "region", all.x = TRUE)
+dr_pl[, year_region_sae := fifelse(region == 13, 0, door)]
+dr_pl[, door := NULL]
+stopifnot(!anyNA(dr_pl$year_region_sae))   # every private class needs a door or the Metro exemption
+
+models_pl <- fit_simple(dr_pl, outcomes)
+cat(did_table(models_pl, pre_means(dr_pl, names(outcomes)), nrow(dr_pl),
+              "Placebo Test: Only Private Schools", "tab: did only private",
+              "tables/staggered_did_sae_on_outcomes_only_private_AM.tex"))
+```
+
+## Mechanism: segregation by academic ability
+
+Segregation of students by 4th-grade SIMCE ability across the schools of a
+commune, on the full 9th-grade entrant population (not the stayer sample): the
+Duncan dissimilarity index, low-to-high exposure, and low-to-low isolation, per
+subject. The ability tag is the student's earliest 4th-grade high/low mark,
+fixed before high school. Commune-cohort cells need both subjects defined and
+at least 10 tagged students in each; the unit is the commune and the class-size
+control is the commune's tagged count in the outcome's subject.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+com_lk <- df[!is.na(COD_COM_RBD), .(commune = as.integer(COD_COM_RBD[1L])), by = .(rbd = RBD)]
+entr <- anchor[AGNO_9th >= start_year & AGNO_9th <= end_year]
+entr <- merge(entr, sch[, .(rbd, region, year_region_sae)], by = "rbd", all.x = TRUE)
+entr <- merge(entr, com_lk, by = "rbd", all.x = TRUE)
+
+s4b <- readRDS(file.path(data_path, "panel_simce_4b.rds"))
+setDT(s4b)
+setorder(s4b, mrun, year)
+tag <- s4b[, .(high_lect = { v <- high_lect4b[!is.na(high_lect4b)]; if (length(v)) as.numeric(v[1L]) else NA_real_ },
+               high_mate = { v <- high_mate4b[!is.na(high_mate4b)]; if (length(v)) as.numeric(v[1L]) else NA_real_ }),
+           by = .(MRUN = as.numeric(mrun))]
+rm(s4b)
+entr[, MRUN := as.numeric(MRUN)]
+entr <- merge(entr, tag, by = "MRUN", all.x = TRUE)
+entr[, `:=`(low_lect = 1 - high_lect, low_mate = 1 - high_mate)]
+
+# across-school indices within (commune, cohort); untagged students are
+# dropped, never counted as low; cells with no high/low split are dropped
+seg_index <- function(tg, hi, lo) {
+  schl <- tg[, .(h_s = sum(get(hi)), l_s = sum(get(lo))), by = .(commune, AGNO_9th, rbd)]
+  schl[, n_s := h_s + l_s]
+  out <- schl[, {
+    H <- sum(h_s); L <- sum(l_s)
+    .(duncan   = if (H > 0 && L > 0) 0.5 * sum(abs(h_s / H - l_s / L)) else NA_real_,
+      p_lh     = if (L > 0) sum(fifelse(n_s > 0, (l_s / L) * (h_s / n_s), 0)) else NA_real_,
+      p_ll     = if (L > 0) sum(fifelse(n_s > 0, (l_s / L) * (l_s / n_s), 0)) else NA_real_,
+      n_tagged = sum(n_s))
+  }, by = .(commune, AGNO_9th)]
+  out[!is.na(duncan)]
+}
+seg_m <- seg_index(entr[!is.na(high_mate)], "high_mate", "low_mate")
+seg_l <- seg_index(entr[!is.na(high_lect)], "high_lect", "low_lect")
+setnames(seg_m, c("duncan", "p_lh", "p_ll", "n_tagged"),
+         c("duncan_mate", "p_lh_mate", "p_ll_mate", "nt_mate"))
+setnames(seg_l, c("duncan", "p_lh", "p_ll", "n_tagged"),
+         c("duncan_lect", "p_lh_lect", "p_ll_lect", "nt_lect"))
+seg <- merge(seg_m, seg_l, by = c("commune", "AGNO_9th"), all = TRUE)
+
+modal <- function(x) { x <- x[!is.na(x)]; if (!length(x)) return(NA_real_)
+  as.numeric(names(which.max(table(x)))) }
+attr_c <- entr[, .(region = modal(region), year_region_sae = modal(year_region_sae)),
+               by = commune]
+seg <- merge(seg, attr_c, by = "commune", all.x = TRUE)
+seg[, year := AGNO_9th - 1]
+seg[year_region_sae > max(year, na.rm = TRUE), year_region_sae := 0]
+seg <- seg[is.finite(duncan_mate) & is.finite(duncan_lect) &
+             nt_mate >= 10 & nt_lect >= 10]
+
+seg_args <- common_args
+seg_args$idname <- "commune"
+seg_cols <- c("duncan_mate", "duncan_lect", "p_lh_mate", "p_lh_lect",
+              "p_ll_mate", "p_ll_lect")
+models_seg <- map(seg_cols, function(y) {
+  nt <- if (grepl("mate$", y)) "nt_mate" else "nt_lect"
+  d <- seg[, c("commune", "year", "year_region_sae", "region", nt, y), with = FALSE]
+  setnames(d, nt, "num_students")
+  seg_args$data <- d
+  set.seed(20260610)
+  m <- do.call(att_gt, c(list(yname = y), seg_args))
+  suppressWarnings(aggte(m, type = "simple", na.rm = TRUE))
+})
+names(models_seg) <- seg_cols
+
+att_seg <- map_dbl(models_seg, "overall.att")
+se_seg  <- map_dbl(models_seg, "overall.se")
+p_seg   <- 2 * pnorm(-abs(att_seg / se_seg))
+pre_seg <- pre_means(seg, seg_cols)
+tab_seg <- paste0(
+  "\\begin{table}[htbp]\n   \\caption{Effect on Segregation by Ability}\\label{tab: did segregation}\n",
+  "   \\centerline{\\scalebox{0.85}{\n\\begin{tabular}{lcccccc}\n\\toprule\n",
+  "      & \\multicolumn{2}{c}{Duncan Index} & \\multicolumn{2}{c}{Exposure Low-High ($P_{LH}$)}",
+  " & \\multicolumn{2}{c}{Isolation Low-Low ($P_{LL}$)} \\\\\n",
+  "      \\cmidrule(lr){2-3} \\cmidrule(lr){4-5} \\cmidrule(lr){6-7}\n",
+  "                   & Math & Verbal & Math & Verbal & Math & Verbal\\\\\n",
+  "                   & (1) & (2) & (3) & (4) & (5) & (6)\\\\\n      \\midrule\n",
+  row_tex("Treated", paste0(fmt(att_seg), star(p_seg))),
+  row_tex("", paste0("(", fmt(se_seg), ")")),
+  "      \\midrule\n",
+  row_tex("Mean pre-treatment", fmt(pre_seg)),
+  row_tex("Observations", rep(format(nrow(seg), big.mark = ","), length(seg_cols))),
+  "      \\bottomrule\n\\end{tabular}\n   }}\n\\end{table}\n")
+writeLines(tab_seg, "tables/did_segregation_AM.tex")
+cat(tab_seg)
+```
+
+## Mechanism: truthful reporting
+
+OLS on the 2022 DEMRE admission-survey cross-section (not a DiD): survey
+completers with fewer than 10 final applications, outside PACE, and outside the
+RCT's information arms. Treated means graduating from a publicly funded school
+in a region whose system started by the student's 9th-grade year (2018);
+controls are Metropolitan-region public students and private-school students.
+Strata and region/dependency fixed effects; standard errors clustered at the
+school, significance from the normal reference.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+onset <- df[!is.na(year_region_first_sae) & year_region_first_sae > 0,
+            .(onset = as.integer(median(year_region_first_sae))), by = .(region = COD_REG_RBD)]
+d22 <- as.data.table(readRDS(file.path(data_path, "data_2022.rds")))
+d22[, apps_fin_n := suppressWarnings(as.numeric(apps_fin))]
+keep22 <- d22[in_survey == 1 & !is.na(apps_fin) & Progress == 100 &
+                responded_survey == 1 & apps_fin_n < 10 & pace != "PACE"]
+dov <- rbind(keep22[in_rct == 0], keep22[in_rct == 1 & treatment %in% c(1, 4)])
+dov <- merge(dov, onset, by.x = "CODIGO_REGION_EGRESO", by.y = "region", all.x = TRUE)
+dov[, treated := as.integer(DEPENDENCIA != 4 & onset <= 2018)]
+dov_df <- as.data.frame(dov)
+
+# cluster-robust (CR1) standard error for one coefficient, school clusters
+cr1 <- function(m, cl, ti) {
+  X <- model.matrix(m)[, !is.na(coef(m)), drop = FALSE]
+  u <- residuals(m)
+  n <- nrow(X); k <- ncol(X); G <- length(unique(cl))
+  stopifnot(length(cl) == n, ti >= 1, ti <= k, G > 1, n > k)
+  S <- rowsum(X * u, cl)
+  a <- S %*% solve(crossprod(X))[, ti]
+  sqrt(sum(a^2) * (G / (G - 1)) * ((n - 1) / (n - k)))
+}
+m2_fe   <- "+ factor(strata_score) + factor(strata_sexo) + factor(CODIGO_REGION_EGRESO) + factor(DEPENDENCIA)"
+m2_outs <- c("applied_to_top_true_fin", "applied_to_bottom_true_fin",
+             "prob_ratex_1_fin", "overall_ratex_fin",
+             "bias_prob_top_reported", "bias_prob_overall")
+m2 <- map(m2_outs, function(y) {
+  m   <- lm(as.formula(paste(y, "~ treated", m2_fe)), data = dov_df)
+  okc <- colnames(model.matrix(m))[!is.na(coef(m))]
+  cl  <- as.character(dov_df$RBD[as.integer(rownames(m$model))])
+  na_i <- which(is.na(cl))
+  if (length(na_i)) cl[na_i] <- paste0("na", na_i)   # unknown school = own singleton cluster
+  b  <- coef(m)[["treated"]]; b0 <- coef(m)[["(Intercept)"]]
+  se_b <- cr1(m, cl, which(okc == "treated"))
+  se_0 <- cr1(m, cl, which(okc == "(Intercept)"))
+  list(att = b, se = se_b, p = 2 * pnorm(-abs(b / se_b)),
+       const = b0, const_se = se_0, const_p = 2 * pnorm(-abs(b0 / se_0)), n = nobs(m))
+})
+
+m2row <- function(f) sapply(m2, `[[`, f)
+tab_m2 <- paste0(
+  "\\begin{table}[!htbp]\n\\caption{Effect on Truthful Reporting}\\label{tab: effect on truthful reporting}\n",
+  "\\centerline{\\scalebox{0.85}{\n\\begin{tabular}{lcccccc}\n\\toprule\n",
+  " & \\multicolumn{2}{c}{Truthful Reporting} & \\multicolumn{2}{c}{Adm. Probability} & \\multicolumn{2}{c}{Bias} \\\\\n",
+  " \\cmidrule(lr){2-3} \\cmidrule(lr){4-5} \\cmidrule(lr){6-7}\n",
+  " & Top & Bottom & Top Reported & Overall & Top Reported & Overall \\\\\n",
+  " & (1) & (2) & (3) & (4) & (5) & (6)\\\\\n\\midrule\n",
+  " Treated & ",  paste0(fmt(m2row("att")), star(m2row("p")), collapse = " & "), " \\\\\n",
+  " & ",         paste0("(", fmt(m2row("se")), ")",          collapse = " & "), " \\\\\n",
+  " Constant & ", paste0(fmt(m2row("const")), star(m2row("const_p")), collapse = " & "), " \\\\\n",
+  " & ",         paste0("(", fmt(m2row("const_se")), ")",    collapse = " & "), " \\\\\n\\midrule\n",
+  " Observations & ", paste(format(m2row("n"), big.mark = ","), collapse = " & "), " \\\\\n",
+  "\\bottomrule\n\\end{tabular}\n}}\n\\end{table}\n")
+writeLines(tab_m2, "tables/effect_truthful_reporting_AM.tex")
+cat(tab_m2)
+```
+
+## Mechanism: application breadth and quality
+
+Unconditional application outcomes over the whole graduating class. Breadth:
+the class share of graduates submitting at least $k$ applications (all
+thresholds below 10, so they mean the same act in every year despite the list
+cap change). Quality: class-level ratio-of-sums rates, valid applications and
+applications above the previous-year cutoff over total applications; classes
+with zero application volume have no defined rate and are dropped. The figure
+plots the effect for every threshold $k = 1, \dots, 10$ with the 95% uniform
+(sup-$t$) band from a region-clustered Mammen multiplier bootstrap with weights
+shared across thresholds.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+thr_cols <- paste0("app_ge", 1:10)
+for (k in 1:10) students[, (paste0("app_ge", k)) := as.integer(num_apps_reg >= k)]
+dr_br <- class_panel(students, thr_cols)
+models_br <- fit_simple(dr_br, setNames(thr_cols, thr_cols))
+
+dr_rate <- students[, .(num_students = .N, s_apps = sum(num_apps_reg),
+                        s_valid = sum(num_valid_apps_reg),
+                        s_above = sum(num_apps_above_prev_cutoff_reg)),
+                    by = .(rbd, AGNO_9th)]
+dr_rate[, `:=`(valid_rate = s_valid / s_apps, above_rate = s_above / s_apps,
+               year = AGNO_9th - 1)]
+dr_rate <- merge(dr_rate, sch[, .(rbd, year_region_sae, region)], by = "rbd", all.x = TRUE)
+dr_rate[year_region_sae > max(year), year_region_sae := 0]
+dr_rate <- dr_rate[s_apps > 0]
+models_rate <- fit_simple(dr_rate, c(valid_rate = "Valid Apps", above_rate = "Above Cutoff"))
+
+br_show <- c(models_br[c("app_ge1", "app_ge3", "app_ge5")], models_rate)
+names(br_show) <- c("$\\geq 1$", "$\\geq 3$", "$\\geq 5$", "Valid Apps", "Above Cutoff")
+att_br <- map_dbl(br_show, "overall.att")
+se_br  <- map_dbl(br_show, "overall.se")
+p_br   <- 2 * pnorm(-abs(att_br / se_br))
+pre_br <- c(pre_means(dr_br, c("app_ge1", "app_ge3", "app_ge5")),
+            pre_means(dr_rate, c("valid_rate", "above_rate")))
+n_br   <- c(rep(nrow(dr_br), 3), rep(nrow(dr_rate), 2))
+tab_br <- paste0(
+  "\\begin{table}[htbp]\n   \\caption{Effect on College Application Quality}\\label{tab: application quality}\n",
+  "   \\centerline{\\scalebox{0.85}{\n\\begin{tabular}{lccccc}\n\\toprule\n",
+  "      & \\multicolumn{3}{c}{Application Breadth} & \\multicolumn{2}{c}{Application Quality} \\\\\n",
+  "      \\cmidrule(lr){2-4}\\cmidrule(lr){5-6}\n",
+  "      & ", paste(names(br_show), collapse = " & "), " \\\\\n",
+  "      & ", paste0("(", seq_along(br_show), ")", collapse = " & "), " \\\\\n\\midrule\n",
+  row_tex("Treated", paste0(fmt(att_br), star(p_br))),
+  row_tex("", paste0("(", fmt(se_br), ")")),
+  "      \\midrule\n",
+  row_tex("Mean (pre-treatment)", fmt(pre_br)),
+  row_tex("Observations", format(n_br, big.mark = ",")),
+  "\\bottomrule\n\\end{tabular}\n   }}\n\\end{table}\n")
+writeLines(tab_br, "tables/did_app_breadth_quality_AM.tex")
+cat(tab_br)
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# uniform (sup-t) band across the 10 thresholds: cluster-mean influence
+# functions from each fit, one Mammen weight vector per draw shared across
+# thresholds (this is what makes the band simultaneous), critical value =
+# 95th percentile of the max |t*|
+psi_extract <- function(s) {
+  inf <- as.numeric(s$inf.function$simple.att)
+  dp  <- s$DIDparams
+  dta <- as.data.frame(dp$data)
+  dta <- dta[dta[[dp$tname]] == sort(unique(dta[[dp$tname]]))[1], ]
+  cl  <- unique(dta[, c(dp$idname, dp$clustervars)])[, 2]
+  stopifnot(length(cl) == length(inf))
+  n_cl <- aggregate(cl, by = list(cl), length)[, 2]
+  list(cmif = as.numeric(rowsum(inf, group = cl, reorder = TRUE) / n_cl),
+       labs = as.integer(sort(unique(cl))))
+}
+psis <- map(models_br[thr_cols], psi_extract)
+stopifnot(all(map_lgl(psis, function(p) identical(p$labs, psis[[1]]$labs))))
+Psi  <- do.call(cbind, map(psis, "cmif"))
+G_cl <- length(psis[[1]]$labs)
+
+att_k <- map_dbl(models_br[thr_cols], "overall.att")
+se_k  <- map_dbl(models_br[thr_cols], "overall.se")
+mammen <- function(n) {
+  k1 <- 0.5 * (1 - sqrt(5)); k2 <- 0.5 * (1 + sqrt(5))
+  pk <- (sqrt(5) + 1) / (2 * sqrt(5))
+  ifelse(runif(n) < pk, k1, k2)
+}
+set.seed(20260610)
+dev_mat <- matrix(NA_real_, 10000, length(thr_cols))
+for (b in seq_len(10000)) {
+  V <- mammen(G_cl)
+  dev_mat[b, ] <- as.numeric(crossprod(V, Psi)) / G_cl
+}
+# scaling self-check: the robust scale of the bootstrap deviations must
+# reproduce each threshold's own bootstrap SE (within 10%); a failure means
+# the influence-function extraction no longer matches the did internals and
+# the band would be wrong -- stop before drawing anything
+robust_scale <- function(b)
+  (quantile(b, 0.75, type = 1, na.rm = TRUE) - quantile(b, 0.25, type = 1, na.rm = TRUE)) /
+    (qnorm(0.75) - qnorm(0.25))
+stopifnot(all(abs(apply(dev_mat, 2, robust_scale) / se_k - 1) < 0.10))
+c_unif <- as.numeric(quantile(apply(abs(sweep(dev_mat, 2, se_k, "/")), 1, max),
+                              0.95, type = 1, na.rm = TRUE))
+
+lo <- att_k - c_unif * se_k
+hi <- att_k + c_unif * se_k
+pdf("figures/effect_uniform_errorbars.pdf", width = 7.2, height = 4.8)
+par(mar = c(4.4, 4.8, 1, 1), family = "serif")
+plot(1:10, att_k, type = "n", ylim = range(c(lo, hi)),
+     xlab = expression(paste("Number of programs applied to (", italic(k), ")")),
+     ylab = expression(paste("Effect on share applying to at least ", italic(k))),
+     xaxt = "n")
+axis(1, at = 1:10)
+abline(h = 0, col = "grey55", lty = 2)
+arrows(1:10, lo, 1:10, hi, length = 0.04, angle = 90, code = 3, col = "#1f77b4", lwd = 1.6)
+points(1:10, att_k, pch = 19, col = "#1f77b4", cex = 1.1)
+invisible(dev.off())
+```
+
+## Appendix: assignment to selective programs by quintile
+
+Same unconditional class shares as the program-selectivity table, with the
+selective (seat-filling) assignments partitioned into five selectivity
+quintiles, least selective (Q1) to most selective (Q5); the quintiles sum to
+the Full column.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+students[, `:=`(
+  Q1 = assigned_selective_q10 + assigned_selective_q20,
+  Q2 = assigned_selective_q30 + assigned_selective_q40,
+  Q3 = assigned_selective_q50 + assigned_selective_q60,
+  Q4 = assigned_selective_q70 + assigned_selective_q80,
+  Q5 = assigned_selective_q90 + assigned_selective_q100)]
+q_cols <- c(assigned = "All", assigned_full = "Full", assigned_not_full = "Not Full",
+            Q1 = "Q1", Q2 = "Q2", Q3 = "Q3", Q4 = "Q4", Q5 = "Q5")
+dr_q <- class_panel(students, names(q_cols))
+models_q <- fit_simple(dr_q, q_cols)
+cat(did_table(models_q, pre_means(dr_q, names(q_cols)), nrow(dr_q),
+              "Effect on Assignment to Selective Programs by Quintile",
+              "tab: effect admissions to selective programs by quintile",
+              "tables/did_by_quantile_selectivity_AM.tex",
+              pre_label = "Mean pre-treatment"))
 ```
