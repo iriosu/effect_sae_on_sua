@@ -1,0 +1,400 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Effect of SAE on SUA - PACE Robustness (Issue \#11)},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+
+\title{Effect of SAE on SUA - PACE Robustness (Issue \#11)}
+\author{}
+\date{\vspace{-2.5em}}
+
+\usepackage{booktabs}
+\begin{document}
+\maketitle
+
+Checks whether the female-skewed SAE effects are confounded by PACE
+(Programa de Acompañamiento y Acceso Efectivo), following issue \#11.
+PACE guarantees seats in the centralized system to top-15\% students of
+covered high-vulnerability schools; eligibility requires taking the
+entrance exam and applying, so PACE moves the applied/assigned/enrolled
+outcomes mechanically, and its benefits skew female (Carlana, Chiuri,
+Miglino and Tincani, 2026). Three tests: (i) does PACE exposure itself
+load on the SAE rollout within our design; (ii) does the gender effect
+survive when PACE-track admissions are removed from the outcomes; (iii)
+does it survive when ever-PACE schools are dropped. Sample, estimator,
+seed and table helpers are identical to \texttt{3\_effect\_sae\_am.Rmd}.
+
+\hypertarget{data-and-treatment}{%
+\subsection{Data and treatment}\label{data-and-treatment}}
+
+\hypertarget{pace-variables}{%
+\subsection{PACE variables}\label{pace-variables}}
+
+PACE flags come straight from the DEMRE student records, keyed to each
+student's first admission process (same convention as the panel's
+applied/assigned/enrolled in
+\texttt{1a\_data\_processing\_primary\_secondary.Rmd}):
+\texttt{is\_pace} marks students registered as PACE;
+\texttt{applied\_pace}/\texttt{assigned\_pace} mark use of the PACE
+application track; enrollment through PACE is an enrollment in the
+program the student was selected into via the PACE track. The
+\texttt{x\ PACE} outcomes remove the PACE channel from the corresponding
+baseline outcome: applications only on the PACE list, assignments
+through the PACE track, and enrollments following a PACE-track
+assignment do not count. The DEMRE PACE flag exists from the 2017
+process onward, so the 69-school pilot admissions of 2016 are not
+flagged; the diagnostics below print the counts by year to check
+coverage against the program's expansion (69 schools in 2014, 456 by
+2016; Carlana et al., 2026) and the 2023 change in the flag's coding.
+
+\begin{verbatim}
+## PACE-flagged students by admission process (first appearance):
+\end{verbatim}
+
+\begin{verbatim}
+##     year     N
+##    <num> <int>
+## 1:  2017 20066
+## 2:  2018 29146
+## 3:  2019 30488
+## 4:  2020 37147
+## 5:  2021 34753
+## 6:  2022 32979
+## 7:  2023 15437
+## 8:  2024 12853
+## 9:  2025 15485
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## is_pace vs. raw pace label:
+\end{verbatim}
+
+\begin{verbatim}
+##          pace_lbl
+## pace_flag   FALSE    TRUE    <NA>
+##         0 2482691       0 1439755
+##         1       0  228354       0
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## PACE-track use among flagged students:
+\end{verbatim}
+
+\begin{verbatim}
+##    applied_pace assigned_pace enrolled_pace
+##           <num>         <num>         <num>
+## 1:    0.4262943    0.08671624    0.06189075
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## assigned_pace outside the flagged group (should be ~0): 102
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## assigned_pace vs. selected at some preference on the PACE track:
+\end{verbatim}
+
+\begin{verbatim}
+##              sel_pace
+## assigned_pace   FALSE    TRUE
+##             0 4130896       0
+##             1       0   19904
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## are PACE-track selections inside the baseline outcomes? (flagged students):
+\end{verbatim}
+
+\begin{verbatim}
+##         assigned_pace
+## assigned      0      1
+##        0 150166      0
+##        1  58386  19802
+\end{verbatim}
+
+\begin{verbatim}
+##        applied_pace
+## applied      0      1
+##       0 123058      0
+##       1   7950  97346
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## PACE-only applicants (applied_pace & !applied_reg) by year:
+\end{verbatim}
+
+\begin{verbatim}
+## Empty data.table (0 rows and 2 cols): year,N
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## among enrolled with a PACE-track assignment, share enrolled in that program:
+\end{verbatim}
+
+\begin{verbatim}
+## [1] 0.8456959
+\end{verbatim}
+
+\hypertarget{headline-sample}{%
+\subsection{Headline sample}\label{headline-sample}}
+
+Same sample as the headline table: graduated on time, all four grades in
+the same school, cohorts entering 9th grade 2012--2021.
+
+\hypertarget{does-pace-exposure-load-on-the-sae-rollout}{%
+\subsection{Does PACE exposure load on the SAE
+rollout?}\label{does-pace-exposure-load-on-the-sae-rollout}}
+
+The direct confounding test: same design and estimator as the headline
+table, with the class's PACE exposure as the outcome. If PACE arrival is
+orthogonal to SAE adoption, these ATTs are zero.
+
+\begin{verbatim}
+## classes with any PACE-flagged student, by admission process (AGNO_9th + 4):
+\end{verbatim}
+
+\begin{verbatim}
+##    adm_year schools classes
+##       <num>   <int>   <int>
+## 1:     2017     354     354
+## 2:     2018     451     451
+## 3:     2019     453     453
+## 4:     2020     573     573
+## 5:     2021     576     576
+## 6:     2022     575     575
+## 7:     2023     567     567
+## 8:     2024     561     561
+## 9:     2025     620     620
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## PACE exposure of treated classes by event time (year - year_region_sae):
+\end{verbatim}
+
+\begin{verbatim}
+##     event_time  share_any share_any_imp share_students     n
+##          <num>      <num>         <num>          <num> <int>
+##  1:         -8 0.00000000    0.00000000     0.00000000   796
+##  2:         -7 0.03974221    0.03974221     0.03712357  1862
+##  3:         -6 0.12899160    0.12941176     0.11462385  2380
+##  4:         -5 0.17023026    0.17023026     0.15094132  2432
+##  5:         -4 0.19446705    0.19446705     0.17233626  2458
+##  6:         -3 0.21814516    0.21814516     0.18794711  2480
+##  7:         -2 0.22732721    0.22772673     0.18162634  2503
+##  8:         -1 0.22705696    0.22903481     0.14648637  2528
+##  9:          0 0.22161316    0.22592013     0.09615321  2554
+## 10:          1 0.22265473    0.22771506     0.07309211  2569
+## 11:          2 0.27147766    0.27720504     0.09017832  1746
+## 12:          3 0.27838828    0.28021978     0.08947952   546
+## 13:          4 0.32142857    0.32142857     0.10444052    28
+\end{verbatim}
+
+\begin{table}[htbp]
+   \caption{Effect of SAE on PACE Exposure}\label{tab: pace exposure did}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lccc}
+      \toprule
+                   & Share PACE & Any PACE & Any PACE (imp.)\\
+                   & (1) & (2) & (3)\\
+      \midrule
+      Treated & -0.107$^{***}$ & 0.014 & 0.019\\
+       & (0.015) & (0.012) & (0.012)\\
+      \midrule
+      Mean (pre-treatment) & 0.139 & 0.170 & 0.170\\
+      Observations & 28,483 & 28,483 & 28,483\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\hypertarget{gender-balance-of-the-pace-channel}{%
+\subsection{Gender balance of the PACE
+channel}\label{gender-balance-of-the-pace-channel}}
+
+\begin{verbatim}
+## female share: sample = 0.522 | PACE-flagged = 0.546 | applied via PACE = 0.610 | assigned via PACE = 0.651 | enrolled via PACE = 0.662
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## share of each student outcome accounted for by the PACE track
+##  (students in treated classes, post-treatment):
+\end{verbatim}
+
+\begin{verbatim}
+##    female   applied applied_pace_only  assigned assigned_pace  enrolled
+##     <int>     <num>             <num>     <num>         <num>     <num>
+## 1:      0 0.4584122                 0 0.3732637    0.00642045 0.3226854
+## 2:      1 0.6010973                 0 0.4583871    0.01326168 0.3801663
+##    enrolled_pace
+##            <num>
+## 1:   0.005331679
+## 2:   0.010836419
+\end{verbatim}
+
+\hypertarget{heterogeneity-by-gender-removing-the-pace-channel}{%
+\subsection{Heterogeneity by gender, removing the PACE
+channel}\label{heterogeneity-by-gender-removing-the-pace-channel}}
+
+Class means computed separately over the female and male students of
+each class, as in the gender table of \texttt{3\_effect\_sae\_am.Rmd};
+students with unknown sex are dropped and the control is the subgroup
+class size. Baseline outcomes replicate the draft's gender table (a
+check that this file reproduces it exactly); the \texttt{x\ PACE}
+outcomes remove PACE-track applications, assignments and enrollments. If
+the female effect is PACE, it shrinks toward zero here.
+
+\begin{table}[htbp]
+   \caption{Regression Results by Gender, Excluding the PACE Channel}\label{tab: results by gender excl pace}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcccccc}
+      \toprule
+      & \multicolumn{2}{c}{Applied}
+      & \multicolumn{2}{c}{Assigned}
+      & \multicolumn{2}{c}{Enrolled} \\
+      \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+                   & Female & Male & Female & Male & Female & Male \\
+                   & (1) & (2) & (3) & (4) & (5) & (6)\\
+      \midrule
+      Treated & 0.078$^{***}$ & 0.020$^{**}$ & 0.086$^{***}$ & 0.035$^{***}$ & 0.072$^{***}$ & 0.027$^{***}$\\
+       & (0.008) & (0.009) & (0.010) & (0.006) & (0.019) & (0.008)\\
+      \midrule
+      Mean (pre-treatment) & 0.464 & 0.396 & 0.314 & 0.307 & 0.249 & 0.257\\
+      Observations & 27,708 & 27,240 & 27,708 & 27,240 & 27,708 & 27,240\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\hypertarget{heterogeneity-by-gender-excluding-ever-pace-schools}{%
+\subsection{Heterogeneity by gender, excluding ever-PACE
+schools}\label{heterogeneity-by-gender-excluding-ever-pace-schools}}
+
+Belt and braces: drop every school with a PACE-flagged class at any
+point in the sample (this removes the most vulnerable treated schools,
+so the estimand changes; the comparison of interest is the female/male
+gap, not the level).
+
+636 ever-PACE schools dropped; 0.249 of treated classes belong to them.
+
+\begin{table}[htbp]
+   \caption{Regression Results by Gender, Excluding Ever-PACE Schools}\label{tab: results by gender excl pace schools}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcccccc}
+      \toprule
+      & \multicolumn{2}{c}{Applied}
+      & \multicolumn{2}{c}{Assigned}
+      & \multicolumn{2}{c}{Enrolled} \\
+      \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+                   & Female & Male & Female & Male & Female & Male \\
+                   & (1) & (2) & (3) & (4) & (5) & (6)\\
+      \midrule
+      Treated & 0.072$^{***}$ & 0.007 & 0.069$^{***}$ & 0.017$^{**}$ & 0.058$^{***}$ & 0.011\\
+       & (0.009) & (0.010) & (0.006) & (0.008) & (0.013) & (0.009)\\
+      \midrule
+      Mean (pre-treatment) & 0.510 & 0.452 & 0.374 & 0.370 & 0.291 & 0.307\\
+      Observations & 21,587 & 21,177 & 21,587 & 21,177 & 21,587 & 21,177\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\hypertarget{summary}{%
+\subsection{Summary}\label{summary}}
+
+\begin{verbatim}
+## 
+## -- Applied --
+## baseline (replication)       female   0.078 (0.008) | male   0.020 (0.009)
+## excl. PACE channel           female   0.078 (0.008) | male   0.020 (0.009)
+## excl. ever-PACE schools      female   0.072 (0.009) | male   0.007 (0.010)
+## 
+## -- Assigned --
+## baseline (replication)       female   0.075 (0.007) | male   0.030 (0.006)
+## excl. PACE channel           female   0.086 (0.010) | male   0.035 (0.006)
+## excl. ever-PACE schools      female   0.069 (0.006) | male   0.017 (0.008)
+## 
+## -- Enrolled --
+## baseline (replication)       female   0.064 (0.017) | male   0.024 (0.008)
+## excl. PACE channel           female   0.072 (0.019) | male   0.027 (0.008)
+## excl. ever-PACE schools      female   0.058 (0.013) | male   0.011 (0.009)
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## -- SAE effect on PACE exposure --
+\end{verbatim}
+
+\begin{verbatim}
+## Share PACE                    -0.107 (0.015)
+## Any PACE                       0.014 (0.012)
+## Any PACE (imp.)                0.019 (0.012)
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Baseline rows must match tables/did_by_gender_AM.tex; if they do not,
+##  the sample replication is off and the other rows are not comparable.
+\end{verbatim}
+
+\end{document}

@@ -1,0 +1,312 @@
+---
+title: "Effect of SAE on SUA - Gender Mechanisms, Phase 1 (Issue #14)"
+output:
+  pdf_document:
+    keep_tex: true
+    extra_dependencies: ["booktabs"]
+  html_document: default
+---
+
+Phase 1 of issue #14: where in the pipeline does the female effect originate,
+and which of two channels moves — application behavior (frictions/uncertainty:
+portfolio size, application mistakes, targeting of attainable programs) or
+admission scores (NEM/ranking percentiles vs. LM). Three gender tables: (A)
+application behavior, (B) admission-score percentiles, (C) upstream margins on
+entrant classes (retention, on-time graduation), the only section whose sample
+is not conditioned on graduating. Sample, estimator, seed and table helpers
+are identical to `3_effect_sae_am.Rmd`; the `Applied` column of Table A must
+match the draft's gender table (replication guard).
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# Clean ---------------------------------------------------------------
+rm(list = ls())
+
+# Libraries ---------------------------------------------------------------
+library(dplyr)
+library(magrittr)
+library(purrr)
+library(data.table)
+library(did)
+
+start_year <- 2012
+end_year <- 2021
+media <- c(310, 410, 510, 610, 710, 810)
+clustering_var <- "region"
+
+# shared Dropbox data folder (resolves to each user's own Dropbox)
+home <- ifelse(Sys.getenv("USERPROFILE") != "", Sys.getenv("USERPROFILE"), path.expand("~"))
+data_path <- file.path(home, "Dropbox", "Effect SAE on SUA", "data")
+dir.create("tables", showWarnings = FALSE)
+
+outcomes_app <- c(
+  scored_lm                      = "P(Take Exam)",
+  applied                        = "Applied",
+  num_apps_reg                   = "Num. Apps",
+  pct_valid_reg                  = "Share Valid",
+  pct_apps_above_prev_cutoff_reg = "Share Above Cutoff"
+)
+outcomes_sco <- c(
+  nem_pct          = "NEM Pct.",
+  ranking_pct      = "Ranking Pct.",
+  nem_pct_cond     = "NEM Pct. (takers)",
+  ranking_pct_cond = "Ranking Pct. (takers)",
+  lm_pct_cond      = "LM Pct. (takers)"
+)
+outcomes_grad <- c(
+  ret4         = "4 Years Same School",
+  on_time_grad = "Graduated On Time",
+  grad_ever    = "Graduated"
+)
+outcomes <- c(outcomes_app, outcomes_sco)
+
+# helpers: table formatting (verbatim from 3_effect_sae_am.Rmd)
+fmt  <- function(x) sub("^-(0\\.000)$", "\\1", sprintf("%.3f", x))
+star <- function(p) ifelse(p < .01, "$^{***}$",
+                    ifelse(p < .05, "$^{**}$",
+                    ifelse(p < .1,  "$^{*}$", "")))
+row_tex <- function(lbl, vals) paste0("      ", lbl, " & ", paste(vals, collapse = " & "), "\\\\\n")
+
+# helper: collapse students to school x cohort classes (class means over the
+# students passed in; num_students = their count)
+class_panel <- function(students, cols = names(outcomes)) {
+  d <- students[, c(.(num_students = .N), lapply(.SD, mean, na.rm = TRUE)),
+                by = .(rbd, AGNO_9th), .SDcols = cols]
+  d[, year := AGNO_9th - 1]
+  d <- merge(d, sch[, .(rbd, year_region_sae, region)], by = "rbd", all.x = TRUE)
+  d[year_region_sae > max(year), year_region_sae := 0]
+  d
+}
+
+# helper: two columns per outcome (female / male), verbatim from 3_effect_sae_am.Rmd
+did_table_pair <- function(res_a, res_b, lab_a, lab_b, means_a, means_b, n_a, n_b,
+                           caption, label, file) {
+  att_a <- map_dbl(res_a, "overall.att"); se_a <- map_dbl(res_a, "overall.se")
+  att_b <- map_dbl(res_b, "overall.att"); se_b <- map_dbl(res_b, "overall.se")
+  p_a <- 2 * pnorm(-abs(att_a / se_a))
+  p_b <- 2 * pnorm(-abs(att_b / se_b))
+  k <- length(res_a)
+  interleave <- function(a, b) as.vector(rbind(a, b))
+  tab <- paste0(
+    "\\begin{table}[htbp]\n   \\caption{", caption, "}\\label{", label, "}\n",
+    "   \\centerline{\\scalebox{0.85}{\\begin{tabular}{l", strrep("c", 2 * k), "}\n      \\toprule\n",
+    paste0("      & \\multicolumn{2}{c}{", names(res_a), "}", collapse = "\n"), " \\\\\n      ",
+    paste0("\\cmidrule(lr){", 2 * seq_len(k), "-", 2 * seq_len(k) + 1, "}", collapse = ""), "\n",
+    "                   & ", paste(rep(c(lab_a, lab_b), k), collapse = " & "), " \\\\\n",
+    "                   & ", paste0("(", seq_len(2 * k), ")", collapse = " & "), "\\\\\n      \\midrule\n",
+    row_tex("Treated", interleave(paste0(fmt(att_a), star(p_a)), paste0(fmt(att_b), star(p_b)))),
+    row_tex("", interleave(paste0("(", fmt(se_a), ")"), paste0("(", fmt(se_b), ")"))),
+    "      \\midrule\n",
+    row_tex("Mean (pre-treatment)", interleave(fmt(means_a), fmt(means_b))),
+    row_tex("Observations", rep(c(format(n_a, big.mark = ","), format(n_b, big.mark = ",")), k)),
+    "      \\bottomrule\n   \\end{tabular}}}\n\\end{table}\n")
+  writeLines(tab, file)
+  tab
+}
+```
+
+## Data and treatment
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# Student panel. Treatment: a school joins SAE the first year 9th grade in its
+# region is assigned through the system; never-treated = private (DEPE 4).
+# Identical to 3_effect_sae_am.Rmd, keeping the application-behavior and
+# score-percentile columns.
+df <- readRDS(file.path(data_path, "panel_9-12_2010_2021.rds"))
+setDT(df)
+df <- df[, .(MRUN, AGNO, RBD, COD_GRADO, COD_ENSE, year_rbd_first_sae,
+             graduated_secondary, COD_REG_RBD, COD_DEPE, GEN_ALU,
+             scored_lm, applied, num_apps_reg, pct_valid_reg,
+             pct_apps_above_prev_cutoff_reg, nem_pct, ranking_pct, lm_pct)]
+
+# conditional versions: percentile among students with a computed score, and
+# non-registrants excluded; the unconditional versions carry zeros
+df[, nem_pct_cond     := fifelse(nem_pct > 0, nem_pct, NA_real_)]
+df[, ranking_pct_cond := fifelse(ranking_pct > 0, ranking_pct, NA_real_)]
+df[, lm_pct_cond      := fifelse(lm_pct > 0, lm_pct, NA_real_)]
+
+sch <- unique(df[, .(RBD, year_rbd_first_sae, COD_REG_RBD, COD_DEPE)])[, .(
+  yfs    = { v <- year_rbd_first_sae[!is.na(year_rbd_first_sae)]; if (length(v)) as.numeric(v[1]) else 0 },
+  region = { v <- COD_REG_RBD[!is.na(COD_REG_RBD)]; if (length(v)) as.integer(v[1]) else NA_integer_ },
+  depe   = { v <- COD_DEPE[!is.na(COD_DEPE)]; if (length(v)) as.integer(names(which.max(table(v)))) else NA_integer_ }
+), by = RBD]
+setnames(sch, "RBD", "rbd")
+
+sae <- readRDS(file.path(data_path, "sae_data_2016_2023.rds"))
+setDT(sae)
+nine <- sae[COD_ENSE %in% media & COD_GRADO == 1, .(g9 = as.numeric(min(AGNO))), by = RBD]
+setnames(nine, "RBD", "rbd")
+sch <- merge(sch, nine, by = "rbd", all.x = TRUE)
+reg9 <- sch[!is.na(g9), .(g9r = min(g9)), by = region][!is.na(region)]
+sch <- merge(sch, reg9, by = "region", all.x = TRUE)
+sch[, elig := fifelse(!is.na(depe), as.integer(depe != 4), as.integer(yfs > 0 | !is.na(g9)))]
+sch[, year_region_sae := fifelse(elig == 1 & !is.na(g9r), as.numeric(g9r), 0)]
+rm(sae, nine, reg9)
+
+# regular-track students; high school records for grades 9-12
+keep <- df[, all(COD_ENSE == 110 | COD_ENSE %in% media), by = MRUN][V1 == TRUE, MRUN]
+hs <- df[MRUN %in% keep & AGNO >= 2010 & AGNO <= 2024 &
+           COD_ENSE %in% media & COD_GRADO %in% 1:4, .(MRUN, AGNO, RBD, COD_GRADO)]
+setorder(hs, MRUN, AGNO, COD_GRADO)
+```
+
+## Headline sample
+
+Same sample as the headline table: graduated on time, all four grades in the
+same school, cohorts entering 9th grade `r start_year`--`r end_year`; class
+means computed separately over the female and male students of each class.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+anchor <- hs[COD_GRADO == 1, .(rbd = RBD[1], AGNO_9th = AGNO[1]), by = MRUN]
+hs1 <- merge(hs, anchor[, .(MRUN, rbd)], by = "MRUN")
+per <- hs1[, .(ng = uniqueN(COD_GRADO[RBD == rbd]), nsch = uniqueN(RBD)), by = MRUN]
+per <- merge(per, anchor, by = "MRUN")
+stayers <- per[ng == 4 & nsch == 1, .(MRUN, rbd, AGNO_9th)]
+setkey(stayers, MRUN)
+grad <- hs1[MRUN %in% stayers$MRUN, .(grad_year = max(AGNO)), by = MRUN]
+vals <- df[MRUN %in% stayers$MRUN,
+           lapply(.SD, function(x) { v <- x[!is.na(x)]; if (length(v)) as.numeric(v[1]) else NA_real_ }),
+           by = MRUN, .SDcols = c(names(outcomes), "graduated_secondary", "GEN_ALU")]
+students <- merge(stayers, vals, by = "MRUN")
+students <- merge(students, grad, by = "MRUN")
+students <- students[graduated_secondary == 1 & grad_year == AGNO_9th + 3 &
+                       AGNO_9th >= start_year & AGNO_9th <= end_year]
+
+female <- students[GEN_ALU == 2]
+male   <- students[GEN_ALU == 1]
+dr_f <- class_panel(female, names(outcomes))
+dr_m <- class_panel(male,   names(outcomes))
+
+common_args <- list(
+  tname = "year",
+  idname = "rbd",
+  gname = "year_region_sae",
+  xformla = ~num_students,
+  control_group = "notyettreated",
+  anticipation = 2,
+  base_period = "universal",
+  est_method = "dr",
+  allow_unbalanced_panel = TRUE,
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+# same seed for each bootstrap so results do not depend on the order the
+# models are run
+run_gender <- function(dat, ycols) {
+  common_args$data <- dat
+  res <- map(ycols, function(y) {
+    set.seed(20260610)
+    m <- do.call(att_gt, c(list(yname = y), common_args))
+    suppressWarnings(aggte(m, type = "simple", na.rm = TRUE))
+  })
+  names(res) <- ycols
+  res
+}
+
+means_pre <- function(dat, ycols) {
+  dat[year_region_sae > 0 & year < year_region_sae,
+      sapply(.SD, mean, na.rm = TRUE), .SDcols = ycols]
+}
+```
+
+## A. Application behavior
+
+`Num. Apps` counts regular-track applications over all class members (zero for
+non-applicants); `Share Valid` and `Share Above Cutoff` are conditional on
+applying (share of the student's listed programs that are valid, and whose
+previous-year cutoff the student's score clears), so they capture portfolio
+quality among appliers. If application frictions bind more on women, the
+female effect starts at the take-exam/apply margin and new applicants list
+attainable programs.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+models_f_app <- run_gender(dr_f, names(outcomes_app))
+models_m_app <- run_gender(dr_m, names(outcomes_app))
+names(models_f_app) <- names(models_m_app) <- outcomes_app
+
+cat(did_table_pair(models_f_app, models_m_app, "Female", "Male",
+                   means_pre(dr_f, names(outcomes_app)), means_pre(dr_m, names(outcomes_app)),
+                   nrow(dr_f), nrow(dr_m),
+                   "Application Behavior by Gender",
+                   "tab: gender application behavior", "tables/did_by_gender_app_behavior_AM.tex"))
+```
+
+## B. Admission-score percentiles
+
+NEM and ranking percentiles are computed within admission year; the
+unconditional versions assign zero to students without a computed score, so
+they mix the registration margin with rank position. The `(takers)` versions
+condition on having a score. If the rank-based channel operates, girls'
+NEM/ranking percentiles rise while LM percentiles among takers do not.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+models_f_sco <- run_gender(dr_f, names(outcomes_sco))
+models_m_sco <- run_gender(dr_m, names(outcomes_sco))
+names(models_f_sco) <- names(models_m_sco) <- outcomes_sco
+
+cat(did_table_pair(models_f_sco, models_m_sco, "Female", "Male",
+                   means_pre(dr_f, names(outcomes_sco)), means_pre(dr_m, names(outcomes_sco)),
+                   nrow(dr_f), nrow(dr_m),
+                   "Admission-Score Percentiles by Gender",
+                   "tab: gender score percentiles", "tables/did_by_gender_scores_AM.tex"))
+```
+
+## C. Upstream margins: entrant classes
+
+One observation per school x 9th-grade entering cohort, all entrants counted
+(the only sample in the paper not conditioned on graduating). `4 Years Same
+School` is the headline sample's retention condition; `Graduated On Time`
+requires reaching 12th grade at entry year + 3 and graduating; `Graduated`
+drops the timing requirement. If SAE keeps girls on track through secondary
+school, more of them reach the college margin.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+g12 <- hs[COD_GRADO == 4, .(g12_year = min(AGNO)), by = MRUN]
+vals_e <- df[MRUN %in% anchor$MRUN,
+             lapply(.SD, function(x) { v <- x[!is.na(x)]; if (length(v)) as.numeric(v[1]) else NA_real_ }),
+             by = MRUN, .SDcols = c("graduated_secondary", "GEN_ALU")]
+entrants <- merge(anchor, per[, .(MRUN, ng, nsch)], by = "MRUN")
+entrants <- merge(entrants, vals_e, by = "MRUN", all.x = TRUE)
+entrants <- merge(entrants, g12, by = "MRUN", all.x = TRUE)
+entrants[, grad_ever    := as.integer(coalesce(graduated_secondary, 0) == 1)]
+entrants[, on_time_grad := as.integer(grad_ever == 1 & !is.na(g12_year) & g12_year == AGNO_9th + 3)]
+entrants[, ret4         := as.integer(ng == 4 & nsch == 1)]
+entrants <- entrants[AGNO_9th >= start_year & AGNO_9th <= end_year]
+
+female_e <- entrants[GEN_ALU == 2]
+male_e   <- entrants[GEN_ALU == 1]
+dr_f_e <- class_panel(female_e, names(outcomes_grad))
+dr_m_e <- class_panel(male_e,   names(outcomes_grad))
+
+models_f_grad <- run_gender(dr_f_e, names(outcomes_grad))
+models_m_grad <- run_gender(dr_m_e, names(outcomes_grad))
+names(models_f_grad) <- names(models_m_grad) <- outcomes_grad
+
+cat(did_table_pair(models_f_grad, models_m_grad, "Female", "Male",
+                   means_pre(dr_f_e, names(outcomes_grad)), means_pre(dr_m_e, names(outcomes_grad)),
+                   nrow(dr_f_e), nrow(dr_m_e),
+                   "Secondary-School Progression by Gender (Entrant Classes)",
+                   "tab: gender progression entrants", "tables/did_by_gender_graduation_AM.tex"))
+```
+
+## Summary
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+show <- function(res_f, res_m, labs) {
+  for (y in labs) cat(sprintf("%-24s female %7.3f (%.3f) | male %7.3f (%.3f)\n", y,
+                              res_f[[y]]$overall.att, res_f[[y]]$overall.se,
+                              res_m[[y]]$overall.att, res_m[[y]]$overall.se))
+}
+cat("-- A. Application behavior --\n"); show(models_f_app, models_m_app, outcomes_app)
+cat("\n-- B. Score percentiles --\n");  show(models_f_sco, models_m_sco, outcomes_sco)
+cat("\n-- C. Entrant progression --\n"); show(models_f_grad, models_m_grad, outcomes_grad)
+cat("\nGuard: the Applied column must match the draft gender table",
+    "(female 0.078, male 0.020); if it does not, the sample replication is off.\n")
+```

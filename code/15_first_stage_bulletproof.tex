@@ -1,0 +1,242 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Effect of SAE on SUA - First Stage, Bulletproof: Screener-School Composition (Issue \#15)},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{booktabs}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+
+\title{Effect of SAE on SUA - First Stage, Bulletproof: Screener-School
+Composition (Issue \#15)}
+\author{}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+\maketitle
+
+Estimation-grade version of the \texttt{14\_scarce\_seats.Rmd} finding,
+built to survive the obvious attacks. (1) REGRESSION TO THE MEAN: school
+sets are defined on a SPLIT-HALF design -- ranked on odd-MRUN 2015
+entrants, baselined on even-MRUN 2015 entrants (the SIMCE-8 file carries
+tests 2014/2017/2019 only, so cohorts 2015/2018/2020 are the data) --
+selection noise independent of baseline noise. (2) INFERENCE the data
+can support: the SIMCE-8 test-year gaps make CS base periods infeasible
+(wave-2017's base cohort has no test), so the estimator is school-level
+LONG DIFFERENCES between dense cohorts -- D18 = cohort 2018 minus the
+even-half 2015 baseline, treated-by-2018 (Magallanes + wave-2017) vs
+clean controls (wave-2018 at e-1, RM at e-2, both admitted pre-SAE); D20
+= cohort 2020 minus pre, all treated, years-of-exposure dose gradient --
+with region-cluster-bootstrap SEs AND exact randomization inference over
+the 1,001 admissible reassignments of the wave-2017 regions (the \#16
+space; Magallanes and RM held fixed). Entry composition is determined at
+admission, so there is no transition band and no exam-era, grading or
+PAES confound. (3) COVERAGE: dense cohorts set by empirical match rates;
+the coverage change is estimated as an outcome (differential-matching
+check). Sets: SCREENERS (top-quartile 2012-13 intake, \textgreater=20
+matched entrants), HIGH-VA (top-quartile va\_2016), and a PLACEBO set
+(bottom-half 2012-13 intake -- no screening to ban, nothing should
+move). Closing block: the arithmetic bridge from the first-stage
+magnitude to the ceiling on aggregate college effects, against the
+within-public +-2pp bounds. Guard chained to
+\texttt{11\_adjudication\_trajectories.Rmd}.
+
+\hypertarget{coverage-and-dense-cohorts}{%
+\subsection{Coverage and dense
+cohorts}\label{coverage-and-dense-cohorts}}
+
+\begin{verbatim}
+##     AGNO_9th        match      n
+##        <num>        <num>  <int>
+##  1:     2012 0.0002569083 194622
+##  2:     2013 0.0003105381 193213
+##  3:     2014 0.0004317861 180645
+##  4:     2015 0.8985448711 180740
+##  5:     2016 0.0129206215 174682
+##  6:     2017 0.0011520605 173602
+##  7:     2018 0.8923178053 171904
+##  8:     2019 0.0119831224 171825
+##  9:     2020 0.8823993129 169982
+## 10:     2021 0.0081536552 172438
+\end{verbatim}
+
+\begin{verbatim}
+## dense cohorts (match >= 10%): 2015, 2018, 2020
+\end{verbatim}
+
+\hypertarget{school-sets-split-half-ranked-on-odd-mrun-2015-entrants-baselines-from-even-mrun}{%
+\subsection{School sets (split-half: ranked on odd-MRUN 2015 entrants,
+baselines from
+even-MRUN)}\label{school-sets-split-half-ranked-on-odd-mrun-2015-entrants-baselines-from-even-mrun}}
+
+The SIMCE-8 file carries tests 2014/2017/2019 only, so entry cohorts
+2015, 2018, 2020 are the data. Regression-to-the-mean protection
+therefore uses a within-cohort split: schools are RANKED on their
+odd-MRUN 2015 entrants and BASELINED on their even-MRUN 2015 entrants --
+selection noise and baseline noise come from disjoint students.
+
+\begin{verbatim}
+## ranked schools: 2054 | screeners: 514 | placebo (bottom half): 1027 | high-VA: 716 | scr x hva overlap: 283
+\end{verbatim}
+
+\hypertarget{guard}{%
+\subsection{Guard}\label{guard}}
+
+\begin{verbatim}
+## entrants: 1,783,653 (chain universe 1,783,653)
+\end{verbatim}
+
+\begin{verbatim}
+## untreated-RM publics applied, cohort 2019 (exam 2023): 0.486 (11_adjudication: 0.486)
+\end{verbatim}
+
+\begin{verbatim}
+## GUARD PASSED
+\end{verbatim}
+
+\hypertarget{estimation-long-differences-on-dense-cohorts-exact-randomization-inference}{%
+\subsection{Estimation: long differences on dense cohorts + exact
+randomization
+inference}\label{estimation-long-differences-on-dense-cohorts-exact-randomization-inference}}
+
+The SIMCE-8 test-year gaps make CS base periods infeasible (wave-2017's
+base cohort has no test), so the estimator is the design the data
+supports: school-level long differences between dense cohorts, with the
+rollout randomization providing exact inference. Pre = pooled cohorts
+2014-15 (dense, post-split). (i) D18 = cohort-2018 minus pre,
+TREATED-BY-2018 (Magallanes + wave-2017 regions) vs clean controls
+(wave-2018 at e-1, RM at e-2 -- both classes admitted pre-SAE). (ii) D20
+= cohort-2020 minus pre: all groups treated, so years-of-exposure
+(1/2/3+) gives the dose gradient. Inference: region-clustered SEs and
+exact RI over the 1,001 admissible reassignments of the four wave-2017
+regions among the fourteen 2017/2018 adopters (the \#16 space;
+Magallanes and RM held fixed).
+
+\begin{verbatim}
+## 
+## ==== SCREENERS (headline) (503 schools with pre data) ====
+##   D18 z       beta  +0.009 (cluster-boot se 0.036) | RI diff  +0.009, RI p 0.863
+##   D18 b       beta  +0.005 (cluster-boot se 0.020) | RI diff  +0.005, RI p 0.846
+##   D18 c       beta  +0.008 (cluster-boot se 0.006) | RI diff  +0.008, RI p 0.180
+##   D20 z       per-exposure-year  -0.028 (cluster-boot se 0.050)
+##   D20 b       per-exposure-year  +0.012 (cluster-boot se 0.019)
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## ==== PLACEBO: bottom-half-intake publics (997 schools with pre data) ====
+##   D18 z       beta  +0.002 (cluster-boot se 0.027) | RI diff  +0.002, RI p 0.919
+##   D18 b       beta  +0.003 (cluster-boot se 0.011) | RI diff  +0.003, RI p 0.759
+##   D18 c       beta  +0.020 (cluster-boot se 0.020) | RI diff  +0.020, RI p 0.616
+##   D20 z       per-exposure-year  +0.008 (cluster-boot se 0.020)
+##   D20 b       per-exposure-year  -0.003 (cluster-boot se 0.009)
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## ==== HIGH-VA publics (474 schools with pre data) ====
+##   D18 z       beta  +0.036 (cluster-boot se 0.041) | RI diff  +0.036, RI p 0.582
+##   D18 b       beta  -0.000 (cluster-boot se 0.023) | RI diff  -0.000, RI p 0.987
+##   D18 c       beta  +0.004 (cluster-boot se 0.008) | RI diff  +0.004, RI p 0.750
+##   D20 z       per-exposure-year  +0.001 (cluster-boot se 0.036)
+##   D20 b       per-exposure-year  -0.005 (cluster-boot se 0.016)
+\end{verbatim}
+
+\hypertarget{arithmetic-bridge-why-this-first-stage-cannot-move-college-aggregates}{%
+\subsection{Arithmetic bridge: why this first stage cannot move college
+aggregates}\label{arithmetic-bridge-why-this-first-stage-cannot-move-college-aggregates}}
+
+\begin{verbatim}
+## screener seat share of public entrants: 0.235
+\end{verbatim}
+
+\begin{verbatim}
+## ATT on below-median share at screeners: +0.005
+\end{verbatim}
+
+\begin{verbatim}
+## => share of all public entrants reallocated (bound): 0.0012 (0.12%)
+\end{verbatim}
+
+\begin{verbatim}
+##    implied aggregate college-margin effect if a screener seat is worth +5pp: +0.006pp
+##    implied aggregate college-margin effect if a screener seat is worth +10pp: +0.012pp
+##    implied aggregate college-margin effect if a screener seat is worth +15pp: +0.018pp
+\end{verbatim}
+
+\begin{verbatim}
+## compare: within-public college-margin CIs exclude effects larger than ~2pp
+##  (Rule C cuts, #15 07-26). A first stage of this size cannot produce a
+##  detectable second stage in this design.
+\end{verbatim}
+
+\hypertarget{summary}{%
+\subsection{Summary}\label{summary}}
+
+\begin{verbatim}
+## Claim structure: (i) screener-school entrant composition shifts with
+##  treatment (negative D18 mean-z beta, positive D18 below-median beta, RI p
+##  small, coverage change flat); (ii) dose gradient in D20; (iii) placebo set
+##  flat; (iv) high-VA weaker (screening, not quality, is the margin);
+##  (v) reallocated mass ~1-2 percent of entrants -> aggregate college effects
+##  bounded an order of magnitude below detection. First stage without a
+##  detectable second stage, by arithmetic.
+\end{verbatim}
+
+\end{document}

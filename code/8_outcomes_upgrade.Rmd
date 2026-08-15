@@ -1,0 +1,612 @@
+---
+title: "Effect of SAE on SUA - Outcomes Upgrade (Issue #15)"
+output:
+  pdf_document:
+    keep_tex: true
+    extra_dependencies: ["booktabs"]
+  html_document: default
+---
+
+Outcomes upgrade of issue #15, in three parts. (A1) Net-enrollment margin:
+enrollment in any higher-education institution the year after on-time
+graduation, from the SIES enrollment records (`panel_enrollment_2007_2024.rds`,
+all institutions 2007--2024), split into the substitution margin (enrolled
+outside the centralized system) and destination type (CRUCH universities,
+private universities, professional institutes, technical centers), with
+institutional accreditation as a quality proxy; overall and by gender. (A2)
+Unconditional class ITT: the headline and gender tables re-estimated on all
+9th-grade entrants keyed to their entry class, dropping the single-school,
+graduation, and on-time filters (the planned robustness check of Appendix 7.4),
+plus the net-enrollment margin on the same entrant classes. (A5) LM
+decomposition: the headline LM outcome split into the taking margin
+(P(take exam)) and the score conditional on taking, with the ranking-score
+percentile as the GPA-based sanity outcome (issues #8/#10). Sample, estimator,
+seed and table helpers are identical to `3_effect_sae_am.Rmd`; the headline
+table is replicated first as a guard.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# Clean ---------------------------------------------------------------
+rm(list = ls())
+
+# Libraries ---------------------------------------------------------------
+library(dplyr)
+library(magrittr)
+library(purrr)
+library(data.table)
+library(did)
+
+start_year <- 2012
+end_year <- 2021
+# last entry cohort whose first admission year (entry + 4) falls inside the
+# SIES enrollment records (2007-2024); one year earlier for the two-year window
+hei_end <- 2020
+hei_end2 <- 2019
+media <- c(310, 410, 510, 610, 710, 810)
+clustering_var <- "region"
+
+# shared Dropbox data folder (resolves to each user's own Dropbox)
+home <- ifelse(Sys.getenv("USERPROFILE") != "", Sys.getenv("USERPROFILE"), path.expand("~"))
+data_path <- file.path(home, "Dropbox", "Effect SAE on SUA", "data")
+dir.create("tables", showWarnings = FALSE)
+
+# headline outcomes (replication guard) -----------------------------------
+outcomes <- c(
+  gpa_secondary  = "GPA",
+  scored_lm      = "P(Take Exam)",
+  prom_lm_actual = "Average LM",
+  applied        = "Applied",
+  assigned       = "Assigned",
+  enrolled       = "Enrolled"
+)
+# A5: LM decomposition on the headline sample
+outcomes_lm <- c(
+  scored_lm        = "P(Take Exam)",
+  prom_lm_actual   = "Average LM",
+  lm_pct_cond      = "LM Pct. (takers)",
+  ranking_pct      = "Ranking Pct.",
+  ranking_pct_cond = "Ranking Pct. (takers)"
+)
+# A1: net-enrollment margin (headline sample, entry cohorts <= hei_end)
+outcomes_hei <- c(
+  enrolled       = "Enrolled SUA",
+  enrolled_any   = "Any HEI",
+  enrolled_out   = "Outside SUA",
+  enrolled_cruch = "CRUCH",
+  enrolled_upriv = "Private Univ.",
+  enrolled_ip    = "IP",
+  enrolled_cft   = "CFT",
+  enrolled_acc   = "Accredited"
+)
+outcomes_hei_g <- c(
+  enrolled     = "Enrolled SUA",
+  enrolled_any = "Any HEI",
+  enrolled_out = "Outside SUA",
+  enrolled_tec = "IP or CFT",
+  enrolled_acc = "Accredited"
+)
+# A2: unconditional entrant classes
+outcomes_ent <- c(
+  on_time_grad   = "Grad. On Time",
+  gpa_secondary  = "GPA",
+  scored_lm      = "P(Take Exam)",
+  prom_lm_actual = "Average LM",
+  applied        = "Applied",
+  assigned       = "Assigned",
+  enrolled       = "Enrolled"
+)
+outcomes_ent_hei <- c(
+  enrolled     = "Enrolled SUA",
+  enrolled_any = "Any HEI",
+  enrolled_out = "Outside SUA",
+  enrolled_tec = "IP or CFT"
+)
+hei_cols <- c("enrolled_any", "enrolled_out", "enrolled_cruch", "enrolled_upriv",
+              "enrolled_ip", "enrolled_cft", "enrolled_tec", "enrolled_acc",
+              "enrolled_any2", "enrolled_out2")
+
+# helpers: table formatting (verbatim from 3_effect_sae_am.Rmd)
+fmt  <- function(x) sub("^-(0\\.000)$", "\\1", sprintf("%.3f", x))
+star <- function(p) ifelse(p < .01, "$^{***}$",
+                    ifelse(p < .05, "$^{**}$",
+                    ifelse(p < .1,  "$^{*}$", "")))
+row_tex <- function(lbl, vals) paste0("      ", lbl, " & ", paste(vals, collapse = " & "), "\\\\\n")
+
+# helper: collapse students to school x cohort classes (class means over the
+# students passed in; num_students = their count)
+class_panel <- function(students, cols = names(outcomes)) {
+  d <- students[, c(.(num_students = .N), lapply(.SD, mean, na.rm = TRUE)),
+                by = .(rbd, AGNO_9th), .SDcols = cols]
+  d[, year := AGNO_9th - 1]
+  d <- merge(d, sch[, .(rbd, year_region_sae, region)], by = "rbd", all.x = TRUE)
+  d[year_region_sae > max(year), year_region_sae := 0]
+  d
+}
+
+# helper: simple aggregated ATT table, coefficients with region-clustered
+# bootstrap SEs, pre-treatment means over treated classes, one column per outcome
+did_table <- function(res, means_pre, nobs, caption, label, file) {
+  att <- map_dbl(res, "overall.att")
+  se  <- map_dbl(res, "overall.se")
+  p   <- 2 * pnorm(-abs(att / se))
+  tab <- paste0(
+    "\\begin{table}[htbp]\n   \\caption{", caption, "}\\label{", label, "}\n",
+    "   \\centerline{\\scalebox{0.85}{\\begin{tabular}{l", strrep("c", length(res)), "}\n      \\toprule\n",
+    "                   & ", paste(names(res), collapse = " & "), "\\\\\n",
+    "                   & ", paste0("(", seq_along(res), ")", collapse = " & "), "\\\\\n      \\midrule\n",
+    row_tex("Treated", paste0(fmt(att), star(p))),
+    row_tex("", paste0("(", fmt(se), ")")),
+    "      \\midrule\n",
+    row_tex("Mean (pre-treatment)", fmt(means_pre)),
+    row_tex("Observations", rep(format(nobs, big.mark = ","), length(res))),
+    "      \\bottomrule\n   \\end{tabular}}}\n\\end{table}\n")
+  writeLines(tab, file)
+  tab
+}
+
+# helper: same table with two columns per outcome (e.g. female / male)
+did_table_pair <- function(res_a, res_b, lab_a, lab_b, means_a, means_b, n_a, n_b,
+                           caption, label, file) {
+  att_a <- map_dbl(res_a, "overall.att"); se_a <- map_dbl(res_a, "overall.se")
+  att_b <- map_dbl(res_b, "overall.att"); se_b <- map_dbl(res_b, "overall.se")
+  p_a <- 2 * pnorm(-abs(att_a / se_a))
+  p_b <- 2 * pnorm(-abs(att_b / se_b))
+  k <- length(res_a)
+  interleave <- function(a, b) as.vector(rbind(a, b))
+  tab <- paste0(
+    "\\begin{table}[htbp]\n   \\caption{", caption, "}\\label{", label, "}\n",
+    "   \\centerline{\\scalebox{0.85}{\\begin{tabular}{l", strrep("c", 2 * k), "}\n      \\toprule\n",
+    paste0("      & \\multicolumn{2}{c}{", names(res_a), "}", collapse = "\n"), " \\\\\n      ",
+    paste0("\\cmidrule(lr){", 2 * seq_len(k), "-", 2 * seq_len(k) + 1, "}", collapse = ""), "\n",
+    "                   & ", paste(rep(c(lab_a, lab_b), k), collapse = " & "), " \\\\\n",
+    "                   & ", paste0("(", seq_len(2 * k), ")", collapse = " & "), "\\\\\n      \\midrule\n",
+    row_tex("Treated", interleave(paste0(fmt(att_a), star(p_a)), paste0(fmt(att_b), star(p_b)))),
+    row_tex("", interleave(paste0("(", fmt(se_a), ")"), paste0("(", fmt(se_b), ")"))),
+    "      \\midrule\n",
+    row_tex("Mean (pre-treatment)", interleave(fmt(means_a), fmt(means_b))),
+    row_tex("Observations", rep(c(format(n_a, big.mark = ","), format(n_b, big.mark = ",")), k)),
+    "      \\bottomrule\n   \\end{tabular}}}\n\\end{table}\n")
+  writeLines(tab, file)
+  tab
+}
+```
+
+## Data and treatment
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# Student panel. Treatment: a school joins SAE the first year 9th grade in its
+# region is assigned through the system; never-treated = private (DEPE 4).
+# Identical to 3_effect_sae_am.Rmd, keeping the score-percentile columns.
+df <- readRDS(file.path(data_path, "panel_9-12_2010_2021.rds"))
+setDT(df)
+df <- df[, .(MRUN, AGNO, RBD, COD_GRADO, COD_ENSE, year_rbd_first_sae,
+             graduated_secondary, COD_REG_RBD, COD_DEPE, GEN_ALU,
+             gpa_secondary, scored_lm, prom_lm_actual, applied, assigned, enrolled,
+             lm_pct, ranking_pct)]
+
+# conditional versions: percentile among students with a computed score
+# (same convention as 5_gender_mechanisms.Rmd)
+df[, lm_pct_cond      := fifelse(lm_pct > 0, lm_pct, NA_real_)]
+df[, ranking_pct_cond := fifelse(ranking_pct > 0, ranking_pct, NA_real_)]
+
+sch <- unique(df[, .(RBD, year_rbd_first_sae, COD_REG_RBD, COD_DEPE)])[, .(
+  yfs    = { v <- year_rbd_first_sae[!is.na(year_rbd_first_sae)]; if (length(v)) as.numeric(v[1]) else 0 },
+  region = { v <- COD_REG_RBD[!is.na(COD_REG_RBD)]; if (length(v)) as.integer(v[1]) else NA_integer_ },
+  depe   = { v <- COD_DEPE[!is.na(COD_DEPE)]; if (length(v)) as.integer(names(which.max(table(v)))) else NA_integer_ }
+), by = RBD]
+setnames(sch, "RBD", "rbd")
+
+sae <- readRDS(file.path(data_path, "sae_data_2016_2023.rds"))
+setDT(sae)
+nine <- sae[COD_ENSE %in% media & COD_GRADO == 1, .(g9 = as.numeric(min(AGNO))), by = RBD]
+setnames(nine, "RBD", "rbd")
+sch <- merge(sch, nine, by = "rbd", all.x = TRUE)
+reg9 <- sch[!is.na(g9), .(g9r = min(g9)), by = region][!is.na(region)]
+sch <- merge(sch, reg9, by = "region", all.x = TRUE)
+sch[, elig := fifelse(!is.na(depe), as.integer(depe != 4), as.integer(yfs > 0 | !is.na(g9)))]
+sch[, year_region_sae := fifelse(elig == 1 & !is.na(g9r), as.numeric(g9r), 0)]
+rm(sae, nine, reg9)
+
+# regular-track students; high school records for grades 9-12
+keep <- df[, all(COD_ENSE == 110 | COD_ENSE %in% media), by = MRUN][V1 == TRUE, MRUN]
+hs <- df[MRUN %in% keep & AGNO >= 2010 & AGNO <= 2024 &
+           COD_ENSE %in% media & COD_GRADO %in% 1:4, .(MRUN, AGNO, RBD, COD_GRADO)]
+setorder(hs, MRUN, AGNO, COD_GRADO)
+```
+
+## Higher-education enrollment records
+
+SIES enrollment records, all institutions and years 2007--2024, one record per
+student x program x year. A student counts as enrolled in a year if they hold
+any undergraduate (pregrado) record in it; institution type comes from the
+SIES classification (CRUCH universities, private universities, professional
+institutes, technical centers), and the quality proxy is enrollment in an
+institution accredited in that year. `hei_demre` marks enrollment in a program
+carrying a DEMRE code (a program admitting through the centralized system),
+printed below as a cross-check of the DEMRE-based enrollment flag.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+sies <- readRDS(file.path(data_path, "panel_enrollment_2007_2024.rds"))
+setDT(sies)
+sies <- sies[nivel_global == "Pregrado" & mrun %in% unique(df$MRUN),
+             .(mrun, YEAR, tipo_inst_2, acreditada_inst, codigo_demre)]
+invisible(gc())
+
+hei <- sies[, .(
+  hei_any   = 1L,
+  hei_cruch = as.integer(any(tipo_inst_2 == "Universidades CRUCH")),
+  hei_upriv = as.integer(any(tipo_inst_2 %chin% c("Universidades Privadas",
+                                                  "Universidades (* Carrera en Convenio)"))),
+  hei_ip    = as.integer(any(tipo_inst_2 == "Institutos Profesionales")),
+  hei_cft   = as.integer(any(tipo_inst_2 == "Centros de Formación Técnica")),
+  hei_acc   = as.integer(any(acreditada_inst == "ACREDITADA")),
+  hei_demre = as.integer(any(!is.na(codigo_demre)))
+), by = .(mrun, YEAR)]
+rm(sies)
+invisible(gc())
+
+cat("panel students with any pregrado enrollment, by year:\n")
+print(hei[, .(students = .N, cruch = sum(hei_cruch), upriv = sum(hei_upriv),
+              ip = sum(hei_ip), cft = sum(hei_cft), demre_prog = sum(hei_demre)),
+          by = YEAR][order(YEAR)])
+
+# merge enrollment at entry + 4 (first admission year after on-time
+# graduation) and entry + 5 onto a student table keyed by MRUN and AGNO_9th
+hei2 <- copy(hei)
+setnames(hei2, setdiff(names(hei2), c("mrun", "YEAR")),
+         paste0(setdiff(names(hei2), c("mrun", "YEAR")), "_2"))
+add_hei <- function(d) {
+  d[, adm_year := AGNO_9th + 4]
+  d[, adm_year2 := AGNO_9th + 5]
+  d <- merge(d, hei, by.x = c("MRUN", "adm_year"), by.y = c("mrun", "YEAR"), all.x = TRUE)
+  d <- merge(d, hei2, by.x = c("MRUN", "adm_year2"), by.y = c("mrun", "YEAR"), all.x = TRUE)
+  d[, enrolled_any   := fcoalesce(hei_any, 0L)]
+  d[, enrolled_out   := as.integer(enrolled_any == 1L & enrolled == 0)]
+  d[, enrolled_cruch := fcoalesce(hei_cruch, 0L)]
+  d[, enrolled_upriv := fcoalesce(hei_upriv, 0L)]
+  d[, enrolled_ip    := fcoalesce(hei_ip, 0L)]
+  d[, enrolled_cft   := fcoalesce(hei_cft, 0L)]
+  d[, enrolled_tec   := pmax(enrolled_ip, enrolled_cft)]
+  d[, enrolled_acc   := fcoalesce(hei_acc, 0L)]
+  d[, enrolled_any2  := pmax(enrolled_any, fcoalesce(hei_any_2, 0L))]
+  d[, enrolled_out2  := as.integer(enrolled_any2 == 1L & enrolled == 0)]
+  d
+}
+```
+
+## Headline sample and replication guard
+
+Same sample as the headline table: graduated on time, all four grades in the
+same school, cohorts entering 9th grade `r start_year`--`r end_year`. The six
+headline outcomes replicate `3_effect_sae_am.Rmd` (a check that this file
+reproduces it exactly) before any new outcome is estimated.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+anchor <- hs[COD_GRADO == 1, .(rbd = RBD[1], AGNO_9th = AGNO[1]), by = MRUN]
+hs1 <- merge(hs, anchor[, .(MRUN, rbd)], by = "MRUN")
+per <- hs1[, .(ng = uniqueN(COD_GRADO[RBD == rbd]), nsch = uniqueN(RBD)), by = MRUN]
+per <- merge(per, anchor, by = "MRUN")
+stayers <- per[ng == 4 & nsch == 1, .(MRUN, rbd, AGNO_9th)]
+setkey(stayers, MRUN)
+grad <- hs1[MRUN %in% stayers$MRUN, .(grad_year = max(AGNO)), by = MRUN]
+vals <- df[MRUN %in% stayers$MRUN,
+           lapply(.SD, function(x) { v <- x[!is.na(x)]; if (length(v)) as.numeric(v[1]) else NA_real_ }),
+           by = MRUN, .SDcols = c(names(outcomes), "lm_pct_cond", "ranking_pct",
+                                  "ranking_pct_cond", "graduated_secondary", "GEN_ALU")]
+students <- merge(stayers, vals, by = "MRUN")
+students <- merge(students, grad, by = "MRUN")
+students <- students[graduated_secondary == 1 & grad_year == AGNO_9th + 3 &
+                       AGNO_9th >= start_year & AGNO_9th <= end_year]
+students <- add_hei(students)
+
+cat("students found in any-HEI enrollment at entry + 4, by entry cohort\n",
+    "(cohorts through", hei_end, "are covered by the SIES records):\n")
+print(students[, .(n = .N, enrolled_sua = mean(enrolled), any_hei = mean(enrolled_any),
+                   outside = mean(enrolled_out)), by = AGNO_9th][order(AGNO_9th)])
+cat("\ncross-check: DEMRE enrollment flag vs. SIES enrollment at entry + 4\n",
+    "(cohorts through", hei_end, "):\n")
+print(students[AGNO_9th <= hei_end, table(enrolled, enrolled_any)])
+cat("\nDEMRE-enrolled students found in a DEMRE-coded SIES program at entry + 4:",
+    fmt(students[AGNO_9th <= hei_end & enrolled == 1, mean(fcoalesce(hei_demre, 0L))]), "\n")
+
+dr <- class_panel(students, unique(c(names(outcomes), names(outcomes_lm))))
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+common_args <- list(
+  tname = "year",
+  idname = "rbd",
+  gname = "year_region_sae",
+  xformla = ~num_students,
+  data = dr,
+  control_group = "notyettreated",
+  anticipation = 2,
+  base_period = "universal",
+  est_method = "dr",
+  allow_unbalanced_panel = TRUE,
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+# same seed for each bootstrap so results do not depend on the order the
+# models are run
+run_set <- function(dat, ycols) {
+  common_args$data <- dat
+  res <- map(ycols, function(y) {
+    set.seed(20260610)
+    m <- do.call(att_gt, c(list(yname = y), common_args))
+    suppressWarnings(aggte(m, type = "simple", na.rm = TRUE))
+  })
+  names(res) <- ycols
+  res
+}
+
+means_pre <- function(dat, ycols) {
+  dat[year_region_sae > 0 & year < year_region_sae,
+      sapply(.SD, mean, na.rm = TRUE), .SDcols = ycols]
+}
+
+models_base <- run_set(dr, names(outcomes))
+names(models_base) <- outcomes
+
+cat(did_table(models_base, means_pre(dr, names(outcomes)), nrow(dr),
+              "Regression Results (Replication)", "tab: headline replication",
+              "tables/did_headline_replication_AM.tex"))
+```
+
+## A5. LM decomposition
+
+The headline `Average LM` outcome is the within-admission-year percentile of
+the average Language and Math score, with zero assigned to students who never
+take the exam, so its treatment effect mixes the taking margin with
+performance conditional on taking. `P(Take Exam)` isolates the first margin;
+`LM Pct. (takers)` the second. The ranking-score percentile is a deterministic
+function of GPA relative to the school's recent history, so its
+taker-conditional effect is a composition gauge for the taker pool: it moves
+only if treatment changes who registers, not how they perform (issues #8/#10).
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+models_lm <- run_set(dr, names(outcomes_lm))
+names(models_lm) <- outcomes_lm
+
+cat(did_table(models_lm, means_pre(dr, names(outcomes_lm)), nrow(dr),
+              "Decomposition of the LM Effect: Taking vs. Performance",
+              "tab: lm decomposition", "tables/did_lm_decomposition_AM.tex"))
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# arithmetic: ATT on the unconditional percentile ~ taking margin x pre-mean
+# conditional score + pre-mean taking rate x conditional margin
+att <- function(m, y) m[[y]]$overall.att
+p_pre <- means_pre(dr, "scored_lm"); c_pre <- means_pre(dr, "lm_pct_cond")
+a_take <- att(models_lm, "P(Take Exam)"); a_cond <- att(models_lm, "LM Pct. (takers)")
+cat(sprintf(paste0("LM decomposition arithmetic: ATT(unconditional) = %.4f;\n",
+                   "  taking margin  ATT(P take) x pre-mean cond. score = %.4f x %.3f = %.4f\n",
+                   "  performance    pre-mean P take x ATT(cond. score) = %.3f x %.4f = %.4f\n",
+                   "  sum of the two margins = %.4f\n"),
+            att(models_lm, "Average LM"),
+            a_take, c_pre, a_take * c_pre,
+            p_pre, a_cond, p_pre * a_cond,
+            a_take * c_pre + p_pre * a_cond))
+```
+
+## A1. Net-enrollment margin
+
+Same headline sample and estimator, entry cohorts `r start_year`--`r hei_end`
+(the last cohort whose first admission year is covered by the SIES records).
+`Enrolled SUA` is the headline enrollment outcome re-estimated on these
+cohorts; `Any HEI` is enrollment in any institution in the year after on-time
+graduation; `Outside SUA` is enrollment in some institution without an
+enrollment through the centralized system; the destination types and the
+accreditation proxy are unconditional class shares, so they add up over the
+`Any HEI` margin.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+students_hei <- students[AGNO_9th <= hei_end]
+dr_hei <- class_panel(students_hei, c("enrolled", hei_cols))
+
+models_hei <- run_set(dr_hei, names(outcomes_hei))
+names(models_hei) <- outcomes_hei
+
+cat(did_table(models_hei, means_pre(dr_hei, names(outcomes_hei)), nrow(dr_hei),
+              "Effect on Enrollment in Any Higher-Education Institution",
+              "tab: net enrollment", "tables/did_net_enrollment_AM.tex"))
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# two-year window (entry + 4 or entry + 5), one cohort shorter
+dr_hei2 <- class_panel(students[AGNO_9th <= hei_end2], c("enrolled_any2", "enrolled_out2"))
+models_hei2 <- run_set(dr_hei2, c("enrolled_any2", "enrolled_out2"))
+cat(sprintf(paste0("two-year window (cohorts through %d, %s classes):\n",
+                   "  Any HEI (2y)     %7.3f (%.3f)   pre-mean %.3f\n",
+                   "  Outside SUA (2y) %7.3f (%.3f)   pre-mean %.3f\n"),
+            hei_end2, format(nrow(dr_hei2), big.mark = ","),
+            models_hei2$enrolled_any2$overall.att, models_hei2$enrolled_any2$overall.se,
+            means_pre(dr_hei2, "enrolled_any2"),
+            models_hei2$enrolled_out2$overall.att, models_hei2$enrolled_out2$overall.se,
+            means_pre(dr_hei2, "enrolled_out2")))
+```
+
+### By gender
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+female_hei <- students_hei[GEN_ALU == 2]
+male_hei   <- students_hei[GEN_ALU == 1]
+dr_f_hei <- class_panel(female_hei, c("enrolled", hei_cols))
+dr_m_hei <- class_panel(male_hei,   c("enrolled", hei_cols))
+
+models_f_hei <- run_set(dr_f_hei, names(outcomes_hei_g))
+models_m_hei <- run_set(dr_m_hei, names(outcomes_hei_g))
+names(models_f_hei) <- names(models_m_hei) <- outcomes_hei_g
+
+cat(did_table_pair(models_f_hei, models_m_hei, "Female", "Male",
+                   means_pre(dr_f_hei, names(outcomes_hei_g)),
+                   means_pre(dr_m_hei, names(outcomes_hei_g)),
+                   nrow(dr_f_hei), nrow(dr_m_hei),
+                   "Effect on Enrollment in Any Higher-Education Institution by Gender",
+                   "tab: net enrollment by gender",
+                   "tables/did_net_enrollment_by_gender_AM.tex"))
+```
+
+## A2. Unconditional entrant classes
+
+All 9th-grade entrants, keyed to their entry class (school x entry year), with
+no single-school, graduation, or on-time requirement: the class ITT of
+Appendix 7.4, on the same regular-track universe as the headline sample.
+Outcomes carry zeros for students who never register with DEMRE, so class
+means are over the entire entering class; GPA averages each student's recorded
+year grades over the secondary years they attended, so partial careers enter
+its class mean. `Grad. On Time` makes the margin between the entrant and
+headline samples visible in the same exhibit.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+g12 <- hs[COD_GRADO == 4, .(g12_year = min(AGNO)), by = MRUN]
+vals_e <- df[MRUN %in% anchor$MRUN,
+             lapply(.SD, function(x) { v <- x[!is.na(x)]; if (length(v)) as.numeric(v[1]) else NA_real_ }),
+             by = MRUN, .SDcols = c(names(outcomes), "graduated_secondary", "GEN_ALU")]
+entrants <- merge(anchor, vals_e, by = "MRUN", all.x = TRUE)
+entrants <- merge(entrants, g12, by = "MRUN", all.x = TRUE)
+entrants[, grad_ever    := as.integer(coalesce(graduated_secondary, 0) == 1)]
+entrants[, on_time_grad := as.integer(grad_ever == 1 & !is.na(g12_year) & g12_year == AGNO_9th + 3)]
+entrants <- entrants[AGNO_9th >= start_year & AGNO_9th <= end_year]
+entrants <- add_hei(entrants)
+
+cat(format(nrow(entrants), big.mark = ","), "entrants;",
+    format(uniqueN(entrants[on_time_grad == 1, MRUN]), big.mark = ","),
+    "graduate on time;", format(nrow(students), big.mark = ","),
+    "pass the headline filters.\n\n")
+
+dr_e <- class_panel(entrants, names(outcomes_ent))
+
+models_e <- run_set(dr_e, names(outcomes_ent))
+names(models_e) <- outcomes_ent
+
+cat(did_table(models_e, means_pre(dr_e, names(outcomes_ent)), nrow(dr_e),
+              "Regression Results: All 9th-Grade Entrants",
+              "tab: entrants", "tables/did_entrants_AM.tex"))
+```
+
+### By gender
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+female_e <- entrants[GEN_ALU == 2]
+male_e   <- entrants[GEN_ALU == 1]
+dr_f_e <- class_panel(female_e, names(outcomes))
+dr_m_e <- class_panel(male_e,   names(outcomes))
+
+models_f_e <- run_set(dr_f_e, names(outcomes))
+models_m_e <- run_set(dr_m_e, names(outcomes))
+names(models_f_e) <- names(models_m_e) <- outcomes
+
+cat(did_table_pair(models_f_e, models_m_e, "Female", "Male",
+                   means_pre(dr_f_e, names(outcomes)),
+                   means_pre(dr_m_e, names(outcomes)),
+                   nrow(dr_f_e), nrow(dr_m_e),
+                   "Regression Results by Gender: All 9th-Grade Entrants",
+                   "tab: entrants by gender", "tables/did_entrants_by_gender_AM.tex"))
+```
+
+### Net enrollment on entrant classes
+
+The access question on the unconditional sample: does enrollment in any
+higher-education institution rise for the full entering class? Entry cohorts
+`r start_year`--`r hei_end`; enrollment measured in the year after on-time
+graduation (entry + 4), so late graduates enrolling later are picked up by the
+two-year window printed below the table.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+entrants_hei <- entrants[AGNO_9th <= hei_end]
+dr_e_hei <- class_panel(entrants_hei, c("enrolled", hei_cols))
+
+models_e_hei <- run_set(dr_e_hei, names(outcomes_ent_hei))
+names(models_e_hei) <- outcomes_ent_hei
+
+cat(did_table(models_e_hei, means_pre(dr_e_hei, names(outcomes_ent_hei)), nrow(dr_e_hei),
+              "Effect on Enrollment in Any Higher-Education Institution: All 9th-Grade Entrants",
+              "tab: entrants net enrollment", "tables/did_entrants_net_enrollment_AM.tex"))
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+dr_e_hei2 <- class_panel(entrants[AGNO_9th <= hei_end2], c("enrolled_any2", "enrolled_out2"))
+models_e_hei2 <- run_set(dr_e_hei2, c("enrolled_any2", "enrolled_out2"))
+cat(sprintf(paste0("two-year window (cohorts through %d, %s classes):\n",
+                   "  Any HEI (2y)     %7.3f (%.3f)   pre-mean %.3f\n",
+                   "  Outside SUA (2y) %7.3f (%.3f)   pre-mean %.3f\n"),
+            hei_end2, format(nrow(dr_e_hei2), big.mark = ","),
+            models_e_hei2$enrolled_any2$overall.att, models_e_hei2$enrolled_any2$overall.se,
+            means_pre(dr_e_hei2, "enrolled_any2"),
+            models_e_hei2$enrolled_out2$overall.att, models_e_hei2$enrolled_out2$overall.se,
+            means_pre(dr_e_hei2, "enrolled_out2")))
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+female_e_hei <- entrants_hei[GEN_ALU == 2]
+male_e_hei   <- entrants_hei[GEN_ALU == 1]
+dr_f_e_hei <- class_panel(female_e_hei, c("enrolled", hei_cols))
+dr_m_e_hei <- class_panel(male_e_hei,   c("enrolled", hei_cols))
+
+models_f_e_hei <- run_set(dr_f_e_hei, names(outcomes_ent_hei))
+models_m_e_hei <- run_set(dr_m_e_hei, names(outcomes_ent_hei))
+names(models_f_e_hei) <- names(models_m_e_hei) <- outcomes_ent_hei
+
+cat(did_table_pair(models_f_e_hei, models_m_e_hei, "Female", "Male",
+                   means_pre(dr_f_e_hei, names(outcomes_ent_hei)),
+                   means_pre(dr_m_e_hei, names(outcomes_ent_hei)),
+                   nrow(dr_f_e_hei), nrow(dr_m_e_hei),
+                   "Effect on Enrollment in Any HEI by Gender: All 9th-Grade Entrants",
+                   "tab: entrants net enrollment by gender",
+                   "tables/did_entrants_net_enrollment_by_gender_AM.tex"))
+```
+
+## Summary
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+cat("did version:", as.character(packageVersion("did")), "|", R.version.string, "\n\n")
+
+line <- function(res, y, lbl) cat(sprintf("%-24s %7.3f (%.3f)\n", lbl,
+                                          res[[y]]$overall.att, res[[y]]$overall.se))
+cat("-- Replication guard: committed headline table (did_by 3_effect_sae_am.Rmd) --\n")
+draft <- c(gpa_secondary = -0.005, prom_lm_actual = -0.016, applied = 0.045,
+           assigned = 0.051, enrolled = 0.041)
+for (y in names(draft)) {
+  cat(sprintf("%-16s this run %7.3f | draft table %7.3f | diff %8.4f\n",
+              outcomes[[y]], models_base[[outcomes[[y]]]]$overall.att, draft[[y]],
+              models_base[[outcomes[[y]]]]$overall.att - draft[[y]]))
+}
+cat("(draft table is the committed 5-column vintage; P(Take Exam) is the HEAD\n",
+    "6th outcome and has no committed counterpart. Bootstrap SEs under did\n",
+    "2.5.1 differ from the draft tables even though point estimates match.)\n")
+
+cat("\n-- A5. LM decomposition (headline sample) --\n")
+for (y in outcomes_lm) line(models_lm, y, y)
+
+cat("\n-- A1. Net enrollment (headline sample, cohorts through", hei_end, ") --\n")
+for (y in outcomes_hei) line(models_hei, y, y)
+cat("\n   by gender (female | male):\n")
+for (y in outcomes_hei_g) cat(sprintf("%-24s female %7.3f (%.3f) | male %7.3f (%.3f)\n", y,
+                                      models_f_hei[[y]]$overall.att, models_f_hei[[y]]$overall.se,
+                                      models_m_hei[[y]]$overall.att, models_m_hei[[y]]$overall.se))
+
+cat("\n-- A2. Entrant classes --\n")
+for (y in outcomes_ent) line(models_e, y, y)
+cat("\n   by gender (female | male):\n")
+for (y in outcomes) cat(sprintf("%-24s female %7.3f (%.3f) | male %7.3f (%.3f)\n", y,
+                                models_f_e[[y]]$overall.att, models_f_e[[y]]$overall.se,
+                                models_m_e[[y]]$overall.att, models_m_e[[y]]$overall.se))
+cat("\n   net enrollment on entrant classes (cohorts through", hei_end, "):\n")
+for (y in outcomes_ent_hei) line(models_e_hei, y, y)
+cat("\n   by gender (female | male):\n")
+for (y in outcomes_ent_hei) cat(sprintf("%-24s female %7.3f (%.3f) | male %7.3f (%.3f)\n", y,
+                                        models_f_e_hei[[y]]$overall.att, models_f_e_hei[[y]]$overall.se,
+                                        models_m_e_hei[[y]]$overall.att, models_m_e_hei[[y]]$overall.se))
+
+cat("\nGuard: the replication block must match the committed headline table;\n",
+    "if it does not, the sample replication is off and the new rows are not\n",
+    "comparable to the draft.\n")
+```

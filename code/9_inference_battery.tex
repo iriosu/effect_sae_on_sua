@@ -1,0 +1,674 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Effect of SAE on SUA - Design-Based Inference and Robustness Battery (Issue \#16)},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+
+\title{Effect of SAE on SUA - Design-Based Inference and Robustness
+Battery (Issue \#16)}
+\author{}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+\maketitle
+
+Issue \#16: randomization inference over the 1,001 admissible rollout
+reassignments, region-level wild cluster bootstrap, COVID / exam-reform
+window cuts, wave-by-wave event studies, leave-one-region-out,
+student-weighted aggregation, wave balance, and sample summary
+statistics. Sample and estimation mirror \texttt{3\_effect\_sae\_am.Rmd}
+exactly (Callaway-Sant'Anna, school x cohort classes, not-yet-treated
+controls, anticipation 2, universal base period,
+\texttt{xformla\ =\ \textasciitilde{}num\_students}, region-clustered
+multiplier bootstrap with 10,000 iterations, \texttt{set.seed(20260610)}
+before every \texttt{att\_gt}). Heavy blocks cache to
+\texttt{cache\_inference/}; set environment variable \texttt{SMOKE=1}
+for a fast end-to-end test run.
+
+\hypertarget{data-and-treatment}{%
+\subsection{Data and treatment}\label{data-and-treatment}}
+
+Identical to \texttt{3\_effect\_sae\_am.Rmd}: treatment is the year 9th
+grade in the school's region was first assigned through SAE;
+never-treated schools are private (DEPE 4); headline sample keeps
+students who graduated on time having spent grades 9 to 12 in the same
+school, entering 9th grade 2012 to 2021.
+
+\begin{verbatim}
+## Classes: 28,483 | schools: 3108 | regions: 16 | years 2011-2020
+\end{verbatim}
+
+\begin{verbatim}
+## Waves: pilot region 12 (2016) | 2017: 1 4 6 10 | 2018: 2 3 5 7 8 9 11 14 15 16 | RM 13 (2019)
+\end{verbatim}
+
+\hypertarget{baseline-replication-check}{%
+\subsection{Baseline replication
+check}\label{baseline-replication-check}}
+
+Point estimates must reproduce the draft's Table 1
+(\texttt{staggered\_did\_sae\_on\_outcomes\_AM.tex}) exactly; bootstrap
+SEs may drift across \texttt{did} versions (documented in issues
+\#11/\#12), so SEs are reported side by side rather than asserted.
+
+\begin{longtable}[]{@{}lllll@{}}
+\caption{Replication check against draft Table 1 (point estimates must
+match)}\tabularnewline
+\toprule
+outcome & att & draft\_att & se & draft\_se \\
+\midrule
+\endfirsthead
+\toprule
+outcome & att & draft\_att & se & draft\_se \\
+\midrule
+\endhead
+GPA & -0.005 & -0.005 & 0.018 & 0.013 \\
+P(Take Exam) & -0.026 & -- & 0.011 & -- \\
+Average LM & -0.016 & -0.016 & 0.004 & 0.008 \\
+Applied & 0.045 & 0.045 & 0.006 & 0.010 \\
+Assigned & 0.051 & 0.051 & 0.005 & 0.013 \\
+Enrolled & 0.041 & 0.041 & 0.009 & 0.012 \\
+\bottomrule
+\end{longtable}
+
+Point estimates match draft Table 1: \textbf{YES}
+
+\hypertarget{randomization-inference-over-the-1001-admissible-rollouts}{%
+\subsection{Randomization inference over the 1,001 admissible
+rollouts}\label{randomization-inference-over-the-1001-admissible-rollouts}}
+
+Magallanes (pilot) and Metropolitana (last) are held at their actual
+dates; the fourteen remaining regions are reassigned to the 2017/2018
+waves in every one of the \(\binom{14}{4} = 1{,}001\) admissible ways
+(exact enumeration; the observed assignment is one of them). For each
+reassignment each school's treatment year is rebuilt from its region's
+permuted wave, and the full estimator is re-run without bootstrap
+(analytic standard errors). Exact two-sided \(p\)-values compare the
+observed statistic with the permutation distribution; the studentized
+statistic \(\hat{ATT}/\widehat{se}\) is primary, the raw \(\hat{ATT}\) a
+check. The same runs give the joint pre-trend statistics over the clean
+leads (event times \(-8\) to \(-4\)): the maximum absolute studentized
+lead, and the sum of squared studentized leads, each also computed
+excluding event time \(-8\).
+
+Permutations run: 1001 of 1001 \textbar{} with any failed outcome: 0
+
+\begin{longtable}[]{@{}lllll@{}}
+\caption{Randomization inference: exact p-values, main
+ATTs}\tabularnewline
+\toprule
+outcome & att\_analytic & t\_analytic & p\_RI\_t & p\_RI\_att \\
+\midrule
+\endfirsthead
+\toprule
+outcome & att\_analytic & t\_analytic & p\_RI\_t & p\_RI\_att \\
+\midrule
+\endhead
+GPA & -0.005 & -0.45 & 0.528 & 0.528 \\
+P(Take Exam) & -0.026 & -5.54 & 0.452 & 0.444 \\
+Average LM & -0.016 & -3.34 & 0.688 & 0.714 \\
+Applied & 0.045 & 6.32 & 0.357 & 0.476 \\
+Assigned & 0.051 & 6.75 & 0.140 & 0.172 \\
+Enrolled & 0.041 & 5.47 & 0.184 & 0.189 \\
+\bottomrule
+\end{longtable}
+
+\begin{longtable}[]{@{}lllll@{}}
+\caption{Randomization inference: joint pre-trend
+p-values}\tabularnewline
+\toprule
+outcome & p\_pre\_maxt & p\_pre\_ssq & p\_pre\_maxt\_excl8 &
+p\_pre\_ssq\_excl8 \\
+\midrule
+\endfirsthead
+\toprule
+outcome & p\_pre\_maxt & p\_pre\_ssq & p\_pre\_maxt\_excl8 &
+p\_pre\_ssq\_excl8 \\
+\midrule
+\endhead
+GPA & 0.653 & 0.467 & 0.653 & 0.467 \\
+P(Take Exam) & 1.000 & 0.387 & 0.755 & 0.387 \\
+Average LM & 0.902 & 0.746 & 0.902 & 0.746 \\
+Applied & 1.000 & 0.835 & 0.764 & 0.835 \\
+Assigned & 1.000 & 0.680 & 0.657 & 0.680 \\
+Enrolled & 1.000 & 0.556 & 0.561 & 0.556 \\
+\bottomrule
+\end{longtable}
+
+\hypertarget{wild-cluster-bootstrap-at-the-region-level}{%
+\subsection{Wild cluster bootstrap at the region
+level}\label{wild-cluster-bootstrap-at-the-region-level}}
+
+The Callaway-Sant'Anna multiplier bootstrap already draws region-level
+Rademacher weights; the wild cluster bootstrap requires a regression
+score, so it is applied to the TWFE analogue of the design: class-level
+outcomes on a treatment indicator with school and admission-year fixed
+effects and the class size control, on the panel with each treated
+school's transition band (event times \(-1\), \(-2\)) set aside,
+standard errors clustered on the sixteen regions. Restricted
+(null-imposed) wild cluster bootstrap with Rademacher and Webb weights,
+9,999 draws. Because one cluster (Metropolitana) holds a third of the
+sample, the region-drawn bootstrap distribution can degenerate; the
+subcluster variant of MacKinnon and Webb draws the weights at the school
+level while keeping the variance clustered on regions, and is reported
+alongside. The bootstrap \(|t^*|\) quantiles stored with the results
+record the spread of each distribution.
+
+\begin{longtable}[]{@{}llllllllr@{}}
+\caption{TWFE analogue with region-level wild cluster
+bootstrap}\tabularnewline
+\toprule
+outcome & beta & se & p\_crve\_t15 & p\_wcb\_rademacher & p\_wcb\_webb &
+p\_wcb\_school & q99\_rade & N \\
+\midrule
+\endfirsthead
+\toprule
+outcome & beta & se & p\_crve\_t15 & p\_wcb\_rademacher & p\_wcb\_webb &
+p\_wcb\_school & q99\_rade & N \\
+\midrule
+\endhead
+GPA & -0.016 & 0.011 & 0.186 & 0.006 & 0.006 & 0.023 & 1.29 & 23391 \\
+P(Take Exam) & -0.033 & 0.004 & 0.000 & 0.000 & 0.000 & 0.000 & 1.33 &
+23391 \\
+Average LM & -0.005 & 0.004 & 0.209 & 0.002 & 0.009 & 0.004 & 1.22 &
+23391 \\
+Applied & 0.050 & 0.011 & 0.000 & 0.000 & 0.000 & 0.001 & 2.34 &
+23391 \\
+Assigned & 0.061 & 0.006 & 0.000 & 0.000 & 0.000 & 0.000 & 2.20 &
+23391 \\
+Enrolled & 0.055 & 0.006 & 0.000 & 0.000 & 0.000 & 0.000 & 2.21 &
+23391 \\
+\bottomrule
+\end{longtable}
+
+\hypertarget{inference-side-by-side}{%
+\subsection{Inference side by side}\label{inference-side-by-side}}
+
+\begin{table}[htbp]
+   \caption{Design-Based Inference for the Main Estimates}\label{tab: inference battery}
+   \centerline{\scalebox{0.8}{\begin{tabular}{lcccccc}
+      \toprule
+                   & GPA & P(Take Exam) & Average LM & Applied & Assigned & Enrolled\\
+                   & (1) & (2) & (3) & (4) & (5) & (6)\\
+      \midrule
+      \multicolumn{7}{l}{\textit{Callaway--Sant'Anna ATT (baseline estimator)}}\\
+      ATT & -0.005 & -0.026$^{**}$ & -0.016$^{***}$ & 0.045$^{***}$ & 0.051$^{***}$ & 0.041$^{***}$\\
+      Multiplier bootstrap SE & (0.018) & (0.011) & (0.004) & (0.006) & (0.005) & (0.009)\\
+      $p$, multiplier bootstrap & 0.776 & 0.016 & 0.000 & 0.000 & 0.000 & 0.000\\
+      $p$, randomization inference & 0.528 & 0.452 & 0.688 & 0.357 & 0.140 & 0.184\\
+      $p$, randomization inference (unstudentized) & 0.528 & 0.444 & 0.714 & 0.476 & 0.172 & 0.189\\
+      ATT range over the 1,001 reassignments & [-0.014, 0.001] & [-0.035, -0.019] & [-0.021, -0.013] & [0.038, 0.051] & [0.044, 0.053] & [0.036, 0.044]\\
+      \midrule
+      \multicolumn{7}{l}{\textit{Two-way fixed effects analogue}}\\
+      Treated & -0.016 & -0.033$^{***}$ & -0.005 & 0.050$^{***}$ & 0.061$^{***}$ & 0.055$^{***}$\\
+      Cluster-robust SE & (0.011) & (0.004) & (0.004) & (0.011) & (0.006) & (0.006)\\
+      $p$, cluster-robust $t_{15}$ & 0.186 & 0.000 & 0.209 & 0.000 & 0.000 & 0.000\\
+      $p$, wild cluster bootstrap (Rademacher) & 0.006 & 0.000 & 0.002 & 0.000 & 0.000 & 0.000\\
+      $p$, wild cluster bootstrap (Webb) & 0.006 & 0.000 & 0.009 & 0.000 & 0.000 & 0.000\\
+      $p$, wild subcluster bootstrap (school draws) & 0.023 & 0.000 & 0.004 & 0.001 & 0.000 & 0.000\\
+      \midrule
+      Observations & 28,483 & 28,483 & 28,483 & 28,483 & 28,483 & 28,483\\
+      Regions (clusters) & 16 & 16 & 16 & 16 & 16 & 16\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\hypertarget{parallel-trends-regenerated}{%
+\subsection{Parallel trends,
+regenerated}\label{parallel-trends-regenerated}}
+
+Same exhibit as the draft's parallel-trends table (event-study averages
+with region-clustered 95 percent uniform confidence bands, bold where
+the band excludes zero), regenerated under the pinned estimator with the
+P(Take Exam) column added, and the exact randomization-inference
+\(p\)-value for the joint null that all clean leads are zero (sum of
+squared studentized leads over event times \(-8\) to \(-4\), the
+statistic behind the draft's published values; identical to three
+decimals when \(-8\) is excluded).
+
+\begin{table}[htbp]
+   \caption{Parallel Trends Assumption: Event-Study Average ATT}\label{tab: parallel trends assumption}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcccccc}
+      \toprule
+                   & GPA & P(Take Exam) & Average LM & Applied & Assigned & Enrolled\\
+                   & (1) & (2) & (3) & (4) & (5) & (6)\\
+      \midrule
+      \multicolumn{7}{l}{\textit{Clean pre-treatment leads}}\\
+      Event time -8 & \textbf{0.035} & \textbf{0.053} & -0.008 & \textbf{-0.071} & \textbf{-0.078} & \textbf{-0.102}\\
+       & (0.012) & (0.007) & (0.004) & (0.007) & (0.013) & (0.015)\\
+      Event time -7 & \textbf{0.014} & 0.007 & \textbf{-0.012} & -0.015 & -0.019 & -0.025\\
+       & (0.005) & (0.031) & (0.005) & (0.014) & (0.015) & (0.027)\\
+      Event time -6 & 0.017 & 0.010 & -0.004 & -0.001 & -0.001 & -0.004\\
+       & (0.010) & (0.030) & (0.012) & (0.008) & (0.006) & (0.009)\\
+      Event time -5 & \textbf{0.018} & 0.013 & -0.002 & 0.005 & 0.005 & 0.002\\
+       & (0.005) & (0.025) & (0.007) & (0.008) & (0.007) & (0.008)\\
+      Event time -4 & 0.016 & \textbf{-0.014} & -0.008 & -0.007 & -0.001 & 0.002\\
+       & (0.012) & (0.005) & (0.005) & (0.005) & (0.006) & (0.004)\\
+      \multicolumn{7}{l}{\textit{Reference period: event time $-3$ (normalized to zero)}}\\
+      \multicolumn{7}{l}{\textit{Transition band (set aside in estimation; partial exposure by construction)}}\\
+      Event time -2 & -0.010 & \textbf{-0.021} & \textbf{-0.011} & -0.014 & -0.001 & 0.001\\
+       & (0.005) & (0.008) & (0.005) & (0.008) & (0.010) & (0.007)\\
+      Event time -1 & -0.030 & \textbf{-0.035} & \textbf{-0.021} & 0.010 & \textbf{0.020} & 0.010\\
+       & (0.016) & (0.013) & (0.003) & (0.017) & (0.007) & (0.009)\\
+      \midrule
+      \multicolumn{7}{l}{\textit{Post-treatment}}\\
+      Event time 0 & -0.019 & -0.028 & \textbf{-0.017} & \textbf{0.039} & \textbf{0.036} & \textbf{0.024}\\
+       & (0.021) & (0.014) & (0.003) & (0.007) & (0.005) & (0.010)\\
+      Event time 1 & 0.003 & -0.020 & \textbf{-0.014} & \textbf{0.051} & \textbf{0.057} & \textbf{0.043}\\
+       & (0.036) & (0.017) & (0.005) & (0.013) & (0.011) & (0.006)\\
+      Event time 2 & 0.003 & \textbf{-0.025} & \textbf{-0.021} & \textbf{0.044} & \textbf{0.054} & \textbf{0.053}\\
+       & (0.012) & (0.008) & (0.008) & (0.008) & (0.011) & (0.013)\\
+      Event time 3 & 0.002 & \textbf{-0.040} & -0.008 & \textbf{0.051} & \textbf{0.079} & \textbf{0.073}\\
+       & (0.015) & (0.007) & (0.008) & (0.021) & (0.019) & (0.017)\\
+      Event time 4 & \textbf{-0.111} & \textbf{-0.060} & \textbf{-0.042} & \textbf{-0.049} & 0.006 & \textbf{0.072}\\
+       & (0.012) & (0.007) & (0.015) & (0.010) & (0.019) & (0.022)\\
+      \midrule
+      Joint pre-trend $p$-value (RI) & 0.467 & 0.387 & 0.746 & 0.835 & 0.680 & 0.556\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\hypertarget{wave-by-wave-estimates}{%
+\subsection{Wave-by-wave estimates}\label{wave-by-wave-estimates}}
+
+Group ATTs by adoption wave for all outcomes, and the full \(ATT(g,e)\)
+event-study path by wave for the headline outcomes (group-time estimates
+with region-clustered bootstrap standard errors from the baseline fits).
+
+\begin{table}[htbp]
+   \caption{ATT by Adoption Wave}\label{tab: att by wave}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcccccc}
+      \toprule
+                   & GPA & P(Take Exam) & Average LM & Applied & Assigned & Enrolled\\
+                   & (1) & (2) & (3) & (4) & (5) & (6)\\
+      \midrule
+      Wave 2016 & -0.083$^{***}$ & -0.055$^{***}$ & -0.016 & -0.071$^{***}$ & 0.005 & 0.028\\
+       & (0.009) & (0.004) & (0.011) & (0.014) & (0.020) & (0.023)\\
+      Wave 2017 & -0.039$^{***}$ & -0.065$^{***}$ & -0.017$^{***}$ & 0.032$^{*}$ & 0.051$^{***}$ & 0.044$^{***}$\\
+       & (0.012) & (0.003) & (0.006) & (0.019) & (0.018) & (0.017)\\
+      Wave 2018 & -0.016$^{*}$ & -0.021$^{***}$ & -0.024$^{***}$ & 0.041$^{***}$ & 0.036$^{***}$ & 0.032$^{*}$\\
+       & (0.009) & (0.006) & (0.009) & (0.010) & (0.013) & (0.017)\\
+      Wave 2019 & 0.063$^{***}$ & 0.015$^{***}$ & 0.002 & 0.078$^{***}$ & 0.084$^{***}$ & 0.058$^{***}$\\
+       & (0.008) & (0.005) & (0.007) & (0.009) & (0.009) & (0.011)\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+\begin{table}[htbp]
+   \caption{Event-Study by Adoption Wave: Applied}\label{tab: event by wave applied}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcccc}
+      \toprule
+                   & Wave 2016 & Wave 2017 & Wave 2018 & Wave 2019\\
+                   & (1) & (2) & (3) & (4)\\
+      \midrule
+      Event time -8 & -- & -- & -- & -0.071$^{***}$ (0.007)\\
+      Event time -7 & -- & -- & 0.001 (0.023) & -0.038$^{***}$ (0.008)\\
+      Event time -6 & -- & -0.026 (0.018) & 0.016 (0.016) & -0.010 (0.008)\\
+      Event time -5 & 0.086$^{***}$ (0.007) & -0.007 (0.014) & 0.021$^{*}$ (0.011) & -0.011 (0.010)\\
+      Event time -4 & 0.002 (0.004) & 0.007 (0.009) & -0.003 (0.007) & -0.020$^{*}$ (0.011)\\
+      Event time -3 & 0 (ref.) & 0 (ref.) & 0 (ref.) & 0 (ref.)\\
+      Event time -2 & -0.048$^{***}$ (0.008) & -0.001 (0.009) & -0.032$^{***}$ (0.008) & 0.004 (0.006)\\
+      Event time -1 & -0.106$^{***}$ (0.009) & -0.023$^{**}$ (0.010) & -0.008 (0.010) & 0.057$^{***}$ (0.016)\\
+      Event time 0 & -0.131$^{***}$ (0.008) & 0.006 (0.011) & 0.041$^{***}$ (0.015) & 0.062$^{***}$ (0.011)\\
+      Event time 1 & -0.082$^{***}$ (0.012) & 0.028 (0.027) & 0.033$^{***}$ (0.010) & 0.094$^{***}$ (0.010)\\
+      Event time 2 & -0.060$^{**}$ (0.025) & 0.040$^{**}$ (0.018) & 0.049$^{***}$ (0.010) & --\\
+      Event time 3 & -0.031$^{*}$ (0.016) & 0.055$^{**}$ (0.022) & -- & --\\
+      Event time 4 & -0.049$^{***}$ (0.010) & -- & -- & --\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+\begin{table}[htbp]
+   \caption{Event-Study by Adoption Wave: Assigned}\label{tab: event by wave assigned}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcccc}
+      \toprule
+                   & Wave 2016 & Wave 2017 & Wave 2018 & Wave 2019\\
+                   & (1) & (2) & (3) & (4)\\
+      \midrule
+      Event time -8 & -- & -- & -- & -0.078$^{***}$ (0.013)\\
+      Event time -7 & -- & -- & 0.012 (0.018) & -0.062$^{***}$ (0.013)\\
+      Event time -6 & -- & -0.002 (0.020) & 0.019 (0.013) & -0.027$^{**}$ (0.012)\\
+      Event time -5 & 0.061$^{***}$ (0.004) & 0.010 (0.014) & 0.015 (0.010) & -0.015 (0.012)\\
+      Event time -4 & 0.034$^{***}$ (0.004) & 0.006 (0.011) & -0.001 (0.008) & -0.006 (0.012)\\
+      Event time -3 & 0 (ref.) & 0 (ref.) & 0 (ref.) & 0 (ref.)\\
+      Event time -2 & -0.018$^{***}$ (0.007) & 0.007$^{*}$ (0.004) & -0.022$^{***}$ (0.008) & 0.023$^{**}$ (0.011)\\
+      Event time -1 & -0.057$^{***}$ (0.010) & -0.012 (0.012) & 0.011 (0.011) & 0.053$^{***}$ (0.017)\\
+      Event time 0 & -0.070$^{***}$ (0.011) & 0.036$^{***}$ (0.014) & 0.019 (0.020) & 0.063$^{***}$ (0.009)\\
+      Event time 1 & 0.005 (0.019) & 0.035 (0.028) & 0.034$^{***}$ (0.012) & 0.105$^{***}$ (0.008)\\
+      Event time 2 & 0.044 (0.031) & 0.054$^{***}$ (0.017) & 0.055$^{***}$ (0.011) & --\\
+      Event time 3 & 0.042$^{**}$ (0.018) & 0.081$^{***}$ (0.020) & -- & --\\
+      Event time 4 & 0.006 (0.019) & -- & -- & --\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+\begin{table}[htbp]
+   \caption{Event-Study by Adoption Wave: Enrolled}\label{tab: event by wave enrolled}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcccc}
+      \toprule
+                   & Wave 2016 & Wave 2017 & Wave 2018 & Wave 2019\\
+                   & (1) & (2) & (3) & (4)\\
+      \midrule
+      Event time -8 & -- & -- & -- & -0.102$^{***}$ (0.015)\\
+      Event time -7 & -- & -- & 0.021 (0.017) & -0.087$^{***}$ (0.012)\\
+      Event time -6 & -- & -0.001 (0.021) & 0.024$^{*}$ (0.014) & -0.045$^{***}$ (0.014)\\
+      Event time -5 & 0.069$^{***}$ (0.004) & 0.009 (0.015) & 0.018$^{**}$ (0.009) & -0.029$^{**}$ (0.012)\\
+      Event time -4 & 0.034$^{***}$ (0.004) & 0.008 (0.009) & 0.006 (0.006) & -0.008 (0.011)\\
+      Event time -3 & 0 (ref.) & 0 (ref.) & 0 (ref.) & 0 (ref.)\\
+      Event time -2 & -0.035$^{***}$ (0.007) & 0.000 (0.007) & -0.014$^{**}$ (0.007) & 0.023$^{***}$ (0.007)\\
+      Event time -1 & -0.061$^{***}$ (0.012) & -0.011 (0.012) & 0.017$^{*}$ (0.010) & 0.016 (0.018)\\
+      Event time 0 & -0.060$^{***}$ (0.014) & 0.044$^{***}$ (0.012) & 0.008 (0.024) & 0.038$^{***}$ (0.013)\\
+      Event time 1 & 0.040$^{*}$ (0.022) & 0.008 (0.027) & 0.033$^{**}$ (0.014) & 0.078$^{***}$ (0.010)\\
+      Event time 2 & 0.027 (0.035) & 0.049$^{***}$ (0.018) & 0.055$^{***}$ (0.011) & --\\
+      Event time 3 & 0.060$^{***}$ (0.023) & 0.074$^{***}$ (0.018) & -- & --\\
+      Event time 4 & 0.072$^{***}$ (0.022) & -- & -- & --\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\hypertarget{covid-and-exam-reform-window-cuts}{%
+\subsection{COVID and exam-reform window
+cuts}\label{covid-and-exam-reform-window-cuts}}
+
+Classes are dated by their 9th-grade admission-process year; their
+college admission process runs five years later. Cut A drops the classes
+whose college admission fell in the two acute disruption years
+(processes 2021 and 2022: senior years under COVID closures, transition
+test PDT), i.e.~admission-process years 2016 and 2017. Cut B
+additionally drops the class facing the disrupted January 2020 exam
+sitting (process 2020, admission-process year 2015). A wave whose
+reference class (formed three years before adoption) falls in the
+dropped years cannot be estimated and leaves the sample: cut A loses the
+2019 wave (Metropolitana), cut B also loses the ten-region 2018 wave.
+Every post-treatment college process in the design falls in 2021--2025,
+inside the PDT/PAES era, so the cuts can remove the acute years but not
+the reform era itself.
+
+\begin{table}[htbp]
+   \caption{Robustness: COVID and Exam-Reform Window Cuts}\label{tab: covid cuts}
+   \centerline{\scalebox{0.8}{\begin{tabular}{lcccccc}
+      \toprule
+                   & GPA & P(Take Exam) & Average LM & Applied & Assigned & Enrolled\\
+                   & (1) & (2) & (3) & (4) & (5) & (6)\\
+      \midrule
+      \multicolumn{7}{l}{\textit{Drop college-admission processes 2021--22 (16,177 classes; waves 2016, 2017, 2018)}}\\
+      Treated & -0.022$^{**}$ & -0.033$^{***}$ & -0.022$^{***}$ & 0.040$^{***}$ & 0.042$^{***}$ & 0.036$^{**}$\\
+       & (0.009) & (0.007) & (0.007) & (0.010) & (0.015) & (0.017)\\
+      \multicolumn{7}{l}{\textit{Drop college-admission processes 2020--22 (6,198 classes; waves 2016, 2017)}}\\
+      Treated & -0.036$^{***}$ & -0.057$^{***}$ & -0.016$^{**}$ & 0.037$^{*}$ & 0.055$^{***}$ & 0.044$^{**}$\\
+       & (0.012) & (0.003) & (0.006) & (0.021) & (0.019) & (0.019)\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\hypertarget{leave-one-region-out}{%
+\subsection{Leave-one-region-out}\label{leave-one-region-out}}
+
+Each row re-estimates the headline outcomes dropping one region entirely
+(treated and control schools alike). Dropping Magallanes removes the
+2016 pilot wave and event time \(4\); dropping Metropolitana removes the
+2019 wave and the deepest lead.
+
+\begin{table}[htbp]
+   \caption{Leave-One-Region-Out: Headline Outcomes}\label{tab: loro}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lccc}
+      \toprule
+                   & Applied & Assigned & Enrolled\\
+                   & (1) & (2) & (3)\\
+      \midrule
+      Drop Tarapac\'a (wave 2017) & 0.046$^{***}$ & 0.051$^{***}$ & 0.042$^{***}$\\
+       & (0.006) & (0.005) & (0.009)\\
+      Drop Antofagasta (wave 2018) & 0.045$^{***}$ & 0.050$^{***}$ & 0.039$^{***}$\\
+       & (0.006) & (0.005) & (0.007)\\
+      Drop Atacama (wave 2018) & 0.045$^{***}$ & 0.050$^{***}$ & 0.040$^{***}$\\
+       & (0.006) & (0.005) & (0.008)\\
+      Drop Coquimbo (wave 2017) & 0.047$^{***}$ & 0.052$^{***}$ & 0.041$^{***}$\\
+       & (0.006) & (0.005) & (0.008)\\
+      Drop Valpara\'iso (wave 2018) & 0.048$^{***}$ & 0.053$^{***}$ & 0.044$^{***}$\\
+       & (0.006) & (0.004) & (0.010)\\
+      Drop O'Higgins (wave 2017) & 0.043$^{***}$ & 0.049$^{***}$ & 0.039$^{***}$\\
+       & (0.007) & (0.005) & (0.006)\\
+      Drop Maule (wave 2018) & 0.044$^{***}$ & 0.051$^{***}$ & 0.040$^{***}$\\
+       & (0.006) & (0.005) & (0.007)\\
+      Drop Biob\'io (wave 2018) & 0.043$^{***}$ & 0.048$^{***}$ & 0.041$^{***}$\\
+       & (0.006) & (0.004) & (0.009)\\
+      Drop Araucan\'ia (wave 2018) & 0.043$^{***}$ & 0.052$^{***}$ & 0.041$^{***}$\\
+       & (0.007) & (0.005) & (0.007)\\
+      Drop Los Lagos (wave 2017) & 0.047$^{***}$ & 0.050$^{***}$ & 0.040$^{***}$\\
+       & (0.006) & (0.005) & (0.008)\\
+      Drop Ays\'en (wave 2018) & 0.046$^{***}$ & 0.051$^{***}$ & 0.042$^{***}$\\
+       & (0.006) & (0.005) & (0.009)\\
+      Drop Magallanes (wave 2016) & 0.047$^{***}$ & 0.051$^{***}$ & 0.041$^{***}$\\
+       & (0.006) & (0.005) & (0.008)\\
+      Drop Metropolitana (wave 2019) & 0.061$^{***}$ & 0.074$^{***}$ & 0.073$^{***}$\\
+       & (0.011) & (0.009) & (0.013)\\
+      Drop Los R\'ios (wave 2018) & 0.046$^{***}$ & 0.051$^{***}$ & 0.041$^{***}$\\
+       & (0.006) & (0.005) & (0.008)\\
+      Drop Arica y Parinacota (wave 2018) & 0.046$^{***}$ & 0.050$^{***}$ & 0.041$^{***}$\\
+       & (0.006) & (0.005) & (0.008)\\
+      Drop \~Nuble (wave 2018) & 0.045$^{***}$ & 0.051$^{***}$ & 0.042$^{***}$\\
+       & (0.006) & (0.005) & (0.009)\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\hypertarget{student-weighted-aggregation}{%
+\subsection{Student-weighted
+aggregation}\label{student-weighted-aggregation}}
+
+The baseline weights every class equally. Here classes are weighted by
+their size (\texttt{did} uses the weight from the base period of each
+comparison, so the weight is the class size of the pre-treatment
+reference cohort, which is not affected by the treatment's effect on
+retention and on-time graduation).
+
+\begin{table}[htbp]
+   \caption{Class-Weighted and Student-Weighted ATTs}\label{tab: student weighted}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcccccc}
+      \toprule
+                   & GPA & P(Take Exam) & Average LM & Applied & Assigned & Enrolled\\
+                   & (1) & (2) & (3) & (4) & (5) & (6)\\
+      \midrule
+      \multicolumn{7}{l}{\textit{Equal class weights (baseline)}}\\
+      Treated & -0.005 & -0.026$^{**}$ & -0.016$^{***}$ & 0.045$^{***}$ & 0.051$^{***}$ & 0.041$^{***}$\\
+       & (0.018) & (0.011) & (0.004) & (0.006) & (0.005) & (0.009)\\
+      \multicolumn{7}{l}{\textit{Class-size weights (base-period class size)}}\\
+      Treated & 0.026$^{**}$ & -0.030$^{**}$ & -0.016$^{***}$ & 0.062$^{***}$ & 0.067$^{***}$ & 0.048$^{***}$\\
+       & (0.012) & (0.015) & (0.003) & (0.007) & (0.005) & (0.013)\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\hypertarget{twfe-analogue-and-private-school-placebo-regenerated}{%
+\subsection{TWFE analogue and private-school placebo,
+regenerated}\label{twfe-analogue-and-private-school-placebo-regenerated}}
+
+The draft's TWFE table (\texttt{twfe\_sae\_on\_outcomes.tex}) and
+private-school table
+(\texttt{staggered\_did\_sae\_on\_outcomes\_only\_private.tex}) come
+from the legacy pipeline: school-level treatment dates, transition band
+left in the sample, school-and-year two-way clustering. Both are
+regenerated here on the class panel with region-level treatment dates,
+the transition band set aside, and region-clustered inference with
+wild-cluster-bootstrap \(p\)-values. The placebo assigns each private
+school its region's adoption date: private admissions are never governed
+by SAE, so nothing should move.
+
+\begin{table}[htbp]
+   \caption{TWFE Analogue}\label{tab: twfe}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcccccc}
+      \toprule
+                   & GPA & P(Take Exam) & Average LM & Applied & Assigned & Enrolled\\
+                   & (1) & (2) & (3) & (4) & (5) & (6)\\
+      \midrule
+      Treated & -0.016 & -0.033$^{***}$ & -0.005 & 0.050$^{***}$ & 0.061$^{***}$ & 0.055$^{***}$\\
+       & (0.011) & (0.004) & (0.004) & (0.011) & (0.006) & (0.006)\\
+      $p$, wild cluster bootstrap & 0.006 & 0.000 & 0.002 & 0.000 & 0.000 & 0.000\\
+      $p$, wild subcluster bootstrap & 0.023 & 0.000 & 0.004 & 0.001 & 0.000 & 0.000\\
+      \midrule
+      Observations & 23,391 & 23,391 & 23,391 & 23,391 & 23,391 & 23,391\\
+      School and year fixed effects & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+\begin{table}[htbp]
+   \caption{Placebo: Private Fee-Paying Schools at Their Region's Adoption Date}\label{tab: private placebo}
+   \centerline{\scalebox{0.8}{\begin{tabular}{lcccccc}
+      \toprule
+                   & GPA & P(Take Exam) & Average LM & Applied & Assigned & Enrolled\\
+                   & (1) & (2) & (3) & (4) & (5) & (6)\\
+      \midrule
+      Post SAE & -0.025 & 0.006 & -0.012$^{**}$ & -0.031$^{***}$ & -0.033$^{***}$ & -0.040$^{**}$\\
+       & (0.021) & (0.006) & (0.005) & (0.010) & (0.009) & (0.014)\\
+      $p$, wild cluster bootstrap & 0.172 & 0.639 & 0.689 & 0.263 & 0.088 & 0.208\\
+      $p$, wild subcluster bootstrap & 0.179 & 0.750 & 0.783 & 0.076 & 0.075 & 0.098\\
+      \midrule
+      Observations & 3,594 & 3,594 & 3,594 & 3,594 & 3,594 & 3,594\\
+      School and year fixed effects & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\hypertarget{wave-balance}{%
+\subsection{Wave balance}\label{wave-balance}}
+
+Region-level means of pre-period observables (admission-process years
+2011 to 2013, at least three years before any adoption) over publicly
+funded schools, by adoption wave; regions weighted equally, the
+randomization unit. The last columns test the randomized margin: the
+difference between the 2017 and 2018 waves, with the exact
+randomization-inference \(p\)-value over the same 1,001 admissible
+reassignments.
+
+\begin{table}[htbp]
+   \caption{Pre-Period Balance by Adoption Wave}\label{tab: wave balance}
+   \centerline{\scalebox{0.8}{\begin{tabular}{lcccccc}
+      \toprule
+                   & Wave 2016 & Wave 2017 & Wave 2018 & Wave 2019 & Diff.\ 2017$-$2018 & RI $p$\\
+                   & (Magallanes) & (4 regions) & (10 regions) & (Metropolitana) & & \\
+      \midrule
+      GPA & 5.772 & 5.612 & 5.650 & 5.532 & -0.039 & 0.171\\
+      P(Take Exam) & 0.837 & 0.835 & 0.845 & 0.897 & -0.010 & 0.661\\
+      Average LM & 0.439 & 0.405 & 0.413 & 0.447 & -0.008 & 0.711\\
+      Applied & 0.535 & 0.427 & 0.478 & 0.398 & -0.051 & 0.118\\
+      Assigned & 0.367 & 0.308 & 0.338 & 0.283 & -0.031 & 0.203\\
+      Enrolled & 0.330 & 0.258 & 0.287 & 0.212 & -0.029 & 0.253\\
+      Class size & 48.8 & 44.2 & 53.0 & 49.5 & -8.8 & 0.270\\
+      Public schools & 25.0 & 124.5 & 112.7 & 839.0 & 11.8 & 0.878\\
+      Classes & 75.0 & 362.2 & 325.8 & 2418.0 & 36.4 & 0.866\\
+      \midrule
+      Regions & 1 & 4 & 10 & 1 &  & \\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\hypertarget{sample-summary-statistics}{%
+\subsection{Sample summary statistics}\label{sample-summary-statistics}}
+
+\begin{table}[htbp]
+   \caption{Sample Summary Statistics}\label{tab: summary stats}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lccc}
+      \toprule
+                   & All & Eventually treated & Never treated (private)\\
+                   & (1) & (2) & (3)\\
+      \midrule
+      \multicolumn{4}{l}{\textit{Students (headline sample)}}\\
+      GPA & 5.814 & 5.766 & 6.194\\
+       & (0.565) & (0.552) & (0.523)\\
+      P(Take Exam) & 0.849 & 0.832 & 0.979\\
+       & (0.358) & (0.374) & (0.142)\\
+      Average LM & 0.475 & 0.432 & 0.818\\
+       & (0.328) & (0.314) & (0.217)\\
+      Applied & 0.521 & 0.478 & 0.861\\
+       & (0.500) & (0.500) & (0.346)\\
+      Assigned & 0.417 & 0.369 & 0.794\\
+       & (0.493) & (0.483) & (0.404)\\
+      Enrolled & 0.347 & 0.302 & 0.702\\
+       & (0.476) & (0.459) & (0.458)\\
+      Female & 0.522 & 0.525 & 0.501\\
+       &  &  & \\
+      Students & 1,266,116 & 1,124,202 & 141,914\\
+      \midrule
+      \multicolumn{4}{l}{\textit{Classes (school $\times$ entry cohort)}}\\
+      Classes & 28,483 & 24,882 & 3,601\\
+      Average class size & 44.452 & 45.181 & 39.410\\
+      Schools & 3108 & 2713 & 395\\
+      Regions & 16 & 16 & 15\\
+      Admission-process years & 2011--2020 & 2011--2020 & 2011--2020\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\hypertarget{session}{%
+\subsection{Session}\label{session}}
+
+\begin{verbatim}
+## did version: 2.5.1 | DRDID: 1.3.0 | fixest: 0.14.0 | SMOKE: FALSE | biters: 10000 | WCB draws: 9999
+\end{verbatim}
+
+\end{document}

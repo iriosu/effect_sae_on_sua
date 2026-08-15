@@ -1,0 +1,434 @@
+---
+title: "Effect of SAE on SUA - PACE Robustness (Issue #11)"
+output:
+  pdf_document:
+    keep_tex: true
+    extra_dependencies: ["booktabs"]
+  html_document: default
+---
+
+Checks whether the female-skewed SAE effects are confounded by PACE (Programa
+de Acompañamiento y Acceso Efectivo), following issue #11. PACE guarantees
+seats in the centralized system to top-15% students of covered
+high-vulnerability schools; eligibility requires taking the entrance exam and
+applying, so PACE moves the applied/assigned/enrolled outcomes mechanically,
+and its benefits skew female (Carlana, Chiuri, Miglino and Tincani, 2026).
+Three tests: (i) does PACE exposure itself load on the SAE rollout within our
+design; (ii) does the gender effect survive when PACE-track admissions are
+removed from the outcomes; (iii) does it survive when ever-PACE schools are
+dropped. Sample, estimator, seed and table helpers are identical to
+`3_effect_sae_am.Rmd`.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# Clean ---------------------------------------------------------------
+rm(list = ls())
+
+# Libraries ---------------------------------------------------------------
+library(dplyr)
+library(magrittr)
+library(purrr)
+library(data.table)
+library(did)
+
+start_year <- 2012
+end_year <- 2021
+media <- c(310, 410, 510, 610, 710, 810)
+clustering_var <- "region"
+
+# shared Dropbox data folder (resolves to each user's own Dropbox)
+home <- ifelse(Sys.getenv("USERPROFILE") != "", Sys.getenv("USERPROFILE"), path.expand("~"))
+data_path <- file.path(home, "Dropbox", "Effect SAE on SUA", "data")
+dir.create("tables", showWarnings = FALSE)
+
+outcomes <- c(
+  applied  = "Applied",
+  assigned = "Assigned",
+  enrolled = "Enrolled"
+)
+outcomes_xpace <- c(
+  applied_xpace  = "Applied",
+  assigned_xpace = "Assigned",
+  enrolled_xpace = "Enrolled"
+)
+outcomes_pace <- c(
+  pace_flag    = "Share PACE",
+  pace_any     = "Any PACE",
+  pace_any_imp = "Any PACE (imp.)"
+)
+pace_student_cols <- c("pace_flag", "applied_pace", "assigned_pace", "enrolled_pace",
+                       names(outcomes_xpace))
+
+# helpers: table formatting (verbatim from 3_effect_sae_am.Rmd)
+fmt  <- function(x) sub("^-(0\\.000)$", "\\1", sprintf("%.3f", x))
+star <- function(p) ifelse(p < .01, "$^{***}$",
+                    ifelse(p < .05, "$^{**}$",
+                    ifelse(p < .1,  "$^{*}$", "")))
+row_tex <- function(lbl, vals) paste0("      ", lbl, " & ", paste(vals, collapse = " & "), "\\\\\n")
+
+# helper: collapse students to school x cohort classes (class means over the
+# students passed in; num_students = their count)
+class_panel <- function(students, cols = names(outcomes)) {
+  d <- students[, c(.(num_students = .N), lapply(.SD, mean, na.rm = TRUE)),
+                by = .(rbd, AGNO_9th), .SDcols = cols]
+  d[, year := AGNO_9th - 1]
+  d <- merge(d, sch[, .(rbd, year_region_sae, region)], by = "rbd", all.x = TRUE)
+  d[year_region_sae > max(year), year_region_sae := 0]
+  d
+}
+
+# helper: simple aggregated ATT table, coefficients with region-clustered
+# bootstrap SEs, pre-treatment means over treated classes, one column per outcome
+did_table <- function(res, means_pre, nobs, caption, label, file) {
+  att <- map_dbl(res, "overall.att")
+  se  <- map_dbl(res, "overall.se")
+  p   <- 2 * pnorm(-abs(att / se))
+  tab <- paste0(
+    "\\begin{table}[htbp]\n   \\caption{", caption, "}\\label{", label, "}\n",
+    "   \\centerline{\\scalebox{0.85}{\\begin{tabular}{l", strrep("c", length(res)), "}\n      \\toprule\n",
+    "                   & ", paste(names(res), collapse = " & "), "\\\\\n",
+    "                   & ", paste0("(", seq_along(res), ")", collapse = " & "), "\\\\\n      \\midrule\n",
+    row_tex("Treated", paste0(fmt(att), star(p))),
+    row_tex("", paste0("(", fmt(se), ")")),
+    "      \\midrule\n",
+    row_tex("Mean (pre-treatment)", fmt(means_pre)),
+    row_tex("Observations", rep(format(nobs, big.mark = ","), length(res))),
+    "      \\bottomrule\n   \\end{tabular}}}\n\\end{table}\n")
+  writeLines(tab, file)
+  tab
+}
+
+# helper: same table with two columns per outcome (e.g. female / male)
+did_table_pair <- function(res_a, res_b, lab_a, lab_b, means_a, means_b, n_a, n_b,
+                           caption, label, file) {
+  att_a <- map_dbl(res_a, "overall.att"); se_a <- map_dbl(res_a, "overall.se")
+  att_b <- map_dbl(res_b, "overall.att"); se_b <- map_dbl(res_b, "overall.se")
+  p_a <- 2 * pnorm(-abs(att_a / se_a))
+  p_b <- 2 * pnorm(-abs(att_b / se_b))
+  k <- length(res_a)
+  interleave <- function(a, b) as.vector(rbind(a, b))
+  tab <- paste0(
+    "\\begin{table}[htbp]\n   \\caption{", caption, "}\\label{", label, "}\n",
+    "   \\centerline{\\scalebox{0.85}{\\begin{tabular}{l", strrep("c", 2 * k), "}\n      \\toprule\n",
+    paste0("      & \\multicolumn{2}{c}{", names(res_a), "}", collapse = "\n"), " \\\\\n      ",
+    paste0("\\cmidrule(lr){", 2 * seq_len(k), "-", 2 * seq_len(k) + 1, "}", collapse = ""), "\n",
+    "                   & ", paste(rep(c(lab_a, lab_b), k), collapse = " & "), " \\\\\n",
+    "                   & ", paste0("(", seq_len(2 * k), ")", collapse = " & "), "\\\\\n      \\midrule\n",
+    row_tex("Treated", interleave(paste0(fmt(att_a), star(p_a)), paste0(fmt(att_b), star(p_b)))),
+    row_tex("", interleave(paste0("(", fmt(se_a), ")"), paste0("(", fmt(se_b), ")"))),
+    "      \\midrule\n",
+    row_tex("Mean (pre-treatment)", interleave(fmt(means_a), fmt(means_b))),
+    row_tex("Observations", rep(c(format(n_a, big.mark = ","), format(n_b, big.mark = ",")), k)),
+    "      \\bottomrule\n   \\end{tabular}}}\n\\end{table}\n")
+  writeLines(tab, file)
+  tab
+}
+```
+
+## Data and treatment
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# Student panel. Treatment: a school joins SAE the first year 9th grade in its
+# region is assigned through the system; never-treated = private (DEPE 4).
+# Identical to 3_effect_sae_am.Rmd.
+df <- readRDS(file.path(data_path, "panel_9-12_2010_2021.rds"))
+setDT(df)
+df <- df[, .(MRUN, AGNO, RBD, COD_GRADO, COD_ENSE, year_rbd_first_sae,
+             graduated_secondary, COD_REG_RBD, COD_DEPE, GEN_ALU,
+             gpa_secondary, scored_lm, prom_lm_actual, applied, assigned, enrolled)]
+
+sch <- unique(df[, .(RBD, year_rbd_first_sae, COD_REG_RBD, COD_DEPE)])[, .(
+  yfs    = { v <- year_rbd_first_sae[!is.na(year_rbd_first_sae)]; if (length(v)) as.numeric(v[1]) else 0 },
+  region = { v <- COD_REG_RBD[!is.na(COD_REG_RBD)]; if (length(v)) as.integer(v[1]) else NA_integer_ },
+  depe   = { v <- COD_DEPE[!is.na(COD_DEPE)]; if (length(v)) as.integer(names(which.max(table(v)))) else NA_integer_ }
+), by = RBD]
+setnames(sch, "RBD", "rbd")
+
+sae <- readRDS(file.path(data_path, "sae_data_2016_2023.rds"))
+setDT(sae)
+nine <- sae[COD_ENSE %in% media & COD_GRADO == 1, .(g9 = as.numeric(min(AGNO))), by = RBD]
+setnames(nine, "RBD", "rbd")
+sch <- merge(sch, nine, by = "rbd", all.x = TRUE)
+reg9 <- sch[!is.na(g9), .(g9r = min(g9)), by = region][!is.na(region)]
+sch <- merge(sch, reg9, by = "region", all.x = TRUE)
+sch[, elig := fifelse(!is.na(depe), as.integer(depe != 4), as.integer(yfs > 0 | !is.na(g9)))]
+sch[, year_region_sae := fifelse(elig == 1 & !is.na(g9r), as.numeric(g9r), 0)]
+rm(sae, nine, reg9)
+
+# regular-track students; high school records for grades 9-12
+keep <- df[, all(COD_ENSE == 110 | COD_ENSE %in% media), by = MRUN][V1 == TRUE, MRUN]
+hs <- df[MRUN %in% keep & AGNO >= 2010 & AGNO <= 2024 &
+           COD_ENSE %in% media & COD_GRADO %in% 1:4, .(MRUN, AGNO, RBD, COD_GRADO)]
+setorder(hs, MRUN, AGNO, COD_GRADO)
+```
+
+## PACE variables
+
+PACE flags come straight from the DEMRE student records, keyed to each
+student's first admission process (same convention as the panel's
+applied/assigned/enrolled in `1a_data_processing_primary_secondary.Rmd`):
+`is_pace` marks students registered as PACE; `applied_pace`/`assigned_pace`
+mark use of the PACE application track; enrollment through PACE is an
+enrollment in the program the student was selected into via the PACE track.
+The `x PACE` outcomes remove the PACE channel from the corresponding baseline
+outcome: applications only on the PACE list, assignments through the PACE
+track, and enrollments following a PACE-track assignment do not count. The
+DEMRE PACE flag exists from the 2017 process onward, so the 69-school pilot
+admissions of 2016 are not flagged; the diagnostics below print the counts by
+year to check coverage against the program's expansion (69 schools in 2014,
+456 by 2016; Carlana et al., 2026) and the 2023 change in the flag's coding.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+demre <- readRDS(file.path(data_path, "data_students_2004_2025.rds"))
+setDT(demre)
+demre <- demre[mrun %in% df$MRUN,
+               .(mrun, year, pace, is_pace, applied, applied_reg, applied_pace,
+                 assigned, assigned_reg, assigned_pace, enrolled, pref_seleccion_pace,
+                 codigo_carrera_matricula, codigo_carrera_pace)]
+setorder(demre, mrun, year)
+demre <- unique(demre, by = "mrun")   # first admission process, as in 1a
+
+demre[, pace_flag     := as.integer(coalesce(as.numeric(is_pace), 0) == 1)]
+demre[, applied_reg   := as.integer(coalesce(as.numeric(applied_reg), 0) == 1)]
+demre[, applied_pace  := as.integer(coalesce(as.numeric(applied_pace), 0) == 1)]
+demre[, assigned_pace := as.integer(coalesce(as.numeric(assigned_pace), 0) == 1)]
+demre[, enrolled_pace := as.integer(coalesce(as.numeric(enrolled), 0) == 1 & assigned_pace == 1 &
+                                    !is.na(codigo_carrera_matricula) & !is.na(codigo_carrera_pace) &
+                                    codigo_carrera_matricula == codigo_carrera_pace)]
+
+# diagnostics: verify flag semantics before trusting the definitions below
+cat("PACE-flagged students by admission process (first appearance):\n")
+print(demre[pace_flag == 1, .N, by = year][order(year)])
+cat("\nis_pace vs. raw pace label:\n")
+print(demre[, table(pace_flag, pace_lbl = trimws(as.character(pace)) == "PACE", useNA = "ifany")])
+cat("\nPACE-track use among flagged students:\n")
+print(demre[pace_flag == 1, .(applied_pace = mean(applied_pace), assigned_pace = mean(assigned_pace),
+                              enrolled_pace = mean(enrolled_pace))])
+cat("\nassigned_pace outside the flagged group (should be ~0):",
+    demre[pace_flag == 0, sum(assigned_pace)], "\n")
+cat("\nassigned_pace vs. selected at some preference on the PACE track:\n")
+print(demre[, table(assigned_pace, sel_pace = coalesce(as.numeric(pref_seleccion_pace), 0) > 0)])
+cat("\nare PACE-track selections inside the baseline outcomes? (flagged students):\n")
+print(demre[pace_flag == 1, table(assigned, assigned_pace, useNA = "ifany")])
+print(demre[pace_flag == 1, table(applied, applied_pace, useNA = "ifany")])
+cat("\nPACE-only applicants (applied_pace & !applied_reg) by year:\n")
+print(demre[applied_pace == 1 & applied_reg == 0, .N, by = year][order(year)])
+cat("\namong enrolled with a PACE-track assignment, share enrolled in that program:\n")
+print(demre[assigned_pace == 1 & coalesce(as.numeric(enrolled), 0) == 1,
+            mean(!is.na(codigo_carrera_matricula) & !is.na(codigo_carrera_pace) &
+                 codigo_carrera_matricula == codigo_carrera_pace)])
+
+df <- merge(df, demre[, .(MRUN = mrun, pace_flag, applied_reg, applied_pace,
+                          assigned_pace, enrolled_pace)], by = "MRUN", all.x = TRUE)
+rm(demre)
+invisible(gc())
+
+# xPACE outcomes: NA-ness mirrors the baseline outcome so class means compare
+# like with like
+df[, pace_flag := coalesce(pace_flag, 0L)]
+df[, applied_xpace  := applied  * as.integer(!(coalesce(applied_pace, 0L) == 1 &
+                                               coalesce(applied_reg, 0L) == 0))]
+df[, assigned_xpace := assigned * (1L - coalesce(assigned_pace, 0L))]
+df[, enrolled_xpace := enrolled * (1L - coalesce(enrolled_pace, 0L))]
+df[, applied_pace   := coalesce(applied_pace, 0L)]
+df[, assigned_pace  := coalesce(assigned_pace, 0L)]
+df[, enrolled_pace  := coalesce(enrolled_pace, 0L)]
+```
+
+## Headline sample
+
+Same sample as the headline table: graduated on time, all four grades in the
+same school, cohorts entering 9th grade `r start_year`--`r end_year`.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+anchor <- hs[COD_GRADO == 1, .(rbd = RBD[1], AGNO_9th = AGNO[1]), by = MRUN]
+hs1 <- merge(hs, anchor[, .(MRUN, rbd)], by = "MRUN")
+per <- hs1[, .(ng = uniqueN(COD_GRADO[RBD == rbd]), nsch = uniqueN(RBD)), by = MRUN]
+per <- merge(per, anchor, by = "MRUN")
+stayers <- per[ng == 4 & nsch == 1, .(MRUN, rbd, AGNO_9th)]
+setkey(stayers, MRUN)
+grad <- hs1[MRUN %in% stayers$MRUN, .(grad_year = max(AGNO)), by = MRUN]
+vals <- df[MRUN %in% stayers$MRUN,
+           lapply(.SD, function(x) { v <- x[!is.na(x)]; if (length(v)) as.numeric(v[1]) else NA_real_ }),
+           by = MRUN, .SDcols = c(names(outcomes), pace_student_cols, "graduated_secondary", "GEN_ALU")]
+students <- merge(stayers, vals, by = "MRUN")
+students <- merge(students, grad, by = "MRUN")
+students <- students[graduated_secondary == 1 & grad_year == AGNO_9th + 3 &
+                       AGNO_9th >= start_year & AGNO_9th <= end_year]
+
+dr <- class_panel(students, c(names(outcomes), pace_student_cols))
+dr[, pace_any := as.integer(pace_flag > 0)]
+fp <- dr[pace_any == 1, .(first_pace = min(year)), by = rbd]
+dr <- merge(dr, fp, by = "rbd", all.x = TRUE)
+# imputed exposure: schools stay PACE once entered (bridges the 2023 change in
+# the DEMRE flag's coding)
+dr[, pace_any_imp := as.integer(!is.na(first_pace) & year >= first_pace)]
+```
+
+## Does PACE exposure load on the SAE rollout?
+
+The direct confounding test: same design and estimator as the headline table,
+with the class's PACE exposure as the outcome. If PACE arrival is orthogonal
+to SAE adoption, these ATTs are zero.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+cat("classes with any PACE-flagged student, by admission process (AGNO_9th + 4):\n")
+print(dr[pace_any == 1, .(schools = uniqueN(rbd), classes = .N), by = .(adm_year = AGNO_9th + 4)][order(adm_year)])
+cat("\nPACE exposure of treated classes by event time (year - year_region_sae):\n")
+print(dr[year_region_sae > 0,
+         .(share_any = mean(pace_any), share_any_imp = mean(pace_any_imp),
+           share_students = mean(pace_flag), n = .N),
+         by = .(event_time = year - year_region_sae)][order(event_time)])
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+common_args <- list(
+  tname = "year",
+  idname = "rbd",
+  gname = "year_region_sae",
+  xformla = ~num_students,
+  data = dr,
+  control_group = "notyettreated",
+  anticipation = 2,
+  base_period = "universal",
+  est_method = "dr",
+  allow_unbalanced_panel = TRUE,
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+# same seed for each bootstrap so results do not depend on the order the
+# models are run
+models_pace <- map(names(outcomes_pace), function(y) {
+  set.seed(20260610)
+  m <- do.call(att_gt, c(list(yname = y), common_args))
+  suppressWarnings(aggte(m, type = "simple", na.rm = TRUE))
+})
+names(models_pace) <- outcomes_pace
+
+means_pre_pace <- dr[year_region_sae > 0 & year < year_region_sae,
+                     sapply(.SD, mean, na.rm = TRUE), .SDcols = names(outcomes_pace)]
+
+cat(did_table(models_pace, means_pre_pace, nrow(dr), "Effect of SAE on PACE Exposure",
+              "tab: pace exposure did", "tables/did_pace_exposure_AM.tex"))
+```
+
+## Gender balance of the PACE channel
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+fem <- function(x) students[x == 1, mean(GEN_ALU == 2, na.rm = TRUE)]
+cat("female share: sample =", fmt(students[, mean(GEN_ALU == 2, na.rm = TRUE)]),
+    "| PACE-flagged =", fmt(fem(students$pace_flag)),
+    "| applied via PACE =", fmt(fem(students$applied_pace)),
+    "| assigned via PACE =", fmt(fem(students$assigned_pace)),
+    "| enrolled via PACE =", fmt(fem(students$enrolled_pace)), "\n")
+cat("\nshare of each student outcome accounted for by the PACE track\n",
+    "(students in treated classes, post-treatment):\n")
+tp <- dr[year_region_sae > 0 & year >= year_region_sae, .(rbd, AGNO_9th)]
+stp <- students[tp, on = c("rbd", "AGNO_9th"), nomatch = 0]
+print(stp[!is.na(GEN_ALU),
+          .(applied = mean(applied, na.rm = TRUE), applied_pace_only = mean(applied - applied_xpace, na.rm = TRUE),
+            assigned = mean(assigned, na.rm = TRUE), assigned_pace = mean(assigned - assigned_xpace, na.rm = TRUE),
+            enrolled = mean(enrolled, na.rm = TRUE), enrolled_pace = mean(enrolled - enrolled_xpace, na.rm = TRUE)),
+          by = .(female = as.integer(GEN_ALU == 2))])
+```
+
+## Heterogeneity by gender, removing the PACE channel
+
+Class means computed separately over the female and male students of each
+class, as in the gender table of `3_effect_sae_am.Rmd`; students with unknown
+sex are dropped and the control is the subgroup class size. Baseline outcomes
+replicate the draft's gender table (a check that this file reproduces it
+exactly); the `x PACE` outcomes remove PACE-track applications, assignments
+and enrollments. If the female effect is PACE, it shrinks toward zero here.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+female <- students[GEN_ALU == 2]
+male   <- students[GEN_ALU == 1]
+dr_f <- class_panel(female, c(names(outcomes), names(outcomes_xpace)))
+dr_m <- class_panel(male,   c(names(outcomes), names(outcomes_xpace)))
+
+run_gender <- function(dat, ycols) {
+  common_args$data <- dat
+  res <- map(ycols, function(y) {
+    set.seed(20260610)
+    m <- do.call(att_gt, c(list(yname = y), common_args))
+    suppressWarnings(aggte(m, type = "simple", na.rm = TRUE))
+  })
+  names(res) <- ycols
+  res
+}
+
+models_f_base <- run_gender(dr_f, names(outcomes))
+models_m_base <- run_gender(dr_m, names(outcomes))
+models_f_x    <- run_gender(dr_f, names(outcomes_xpace))
+models_m_x    <- run_gender(dr_m, names(outcomes_xpace))
+names(models_f_x) <- names(models_m_x) <- outcomes_xpace
+
+means_pre_f <- dr_f[year_region_sae > 0 & year < year_region_sae,
+                    sapply(.SD, mean, na.rm = TRUE), .SDcols = names(outcomes_xpace)]
+means_pre_m <- dr_m[year_region_sae > 0 & year < year_region_sae,
+                    sapply(.SD, mean, na.rm = TRUE), .SDcols = names(outcomes_xpace)]
+
+cat(did_table_pair(models_f_x, models_m_x, "Female", "Male", means_pre_f, means_pre_m,
+                   nrow(dr_f), nrow(dr_m),
+                   "Regression Results by Gender, Excluding the PACE Channel",
+                   "tab: results by gender excl pace", "tables/did_by_gender_xpace_AM.tex"))
+```
+
+## Heterogeneity by gender, excluding ever-PACE schools
+
+Belt and braces: drop every school with a PACE-flagged class at any point in
+the sample (this removes the most vulnerable treated schools, so the estimand
+changes; the comparison of interest is the female/male gap, not the level).
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+pace_schools <- dr[pace_any == 1, unique(rbd)]
+cat(length(pace_schools), "ever-PACE schools dropped;",
+    fmt(dr[year_region_sae > 0, mean(rbd %in% pace_schools)]),
+    "of treated classes belong to them.\n\n")
+
+dr_f_np <- class_panel(female[!rbd %in% pace_schools], names(outcomes))
+dr_m_np <- class_panel(male[!rbd %in% pace_schools],   names(outcomes))
+
+models_f_np <- run_gender(dr_f_np, names(outcomes))
+models_m_np <- run_gender(dr_m_np, names(outcomes))
+names(models_f_np) <- names(models_m_np) <- outcomes
+
+means_pre_f_np <- dr_f_np[year_region_sae > 0 & year < year_region_sae,
+                          sapply(.SD, mean, na.rm = TRUE), .SDcols = names(outcomes)]
+means_pre_m_np <- dr_m_np[year_region_sae > 0 & year < year_region_sae,
+                          sapply(.SD, mean, na.rm = TRUE), .SDcols = names(outcomes)]
+
+cat(did_table_pair(models_f_np, models_m_np, "Female", "Male", means_pre_f_np, means_pre_m_np,
+                   nrow(dr_f_np), nrow(dr_m_np),
+                   "Regression Results by Gender, Excluding Ever-PACE Schools",
+                   "tab: results by gender excl pace schools",
+                   "tables/did_by_gender_excl_pace_schools_AM.tex"))
+```
+
+## Summary
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+line <- function(res_f, res_m, y, lbl) {
+  a <- function(r) sprintf("%7.3f (%.3f)", r[[y]]$overall.att, r[[y]]$overall.se)
+  cat(sprintf("%-28s female %s | male %s\n", lbl, a(res_f), a(res_m)))
+}
+for (y in names(outcomes)) {
+  cat("\n--", outcomes[[y]], "--\n")
+  line(models_f_base, models_m_base, y, "baseline (replication)")
+  line(models_f_x,    models_m_x,    outcomes_xpace[paste0(y, "_xpace")], "excl. PACE channel")
+  line(models_f_np,   models_m_np,   outcomes[y], "excl. ever-PACE schools")
+}
+cat("\n-- SAE effect on PACE exposure --\n")
+for (y in outcomes_pace) cat(sprintf("%-28s %7.3f (%.3f)\n", y,
+                                     models_pace[[y]]$overall.att, models_pace[[y]]$overall.se))
+cat("\nBaseline rows must match tables/did_by_gender_AM.tex; if they do not,\n",
+    "the sample replication is off and the other rows are not comparable.\n")
+```

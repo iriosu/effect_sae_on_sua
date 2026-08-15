@@ -1,0 +1,321 @@
+---
+title: "Effect of SAE on SUA - Gender Mechanisms, Phase 2: Sorting (Issue #14)"
+output:
+  pdf_document:
+    keep_tex: true
+    extra_dependencies: ["booktabs"]
+  html_document: default
+---
+
+Phase 2 of issue #14: does SAE re-sort girls across schools? Three tests. (A)
+Class gender composition: effect of SAE on the share of female students, with
+treated schools split by academic vs vocational type and by pre-reform
+college-pipeline intensity — if centralized choice moves girls toward
+college-pipeline schools, their share rises there and falls elsewhere. (B)
+Commuting: share of students enrolled outside their commune of residence in
+9th grade, by gender — a feasible-set test. (C) Composition: average 8th-grade
+SIMCE of the class's female and male students — measured before high school,
+so it moves only through who sorts where. Sample, estimator, seed and helpers
+identical to `3_effect_sae_am.Rmd`.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# Clean ---------------------------------------------------------------
+rm(list = ls())
+
+# Libraries ---------------------------------------------------------------
+library(dplyr)
+library(magrittr)
+library(purrr)
+library(data.table)
+library(did)
+
+start_year <- 2012
+end_year <- 2021
+media <- c(310, 410, 510, 610, 710, 810)
+clustering_var <- "region"
+
+# shared Dropbox data folder (resolves to each user's own Dropbox)
+home <- ifelse(Sys.getenv("USERPROFILE") != "", Sys.getenv("USERPROFILE"), path.expand("~"))
+data_path <- file.path(home, "Dropbox", "Effect SAE on SUA", "data")
+dir.create("tables", showWarnings = FALSE)
+
+# helpers: table formatting (verbatim from 3_effect_sae_am.Rmd)
+fmt  <- function(x) sub("^-(0\\.000)$", "\\1", sprintf("%.3f", x))
+star <- function(p) ifelse(p < .01, "$^{***}$",
+                    ifelse(p < .05, "$^{**}$",
+                    ifelse(p < .1,  "$^{*}$", "")))
+row_tex <- function(lbl, vals) paste0("      ", lbl, " & ", paste(vals, collapse = " & "), "\\\\\n")
+
+class_panel <- function(students, cols) {
+  d <- students[, c(.(num_students = .N), lapply(.SD, mean, na.rm = TRUE)),
+                by = .(rbd, AGNO_9th), .SDcols = cols]
+  d[, year := AGNO_9th - 1]
+  d <- merge(d, sch[, .(rbd, year_region_sae, region)], by = "rbd", all.x = TRUE)
+  d[year_region_sae > max(year), year_region_sae := 0]
+  d
+}
+
+did_table <- function(res, means_pre, nobs, caption, label, file) {
+  att <- map_dbl(res, "overall.att")
+  se  <- map_dbl(res, "overall.se")
+  p   <- 2 * pnorm(-abs(att / se))
+  tab <- paste0(
+    "\\begin{table}[htbp]\n   \\caption{", caption, "}\\label{", label, "}\n",
+    "   \\centerline{\\scalebox{0.85}{\\begin{tabular}{l", strrep("c", length(res)), "}\n      \\toprule\n",
+    "                   & ", paste(names(res), collapse = " & "), "\\\\\n",
+    "                   & ", paste0("(", seq_along(res), ")", collapse = " & "), "\\\\\n      \\midrule\n",
+    row_tex("Treated", paste0(fmt(att), star(p))),
+    row_tex("", paste0("(", fmt(se), ")")),
+    "      \\midrule\n",
+    row_tex("Mean (pre-treatment)", fmt(means_pre)),
+    row_tex("Observations", format(nobs, big.mark = ",")),
+    "      \\bottomrule\n   \\end{tabular}}}\n\\end{table}\n")
+  writeLines(tab, file)
+  tab
+}
+
+did_table_pair <- function(res_a, res_b, lab_a, lab_b, means_a, means_b, n_a, n_b,
+                           caption, label, file) {
+  att_a <- map_dbl(res_a, "overall.att"); se_a <- map_dbl(res_a, "overall.se")
+  att_b <- map_dbl(res_b, "overall.att"); se_b <- map_dbl(res_b, "overall.se")
+  p_a <- 2 * pnorm(-abs(att_a / se_a))
+  p_b <- 2 * pnorm(-abs(att_b / se_b))
+  k <- length(res_a)
+  interleave <- function(a, b) as.vector(rbind(a, b))
+  tab <- paste0(
+    "\\begin{table}[htbp]\n   \\caption{", caption, "}\\label{", label, "}\n",
+    "   \\centerline{\\scalebox{0.85}{\\begin{tabular}{l", strrep("c", 2 * k), "}\n      \\toprule\n",
+    paste0("      & \\multicolumn{2}{c}{", names(res_a), "}", collapse = "\n"), " \\\\\n      ",
+    paste0("\\cmidrule(lr){", 2 * seq_len(k), "-", 2 * seq_len(k) + 1, "}", collapse = ""), "\n",
+    "                   & ", paste(rep(c(lab_a, lab_b), k), collapse = " & "), " \\\\\n",
+    "                   & ", paste0("(", seq_len(2 * k), ")", collapse = " & "), "\\\\\n      \\midrule\n",
+    row_tex("Treated", interleave(paste0(fmt(att_a), star(p_a)), paste0(fmt(att_b), star(p_b)))),
+    row_tex("", interleave(paste0("(", fmt(se_a), ")"), paste0("(", fmt(se_b), ")"))),
+    "      \\midrule\n",
+    row_tex("Mean (pre-treatment)", interleave(fmt(means_a), fmt(means_b))),
+    row_tex("Observations", rep(c(format(n_a, big.mark = ","), format(n_b, big.mark = ",")), k)),
+    "      \\bottomrule\n   \\end{tabular}}}\n\\end{table}\n")
+  writeLines(tab, file)
+  tab
+}
+```
+
+## Data and treatment
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# Identical to 3_effect_sae_am.Rmd, keeping communes and school type (COD_ENSE).
+df <- readRDS(file.path(data_path, "panel_9-12_2010_2021.rds"))
+setDT(df)
+df <- df[, .(MRUN, AGNO, RBD, COD_GRADO, COD_ENSE, year_rbd_first_sae,
+             graduated_secondary, COD_REG_RBD, COD_DEPE, GEN_ALU,
+             COD_COM_ALU, COD_COM_RBD, applied)]
+
+sch <- unique(df[, .(RBD, year_rbd_first_sae, COD_REG_RBD, COD_DEPE)])[, .(
+  yfs    = { v <- year_rbd_first_sae[!is.na(year_rbd_first_sae)]; if (length(v)) as.numeric(v[1]) else 0 },
+  region = { v <- COD_REG_RBD[!is.na(COD_REG_RBD)]; if (length(v)) as.integer(v[1]) else NA_integer_ },
+  depe   = { v <- COD_DEPE[!is.na(COD_DEPE)]; if (length(v)) as.integer(names(which.max(table(v)))) else NA_integer_ }
+), by = RBD]
+setnames(sch, "RBD", "rbd")
+
+sae <- readRDS(file.path(data_path, "sae_data_2016_2023.rds"))
+setDT(sae)
+nine <- sae[COD_ENSE %in% media & COD_GRADO == 1, .(g9 = as.numeric(min(AGNO))), by = RBD]
+setnames(nine, "RBD", "rbd")
+sch <- merge(sch, nine, by = "rbd", all.x = TRUE)
+reg9 <- sch[!is.na(g9), .(g9r = min(g9)), by = region][!is.na(region)]
+sch <- merge(sch, reg9, by = "region", all.x = TRUE)
+sch[, elig := fifelse(!is.na(depe), as.integer(depe != 4), as.integer(yfs > 0 | !is.na(g9)))]
+sch[, year_region_sae := fifelse(elig == 1 & !is.na(g9r), as.numeric(g9r), 0)]
+rm(sae, nine, reg9)
+
+# school type: share of pre-2016 secondary enrollment in the academic track
+# (COD_ENSE 310); majority rule
+stype <- df[COD_ENSE %in% media & AGNO <= 2015, .(hc_share = mean(COD_ENSE == 310)), by = RBD]
+setnames(stype, "RBD", "rbd")
+stype[, hc := as.integer(hc_share >= 0.5)]
+
+# commune of residence vs commune of the school at the 9th-grade record
+com9 <- df[COD_ENSE %in% media & COD_GRADO == 1 & !is.na(COD_COM_ALU) & !is.na(COD_COM_RBD),
+           .(MRUN, AGNO, diff_com = as.integer(COD_COM_ALU != COD_COM_RBD))]
+setorder(com9, MRUN, AGNO)
+com9 <- unique(com9, by = "MRUN")[, .(MRUN, diff_com)]
+
+# regular-track students; high school records for grades 9-12
+keep <- df[, all(COD_ENSE == 110 | COD_ENSE %in% media), by = MRUN][V1 == TRUE, MRUN]
+hs <- df[MRUN %in% keep & AGNO >= 2010 & AGNO <= 2024 &
+           COD_ENSE %in% media & COD_GRADO %in% 1:4, .(MRUN, AGNO, RBD, COD_GRADO)]
+setorder(hs, MRUN, AGNO, COD_GRADO)
+```
+
+## Headline sample
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+anchor <- hs[COD_GRADO == 1, .(rbd = RBD[1], AGNO_9th = AGNO[1]), by = MRUN]
+hs1 <- merge(hs, anchor[, .(MRUN, rbd)], by = "MRUN")
+per <- hs1[, .(ng = uniqueN(COD_GRADO[RBD == rbd]), nsch = uniqueN(RBD)), by = MRUN]
+per <- merge(per, anchor, by = "MRUN")
+stayers <- per[ng == 4 & nsch == 1, .(MRUN, rbd, AGNO_9th)]
+setkey(stayers, MRUN)
+grad <- hs1[MRUN %in% stayers$MRUN, .(grad_year = max(AGNO)), by = MRUN]
+vals <- df[MRUN %in% stayers$MRUN,
+           lapply(.SD, function(x) { v <- x[!is.na(x)]; if (length(v)) as.numeric(v[1]) else NA_real_ }),
+           by = MRUN, .SDcols = c("applied", "graduated_secondary", "GEN_ALU")]
+students <- merge(stayers, vals, by = "MRUN")
+students <- merge(students, grad, by = "MRUN")
+students <- students[graduated_secondary == 1 & grad_year == AGNO_9th + 3 &
+                       AGNO_9th >= start_year & AGNO_9th <= end_year]
+students <- merge(students, com9, by = "MRUN", all.x = TRUE)
+students[, female := fifelse(GEN_ALU %in% c(1, 2), as.numeric(GEN_ALU == 2), NA_real_)]
+
+common_args <- list(
+  tname = "year",
+  idname = "rbd",
+  gname = "year_region_sae",
+  xformla = ~num_students,
+  control_group = "notyettreated",
+  anticipation = 2,
+  base_period = "universal",
+  est_method = "dr",
+  allow_unbalanced_panel = TRUE,
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+# same seed for each bootstrap so results do not depend on the order the
+# models are run
+run_set <- function(dat, ycols) {
+  common_args$data <- dat
+  res <- map(ycols, function(y) {
+    set.seed(20260610)
+    m <- do.call(att_gt, c(list(yname = y), common_args))
+    suppressWarnings(aggte(m, type = "simple", na.rm = TRUE))
+  })
+  names(res) <- ycols
+  res
+}
+
+means_pre <- function(dat, ycols) {
+  dat[year_region_sae > 0 & year < year_region_sae,
+      sapply(.SD, mean, na.rm = TRUE), .SDcols = ycols]
+}
+```
+
+## A. Class gender composition, by school type and pipeline intensity
+
+One observation per school x cohort over the whole class; the outcome is the
+share of female students. Treated schools are split (i) by academic (HC) vs
+vocational (TP) type, classified by the majority track of their pre-2016
+enrollment, and (ii) at the within-region median of pre-reform college-pipeline
+intensity (mean application share of the school's 2012--2014 classes), taken
+over treated schools; never-treated private schools serve as the comparison
+group in every arm.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+cls <- students[!is.na(female)]
+dr_all <- class_panel(cls, c("female", "applied"))
+
+pipe <- dr_all[AGNO_9th <= 2014, .(pipe = mean(applied, na.rm = TRUE)), by = rbd]
+schx <- unique(dr_all[, .(rbd, region, year_region_sae)])
+schx <- merge(schx, pipe, by = "rbd", all.x = TRUE)
+schx <- merge(schx, stype[, .(rbd, hc)], by = "rbd", all.x = TRUE)
+medp <- schx[year_region_sae > 0 & !is.na(pipe), .(pmed = median(pipe)), by = region]
+schx <- merge(schx, medp, by = "region", all.x = TRUE)
+schx[, hi_pipe := as.integer(year_region_sae > 0 & !is.na(pipe) & !is.na(pmed) & pipe >= pmed)]
+schx[, lo_pipe := as.integer(year_region_sae > 0 & !is.na(pipe) & !is.na(pmed) & pipe <  pmed)]
+
+dr_x <- merge(dr_all, schx[, .(rbd, hc, hi_pipe, lo_pipe)], by = "rbd", all.x = TRUE)
+arms <- list(
+  "HC Schools"    = dr_x[year_region_sae == 0 | (year_region_sae > 0 & hc == 1)],
+  "TP Schools"    = dr_x[year_region_sae == 0 | (year_region_sae > 0 & hc == 0)],
+  "High Pipeline" = dr_x[year_region_sae == 0 | hi_pipe == 1],
+  "Low Pipeline"  = dr_x[year_region_sae == 0 | lo_pipe == 1]
+)
+models_sf <- imap(arms, function(dat, nm) run_set(dat, "female")[[1]])
+means_sf  <- map_dbl(arms, ~means_pre(.x, "female"))
+
+cat(did_table(models_sf, means_sf, map_int(arms, nrow), "Effect on Share of Female Students",
+              "tab: share female by school type", "tables/did_share_female_by_type_AM.tex"))
+```
+
+## B. Enrollment outside the commune of residence
+
+Share of the class's female (male) students whose 9th-grade school is in a
+different commune than their residence. If centralized choice relaxes
+constraints that bind more for daughters, girls' out-of-commune enrollment
+rises relative to boys'.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+female_s <- students[GEN_ALU == 2]
+male_s   <- students[GEN_ALU == 1]
+dr_f <- class_panel(female_s, "diff_com")
+dr_m <- class_panel(male_s,   "diff_com")
+
+models_f_dc <- run_set(dr_f, "diff_com"); names(models_f_dc) <- "Outside Own Commune"
+models_m_dc <- run_set(dr_m, "diff_com"); names(models_m_dc) <- "Outside Own Commune"
+
+cat(did_table_pair(models_f_dc, models_m_dc, "Female", "Male",
+                   means_pre(dr_f, "diff_com"), means_pre(dr_m, "diff_com"),
+                   nrow(dr_f), nrow(dr_m),
+                   "Enrollment Outside the Commune of Residence by Gender",
+                   "tab: gender out of commune", "tables/did_by_gender_commune_AM.tex"))
+```
+
+## C. Baseline composition: 8th-grade SIMCE
+
+Average 8th-grade SIMCE of the class's female (male) students, standardized
+within test year. The score is measured before high school, so any effect
+reflects who sorts into the school, not what the school does — separating
+re-sorting from behavior. The 8th-grade test is not administered every year,
+so only cohorts with a tested 8th-grade year contribute.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+s8 <- readRDS(file.path(data_path, "panel_simce_8b.rds"))
+setDT(s8)
+s8 <- s8[!is.na(mrun), .(MRUN = mrun, agno,
+                         lect = suppressWarnings(as.numeric(ptje_lect8b_alu)),
+                         mate = suppressWarnings(as.numeric(ptje_mate8b_alu)))]
+s8 <- s8[!is.na(lect) | !is.na(mate)]
+setorder(s8, MRUN, -agno)
+s8 <- unique(s8, by = "MRUN")
+s8[, z_lect := as.numeric(scale(lect)), by = agno]
+s8[, z_mate := as.numeric(scale(mate)), by = agno]
+
+students <- merge(students, s8[, .(MRUN, z_lect, z_mate)], by = "MRUN", all.x = TRUE)
+female_s <- students[GEN_ALU == 2]
+male_s   <- students[GEN_ALU == 1]
+dr_f8 <- class_panel(female_s, c("z_mate", "z_lect"))
+dr_m8 <- class_panel(male_s,   c("z_mate", "z_lect"))
+
+outcomes_s8 <- c(z_mate = "SIMCE-8 Math", z_lect = "SIMCE-8 Reading")
+models_f_s8 <- run_set(dr_f8, names(outcomes_s8)); names(models_f_s8) <- outcomes_s8
+models_m_s8 <- run_set(dr_m8, names(outcomes_s8)); names(models_m_s8) <- outcomes_s8
+
+cat(did_table_pair(models_f_s8, models_m_s8, "Female", "Male",
+                   means_pre(dr_f8, names(outcomes_s8)), means_pre(dr_m8, names(outcomes_s8)),
+                   nrow(dr_f8), nrow(dr_m8),
+                   "Baseline 8th-Grade SIMCE Composition by Gender",
+                   "tab: gender simce8 composition", "tables/did_by_gender_simce8_AM.tex"))
+```
+
+## Summary
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+cat("-- A. Share female --\n")
+for (nm in names(models_sf)) cat(sprintf("%-16s %7.3f (%.3f)\n", nm,
+                                         models_sf[[nm]]$overall.att, models_sf[[nm]]$overall.se))
+cat("\n-- B. Outside own commune --\n")
+cat(sprintf("female %7.3f (%.3f) | male %7.3f (%.3f)\n",
+            models_f_dc[[1]]$overall.att, models_f_dc[[1]]$overall.se,
+            models_m_dc[[1]]$overall.att, models_m_dc[[1]]$overall.se))
+cat("\n-- C. SIMCE-8 composition --\n")
+for (y in outcomes_s8) cat(sprintf("%-16s female %7.3f (%.3f) | male %7.3f (%.3f)\n", y,
+                                   models_f_s8[[y]]$overall.att, models_f_s8[[y]]$overall.se,
+                                   models_m_s8[[y]]$overall.att, models_m_s8[[y]]$overall.se))
+```

@@ -1,0 +1,271 @@
+---
+title: "Effect of SAE on SUA - Gender Mechanisms, Phase 3: Destination Fields (Issue #14)"
+output:
+  pdf_document:
+    keep_tex: true
+    extra_dependencies: ["booktabs"]
+  html_document: default
+---
+
+Phase 3 of issue #14: is the female effect a supply-composition story — new
+admissions absorbed by female-typed programs? Programs are typed by their
+female share among students selected in the 2014--2019 processes (before any
+SAE-treated cohort reaches college admission): top tercile = female-typed,
+bottom = male-typed, middle (and programs with fewer than 30 selected
+students) = mixed. Assigned and enrolled are then partitioned by the
+destination program's type, so the three columns add up to the baseline
+outcome, and the decomposition reports how much of the female--male gap each
+type accounts for. Sample, estimator, seed and helpers identical to
+`3_effect_sae_am.Rmd`.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# Clean ---------------------------------------------------------------
+rm(list = ls())
+
+# Libraries ---------------------------------------------------------------
+library(dplyr)
+library(magrittr)
+library(purrr)
+library(data.table)
+library(did)
+
+start_year <- 2012
+end_year <- 2021
+media <- c(310, 410, 510, 610, 710, 810)
+clustering_var <- "region"
+
+# shared Dropbox data folder (resolves to each user's own Dropbox)
+home <- ifelse(Sys.getenv("USERPROFILE") != "", Sys.getenv("USERPROFILE"), path.expand("~"))
+data_path <- file.path(home, "Dropbox", "Effect SAE on SUA", "data")
+dir.create("tables", showWarnings = FALSE)
+
+outcomes_asg <- c(asg_fem = "Female-typed", asg_mix = "Mixed", asg_mal = "Male-typed")
+outcomes_enr <- c(enr_fem = "Female-typed", enr_mix = "Mixed", enr_mal = "Male-typed")
+
+# helpers: table formatting (verbatim from 3_effect_sae_am.Rmd)
+fmt  <- function(x) sub("^-(0\\.000)$", "\\1", sprintf("%.3f", x))
+star <- function(p) ifelse(p < .01, "$^{***}$",
+                    ifelse(p < .05, "$^{**}$",
+                    ifelse(p < .1,  "$^{*}$", "")))
+row_tex <- function(lbl, vals) paste0("      ", lbl, " & ", paste(vals, collapse = " & "), "\\\\\n")
+
+class_panel <- function(students, cols) {
+  d <- students[, c(.(num_students = .N), lapply(.SD, mean, na.rm = TRUE)),
+                by = .(rbd, AGNO_9th), .SDcols = cols]
+  d[, year := AGNO_9th - 1]
+  d <- merge(d, sch[, .(rbd, year_region_sae, region)], by = "rbd", all.x = TRUE)
+  d[year_region_sae > max(year), year_region_sae := 0]
+  d
+}
+
+did_table_pair <- function(res_a, res_b, lab_a, lab_b, means_a, means_b, n_a, n_b,
+                           caption, label, file) {
+  att_a <- map_dbl(res_a, "overall.att"); se_a <- map_dbl(res_a, "overall.se")
+  att_b <- map_dbl(res_b, "overall.att"); se_b <- map_dbl(res_b, "overall.se")
+  p_a <- 2 * pnorm(-abs(att_a / se_a))
+  p_b <- 2 * pnorm(-abs(att_b / se_b))
+  k <- length(res_a)
+  interleave <- function(a, b) as.vector(rbind(a, b))
+  tab <- paste0(
+    "\\begin{table}[htbp]\n   \\caption{", caption, "}\\label{", label, "}\n",
+    "   \\centerline{\\scalebox{0.85}{\\begin{tabular}{l", strrep("c", 2 * k), "}\n      \\toprule\n",
+    paste0("      & \\multicolumn{2}{c}{", names(res_a), "}", collapse = "\n"), " \\\\\n      ",
+    paste0("\\cmidrule(lr){", 2 * seq_len(k), "-", 2 * seq_len(k) + 1, "}", collapse = ""), "\n",
+    "                   & ", paste(rep(c(lab_a, lab_b), k), collapse = " & "), " \\\\\n",
+    "                   & ", paste0("(", seq_len(2 * k), ")", collapse = " & "), "\\\\\n      \\midrule\n",
+    row_tex("Treated", interleave(paste0(fmt(att_a), star(p_a)), paste0(fmt(att_b), star(p_b)))),
+    row_tex("", interleave(paste0("(", fmt(se_a), ")"), paste0("(", fmt(se_b), ")"))),
+    "      \\midrule\n",
+    row_tex("Mean (pre-treatment)", interleave(fmt(means_a), fmt(means_b))),
+    row_tex("Observations", rep(c(format(n_a, big.mark = ","), format(n_b, big.mark = ",")), k)),
+    "      \\bottomrule\n   \\end{tabular}}}\n\\end{table}\n")
+  writeLines(tab, file)
+  tab
+}
+```
+
+## Data and treatment
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# Identical to 3_effect_sae_am.Rmd, keeping the selected and enrolled program codes.
+df <- readRDS(file.path(data_path, "panel_9-12_2010_2021.rds"))
+setDT(df)
+df <- df[, .(MRUN, AGNO, RBD, COD_GRADO, COD_ENSE, year_rbd_first_sae,
+             graduated_secondary, COD_REG_RBD, COD_DEPE, GEN_ALU,
+             applied, assigned, enrolled,
+             codigo_carrera_seleccion, codigo_carrera_matricula)]
+
+sch <- unique(df[, .(RBD, year_rbd_first_sae, COD_REG_RBD, COD_DEPE)])[, .(
+  yfs    = { v <- year_rbd_first_sae[!is.na(year_rbd_first_sae)]; if (length(v)) as.numeric(v[1]) else 0 },
+  region = { v <- COD_REG_RBD[!is.na(COD_REG_RBD)]; if (length(v)) as.integer(v[1]) else NA_integer_ },
+  depe   = { v <- COD_DEPE[!is.na(COD_DEPE)]; if (length(v)) as.integer(names(which.max(table(v)))) else NA_integer_ }
+), by = RBD]
+setnames(sch, "RBD", "rbd")
+
+sae <- readRDS(file.path(data_path, "sae_data_2016_2023.rds"))
+setDT(sae)
+nine <- sae[COD_ENSE %in% media & COD_GRADO == 1, .(g9 = as.numeric(min(AGNO))), by = RBD]
+setnames(nine, "RBD", "rbd")
+sch <- merge(sch, nine, by = "rbd", all.x = TRUE)
+reg9 <- sch[!is.na(g9), .(g9r = min(g9)), by = region][!is.na(region)]
+sch <- merge(sch, reg9, by = "region", all.x = TRUE)
+sch[, elig := fifelse(!is.na(depe), as.integer(depe != 4), as.integer(yfs > 0 | !is.na(g9)))]
+sch[, year_region_sae := fifelse(elig == 1 & !is.na(g9r), as.numeric(g9r), 0)]
+rm(sae, nine, reg9)
+
+# regular-track students; high school records for grades 9-12
+keep <- df[, all(COD_ENSE == 110 | COD_ENSE %in% media), by = MRUN][V1 == TRUE, MRUN]
+hs <- df[MRUN %in% keep & AGNO >= 2010 & AGNO <= 2024 &
+           COD_ENSE %in% media & COD_GRADO %in% 1:4, .(MRUN, AGNO, RBD, COD_GRADO)]
+setorder(hs, MRUN, AGNO, COD_GRADO)
+```
+
+## Program typing by pre-reform female share
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+demre <- readRDS(file.path(data_path, "data_students_2004_2025.rds"))
+setDT(demre)
+fs <- demre[year %in% 2014:2019 & !is.na(codigo_carrera_seleccion) & codigo_carrera_seleccion > 0,
+            .(fem_share = mean(is_female, na.rm = TRUE), n = .N), by = codigo_carrera_seleccion]
+rm(demre)
+invisible(gc())
+
+fs_ok <- fs[n >= 30]
+cuts <- quantile(fs_ok$fem_share, c(1/3, 2/3))
+fs_ok[, ptype := fifelse(fem_share >= cuts[2], "fem", fifelse(fem_share < cuts[1], "mal", "mix"))]
+
+cat("programs typed:", nrow(fs_ok), "of", nrow(fs),
+    "(", fmt(sum(fs_ok$n) / sum(fs$n)), "of selections );",
+    "tercile cutoffs:", fmt(cuts[1]), "/", fmt(cuts[2]), "\n")
+cat("female share by type:\n")
+print(fs_ok[, .(programs = .N, mean_fem_share = mean(fem_share)), by = ptype][order(ptype)])
+
+type_of <- function(code) {
+  t <- fs_ok$ptype[match(code, fs_ok$codigo_carrera_seleccion)]
+  fifelse(is.na(t), "mix", t)   # untyped small programs count as mixed
+}
+df[, asg_type := fifelse(assigned == 1 & codigo_carrera_seleccion > 0,
+                         type_of(codigo_carrera_seleccion), NA_character_)]
+df[, enr_type := fifelse(enrolled == 1 & !is.na(codigo_carrera_matricula),
+                         type_of(codigo_carrera_matricula), NA_character_)]
+df[, `:=`(
+  asg_fem = fifelse(is.na(assigned), NA_real_, as.numeric(assigned == 1 & asg_type == "fem" & !is.na(asg_type))),
+  asg_mix = fifelse(is.na(assigned), NA_real_, as.numeric(assigned == 1 & asg_type == "mix" & !is.na(asg_type))),
+  asg_mal = fifelse(is.na(assigned), NA_real_, as.numeric(assigned == 1 & asg_type == "mal" & !is.na(asg_type))),
+  enr_fem = fifelse(is.na(enrolled), NA_real_, as.numeric(enrolled == 1 & enr_type == "fem" & !is.na(enr_type))),
+  enr_mix = fifelse(is.na(enrolled), NA_real_, as.numeric(enrolled == 1 & enr_type == "mix" & !is.na(enr_type))),
+  enr_mal = fifelse(is.na(enrolled), NA_real_, as.numeric(enrolled == 1 & enr_type == "mal" & !is.na(enr_type)))
+)]
+cat("\npartition check (assigned==1): ")
+print(df[assigned == 1, table(asg_type, useNA = "ifany")])
+```
+
+## Headline sample
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+part_cols <- c(names(outcomes_asg), names(outcomes_enr))
+anchor <- hs[COD_GRADO == 1, .(rbd = RBD[1], AGNO_9th = AGNO[1]), by = MRUN]
+hs1 <- merge(hs, anchor[, .(MRUN, rbd)], by = "MRUN")
+per <- hs1[, .(ng = uniqueN(COD_GRADO[RBD == rbd]), nsch = uniqueN(RBD)), by = MRUN]
+per <- merge(per, anchor, by = "MRUN")
+stayers <- per[ng == 4 & nsch == 1, .(MRUN, rbd, AGNO_9th)]
+setkey(stayers, MRUN)
+grad <- hs1[MRUN %in% stayers$MRUN, .(grad_year = max(AGNO)), by = MRUN]
+vals <- df[MRUN %in% stayers$MRUN,
+           lapply(.SD, function(x) { v <- x[!is.na(x)]; if (length(v)) as.numeric(v[1]) else NA_real_ }),
+           by = MRUN, .SDcols = c("assigned", "enrolled", part_cols, "graduated_secondary", "GEN_ALU")]
+students <- merge(stayers, vals, by = "MRUN")
+students <- merge(students, grad, by = "MRUN")
+students <- students[graduated_secondary == 1 & grad_year == AGNO_9th + 3 &
+                       AGNO_9th >= start_year & AGNO_9th <= end_year]
+
+female <- students[GEN_ALU == 2]
+male   <- students[GEN_ALU == 1]
+dr_f <- class_panel(female, c("assigned", "enrolled", part_cols))
+dr_m <- class_panel(male,   c("assigned", "enrolled", part_cols))
+
+common_args <- list(
+  tname = "year",
+  idname = "rbd",
+  gname = "year_region_sae",
+  xformla = ~num_students,
+  control_group = "notyettreated",
+  anticipation = 2,
+  base_period = "universal",
+  est_method = "dr",
+  allow_unbalanced_panel = TRUE,
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+# same seed for each bootstrap so results do not depend on the order the
+# models are run
+run_gender <- function(dat, ycols) {
+  common_args$data <- dat
+  res <- map(ycols, function(y) {
+    set.seed(20260610)
+    m <- do.call(att_gt, c(list(yname = y), common_args))
+    suppressWarnings(aggte(m, type = "simple", na.rm = TRUE))
+  })
+  names(res) <- ycols
+  res
+}
+
+means_pre <- function(dat, ycols) {
+  dat[year_region_sae > 0 & year < year_region_sae,
+      sapply(.SD, mean, na.rm = TRUE), .SDcols = ycols]
+}
+```
+
+## Assignment by destination-program type
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+models_f_asg <- run_gender(dr_f, names(outcomes_asg))
+models_m_asg <- run_gender(dr_m, names(outcomes_asg))
+names(models_f_asg) <- names(models_m_asg) <- outcomes_asg
+
+cat(did_table_pair(models_f_asg, models_m_asg, "Female", "Male",
+                   means_pre(dr_f, names(outcomes_asg)), means_pre(dr_m, names(outcomes_asg)),
+                   nrow(dr_f), nrow(dr_m),
+                   "Assignment by Destination-Program Type and Gender",
+                   "tab: gender assigned by program type", "tables/did_by_gender_asg_ptype_AM.tex"))
+```
+
+## Enrollment by destination-program type
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+models_f_enr <- run_gender(dr_f, names(outcomes_enr))
+models_m_enr <- run_gender(dr_m, names(outcomes_enr))
+names(models_f_enr) <- names(models_m_enr) <- outcomes_enr
+
+cat(did_table_pair(models_f_enr, models_m_enr, "Female", "Male",
+                   means_pre(dr_f, names(outcomes_enr)), means_pre(dr_m, names(outcomes_enr)),
+                   nrow(dr_f), nrow(dr_m),
+                   "Enrollment by Destination-Program Type and Gender",
+                   "tab: gender enrolled by program type", "tables/did_by_gender_enr_ptype_AM.tex"))
+```
+
+## Decomposition
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+decomp <- function(res_f, res_m, labs, total_lbl) {
+  af <- map_dbl(res_f, "overall.att"); am <- map_dbl(res_m, "overall.att")
+  cat(sprintf("%-14s %10s %10s %10s\n", total_lbl, "female", "male", "gap F-M"))
+  for (i in seq_along(labs)) cat(sprintf("%-14s %10.3f %10.3f %10.3f\n", labs[i], af[i], am[i], af[i] - am[i]))
+  cat(sprintf("%-14s %10.3f %10.3f %10.3f\n", "sum", sum(af), sum(am), sum(af) - sum(am)))
+  cat(sprintf("share of the F-M gap from each type: %s\n\n",
+              paste(sprintf("%s %.0f%%", labs, 100 * (af - am) / (sum(af) - sum(am))), collapse = ", ")))
+}
+cat("-- Assigned --\n");  decomp(models_f_asg, models_m_asg, outcomes_asg, "type")
+cat("-- Enrolled --\n");  decomp(models_f_enr, models_m_enr, outcomes_enr, "type")
+cat("Component ATTs are estimated on the same classes, so they sum to the",
+    "baseline gender ATTs up to estimation error (Assigned F 0.075 / M 0.030,",
+    "Enrolled F 0.064 / M 0.024 in the draft table).\n")
+```

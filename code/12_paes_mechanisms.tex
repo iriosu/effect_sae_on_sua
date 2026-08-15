@@ -1,0 +1,309 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Effect of SAE on SUA - PAES Boom Mechanisms (Issue \#15)},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{booktabs}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+
+\title{Effect of SAE on SUA - PAES Boom Mechanisms (Issue \#15)}
+\author{}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+\maketitle
+
+Mechanism fingerprints for the exam-2023 boom (\#15 adjudication,
+07-26). If the boom is the PAES-era eligibility machinery
+(ranking/top-10\% pathway bite, floor changes on the new scale,
+application cap 10 to 20, second sitting), it leaves testable marks in
+the composition of applicants: (A) the marginal 2023 applicants enter
+from the bottom of the score distribution; (B) high-rank / low-score
+applicants -- the ranking-pathway users -- surge in 2023, more for women
+(better rank, worse scores); (C) list lengths respond to the cap change;
+(D) the assignment mix shifts down-market in untreated RM too, which
+would reattribute the displacement/selectivity table. All raw
+student-weighted descriptives on the entrant sample by wave group (g =
+first treated entry cohort), no estimation. Guard: entrant count + two
+trajectory cells from \texttt{11\_adjudication\_trajectories.Rmd}.
+
+\begin{verbatim}
+## columns present: MRUN, AGNO, RBD, COD_GRADO, COD_ENSE, year_rbd_first_sae, COD_REG_RBD, COD_DEPE, GEN_ALU, scored_lm, applied, assigned, enrolled, lm_pct, ranking_pct, num_apps_reg, pct_valid_reg, assigned_full, assigned_not_full, assigned_top10, assigned_top25, assigned_top50
+\end{verbatim}
+
+\hypertarget{guard}{%
+\subsection{Guard}\label{guard}}
+
+\begin{verbatim}
+## entrants: 1,783,653 (target 1,783,653)
+\end{verbatim}
+
+\begin{verbatim}
+## untreated-RM applied 2023: 0.486 (11_adjudication: 0.486) | private 2023: 0.844 (0.844)
+\end{verbatim}
+
+\begin{verbatim}
+## GUARD PASSED
+\end{verbatim}
+
+\hypertarget{a.-where-do-the-2023-applicants-come-from-score-composition-of-applicants}{%
+\subsection{A. Where do the 2023 applicants come from? Score composition
+of
+applicants}\label{a.-where-do-the-2023-applicants-come-from-score-composition-of-applicants}}
+
+\begin{verbatim}
+## 
+## ==== p25 of applicants' LM percentile ====
+## Key: <exam>
+##     exam private g2017 g2018 g2019 g2020
+##    <num>   <num> <num> <num> <num> <num>
+## 1:  2019   0.809 0.473 0.512 0.503 0.563
+## 2:  2020   0.811 0.491 0.508 0.502 0.560
+## 3:  2021   0.781 0.455 0.450 0.442 0.505
+## 4:  2022   0.780 0.457 0.415 0.415 0.485
+## 5:  2023   0.763 0.363 0.352 0.350 0.401
+## 6:  2024   0.779 0.366 0.370 0.362 0.413
+## 7:  2025   0.780 0.346 0.370 0.360 0.413
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## ==== median of applicants' LM percentile ====
+## Key: <exam>
+##     exam private g2017 g2018 g2019 g2020
+##    <num>   <num> <num> <num> <num> <num>
+## 1:  2019   0.912 0.652 0.691 0.678 0.732
+## 2:  2020   0.911 0.679 0.682 0.678 0.731
+## 3:  2021   0.899 0.651 0.638 0.638 0.694
+## 4:  2022   0.903 0.631 0.616 0.619 0.681
+## 5:  2023   0.903 0.574 0.572 0.569 0.624
+## 6:  2024   0.908 0.584 0.585 0.579 0.632
+## 7:  2025   0.910 0.565 0.588 0.582 0.632
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## ==== share of applicants with LM pct < 0.30 (old-floor region) ====
+## Key: <exam>
+##     exam private g2017 g2018 g2019 g2020
+##    <num>   <num> <num> <num> <num> <num>
+## 1:  2019   0.006 0.108 0.084 0.088 0.061
+## 2:  2020   0.007 0.099 0.085 0.088 0.058
+## 3:  2021   0.012 0.121 0.121 0.122 0.083
+## 4:  2022   0.015 0.111 0.143 0.143 0.093
+## 5:  2023   0.022 0.190 0.197 0.199 0.154
+## 6:  2024   0.020 0.183 0.179 0.186 0.146
+## 7:  2025   0.019 0.190 0.182 0.193 0.149
+\end{verbatim}
+
+\hypertarget{b.-ranking-pathway-fingerprint-high-rank-low-score-applicants}{%
+\subsection{B. Ranking-pathway fingerprint: high-rank / low-score
+applicants}\label{b.-ranking-pathway-fingerprint-high-rank-low-score-applicants}}
+
+\begin{verbatim}
+## 
+## ==== share of applicants high-rank(>=p90)/low-score(<p30) ====
+## Key: <exam>
+##     exam private g2017 g2018 g2019 g2020
+##    <num>   <num> <num> <num> <num> <num>
+## 1:  2019   0.000 0.007 0.009 0.008 0.004
+## 2:  2020   0.000 0.003 0.006 0.008 0.004
+## 3:  2021   0.000 0.004 0.010 0.008 0.005
+## 4:  2022   0.000 0.005 0.009 0.008 0.004
+## 5:  2023   0.000 0.006 0.007 0.006 0.005
+## 6:  2024   0.001 0.007 0.007 0.007 0.004
+## 7:  2025   0.000 0.001 0.008 0.007 0.004
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## ====   same, FEMALE applicants ====
+## Key: <exam>
+##     exam private g2017 g2018 g2019 g2020
+##    <num>   <num> <num> <num> <num> <num>
+## 1:  2019   0.000 0.013 0.011 0.010 0.005
+## 2:  2020   0.000 0.006 0.008 0.011 0.005
+## 3:  2021   0.000 0.003 0.013 0.011 0.007
+## 4:  2022   0.000 0.009 0.012 0.010 0.005
+## 5:  2023   0.000 0.010 0.010 0.008 0.007
+## 6:  2024   0.001 0.010 0.010 0.009 0.006
+## 7:  2025   0.000 0.002 0.011 0.010 0.005
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## ====   same, MALE applicants ====
+## Key: <exam>
+##     exam private g2017 g2018 g2019 g2020
+##    <num>   <num> <num> <num> <num> <num>
+## 1:  2019       0 0.000 0.005 0.005 0.002
+## 2:  2020       0 0.000 0.004 0.003 0.003
+## 3:  2021       0 0.004 0.005 0.004 0.002
+## 4:  2022       0 0.000 0.004 0.004 0.002
+## 5:  2023       0 0.000 0.003 0.003 0.001
+## 6:  2024       0 0.003 0.001 0.003 0.001
+## 7:  2025       0 0.000 0.003 0.002 0.002
+\end{verbatim}
+
+\hypertarget{c.-list-length-and-the-10-to-20-cap}{%
+\subsection{C. List length and the 10-to-20
+cap}\label{c.-list-length-and-the-10-to-20-cap}}
+
+\begin{verbatim}
+## 
+## ==== mean list length among applicants ====
+## Key: <exam>
+##     exam private g2017 g2018 g2019 g2020
+##    <num>   <num> <num> <num> <num> <num>
+## 1:  2019   4.507 4.203 4.950 4.938 5.270
+## 2:  2020   4.816 4.219 5.013 5.127 5.652
+## 3:  2021   5.037 4.264 5.290 5.312 5.964
+## 4:  2022   4.982 4.378 5.487 5.552 6.168
+## 5:  2023   7.222 5.736 7.438 7.365 9.143
+## 6:  2024   6.544 5.337 7.233 7.125 8.718
+## 7:  2025   6.499 4.813 6.995 6.925 8.623
+## 
+## ==== share of applicants with 10+ applications ====
+## Key: <exam>
+##     exam private g2017 g2018 g2019 g2020
+##    <num>   <num> <num> <num> <num> <num>
+## 1:  2019   0.050 0.065 0.110 0.107 0.120
+## 2:  2020   0.072 0.068 0.119 0.121 0.145
+## 3:  2021   0.087 0.076 0.138 0.136 0.172
+## 4:  2022   0.086 0.087 0.154 0.156 0.198
+## 5:  2023   0.236 0.164 0.273 0.268 0.401
+## 6:  2024   0.191 0.153 0.263 0.253 0.366
+## 7:  2025   0.190 0.132 0.248 0.239 0.360
+\end{verbatim}
+
+\hypertarget{d.-selectivity-falsification-assignment-mix-in-untreated-rm}{%
+\subsection{D. Selectivity falsification: assignment mix in untreated
+RM}\label{d.-selectivity-falsification-assignment-mix-in-untreated-rm}}
+
+\begin{verbatim}
+## 
+## ==== unconditional assigned_top10 ====
+## Key: <exam>
+##     exam private g2017 g2018 g2019 g2020
+##    <num>   <num> <num> <num> <num> <num>
+## 1:  2019   0.287 0.020 0.031 0.032 0.053
+## 2:  2020   0.294 0.021 0.031 0.032 0.054
+## 3:  2021   0.311 0.030 0.032 0.042 0.058
+## 4:  2022   0.336 0.031 0.036 0.043 0.059
+## 5:  2023   0.322 0.038 0.037 0.044 0.052
+## 6:  2024   0.340 0.032 0.034 0.041 0.049
+## 7:  2025   0.354 0.023 0.032 0.035 0.055
+## 
+## ==== unconditional assigned_top50 ====
+## Key: <exam>
+##     exam private g2017 g2018 g2019 g2020
+##    <num>   <num> <num> <num> <num> <num>
+## 1:  2019   0.599 0.178 0.190 0.210 0.186
+## 2:  2020   0.743 0.264 0.278 0.307 0.290
+## 3:  2021   0.747 0.276 0.279 0.306 0.298
+## 4:  2022   0.715 0.280 0.278 0.304 0.292
+## 5:  2023   0.625 0.226 0.214 0.255 0.216
+## 6:  2024   0.620 0.255 0.209 0.241 0.215
+## 7:  2025   0.592 0.249 0.207 0.238 0.200
+## 
+## ==== unconditional assigned_not_full ====
+## Key: <exam>
+##     exam private g2017 g2018 g2019 g2020
+##    <num>   <num> <num> <num> <num> <num>
+## 1:  2019   0.148 0.111 0.078 0.078 0.092
+## 2:  2020   0.164 0.087 0.099 0.099 0.115
+## 3:  2021   0.184 0.102 0.119 0.113 0.112
+## 4:  2022   0.139 0.122 0.103 0.098 0.095
+## 5:  2023   0.046 0.042 0.049 0.037 0.060
+## 6:  2024   0.065 0.031 0.050 0.045 0.068
+## 7:  2025   0.061 0.038 0.067 0.051 0.074
+## 
+## ==== unconditional assigned_full ====
+## Key: <exam>
+##     exam private g2017 g2018 g2019 g2020
+##    <num>   <num> <num> <num> <num> <num>
+## 1:  2019   0.612 0.203 0.214 0.241 0.210
+## 2:  2020   0.579 0.178 0.180 0.208 0.177
+## 3:  2021   0.564 0.176 0.163 0.196 0.189
+## 4:  2022   0.583 0.166 0.190 0.218 0.213
+## 5:  2023   0.718 0.331 0.303 0.341 0.325
+## 6:  2024   0.687 0.313 0.300 0.326 0.308
+## 7:  2025   0.674 0.312 0.290 0.321 0.308
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Read: if assigned_not_full / low-selectivity assignment jumps at exam 2023 in
+##  untreated RM like everywhere else, the selectivity/displacement table is boom
+##  composition, not SAE congestion relief.
+\end{verbatim}
+
+\hypertarget{summary}{%
+\subsection{Summary}\label{summary}}
+
+\begin{verbatim}
+## Fingerprint predictions if the boom is PAES eligibility machinery:
+##  A: applicant p25/median LM pct DROPS sharply in 2023 for publics (not privates).
+##  B: high-rank/low-score applicant share JUMPS in 2023, more for women.
+##  C: cap bite visible only in the top tail (share 10+; mean shifts little).
+##  D: not-full/low-selectivity assignment jumps in untreated RM at 2023.
+\end{verbatim}
+
+\end{document}

@@ -1,0 +1,166 @@
+---
+title: "Effect of SAE on SUA - Adjudication Trajectories (Issue #15)"
+output:
+  pdf_document:
+    keep_tex: true
+    extra_dependencies: ["booktabs"]
+  html_document: default
+---
+
+Three descriptive checks for the exam-2023 adjudication (#15, 07-26), all raw
+student-weighted means by wave group (labeled by first treated entry cohort
+g = region SAE start + 1) -- no estimation, no bootstrap. (A) Entrant-based
+replication of the applied/assigned/enrolled trajectories (the stayer-composition
+caveat). (B) Female-minus-male gap trajectories: within-class gap estimates
+difference out class-level calendar shocks only if the boom is gender-neutral --
+the read is whether the F-M applied gap jumps at exam 2023 in still-untreated
+RM. (C) Graduation calendar check: on-time graduation for entry cohort t is
+realized in calendar t+3; if the +3-4pp graduation/retention effects are COVID
+promotion policy rather than SAE, untreated public groups should jump at
+graduation years 2020-21 too. Sample construction identical to
+`10_gpa_decomposition.Rmd` (guard: entrant count + six stayer trajectory cells
+recomputed from students must match the dr.rds-derived table posted on #15).
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+rm(list = ls())
+library(dplyr); library(magrittr); library(purrr); library(data.table)
+
+start_year <- 2012; end_year <- 2021
+media <- c(310, 410, 510, 610, 710, 810)
+home <- ifelse(Sys.getenv("USERPROFILE") != "", Sys.getenv("USERPROFILE"), path.expand("~"))
+data_path <- file.path(home, "Dropbox", "Effect SAE on SUA", "data")
+
+df <- readRDS(file.path(data_path, "panel_9-12_2010_2021.rds"))
+setDT(df)
+df <- df[, .(MRUN, AGNO, RBD, COD_GRADO, COD_ENSE, year_rbd_first_sae,
+             graduated_secondary, COD_REG_RBD, COD_DEPE, GEN_ALU,
+             scored_lm, applied, assigned, enrolled)]
+
+sch <- unique(df[, .(RBD, year_rbd_first_sae, COD_REG_RBD, COD_DEPE)])[, .(
+  yfs    = { v <- year_rbd_first_sae[!is.na(year_rbd_first_sae)]; if (length(v)) as.numeric(v[1]) else 0 },
+  region = { v <- COD_REG_RBD[!is.na(COD_REG_RBD)]; if (length(v)) as.integer(v[1]) else NA_integer_ },
+  depe   = { v <- COD_DEPE[!is.na(COD_DEPE)]; if (length(v)) as.integer(names(which.max(table(v)))) else NA_integer_ }
+), by = RBD]
+setnames(sch, "RBD", "rbd")
+sae <- readRDS(file.path(data_path, "sae_data_2016_2023.rds")); setDT(sae)
+nine <- sae[COD_ENSE %in% media & COD_GRADO == 1, .(g9 = as.numeric(min(AGNO))), by = RBD]
+setnames(nine, "RBD", "rbd")
+sch <- merge(sch, nine, by = "rbd", all.x = TRUE)
+reg9 <- sch[!is.na(g9), .(g9r = min(g9)), by = region][!is.na(region)]
+sch <- merge(sch, reg9, by = "region", all.x = TRUE)
+sch[, elig := fifelse(!is.na(depe), as.integer(depe != 4), as.integer(yfs > 0 | !is.na(g9)))]
+sch[, year_region_sae := fifelse(elig == 1 & !is.na(g9r), as.numeric(g9r), 0)]
+rm(sae, nine, reg9)
+
+keep <- df[, all(COD_ENSE == 110 | COD_ENSE %in% media), by = MRUN][V1 == TRUE, MRUN]
+hs <- df[MRUN %in% keep & AGNO >= 2010 & AGNO <= 2024 &
+           COD_ENSE %in% media & COD_GRADO %in% 1:4, .(MRUN, AGNO, RBD, COD_GRADO)]
+setorder(hs, MRUN, AGNO, COD_GRADO)
+
+anchor <- hs[COD_GRADO == 1, .(rbd = RBD[1], AGNO_9th = AGNO[1]), by = MRUN]
+g12 <- hs[COD_GRADO == 4, .(g12_year = min(AGNO)), by = MRUN]
+vals_e <- df[MRUN %in% anchor$MRUN,
+             lapply(.SD, function(x) { v <- x[!is.na(x)]; if (length(v)) as.numeric(v[1]) else NA_real_ }),
+             by = MRUN, .SDcols = c("scored_lm", "applied", "assigned", "enrolled",
+                                    "graduated_secondary", "GEN_ALU")]
+entrants <- merge(anchor, vals_e, by = "MRUN", all.x = TRUE)
+entrants <- merge(entrants, g12, by = "MRUN", all.x = TRUE)
+entrants[, grad_ever    := as.integer(coalesce(graduated_secondary, 0) == 1)]
+entrants[, on_time_grad := as.integer(grad_ever == 1 & !is.na(g12_year) & g12_year == AGNO_9th + 3)]
+entrants <- entrants[AGNO_9th >= start_year & AGNO_9th <= end_year]
+entrants <- merge(entrants, sch[, .(rbd, year_region_sae)], by = "rbd", all.x = TRUE)
+entrants[is.na(year_region_sae) | year_region_sae + 1 > end_year + 3, year_region_sae := 0]
+entrants[, wave := fifelse(year_region_sae == 0, "private", paste0("g", year_region_sae + 1))]
+entrants[, exam := AGNO_9th + 4]
+
+# stayer flag (for guard + retention margin)
+hs1 <- merge(hs, anchor[, .(MRUN, rbd)], by = "MRUN")
+per <- hs1[, .(ng = uniqueN(COD_GRADO[RBD == rbd]), nsch = uniqueN(RBD)), by = MRUN]
+stay_ids <- per[ng == 4 & nsch == 1, MRUN]
+entrants[, stayer := as.integer(MRUN %in% stay_ids)]
+grad_st <- hs1[MRUN %in% stay_ids, .(grad_year = max(AGNO)), by = MRUN]
+entrants <- merge(entrants, grad_st, by = "MRUN", all.x = TRUE)
+entrants[, stayer_ot := as.integer(stayer == 1 & grad_ever == 1 &
+                                   !is.na(grad_year) & grad_year == AGNO_9th + 3)]
+```
+
+## Guard
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+cat("entrants:", format(nrow(entrants), big.mark = ","), "(target 1,783,653)\n\n")
+
+# six stayer trajectory cells recomputed from students, vs the dr.rds-derived
+# table posted on #15 (student-weighted class means = student means)
+st <- entrants[stayer_ot == 1]
+gcell <- function(w, ex) st[wave == w & exam == ex, mean(applied, na.rm = TRUE)]
+ref <- data.table(
+  wave = c("private", "g2020", "g2017", "g2019", "private", "g2018"),
+  exam = c(2023, 2023, 2021, 2023, 2019, 2022),
+  ref  = c(0.887, 0.555, 0.384, 0.568, 0.851, 0.427))
+ref[, this := mapply(gcell, wave, exam)]
+ref[, diff := this - ref]
+print(ref[, .(wave, exam, this = round(this, 3), ref, diff = round(diff, 4))])
+ok <- ref[, all(abs(diff) < 0.003)]
+cat(if (ok) "GUARD PASSED\n" else "GUARD FAILED\n")
+stopifnot(ok)
+```
+
+## A. Entrant-based trajectories (applied / assigned / enrolled / take)
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+wtab <- function(d, v, timevar = "exam", tmin = 2019) {
+  t <- dcast(d[get(timevar) >= tmin,
+               .(m = round(mean(get(v), na.rm = TRUE), 3)), by = c("wave", timevar)],
+             as.formula(paste(timevar, "~ wave")), value.var = "m")
+  setcolorder(t, intersect(c(timevar, "private", "g2017", "g2018", "g2019", "g2020"), names(t)))
+  t
+}
+for (v in c("applied", "assigned", "enrolled", "scored_lm")) {
+  cat("\n====", v, "(entrants) by exam year ====\n"); print(wtab(entrants, v), nrow = 20)
+}
+```
+
+## B. Female-minus-male gap trajectories (entrants)
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+gap <- entrants[GEN_ALU %in% c(1, 2),
+                .(applied_gap  = mean(applied [GEN_ALU == 2], na.rm = TRUE) - mean(applied [GEN_ALU == 1], na.rm = TRUE),
+                  assigned_gap = mean(assigned[GEN_ALU == 2], na.rm = TRUE) - mean(assigned[GEN_ALU == 1], na.rm = TRUE),
+                  enrolled_gap = mean(enrolled[GEN_ALU == 2], na.rm = TRUE) - mean(enrolled[GEN_ALU == 1], na.rm = TRUE),
+                  take_gap     = mean(scored_lm[GEN_ALU == 2], na.rm = TRUE) - mean(scored_lm[GEN_ALU == 1], na.rm = TRUE)),
+                by = .(wave, exam)]
+for (v in c("applied_gap", "assigned_gap", "enrolled_gap", "take_gap")) {
+  cat("\n==== F-M", v, "by exam year ====\n")
+  t <- dcast(gap[exam >= 2019, .(wave, exam, m = round(get(v), 3))], exam ~ wave, value.var = "m")
+  setcolorder(t, intersect(c("exam", "private", "g2017", "g2018", "g2019", "g2020"), names(t)))
+  print(t, nrow = 20)
+}
+```
+
+## C. Graduation calendar check
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+entrants[, grad_cal := AGNO_9th + 3]
+for (v in c("on_time_grad", "grad_ever", "stayer")) {
+  cat("\n====", v, "(entrants) by graduation calendar year (entry + 3) ====\n")
+  print(wtab(entrants, v, timevar = "grad_cal", tmin = 2016), nrow = 20)
+}
+cat("\nfirst treated GRADUATION year by group: g2017->2020, g2018->2021, g2019->2022, g2020(RM)->2023\n",
+    "COVID promotion-flexibility years: 2020-21. If untreated groups jump at 2020-21\n",
+    "like treated ones, the graduation margin is the promotion regime, not SAE.\n")
+```
+
+## Summary
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+cat("Key reads:\n",
+    "A: does the exam-2023 jump replicate on the ITT sample (incl. untreated RM)?\n",
+    "B: does the F-M applied gap move at exam 2023 in untreated RM (g2020)?\n",
+    "   If yes -> the gender gaps are partly the boom; if flat -> #14 survives.\n",
+    "C: do on-time graduation trajectories jump at calendar 2020-21 regardless of\n",
+    "   treatment status? Compare each group's first treated graduation year.\n")
+```

@@ -1,0 +1,834 @@
+---
+title: "Effect of SAE on SUA - Design-Based Inference and Robustness Battery (Issue #16)"
+output:
+  pdf_document:
+    keep_tex: true
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+Issue #16: randomization inference over the 1,001 admissible rollout
+reassignments, region-level wild cluster bootstrap, COVID / exam-reform window
+cuts, wave-by-wave event studies, leave-one-region-out, student-weighted
+aggregation, wave balance, and sample summary statistics. Sample and estimation
+mirror `3_effect_sae_am.Rmd` exactly (Callaway-Sant'Anna, school x cohort
+classes, not-yet-treated controls, anticipation 2, universal base period,
+`xformla = ~num_students`, region-clustered multiplier bootstrap with 10,000
+iterations, `set.seed(20260610)` before every `att_gt`). Heavy blocks cache to
+`cache_inference/`; set environment variable `SMOKE=1` for a fast end-to-end
+test run.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# Clean ---------------------------------------------------------------
+rm(list = ls())
+
+# Libraries ---------------------------------------------------------------
+library(dplyr)
+library(magrittr)
+library(purrr)
+library(data.table)
+library(did)
+library(fixest)
+library(parallel)
+
+SMOKE   <- Sys.getenv("SMOKE") == "1"
+N_CORES <- as.integer(Sys.getenv("BATTERY_CORES", "20"))
+setDTthreads(8)
+
+start_year <- 2012
+end_year <- 2021
+media <- c(310, 410, 510, 610, 710, 810)
+clustering_var <- "region"
+
+BITERS  <- if (SMOKE) 500 else 10000    # multiplier bootstrap iterations
+B_WCB   <- if (SMOKE) 199 else 9999     # wild cluster bootstrap iterations
+RI_KEEP <- if (SMOKE) 8 else Inf        # permutations to run (Inf = all 1,001)
+
+# shared Dropbox data folder (resolves to each user's own Dropbox)
+home <- ifelse(Sys.getenv("USERPROFILE") != "", Sys.getenv("USERPROFILE"), path.expand("~"))
+data_path <- file.path(home, "Dropbox", "Effect SAE on SUA", "data")
+cache_dir <- file.path("cache_inference", if (SMOKE) "smoke" else "full")
+dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
+tdir <- if (SMOKE) file.path(cache_dir, "tables") else "tables"
+dir.create(tdir, showWarnings = FALSE)
+tex_out <- function(file) file.path(tdir, file)
+cached <- function(name, expr) {
+  f <- file.path(cache_dir, paste0(name, ".rds"))
+  if (file.exists(f)) return(readRDS(f))
+  x <- eval.parent(substitute(expr))
+  saveRDS(x, f)
+  x
+}
+
+outcomes <- c(
+  gpa_secondary  = "GPA",
+  scored_lm      = "P(Take Exam)",
+  prom_lm_actual = "Average LM",
+  applied        = "Applied",
+  assigned       = "Assigned",
+  enrolled       = "Enrolled"
+)
+headline <- c(applied = "Applied", assigned = "Assigned", enrolled = "Enrolled")
+
+region_names <- c(
+  "1" = "Tarapac\\'a", "2" = "Antofagasta", "3" = "Atacama", "4" = "Coquimbo",
+  "5" = "Valpara\\'iso", "6" = "O'Higgins", "7" = "Maule", "8" = "Biob\\'io",
+  "9" = "Araucan\\'ia", "10" = "Los Lagos", "11" = "Ays\\'en", "12" = "Magallanes",
+  "13" = "Metropolitana", "14" = "Los R\\'ios", "15" = "Arica y Parinacota",
+  "16" = "\\~Nuble"
+)
+
+# helpers: table formatting
+fmt  <- function(x) sub("^-(0\\.000)$", "\\1", sprintf("%.3f", x))
+fmt_p <- function(x) sprintf("%.3f", x)
+star <- function(p) ifelse(p < .01, "$^{***}$",
+                    ifelse(p < .05, "$^{**}$",
+                    ifelse(p < .1,  "$^{*}$", "")))
+row_tex <- function(lbl, vals) paste0("      ", lbl, " & ", paste(vals, collapse = " & "), "\\\\\n")
+
+tab_open <- function(caption, label, ncols, scale = 0.85) paste0(
+  "\\begin{table}[htbp]\n   \\caption{", caption, "}\\label{", label, "}\n",
+  "   \\centerline{\\scalebox{", scale, "}{\\begin{tabular}{l", strrep("c", ncols), "}\n      \\toprule\n")
+tab_close <- "      \\bottomrule\n   \\end{tabular}}}\n\\end{table}\n"
+tab_head <- function(labels) paste0(
+  "                   & ", paste(labels, collapse = " & "), "\\\\\n",
+  "                   & ", paste0("(", seq_along(labels), ")", collapse = " & "), "\\\\\n      \\midrule\n")
+
+# helper: collapse students to school x cohort classes (class means over the
+# students passed in; num_students = their count)
+class_panel <- function(students, cols = names(outcomes)) {
+  d <- students[, c(.(num_students = .N), lapply(.SD, mean, na.rm = TRUE)),
+                by = .(rbd, AGNO_9th), .SDcols = cols]
+  d[, year := AGNO_9th - 1]
+  d <- merge(d, sch[, .(rbd, year_region_sae, region)], by = "rbd", all.x = TRUE)
+  d[year_region_sae > max(year), year_region_sae := 0]
+  d
+}
+
+# helper: run the baseline estimator with the full convention and return the
+# att_gt fit (seeded multiplier bootstrap, region clusters)
+fit_boot <- function(y, data, extra = list()) {
+  set.seed(20260610)
+  args <- c(list(yname = y, tname = "year", idname = "rbd", gname = "year_region_sae",
+                 xformla = ~num_students, data = data, control_group = "notyettreated",
+                 anticipation = 2, base_period = "universal", est_method = "dr",
+                 allow_unbalanced_panel = TRUE, clustervars = clustering_var,
+                 panel = TRUE, bstrap = TRUE, biters = BITERS, cband = TRUE), extra)
+  do.call(att_gt, args)
+}
+agg_simple <- function(m) suppressWarnings(aggte(m, type = "simple", na.rm = TRUE))
+
+# helper: fast analytic fit for randomization inference (no bootstrap; did's
+# clustervars only enters through the bootstrap, so it is not passed here --
+# the permutation statistic is studentized by the analytic standard error,
+# which does not affect the exactness of the test)
+fit_fast <- function(y, data, gname = "year_region_sae") {
+  do.call(att_gt, list(yname = y, tname = "year", idname = "rbd", gname = gname,
+                       xformla = ~num_students, data = data, control_group = "notyettreated",
+                       anticipation = 2, base_period = "universal", est_method = "dr",
+                       allow_unbalanced_panel = TRUE,
+                       panel = TRUE, bstrap = FALSE, cband = FALSE))
+}
+```
+
+## Data and treatment
+
+Identical to `3_effect_sae_am.Rmd`: treatment is the year 9th grade in the
+school's region was first assigned through SAE; never-treated schools are
+private (DEPE 4); headline sample keeps students who graduated on time having
+spent grades 9 to 12 in the same school, entering 9th grade 2012 to 2021.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+df <- readRDS(file.path(data_path, "panel_9-12_2010_2021.rds"))
+setDT(df)
+df <- df[, .(MRUN, AGNO, RBD, COD_GRADO, COD_ENSE, year_rbd_first_sae,
+             graduated_secondary, COD_REG_RBD, COD_DEPE, GEN_ALU,
+             gpa_secondary, scored_lm, prom_lm_actual, applied, assigned, enrolled)]
+
+sch <- unique(df[, .(RBD, year_rbd_first_sae, COD_REG_RBD, COD_DEPE)])[, .(
+  yfs    = { v <- year_rbd_first_sae[!is.na(year_rbd_first_sae)]; if (length(v)) as.numeric(v[1]) else 0 },
+  region = { v <- COD_REG_RBD[!is.na(COD_REG_RBD)]; if (length(v)) as.integer(v[1]) else NA_integer_ },
+  depe   = { v <- COD_DEPE[!is.na(COD_DEPE)]; if (length(v)) as.integer(names(which.max(table(v)))) else NA_integer_ }
+), by = RBD]
+setnames(sch, "RBD", "rbd")
+
+sae <- readRDS(file.path(data_path, "sae_data_2016_2023.rds"))
+setDT(sae)
+nine <- sae[COD_ENSE %in% media & COD_GRADO == 1, .(g9 = as.numeric(min(AGNO))), by = RBD]
+setnames(nine, "RBD", "rbd")
+sch <- merge(sch, nine, by = "rbd", all.x = TRUE)
+reg9 <- sch[!is.na(g9), .(g9r = min(g9)), by = region][!is.na(region)]
+sch <- merge(sch, reg9, by = "region", all.x = TRUE)
+sch[, elig := fifelse(!is.na(depe), as.integer(depe != 4), as.integer(yfs > 0 | !is.na(g9)))]
+sch[, year_region_sae := fifelse(elig == 1 & !is.na(g9r), as.numeric(g9r), 0)]
+rm(sae, nine, reg9)
+
+keep <- df[, all(COD_ENSE == 110 | COD_ENSE %in% media), by = MRUN][V1 == TRUE, MRUN]
+hs <- df[MRUN %in% keep & AGNO >= 2010 & AGNO <= 2024 &
+           COD_ENSE %in% media & COD_GRADO %in% 1:4, .(MRUN, AGNO, RBD, COD_GRADO)]
+setorder(hs, MRUN, AGNO, COD_GRADO)
+
+anchor <- hs[COD_GRADO == 1, .(rbd = RBD[1], AGNO_9th = AGNO[1]), by = MRUN]
+hs1 <- merge(hs, anchor[, .(MRUN, rbd)], by = "MRUN")
+per <- hs1[, .(ng = uniqueN(COD_GRADO[RBD == rbd]), nsch = uniqueN(RBD)), by = MRUN]
+per <- merge(per, anchor, by = "MRUN")
+stayers <- per[ng == 4 & nsch == 1, .(MRUN, rbd, AGNO_9th)]
+setkey(stayers, MRUN)
+grad <- hs1[MRUN %in% stayers$MRUN, .(grad_year = max(AGNO)), by = MRUN]
+vals <- df[MRUN %in% stayers$MRUN,
+           lapply(.SD, function(x) { v <- x[!is.na(x)]; if (length(v)) as.numeric(v[1]) else NA_real_ }),
+           by = MRUN, .SDcols = c(names(outcomes), "graduated_secondary", "GEN_ALU")]
+students <- merge(stayers, vals, by = "MRUN")
+students <- merge(students, grad, by = "MRUN")
+students <- students[graduated_secondary == 1 & grad_year == AGNO_9th + 3 &
+                       AGNO_9th >= start_year & AGNO_9th <= end_year]
+
+dr <- class_panel(students)
+
+# adoption waves at the region level (pilot Magallanes 2016, four regions 2017,
+# ten regions 2018, Metropolitana 2019); the 2017/2018 split is the randomized
+# margin permuted by the randomization inference
+region_wave <- unique(sch[elig == 1 & !is.na(region) & year_region_sae > 0,
+                          .(region, wave = year_region_sae)])
+setorder(region_wave, wave, region)
+pilot  <- region_wave[wave == 2016, region]
+rm_reg <- region_wave[wave == 2019, region]
+w2017  <- sort(region_wave[wave == 2017, region])
+free14 <- sort(region_wave[wave %in% c(2017, 2018), region])
+stopifnot(length(pilot) == 1, length(rm_reg) == 1, length(free14) == 14, length(w2017) == 4)
+
+rebuild_g <- function(d, regs2017) {
+  fifelse(d$year_region_sae == 0, 0,
+   fifelse(d$region %in% pilot, 2016,
+    fifelse(d$region %in% rm_reg, 2019,
+     fifelse(d$region %in% regs2017, 2017, 2018))))
+}
+stopifnot(dr[, all(rebuild_g(.SD, w2017) == year_region_sae)])
+
+# free memory before forking workers
+rm(df, hs, hs1, per, anchor, grad, vals, keep)
+invisible(gc(FALSE))
+saveRDS(dr, file.path(cache_dir, "dr.rds"))
+
+cat(sprintf("Classes: %s | schools: %s | regions: %s | years %d-%d\n",
+            format(nrow(dr), big.mark = ","), uniqueN(dr$rbd),
+            uniqueN(dr$region[!is.na(dr$region)]), min(dr$year), max(dr$year)))
+cat(sprintf("Waves: pilot region %s (2016) | 2017: %s | 2018: %s | RM %s (2019)\n",
+            pilot, paste(w2017, collapse = " "),
+            paste(setdiff(free14, w2017), collapse = " "), rm_reg))
+```
+
+## Baseline replication check
+
+Point estimates must reproduce the draft's Table 1
+(`staggered_did_sae_on_outcomes_AM.tex`) exactly; bootstrap SEs may drift
+across `did` versions (documented in issues #11/#12), so SEs are reported side
+by side rather than asserted.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+base <- cached("baseline", {
+  fits <- map(names(outcomes), function(y) fit_boot(y, dr))
+  names(fits) <- names(outcomes)
+  list(
+    simple  = map(fits, agg_simple),
+    dynamic = map(fits, function(m) suppressWarnings(aggte(m, type = "dynamic", na.rm = TRUE))),
+    group   = map(fits, function(m) suppressWarnings(aggte(m, type = "group", na.rm = TRUE))),
+    gtres   = map(fits, function(m) data.frame(g = m$group, t = m$t, att = m$att, se = m$se))
+  )
+})
+
+# draft Table 1 values (documents/draft/tables/staggered_did_sae_on_outcomes_AM.tex),
+# quoted here only as replication targets; the draft table has no P(Take Exam) column
+draft_att <- c(gpa_secondary = -0.005, prom_lm_actual = -0.016, applied = 0.045,
+               assigned = 0.051, enrolled = 0.041)
+draft_se  <- c(gpa_secondary = 0.013, prom_lm_actual = 0.008, applied = 0.010,
+               assigned = 0.013, enrolled = 0.012)
+
+att <- map_dbl(base$simple, "overall.att")
+se  <- map_dbl(base$simple, "overall.se")
+chk <- data.frame(outcome = outcomes,
+                  att = fmt(att), draft_att = c(fmt(draft_att[1]), "--", fmt(draft_att[-1])),
+                  se = fmt(se), draft_se = c(fmt(draft_se[1]), "--", fmt(draft_se[-1])))
+knitr::kable(chk, row.names = FALSE,
+             caption = "Replication check against draft Table 1 (point estimates must match)")
+match_ok <- all(fmt(att[names(draft_att)]) == fmt(draft_att))
+cat(sprintf("\n\nPoint estimates match draft Table 1: **%s**\n\n", ifelse(match_ok, "YES", "NO")))
+
+means_pre <- dr[year_region_sae > 0 & year < year_region_sae,
+                sapply(.SD, mean, na.rm = TRUE), .SDcols = names(outcomes)]
+```
+
+## Randomization inference over the 1,001 admissible rollouts
+
+Magallanes (pilot) and Metropolitana (last) are held at their actual dates;
+the fourteen remaining regions are reassigned to the 2017/2018 waves in every
+one of the $\binom{14}{4} = 1{,}001$ admissible ways (exact enumeration; the
+observed assignment is one of them). For each reassignment each school's
+treatment year is rebuilt from its region's permuted wave, and the full
+estimator is re-run without bootstrap (analytic standard errors). Exact
+two-sided $p$-values compare the observed statistic with the permutation
+distribution; the studentized statistic $\hat{ATT}/\widehat{se}$ is primary,
+the raw $\hat{ATT}$ a check. The same runs give the joint pre-trend statistics
+over the clean leads (event times $-8$ to $-4$): the maximum absolute
+studentized lead, and the sum of squared studentized leads, each also computed
+excluding event time $-8$.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+perm_sets <- combn(free14, 4)
+n_perm <- ncol(perm_sets)
+obs_idx <- which(apply(perm_sets, 2, function(s) setequal(s, w2017)))
+stopifnot(length(obs_idx) == 1)
+
+ri_stats_one <- function(regs2017) {
+  d <- copy(dr)
+  d[, g_perm := rebuild_g(d, regs2017)]
+  out <- lapply(names(outcomes), function(y) {
+    r <- tryCatch({
+      m <- fit_fast(y, d, gname = "g_perm")
+      a <- suppressWarnings(aggte(m, type = "simple", na.rm = TRUE))
+      dyn <- suppressWarnings(aggte(m, type = "dynamic", na.rm = TRUE))
+      lead <- dyn$egt <= -4
+      t_lead <- dyn$att.egt[lead] / dyn$se.egt[lead]
+      lead7 <- dyn$egt <= -4 & dyn$egt >= -7
+      t_lead7 <- dyn$att.egt[lead7] / dyn$se.egt[lead7]
+      c(att = a$overall.att, se = a$overall.se, t = a$overall.att / a$overall.se,
+        pre_maxt = max(abs(t_lead)), pre_ssq = sum(t_lead^2),
+        pre_maxt_x8 = max(abs(t_lead7)), pre_ssq_x8 = sum(t_lead7^2))
+    }, error = function(e) c(att = NA_real_, se = NA_real_, t = NA_real_,
+                             pre_maxt = NA_real_, pre_ssq = NA_real_,
+                             pre_maxt_x8 = NA_real_, pre_ssq_x8 = NA_real_))
+    r
+  })
+  names(out) <- names(outcomes)
+  out
+}
+
+ri <- cached("ri_results", {
+  idx <- if (is.finite(RI_KEEP)) sort(unique(c(obs_idx, seq_len(min(RI_KEEP, n_perm))))) else seq_len(n_perm)
+  res <- mclapply(idx, function(j) ri_stats_one(perm_sets[, j]),
+                  mc.cores = N_CORES, mc.preschedule = FALSE)
+  names(res) <- as.character(idx)
+  list(idx = idx, res = res)
+})
+
+ri_mat <- function(stat) sapply(names(outcomes), function(y)
+  sapply(ri$res, function(r) r[[y]][stat]))
+ri_p <- function(stat) {
+  m <- ri_mat(stat)
+  obs <- m[which(ri$idx == obs_idx), ]
+  ok <- colSums(!is.na(m))
+  p <- sapply(names(outcomes), function(y) mean(abs(m[, y]) >= abs(obs[y]), na.rm = TRUE))
+  list(p = p, obs = obs, ok = ok)
+}
+ri_t   <- ri_p("t")
+ri_att <- ri_p("att")
+pre_maxt    <- ri_p("pre_maxt")
+pre_ssq     <- ri_p("pre_ssq")
+pre_maxt_x8 <- ri_p("pre_maxt_x8")
+pre_ssq_x8  <- ri_p("pre_ssq_x8")
+n_fail <- sum(sapply(ri$res, function(r) any(sapply(r, function(x) is.na(x["att"])))))
+cat(sprintf("Permutations run: %d of %d | with any failed outcome: %d\n\n",
+            length(ri$idx), n_perm, n_fail))
+cat(knitr::kable(data.frame(
+  outcome = outcomes,
+  att_analytic = fmt(ri_att$obs), t_analytic = sprintf("%.2f", ri_t$obs),
+  p_RI_t = fmt_p(ri_t$p), p_RI_att = fmt_p(ri_att$p)),
+  row.names = FALSE, caption = "Randomization inference: exact p-values, main ATTs"),
+  sep = "\n")
+cat("\n\n")
+cat(knitr::kable(data.frame(
+  outcome = outcomes,
+  p_pre_maxt = fmt_p(pre_maxt$p), p_pre_ssq = fmt_p(pre_ssq$p),
+  p_pre_maxt_excl8 = fmt_p(pre_maxt_x8$p), p_pre_ssq_excl8 = fmt_p(pre_ssq_x8$p)),
+  row.names = FALSE, caption = "Randomization inference: joint pre-trend p-values"),
+  sep = "\n")
+cat("\n")
+```
+
+## Wild cluster bootstrap at the region level
+
+The Callaway-Sant'Anna multiplier bootstrap already draws region-level
+Rademacher weights; the wild cluster bootstrap requires a regression score, so
+it is applied to the TWFE analogue of the design: class-level outcomes on a
+treatment indicator with school and admission-year fixed effects and the class
+size control, on the panel with each treated school's transition band (event
+times $-1$, $-2$) set aside, standard errors clustered on the sixteen regions.
+Restricted (null-imposed) wild cluster bootstrap with Rademacher and Webb
+weights, `r format(if (Sys.getenv("SMOKE")=="1") 199 else 9999, big.mark=",")`
+draws. Because one cluster (Metropolitana) holds a third of the sample, the
+region-drawn bootstrap distribution can degenerate; the subcluster variant of
+MacKinnon and Webb draws the weights at the school level while keeping the
+variance clustered on regions, and is reported alongside. The bootstrap
+$|t^*|$ quantiles stored with the results record the spread of each
+distribution.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+est <- copy(dr)[!is.na(region)]
+est[, e := fifelse(year_region_sae > 0, year - year_region_sae, NA_real_)]
+est[, treated := as.integer(!is.na(e) & e >= 0)]
+est_tw <- est[is.na(e) | e < -2 | e >= 0]
+
+wcb_one <- function(y, data, xvar = "treated", B = B_WCB) {
+  dat <- data[!is.na(data[[y]])]
+  full <- feols(as.formula(paste0(y, " ~ ", xvar, " + num_students | rbd + year")),
+                data = dat, cluster = ~region)
+  b_obs  <- coef(full)[xvar]
+  se_obs <- sqrt(vcov(full)[xvar, xvar])
+  t_obs  <- b_obs / se_obs
+  G <- uniqueN(dat$region)
+  # restricted model (null: coefficient on xvar is zero)
+  restr <- feols(as.formula(paste0(y, " ~ num_students | rbd + year")),
+                 data = dat, cluster = ~region)
+  yhat_r <- fitted(restr)
+  uhat_r <- resid(restr)
+  cl_reg <- as.integer(factor(dat$region))
+  cl_sch <- as.integer(factor(dat$rbd))
+  draw_t <- function(wts, cl) {
+    dat2 <- copy(dat)
+    dat2[[paste0(y, "_star")]] <- yhat_r + uhat_r * wts[cl]
+    fb <- feols(as.formula(paste0(y, "_star ~ ", xvar, " + num_students | rbd + year")),
+                data = dat2, cluster = ~region)
+    coef(fb)[xvar] / sqrt(vcov(fb)[xvar, xvar])
+  }
+  webb_vals <- c(-sqrt(1.5), -1, -sqrt(0.5), sqrt(0.5), 1, sqrt(1.5))
+  S <- max(cl_sch)
+  set.seed(20260610)
+  w_rade <- matrix(sample(c(-1, 1), G * B, replace = TRUE), nrow = G)
+  set.seed(20260610)
+  w_webb <- matrix(sample(webb_vals, G * B, replace = TRUE), nrow = G)
+  set.seed(20260610)
+  w_sub  <- matrix(sample(c(-1, 1), S * B, replace = TRUE), nrow = S)
+  t_rade <- unlist(mclapply(seq_len(B), function(b) draw_t(w_rade[, b], cl_reg), mc.cores = N_CORES))
+  t_webb <- unlist(mclapply(seq_len(B), function(b) draw_t(w_webb[, b], cl_reg), mc.cores = N_CORES))
+  t_sub  <- unlist(mclapply(seq_len(B), function(b) draw_t(w_sub[, b], cl_sch), mc.cores = N_CORES))
+  boot_p <- function(ts) (1 + sum(abs(ts) >= abs(t_obs), na.rm = TRUE)) / (sum(!is.na(ts)) + 1)
+  list(b = b_obs, se = se_obs, t = t_obs, G = G, n = nobs(full),
+       p_crve = 2 * pt(-abs(t_obs), df = G - 1),
+       p_rade = boot_p(t_rade), p_webb = boot_p(t_webb), p_sub = boot_p(t_sub),
+       q_rade = quantile(abs(t_rade), c(.5, .9, .95, .99, 1), na.rm = TRUE),
+       q_webb = quantile(abs(t_webb), c(.5, .9, .95, .99, 1), na.rm = TRUE),
+       q_sub  = quantile(abs(t_sub), c(.5, .9, .95, .99, 1), na.rm = TRUE))
+}
+
+wcb <- cached("wcb_results", {
+  r <- lapply(names(outcomes), function(y) wcb_one(y, est_tw))
+  names(r) <- names(outcomes)
+  r
+})
+knitr::kable(data.frame(
+  outcome = outcomes,
+  beta = fmt(map_dbl(wcb, "b")), se = fmt(map_dbl(wcb, "se")),
+  p_crve_t15 = fmt_p(map_dbl(wcb, "p_crve")),
+  p_wcb_rademacher = fmt_p(map_dbl(wcb, "p_rade")),
+  p_wcb_webb = fmt_p(map_dbl(wcb, "p_webb")),
+  p_wcb_school = fmt_p(map_dbl(wcb, "p_sub")),
+  q99_rade = sprintf("%.2f", map_dbl(wcb, ~ .x$q_rade["99%"])),
+  N = map_dbl(wcb, "n")),
+  row.names = FALSE, caption = "TWFE analogue with region-level wild cluster bootstrap")
+```
+
+## Inference side by side
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+p_mult <- 2 * pnorm(-abs(att / se))
+tab <- paste0(
+  tab_open("Design-Based Inference for the Main Estimates", "tab: inference battery", length(outcomes), 0.8),
+  tab_head(unname(outcomes)),
+  "      \\multicolumn{7}{l}{\\textit{Callaway--Sant'Anna ATT (baseline estimator)}}\\\\\n",
+  row_tex("ATT", paste0(fmt(att), star(p_mult))),
+  row_tex("Multiplier bootstrap SE", paste0("(", fmt(se), ")")),
+  row_tex("$p$, multiplier bootstrap", fmt_p(p_mult)),
+  row_tex("$p$, randomization inference", fmt_p(ri_t$p)),
+  row_tex("$p$, randomization inference (unstudentized)", fmt_p(ri_att$p)),
+  row_tex("ATT range over the 1,001 reassignments",
+          sapply(names(outcomes), function(y) {
+            a <- ri_mat("att")[, y]
+            paste0("[", fmt(min(a, na.rm = TRUE)), ", ", fmt(max(a, na.rm = TRUE)), "]")
+          })),
+  "      \\midrule\n",
+  "      \\multicolumn{7}{l}{\\textit{Two-way fixed effects analogue}}\\\\\n",
+  row_tex("Treated", paste0(fmt(map_dbl(wcb, "b")), star(map_dbl(wcb, "p_crve")))),
+  row_tex("Cluster-robust SE", paste0("(", fmt(map_dbl(wcb, "se")), ")")),
+  row_tex("$p$, cluster-robust $t_{15}$", fmt_p(map_dbl(wcb, "p_crve"))),
+  row_tex("$p$, wild cluster bootstrap (Rademacher)", fmt_p(map_dbl(wcb, "p_rade"))),
+  row_tex("$p$, wild cluster bootstrap (Webb)", fmt_p(map_dbl(wcb, "p_webb"))),
+  row_tex("$p$, wild subcluster bootstrap (school draws)", fmt_p(map_dbl(wcb, "p_sub"))),
+  "      \\midrule\n",
+  row_tex("Observations", rep(format(nrow(dr), big.mark = ","), length(outcomes))),
+  row_tex("Regions (clusters)", rep("16", length(outcomes))),
+  tab_close)
+writeLines(tab, tex_out("did_inference_battery_AM.tex"))
+cat(tab)
+```
+
+## Parallel trends, regenerated
+
+Same exhibit as the draft's parallel-trends table (event-study averages with
+region-clustered 95 percent uniform confidence bands, bold where the band
+excludes zero), regenerated under the pinned estimator with the P(Take Exam)
+column added, and the exact randomization-inference $p$-value for the joint
+null that all clean leads are zero (sum of squared studentized leads over
+event times $-8$ to $-4$, the statistic behind the draft's published values;
+identical to three decimals when $-8$ is excluded).
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+dyn <- base$dynamic
+egt <- dyn[[1]]$egt
+crit <- map_dbl(dyn, function(d) if (!is.null(d$crit.val.egt) && is.finite(d$crit.val.egt)) d$crit.val.egt else qnorm(0.975))
+cell <- function(d, cv, e) {
+  i <- match(e, d$egt)
+  if (is.na(i)) return(c("--", ""))
+  a <- d$att.egt[i]; s <- d$se.egt[i]
+  bold <- abs(a) > cv * s
+  c(ifelse(bold, paste0("\\textbf{", fmt(a), "}"), fmt(a)), paste0("(", fmt(s), ")"))
+}
+block <- function(es) paste0(map_chr(es, function(e) {
+  cells <- map2(dyn, crit, cell, e = e)
+  paste0(row_tex(paste0("Event time ", e), map_chr(cells, 1)),
+         row_tex("", map_chr(cells, 2)))
+}), collapse = "")
+k <- length(outcomes)
+tab <- paste0(
+  tab_open("Parallel Trends Assumption: Event-Study Average ATT", "tab: parallel trends assumption", k),
+  tab_head(unname(outcomes)),
+  "      \\multicolumn{", k + 1, "}{l}{\\textit{Clean pre-treatment leads}}\\\\\n",
+  block(egt[egt <= -4]),
+  "      \\multicolumn{", k + 1, "}{l}{\\textit{Reference period: event time $-3$ (normalized to zero)}}\\\\\n",
+  "      \\multicolumn{", k + 1, "}{l}{\\textit{Transition band (set aside in estimation; partial exposure by construction)}}\\\\\n",
+  block(egt[egt %in% c(-2, -1)]),
+  "      \\midrule\n",
+  "      \\multicolumn{", k + 1, "}{l}{\\textit{Post-treatment}}\\\\\n",
+  block(egt[egt >= 0]),
+  "      \\midrule\n",
+  row_tex("Joint pre-trend $p$-value (RI)", fmt_p(pre_ssq$p)),
+  tab_close)
+writeLines(tab, tex_out("parallel_trends_sae_on_outcomes_AM.tex"))
+cat(tab)
+```
+
+## Wave-by-wave estimates
+
+Group ATTs by adoption wave for all outcomes, and the full $ATT(g,e)$
+event-study path by wave for the headline outcomes (group-time estimates with
+region-clustered bootstrap standard errors from the baseline fits).
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+waves <- sort(unique(dr[year_region_sae > 0, year_region_sae]))
+gatt <- map(base$group, function(a) {
+  i <- match(waves, a$egt)
+  list(att = a$att.egt[i], se = a$se.egt[i])
+})
+tab <- paste0(
+  tab_open("ATT by Adoption Wave", "tab: att by wave", length(outcomes)),
+  tab_head(unname(outcomes)),
+  paste0(map_chr(seq_along(waves), function(i) {
+    a <- map_dbl(gatt, ~ .x$att[i]); s <- map_dbl(gatt, ~ .x$se[i])
+    p <- 2 * pnorm(-abs(a / s))
+    paste0(row_tex(paste0("Wave ", waves[i]), paste0(fmt(a), star(p))),
+           row_tex("", paste0("(", fmt(s), ")")))
+  }), collapse = ""),
+  tab_close)
+writeLines(tab, tex_out("did_att_by_wave_AM.tex"))
+cat(tab)
+
+# ATT(g, e) tables for the headline outcomes, from the baseline group-time results
+gt <- base$gtres[names(headline)]
+for (y in names(headline)) {
+  d <- gt[[y]]
+  d$e <- d$t - d$g
+  es <- sort(unique(d$e))
+  tab <- paste0(
+    tab_open(paste0("Event-Study by Adoption Wave: ", headline[y]),
+             paste0("tab: event by wave ", y), length(waves)),
+    tab_head(paste0("Wave ", waves)),
+    paste0(map_chr(es, function(e) {
+      cells <- map_chr(waves, function(g) {
+        i <- which(d$g == g & d$e == e)
+        if (!length(i)) return("--")
+        if (!is.finite(d$se[i]) || d$se[i] <= 0) return("0 (ref.)")
+        p <- 2 * pnorm(-abs(d$att[i] / d$se[i]))
+        paste0(fmt(d$att[i]), star(p), " (", fmt(d$se[i]), ")")
+      })
+      row_tex(paste0("Event time ", e), cells)
+    }), collapse = ""),
+    tab_close)
+  writeLines(tab, tex_out(paste0("did_event_by_wave_", y, "_AM.tex")))
+  cat(tab)
+}
+```
+
+## COVID and exam-reform window cuts
+
+Classes are dated by their 9th-grade admission-process year; their college
+admission process runs five years later. Cut A drops the classes whose college
+admission fell in the two acute disruption years (processes 2021 and 2022:
+senior years under COVID closures, transition test PDT), i.e. admission-process
+years 2016 and 2017. Cut B additionally drops the class facing the disrupted
+January 2020 exam sitting (process 2020, admission-process year 2015). A wave
+whose reference class (formed three years before adoption) falls in the dropped
+years cannot be estimated and leaves the sample: cut A loses the 2019 wave
+(Metropolitana), cut B also loses the ten-region 2018 wave. Every
+post-treatment college process in the design falls in 2021--2025, inside the
+PDT/PAES era, so the cuts can remove the acute years but not the reform era
+itself.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+cuts <- list(
+  cutA = list(drop = c(2016, 2017), label = "Drop college-admission processes 2021--22"),
+  cutB = list(drop = c(2015, 2016, 2017), label = "Drop college-admission processes 2020--22")
+)
+covid <- cached("covid_cuts", {
+  map(cuts, function(cc) {
+    d <- dr[!year %in% cc$drop]
+    # a wave whose universal base period (g - 3) falls in the dropped years
+    # cannot be estimated; its schools leave the sample (they are treated in
+    # the remaining post years, so they cannot serve as comparisons either)
+    bad_g <- waves[(waves - 3) %in% cc$drop]
+    d <- d[!year_region_sae %in% bad_g]
+    res <- map(names(outcomes), function(y) {
+      tryCatch({
+        a <- agg_simple(fit_boot(y, d))
+        list(att = a$overall.att, se = a$overall.se)
+      }, error = function(e) list(att = NA_real_, se = NA_real_))
+    })
+    names(res) <- names(outcomes)
+    list(res = res, n = nrow(d), waves_kept = setdiff(waves, bad_g))
+  })
+})
+tab <- paste0(
+  tab_open("Robustness: COVID and Exam-Reform Window Cuts", "tab: covid cuts", length(outcomes), 0.8),
+  tab_head(unname(outcomes)),
+  paste0(map_chr(names(cuts), function(nm) {
+    a <- map_dbl(covid[[nm]]$res, "att"); s <- map_dbl(covid[[nm]]$res, "se")
+    p <- 2 * pnorm(-abs(a / s))
+    paste0("      \\multicolumn{", length(outcomes) + 1, "}{l}{\\textit{", cuts[[nm]]$label,
+           " (", format(covid[[nm]]$n, big.mark = ","), " classes; waves ",
+           paste(covid[[nm]]$waves_kept, collapse = ", "), ")}}\\\\\n",
+           row_tex("Treated", paste0(fmt(a), star(p))),
+           row_tex("", paste0("(", fmt(s), ")")))
+  }), collapse = ""),
+  tab_close)
+writeLines(tab, tex_out("did_covid_cuts_AM.tex"))
+cat(tab)
+```
+
+## Leave-one-region-out
+
+Each row re-estimates the headline outcomes dropping one region entirely
+(treated and control schools alike). Dropping Magallanes removes the 2016
+pilot wave and event time $4$; dropping Metropolitana removes the 2019 wave
+and the deepest lead.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+loro_regions <- if (SMOKE) c(pilot, rm_reg) else sort(unique(dr$region[!is.na(dr$region)]))
+loro <- cached("loro", {
+  res <- mclapply(loro_regions, function(r) {
+    d <- dr[is.na(region) | region != r]
+    out <- map(names(headline), function(y) {
+      tryCatch({
+        a <- agg_simple(fit_boot(y, d))
+        c(att = a$overall.att, se = a$overall.se)
+      }, error = function(e) c(att = NA_real_, se = NA_real_))
+    })
+    names(out) <- names(headline)
+    list(region = r, res = out, n = nrow(d))
+  }, mc.cores = min(N_CORES, length(loro_regions)), mc.preschedule = FALSE)
+  res[!sapply(res, is.null)]
+})
+wave_of <- setNames(region_wave$wave, region_wave$region)
+tab <- paste0(
+  tab_open("Leave-One-Region-Out: Headline Outcomes", "tab: loro", length(headline)),
+  tab_head(unname(headline)),
+  paste0(map_chr(loro, function(l) {
+    a <- map_dbl(l$res, "att"); s <- map_dbl(l$res, "se")
+    p <- 2 * pnorm(-abs(a / s))
+    lbl <- paste0("Drop ", region_names[as.character(l$region)],
+                  " (wave ", wave_of[as.character(l$region)], ")")
+    paste0(row_tex(lbl, paste0(fmt(a), star(p))),
+           row_tex("", paste0("(", fmt(s), ")")))
+  }), collapse = ""),
+  tab_close)
+writeLines(tab, tex_out("did_loro_AM.tex"))
+cat(tab)
+```
+
+## Student-weighted aggregation
+
+The baseline weights every class equally. Here classes are weighted by their
+size (`did` uses the weight from the base period of each comparison, so the
+weight is the class size of the pre-treatment reference cohort, which is not
+affected by the treatment's effect on retention and on-time graduation).
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+wgt <- cached("weighted", {
+  res <- map(names(outcomes), function(y)
+    agg_simple(fit_boot(y, dr, extra = list(weightsname = "num_students"))))
+  names(res) <- names(outcomes)
+  map(res, ~ list(att = .x$overall.att, se = .x$overall.se))
+})
+aw <- map_dbl(wgt, "att"); sw <- map_dbl(wgt, "se")
+pw <- 2 * pnorm(-abs(aw / sw))
+tab <- paste0(
+  tab_open("Class-Weighted and Student-Weighted ATTs", "tab: student weighted", length(outcomes)),
+  tab_head(unname(outcomes)),
+  "      \\multicolumn{", length(outcomes) + 1, "}{l}{\\textit{Equal class weights (baseline)}}\\\\\n",
+  row_tex("Treated", paste0(fmt(att), star(p_mult))),
+  row_tex("", paste0("(", fmt(se), ")")),
+  "      \\multicolumn{", length(outcomes) + 1, "}{l}{\\textit{Class-size weights (base-period class size)}}\\\\\n",
+  row_tex("Treated", paste0(fmt(aw), star(pw))),
+  row_tex("", paste0("(", fmt(sw), ")")),
+  tab_close)
+writeLines(tab, tex_out("did_student_weighted_AM.tex"))
+cat(tab)
+```
+
+## TWFE analogue and private-school placebo, regenerated
+
+The draft's TWFE table (`twfe_sae_on_outcomes.tex`) and private-school table
+(`staggered_did_sae_on_outcomes_only_private.tex`) come from the legacy
+pipeline: school-level treatment dates, transition band left in the sample,
+school-and-year two-way clustering. Both are regenerated here on the class
+panel with region-level treatment dates, the transition band set aside, and
+region-clustered inference with wild-cluster-bootstrap $p$-values. The placebo
+assigns each private school its region's adoption date: private admissions are
+never governed by SAE, so nothing should move.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+tab <- paste0(
+  tab_open("TWFE Analogue", "tab: twfe", length(outcomes)),
+  tab_head(unname(outcomes)),
+  row_tex("Treated", paste0(fmt(map_dbl(wcb, "b")), star(map_dbl(wcb, "p_crve")))),
+  row_tex("", paste0("(", fmt(map_dbl(wcb, "se")), ")")),
+  row_tex("$p$, wild cluster bootstrap", fmt_p(map_dbl(wcb, "p_rade"))),
+  row_tex("$p$, wild subcluster bootstrap", fmt_p(map_dbl(wcb, "p_sub"))),
+  "      \\midrule\n",
+  row_tex("Observations", format(map_dbl(wcb, "n"), big.mark = ",")),
+  row_tex("School and year fixed effects", rep("$\\checkmark$", length(outcomes))),
+  tab_close)
+writeLines(tab, tex_out("twfe_sae_on_outcomes_AM.tex"))
+cat(tab)
+
+# placebo: private schools only, "post" = region's adoption date
+priv <- est[year_region_sae == 0 & !is.na(region)]
+priv <- merge(priv, region_wave, by = "region", all.x = TRUE)
+priv[, post_sae := as.integer(year >= wave)]
+placebo <- cached("private_placebo", {
+  r <- lapply(names(outcomes), function(y) wcb_one(y, priv, xvar = "post_sae"))
+  names(r) <- names(outcomes)
+  r
+})
+tab <- paste0(
+  tab_open("Placebo: Private Fee-Paying Schools at Their Region's Adoption Date",
+           "tab: private placebo", length(outcomes), 0.8),
+  tab_head(unname(outcomes)),
+  row_tex("Post SAE", paste0(fmt(map_dbl(placebo, "b")), star(map_dbl(placebo, "p_crve")))),
+  row_tex("", paste0("(", fmt(map_dbl(placebo, "se")), ")")),
+  row_tex("$p$, wild cluster bootstrap", fmt_p(map_dbl(placebo, "p_rade"))),
+  row_tex("$p$, wild subcluster bootstrap", fmt_p(map_dbl(placebo, "p_sub"))),
+  "      \\midrule\n",
+  row_tex("Observations", format(map_dbl(placebo, "n"), big.mark = ",")),
+  row_tex("School and year fixed effects", rep("$\\checkmark$", length(outcomes))),
+  tab_close)
+writeLines(tab, tex_out("did_private_placebo_AM.tex"))
+cat(tab)
+```
+
+## Wave balance
+
+Region-level means of pre-period observables (admission-process years 2011 to
+2013, at least three years before any adoption) over publicly funded schools,
+by adoption wave; regions weighted equally, the randomization unit. The last
+columns test the randomized margin: the difference between the 2017 and 2018
+waves, with the exact randomization-inference $p$-value over the same 1,001
+admissible reassignments.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+bal_vars <- c(names(outcomes), "num_students")
+bal_labels <- c(unname(outcomes), "Class size")
+pre <- dr[year <= 2013 & year_region_sae > 0]
+regm <- pre[, c(lapply(.SD, mean, na.rm = TRUE),
+                .(n_schools = uniqueN(rbd), n_classes = .N)),
+            by = region, .SDcols = bal_vars]
+regm <- merge(regm, region_wave, by = "region")
+wave_mean <- function(v, w) mean(regm[[v]][regm$wave == w], na.rm = TRUE)
+diff_perm <- function(v, regs2017) {
+  x <- regm[[v]]
+  mean(x[regm$region %in% regs2017], na.rm = TRUE) -
+    mean(x[regm$region %in% setdiff(free14, regs2017)], na.rm = TRUE)
+}
+bal_rows <- map_chr(seq_along(c(bal_vars, "n_schools", "n_classes")), function(i) {
+  v <- c(bal_vars, "n_schools", "n_classes")[i]
+  lbl <- c(bal_labels, "Public schools", "Classes")[i]
+  f <- if (v %in% c("num_students", "n_schools", "n_classes")) function(x) sprintf("%.1f", x) else fmt
+  obs_d <- diff_perm(v, w2017)
+  perm_d <- apply(perm_sets, 2, function(s) diff_perm(v, s))
+  p <- mean(abs(perm_d) >= abs(obs_d))
+  row_tex(lbl, c(f(map_dbl(waves, ~ wave_mean(v, .x))), f(obs_d), fmt_p(p)))
+})
+tab <- paste0(
+  tab_open("Pre-Period Balance by Adoption Wave", "tab: wave balance", length(waves) + 2, 0.8),
+  "                   & Wave 2016 & Wave 2017 & Wave 2018 & Wave 2019 & Diff.\\ 2017$-$2018 & RI $p$\\\\\n",
+  "                   & (Magallanes) & (4 regions) & (10 regions) & (Metropolitana) & & \\\\\n      \\midrule\n",
+  paste0(bal_rows, collapse = ""),
+  "      \\midrule\n",
+  row_tex("Regions", c("1", "4", "10", "1", "", "")),
+  tab_close)
+writeLines(tab, tex_out("wave_balance_AM.tex"))
+cat(tab)
+```
+
+## Sample summary statistics
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+students2 <- merge(students, sch[, .(rbd, year_region_sae)], by = "rbd", all.x = TRUE)
+students2[, grp := fifelse(year_region_sae > 0, "treat", "never")]
+ms <- function(d) c(map(names(outcomes), ~ c(mean(d[[.x]], na.rm = TRUE), sd(d[[.x]], na.rm = TRUE))),
+                    list(c(mean(d$GEN_ALU == 2, na.rm = TRUE), NA)))
+stats <- list(all = ms(students2), treat = ms(students2[grp == "treat"]),
+              never = ms(students2[grp == "never"]))
+lbls <- c(unname(outcomes), "Female")
+srow <- function(i) {
+  m <- map_chr(stats, ~ fmt(.x[[i]][1]))
+  s <- map_chr(stats, ~ ifelse(is.na(.x[[i]][2]), "", paste0("(", fmt(.x[[i]][2]), ")")))
+  paste0(row_tex(lbls[i], m), row_tex("", s))
+}
+counts <- function(d) c(format(nrow(d), big.mark = ","),
+                        format(uniqueN(d$rbd), big.mark = ","))
+cls <- dr[, .(n = .N, size = mean(num_students)), by = .(grp = fifelse(year_region_sae > 0, "treat", "never"))]
+tab <- paste0(
+  tab_open("Sample Summary Statistics", "tab: summary stats", 3),
+  "                   & All & Eventually treated & Never treated (private)\\\\\n",
+  "                   & (1) & (2) & (3)\\\\\n      \\midrule\n",
+  "      \\multicolumn{4}{l}{\\textit{Students (headline sample)}}\\\\\n",
+  paste0(map_chr(seq_along(lbls), srow), collapse = ""),
+  row_tex("Students", c(counts(students2)[1], format(nrow(students2[grp == "treat"]), big.mark = ","),
+                        format(nrow(students2[grp == "never"]), big.mark = ","))),
+  "      \\midrule\n",
+  "      \\multicolumn{4}{l}{\\textit{Classes (school $\\times$ entry cohort)}}\\\\\n",
+  row_tex("Classes", c(format(nrow(dr), big.mark = ","),
+                       format(cls[grp == "treat", n], big.mark = ","),
+                       format(cls[grp == "never", n], big.mark = ","))),
+  row_tex("Average class size", c(fmt(mean(dr$num_students)),
+                                  fmt(cls[grp == "treat", size]), fmt(cls[grp == "never", size]))),
+  row_tex("Schools", c(uniqueN(dr$rbd), uniqueN(dr[year_region_sae > 0, rbd]),
+                       uniqueN(dr[year_region_sae == 0, rbd]))),
+  row_tex("Regions", c(uniqueN(dr$region[!is.na(dr$region)]),
+                       uniqueN(dr[year_region_sae > 0 & !is.na(region), region]),
+                       uniqueN(dr[year_region_sae == 0 & !is.na(region), region]))),
+  row_tex("Admission-process years", rep("2011--2020", 3)),
+  tab_close)
+writeLines(tab, tex_out("sample_summary_stats_AM.tex"))
+cat(tab)
+```
+
+## Session
+
+```{r echo=FALSE}
+cat("did version:", as.character(packageVersion("did")),
+    "| DRDID:", as.character(packageVersion("DRDID")),
+    "| fixest:", as.character(packageVersion("fixest")),
+    "| SMOKE:", SMOKE, "| biters:", BITERS, "| WCB draws:", B_WCB, "\n")
+```

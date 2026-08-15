@@ -1,0 +1,249 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Effect of SAE on SUA - First Stage: School Assignments (Issue \#15)},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{booktabs}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+
+\title{Effect of SAE on SUA - First Stage: School Assignments (Issue
+\#15)}
+\author{}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+\maketitle
+
+The missing first stage for the meeting: did SAE change WHERE students
+go at 9th-grade entry -- quality-weighted assignment, access to high-VA
+schools, ability mixing across schools, private-sector avoidance,
+cross-commune mobility? These outcomes are realized at entry (calendar
+2012-2021), so they avoid the grading-2020, promotion-2020/21 and
+PAES-2023 confounds entirely, and the within-public rollout comparison
+is clean here. Read = onset alignment: does anything move at each wave's
+first treated entry cohort (g2017/g2018/g2019/g2020)? All raw
+student-weighted descriptives by wave group of the ENTRY SCHOOL'S REGION
+(so private-school entrants belong to their region's market). Quality =
+SES-adjusted 2016 school value-added (\texttt{va\_2016\_gazmuri.csv},
+public schools) and 8th-grade SIMCE of entrants. Guard: entrant count +
+two trajectory cells chained to
+\texttt{11\_adjudication\_trajectories.Rmd}.
+
+\hypertarget{guard}{%
+\subsection{Guard}\label{guard}}
+
+\begin{verbatim}
+## entrants with region: 1,783,653 (11_adjudication universe: 1,783,653)
+\end{verbatim}
+
+\begin{verbatim}
+## untreated-RM publics applied 2023: 0.486 (11_adjudication: 0.486)
+\end{verbatim}
+
+\begin{verbatim}
+## VA coverage among public entrants: 0.980 | SIMCE-8 coverage: 0.265
+\end{verbatim}
+
+\begin{verbatim}
+## GUARD PASSED
+\end{verbatim}
+
+\hypertarget{a.-quality-of-the-entry-school-public-entrants}{%
+\subsection{A. Quality of the entry school (public
+entrants)}\label{a.-quality-of-the-entry-school-public-entrants}}
+
+First treated entry cohort per wave: g2017 -\textgreater{} 2017, g2018
+-\textgreater{} 2018, g2019 -\textgreater{} 2019, g2020 (RM)
+-\textgreater{} 2020.
+
+\begin{verbatim}
+## 
+## ==== mean VA-2016 of entry school (public entrants) ====
+## Key: <AGNO_9th>
+##     AGNO_9th g2017 g2018 g2019 g2020
+##        <num> <num> <num> <num> <num>
+##  1:     2012 0.511 0.561 0.545 0.587
+##  2:     2013 0.508 0.567 0.548 0.593
+##  3:     2014 0.511 0.571 0.550 0.592
+##  4:     2015 0.507 0.567 0.554 0.592
+##  5:     2016 0.520 0.569 0.560 0.602
+##  6:     2017 0.533 0.576 0.564 0.605
+##  7:     2018 0.518 0.578 0.569 0.603
+##  8:     2019 0.522 0.570 0.566 0.603
+##  9:     2020 0.520 0.573 0.564 0.605
+## 10:     2021 0.528 0.572 0.562 0.596
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## ==== share entering a top-quartile-VA school ====
+## Key: <AGNO_9th>
+##     AGNO_9th g2017 g2018 g2019 g2020
+##        <num> <num> <num> <num> <num>
+##  1:     2012 0.173 0.215 0.203 0.242
+##  2:     2013 0.190 0.225 0.205 0.243
+##  3:     2014 0.193 0.225 0.203 0.246
+##  4:     2015 0.196 0.219 0.206 0.241
+##  5:     2016 0.212 0.219 0.213 0.250
+##  6:     2017 0.218 0.228 0.215 0.255
+##  7:     2018 0.205 0.229 0.219 0.253
+##  8:     2019 0.215 0.226 0.218 0.255
+##  9:     2020 0.216 0.225 0.215 0.256
+## 10:     2021 0.222 0.227 0.215 0.253
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## ====   same, below-median-SIMCE-8 entrants (access margin for weaker students) ====
+## Key: <AGNO_9th>
+##     AGNO_9th g2017 g2018 g2019 g2020
+##        <num> <num> <num> <num> <num>
+##  1:     2012    NA 0.000 0.067 0.000
+##  2:     2013 0.000 0.250 0.158 0.143
+##  3:     2014 0.000 0.111 0.150 0.286
+##  4:     2015 0.142 0.130 0.125 0.126
+##  5:     2016 0.438 0.121 0.127 0.144
+##  6:     2017 0.000 0.136 0.077 0.170
+##  7:     2018 0.127 0.147 0.133 0.143
+##  8:     2019 0.235 0.130 0.155 0.172
+##  9:     2020 0.165 0.154 0.145 0.159
+## 10:     2021 0.333 0.128 0.150 0.182
+\end{verbatim}
+
+\hypertarget{b.-ability-mixing-between-school-segregation-of-entering-cohorts}{%
+\subsection{B. Ability mixing: between-school segregation of entering
+cohorts}\label{b.-ability-mixing-between-school-segregation-of-entering-cohorts}}
+
+\begin{verbatim}
+## ==== between-school share of SIMCE-8 variance (public entrants) ====
+\end{verbatim}
+
+\begin{verbatim}
+## Key: <AGNO_9th>
+##     AGNO_9th g2017 g2018 g2019 g2020
+##        <num> <num> <num> <num> <num>
+##  1:     2012    NA 0.488 1.000 0.999
+##  2:     2013 1.000 1.000 1.000 0.998
+##  3:     2014    NA 1.000 1.000 0.905
+##  4:     2015 0.248 0.299 0.306 0.313
+##  5:     2016 0.710 0.663 0.632 0.595
+##  6:     2017 0.000 0.965 0.987 0.987
+##  7:     2018 0.196 0.271 0.287 0.305
+##  8:     2019 0.385 0.699 0.663 0.608
+##  9:     2020 0.162 0.229 0.235 0.251
+## 10:     2021 0.221 0.732 0.741 0.675
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## (lower = more mixing; SIMCE-8 gap cohorts are blank)
+\end{verbatim}
+
+\hypertarget{c.-private-sector-entry-and-cross-commune-mobility-all-entrants}{%
+\subsection{C. Private-sector entry and cross-commune mobility (all
+entrants)}\label{c.-private-sector-entry-and-cross-commune-mobility-all-entrants}}
+
+\begin{verbatim}
+## 
+## ==== share of the region's entrants entering a PRIVATE school (avoidance margin) ====
+## Key: <AGNO_9th>
+##     AGNO_9th g2017 g2018 g2019 g2020
+##        <num> <num> <num> <num> <num>
+##  1:     2012 0.094 0.046 0.056 0.144
+##  2:     2013 0.082 0.047 0.054 0.146
+##  3:     2014 0.073 0.049 0.057 0.159
+##  4:     2015 0.082 0.048 0.058 0.164
+##  5:     2016 0.083 0.049 0.059 0.169
+##  6:     2017 0.095 0.051 0.059 0.168
+##  7:     2018 0.098 0.053 0.060 0.172
+##  8:     2019 0.092 0.051 0.061 0.170
+##  9:     2020 0.085 0.054 0.062 0.169
+## 10:     2021 0.101 0.054 0.064 0.169
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## ==== out-of-commune entry share (public entrants) ====
+## Key: <AGNO_9th>
+##     AGNO_9th g2017 g2018 g2019 g2020
+##        <num> <num> <num> <num> <num>
+##  1:     2012 0.077 0.224 0.235 0.435
+##  2:     2013 0.055 0.225 0.230 0.440
+##  3:     2014 0.071 0.224 0.237 0.435
+##  4:     2015 0.058 0.233 0.241 0.435
+##  5:     2016 0.078 0.239 0.244 0.441
+##  6:     2017 0.094 0.243 0.244 0.438
+##  7:     2018 0.076 0.245 0.246 0.439
+##  8:     2019 0.072 0.245 0.250 0.444
+##  9:     2020 0.078 0.247 0.248 0.435
+## 10:     2021 0.077 0.238 0.234 0.417
+\end{verbatim}
+
+\hypertarget{summary}{%
+\subsection{Summary}\label{summary}}
+
+\begin{verbatim}
+## Onset-alignment read: SAE moved school assignments only if these series shift
+##  at each wave's own g (2017/2018/2019/2020 diagonally), not at common calendar
+##  years. Entry-year outcomes -- no exam-era or grading confounds; COVID caveat
+##  for 2020-21 entries only.
+\end{verbatim}
+
+\end{document}

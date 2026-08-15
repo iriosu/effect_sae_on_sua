@@ -1,0 +1,146 @@
+---
+title: "Effect of SAE on SUA - PAES Boom Mechanisms (Issue #15)"
+output:
+  pdf_document:
+    keep_tex: true
+    extra_dependencies: ["booktabs"]
+  html_document: default
+---
+
+Mechanism fingerprints for the exam-2023 boom (#15 adjudication, 07-26). If
+the boom is the PAES-era eligibility machinery (ranking/top-10% pathway bite,
+floor changes on the new scale, application cap 10 to 20, second sitting), it
+leaves testable marks in the composition of applicants: (A) the marginal 2023
+applicants enter from the bottom of the score distribution; (B) high-rank /
+low-score applicants -- the ranking-pathway users -- surge in 2023, more for
+women (better rank, worse scores); (C) list lengths respond to the cap change;
+(D) the assignment mix shifts down-market in untreated RM too, which would
+reattribute the displacement/selectivity table. All raw student-weighted
+descriptives on the entrant sample by wave group (g = first treated entry
+cohort), no estimation. Guard: entrant count + two trajectory cells from
+`11_adjudication_trajectories.Rmd`.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+rm(list = ls())
+library(dplyr); library(magrittr); library(purrr); library(data.table)
+
+start_year <- 2012; end_year <- 2021
+media <- c(310, 410, 510, 610, 710, 810)
+home <- ifelse(Sys.getenv("USERPROFILE") != "", Sys.getenv("USERPROFILE"), path.expand("~"))
+data_path <- file.path(home, "Dropbox", "Effect SAE on SUA", "data")
+
+df <- readRDS(file.path(data_path, "panel_9-12_2010_2021.rds"))
+setDT(df)
+keep_cols <- intersect(c("MRUN", "AGNO", "RBD", "COD_GRADO", "COD_ENSE", "year_rbd_first_sae",
+                         "COD_REG_RBD", "COD_DEPE", "GEN_ALU",
+                         "scored_lm", "applied", "assigned", "enrolled",
+                         "lm_pct", "ranking_pct", "num_apps_reg", "pct_valid_reg",
+                         "assigned_full", "assigned_not_full", "assigned_top10",
+                         "assigned_top25", "assigned_top50"), names(df))
+cat("columns present:", paste(keep_cols, collapse = ", "), "\n")
+df <- df[, ..keep_cols]
+
+sch <- unique(df[, .(RBD, year_rbd_first_sae, COD_REG_RBD, COD_DEPE)])[, .(
+  yfs    = { v <- year_rbd_first_sae[!is.na(year_rbd_first_sae)]; if (length(v)) as.numeric(v[1]) else 0 },
+  region = { v <- COD_REG_RBD[!is.na(COD_REG_RBD)]; if (length(v)) as.integer(v[1]) else NA_integer_ },
+  depe   = { v <- COD_DEPE[!is.na(COD_DEPE)]; if (length(v)) as.integer(names(which.max(table(v)))) else NA_integer_ }
+), by = RBD]
+setnames(sch, "RBD", "rbd")
+sae <- readRDS(file.path(data_path, "sae_data_2016_2023.rds")); setDT(sae)
+nine <- sae[COD_ENSE %in% media & COD_GRADO == 1, .(g9 = as.numeric(min(AGNO))), by = RBD]
+setnames(nine, "RBD", "rbd")
+sch <- merge(sch, nine, by = "rbd", all.x = TRUE)
+reg9 <- sch[!is.na(g9), .(g9r = min(g9)), by = region][!is.na(region)]
+sch <- merge(sch, reg9, by = "region", all.x = TRUE)
+sch[, elig := fifelse(!is.na(depe), as.integer(depe != 4), as.integer(yfs > 0 | !is.na(g9)))]
+sch[, year_region_sae := fifelse(elig == 1 & !is.na(g9r), as.numeric(g9r), 0)]
+rm(sae, nine, reg9)
+
+keep <- df[, all(COD_ENSE == 110 | COD_ENSE %in% media), by = MRUN][V1 == TRUE, MRUN]
+hs <- df[MRUN %in% keep & AGNO >= 2010 & AGNO <= 2024 &
+           COD_ENSE %in% media & COD_GRADO %in% 1:4, .(MRUN, AGNO, RBD, COD_GRADO)]
+anchor <- hs[COD_GRADO == 1, .(rbd = RBD[1], AGNO_9th = AGNO[1]), by = MRUN]
+
+val_cols <- setdiff(keep_cols, c("MRUN", "AGNO", "RBD", "COD_GRADO", "COD_ENSE",
+                                 "year_rbd_first_sae", "COD_REG_RBD", "COD_DEPE"))
+vals_e <- df[MRUN %in% anchor$MRUN,
+             lapply(.SD, function(x) { v <- x[!is.na(x)]; if (length(v)) as.numeric(v[1]) else NA_real_ }),
+             by = MRUN, .SDcols = val_cols]
+entrants <- merge(anchor, vals_e, by = "MRUN", all.x = TRUE)
+entrants <- entrants[AGNO_9th >= start_year & AGNO_9th <= end_year]
+entrants <- merge(entrants, sch[, .(rbd, year_region_sae)], by = "rbd", all.x = TRUE)
+entrants[is.na(year_region_sae) | year_region_sae + 1 > end_year + 3, year_region_sae := 0]
+entrants[, wave := fifelse(year_region_sae == 0, "private", paste0("g", year_region_sae + 1))]
+entrants[, exam := AGNO_9th + 4]
+```
+
+## Guard
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+cat("entrants:", format(nrow(entrants), big.mark = ","), "(target 1,783,653)\n")
+c1 <- entrants[wave == "g2020" & exam == 2023, mean(applied, na.rm = TRUE)]
+c2 <- entrants[wave == "private" & exam == 2023, mean(applied, na.rm = TRUE)]
+cat(sprintf("untreated-RM applied 2023: %.3f (11_adjudication: 0.486) | private 2023: %.3f (0.844)\n", c1, c2))
+ok <- abs(c1 - 0.486) < 0.003 && abs(c2 - 0.844) < 0.003
+cat(if (ok) "GUARD PASSED\n" else "GUARD FAILED\n"); stopifnot(ok)
+```
+
+## A. Where do the 2023 applicants come from? Score composition of applicants
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+wt <- function(d, expr_txt, label, tmin = 2019) {
+  t <- dcast(d[exam >= tmin, .(m = round(eval(parse(text = expr_txt)), 3)), by = .(wave, exam)],
+             exam ~ wave, value.var = "m")
+  setcolorder(t, intersect(c("exam", "private", "g2017", "g2018", "g2019", "g2020"), names(t)))
+  cat("\n====", label, "====\n"); print(t, nrow = 20)
+}
+apps <- entrants[applied == 1 & !is.na(lm_pct) & lm_pct > 0]
+wt(apps, "quantile(lm_pct, .25, na.rm=TRUE)", "p25 of applicants' LM percentile")
+wt(apps, "median(lm_pct, na.rm=TRUE)", "median of applicants' LM percentile")
+wt(apps, "mean(lm_pct < 0.30, na.rm=TRUE)", "share of applicants with LM pct < 0.30 (old-floor region)")
+```
+
+## B. Ranking-pathway fingerprint: high-rank / low-score applicants
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# pathway users: applicants in the top ranking decile of their year with LM
+# percentile below 0.30 (would have struggled with a score floor)
+apps[, hr_ls := as.integer(ranking_pct >= 0.90 & lm_pct < 0.30)]
+wt(apps, "mean(hr_ls, na.rm=TRUE)", "share of applicants high-rank(>=p90)/low-score(<p30)")
+wt(apps[GEN_ALU == 2], "mean(hr_ls, na.rm=TRUE)", "  same, FEMALE applicants")
+wt(apps[GEN_ALU == 1], "mean(hr_ls, na.rm=TRUE)", "  same, MALE applicants")
+```
+
+## C. List length and the 10-to-20 cap
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+if ("num_apps_reg" %in% names(entrants)) {
+  la <- entrants[applied == 1 & !is.na(num_apps_reg)]
+  wt(la, "mean(num_apps_reg, na.rm=TRUE)", "mean list length among applicants")
+  wt(la, "mean(num_apps_reg >= 10, na.rm=TRUE)", "share of applicants with 10+ applications")
+} else cat("num_apps_reg not in panel -- skipped\n")
+```
+
+## D. Selectivity falsification: assignment mix in untreated RM
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+sel <- intersect(c("assigned_top10", "assigned_top50", "assigned_not_full", "assigned_full"), names(entrants))
+for (v in sel) wt(entrants, sprintf("mean(%s, na.rm=TRUE)", v), paste("unconditional", v))
+cat("\nRead: if assigned_not_full / low-selectivity assignment jumps at exam 2023 in\n",
+    "untreated RM like everywhere else, the selectivity/displacement table is boom\n",
+    "composition, not SAE congestion relief.\n")
+```
+
+## Summary
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+cat("Fingerprint predictions if the boom is PAES eligibility machinery:\n",
+    "A: applicant p25/median LM pct DROPS sharply in 2023 for publics (not privates).\n",
+    "B: high-rank/low-score applicant share JUMPS in 2023, more for women.\n",
+    "C: cap bite visible only in the top tail (share 10+; mean shifts little).\n",
+    "D: not-full/low-selectivity assignment jumps in untreated RM at 2023.\n")
+```

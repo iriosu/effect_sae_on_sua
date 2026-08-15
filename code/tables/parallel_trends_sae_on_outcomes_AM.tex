@@ -1,0 +1,42 @@
+\begin{table}[htbp]
+   \caption{Parallel Trends Assumption: Event-Study Average ATT}\label{tab: parallel trends assumption}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcccccc}
+      \toprule
+                   & GPA & P(Take Exam) & Average LM & Applied & Assigned & Enrolled\\
+                   & (1) & (2) & (3) & (4) & (5) & (6)\\
+      \midrule
+      \multicolumn{7}{l}{\textit{Clean pre-treatment leads}}\\
+      Event time -8 & \textbf{0.035} & \textbf{0.053} & -0.008 & \textbf{-0.071} & \textbf{-0.078} & \textbf{-0.102}\\
+       & (0.012) & (0.007) & (0.004) & (0.007) & (0.013) & (0.015)\\
+      Event time -7 & \textbf{0.014} & 0.007 & \textbf{-0.012} & -0.015 & -0.019 & -0.025\\
+       & (0.005) & (0.031) & (0.005) & (0.014) & (0.015) & (0.027)\\
+      Event time -6 & 0.017 & 0.010 & -0.004 & -0.001 & -0.001 & -0.004\\
+       & (0.010) & (0.030) & (0.012) & (0.008) & (0.006) & (0.009)\\
+      Event time -5 & \textbf{0.018} & 0.013 & -0.002 & 0.005 & 0.005 & 0.002\\
+       & (0.005) & (0.025) & (0.007) & (0.008) & (0.007) & (0.008)\\
+      Event time -4 & 0.016 & \textbf{-0.014} & -0.008 & -0.007 & -0.001 & 0.002\\
+       & (0.012) & (0.005) & (0.005) & (0.005) & (0.006) & (0.004)\\
+      \multicolumn{7}{l}{\textit{Reference period: event time $-3$ (normalized to zero)}}\\
+      \multicolumn{7}{l}{\textit{Transition band (set aside in estimation; partial exposure by construction)}}\\
+      Event time -2 & -0.010 & \textbf{-0.021} & \textbf{-0.011} & -0.014 & -0.001 & 0.001\\
+       & (0.005) & (0.008) & (0.005) & (0.008) & (0.010) & (0.007)\\
+      Event time -1 & -0.030 & \textbf{-0.035} & \textbf{-0.021} & 0.010 & \textbf{0.020} & 0.010\\
+       & (0.016) & (0.013) & (0.003) & (0.017) & (0.007) & (0.009)\\
+      \midrule
+      \multicolumn{7}{l}{\textit{Post-treatment}}\\
+      Event time 0 & -0.019 & -0.028 & \textbf{-0.017} & \textbf{0.039} & \textbf{0.036} & \textbf{0.024}\\
+       & (0.021) & (0.014) & (0.003) & (0.007) & (0.005) & (0.010)\\
+      Event time 1 & 0.003 & -0.020 & \textbf{-0.014} & \textbf{0.051} & \textbf{0.057} & \textbf{0.043}\\
+       & (0.036) & (0.017) & (0.005) & (0.013) & (0.011) & (0.006)\\
+      Event time 2 & 0.003 & \textbf{-0.025} & \textbf{-0.021} & \textbf{0.044} & \textbf{0.054} & \textbf{0.053}\\
+       & (0.012) & (0.008) & (0.008) & (0.008) & (0.011) & (0.013)\\
+      Event time 3 & 0.002 & \textbf{-0.040} & -0.008 & \textbf{0.051} & \textbf{0.079} & \textbf{0.073}\\
+       & (0.015) & (0.007) & (0.008) & (0.021) & (0.019) & (0.017)\\
+      Event time 4 & \textbf{-0.111} & \textbf{-0.060} & \textbf{-0.042} & \textbf{-0.049} & 0.006 & \textbf{0.072}\\
+       & (0.012) & (0.007) & (0.015) & (0.010) & (0.019) & (0.022)\\
+      \midrule
+      Joint pre-trend $p$-value (RI) & 0.467 & 0.387 & 0.746 & 0.835 & 0.680 & 0.556\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+

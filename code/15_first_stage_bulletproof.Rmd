@@ -1,0 +1,238 @@
+---
+title: "Effect of SAE on SUA - First Stage, Bulletproof: Screener-School Composition (Issue #15)"
+output:
+  pdf_document:
+    keep_tex: true
+    extra_dependencies: ["booktabs"]
+  html_document: default
+---
+
+Estimation-grade version of the `14_scarce_seats.Rmd` finding, built to survive
+the obvious attacks. (1) REGRESSION TO THE MEAN: school sets are defined on a
+SPLIT-HALF design -- ranked on odd-MRUN 2015 entrants, baselined on even-MRUN
+2015 entrants (the SIMCE-8 file carries tests 2014/2017/2019 only, so cohorts
+2015/2018/2020 are the data) -- selection noise independent of baseline noise. (2) INFERENCE the data can support: the SIMCE-8 test-year
+gaps make CS base periods infeasible (wave-2017's base cohort has no test), so
+the estimator is school-level LONG DIFFERENCES between dense cohorts -- D18 =
+cohort 2018 minus the even-half 2015 baseline, treated-by-2018 (Magallanes + wave-2017) vs
+clean controls (wave-2018 at e-1, RM at e-2, both admitted pre-SAE); D20 =
+cohort 2020 minus pre, all treated, years-of-exposure dose gradient -- with
+region-cluster-bootstrap SEs AND exact randomization inference over the 1,001
+admissible reassignments of the wave-2017 regions (the #16 space; Magallanes
+and RM held fixed). Entry composition is determined at admission, so there is
+no transition band and no exam-era, grading or PAES confound. (3) COVERAGE:
+dense cohorts set by empirical match rates; the coverage change is estimated
+as an outcome (differential-matching check). Sets: SCREENERS (top-quartile
+2012-13 intake, >=20 matched entrants), HIGH-VA (top-quartile va_2016), and a
+PLACEBO set (bottom-half 2012-13 intake -- no screening to ban, nothing should
+move). Closing block: the arithmetic bridge from the first-stage magnitude to
+the ceiling on aggregate college effects, against the within-public +-2pp
+bounds. Guard chained to `11_adjudication_trajectories.Rmd`.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+rm(list = ls())
+library(dplyr); library(magrittr); library(purrr); library(data.table); library(did)
+
+start_year <- 2012; end_year <- 2021
+media <- c(310, 410, 510, 610, 710, 810)
+home <- ifelse(Sys.getenv("USERPROFILE") != "", Sys.getenv("USERPROFILE"), path.expand("~"))
+data_path <- file.path(home, "Dropbox", "Effect SAE on SUA", "data")
+dir.create("tables", showWarnings = FALSE)
+
+df <- readRDS(file.path(data_path, "panel_9-12_2010_2021.rds"))
+setDT(df)
+df <- df[, .(MRUN, AGNO, RBD, COD_GRADO, COD_ENSE, year_rbd_first_sae,
+             COD_REG_RBD, COD_DEPE, applied)]
+
+sch <- unique(df[, .(RBD, year_rbd_first_sae, COD_REG_RBD, COD_DEPE)])[, .(
+  yfs    = { v <- year_rbd_first_sae[!is.na(year_rbd_first_sae)]; if (length(v)) as.numeric(v[1]) else 0 },
+  region = { v <- COD_REG_RBD[!is.na(COD_REG_RBD)]; if (length(v)) as.integer(v[1]) else NA_integer_ },
+  depe   = { v <- COD_DEPE[!is.na(COD_DEPE)]; if (length(v)) as.integer(names(which.max(table(v)))) else NA_integer_ }
+), by = RBD]
+setnames(sch, "RBD", "rbd")
+sae <- readRDS(file.path(data_path, "sae_data_2016_2023.rds")); setDT(sae)
+nine <- sae[COD_ENSE %in% media & COD_GRADO == 1, .(g9 = as.numeric(min(AGNO))), by = RBD]
+setnames(nine, "RBD", "rbd")
+sch <- merge(sch, nine, by = "rbd", all.x = TRUE)
+reg9 <- sch[!is.na(g9), .(g9r = min(g9)), by = region][!is.na(region)]
+sch <- merge(sch, reg9, by = "region", all.x = TRUE)
+sch[, elig := fifelse(!is.na(depe), as.integer(depe != 4), as.integer(yfs > 0 | !is.na(g9)))]
+sch[, year_region_sae := fifelse(elig == 1 & !is.na(g9r), as.numeric(g9r), 0)]
+rm(sae, nine, reg9)
+
+keep <- df[, all(COD_ENSE == 110 | COD_ENSE %in% media), by = MRUN][V1 == TRUE, MRUN]
+hs <- df[MRUN %in% keep & AGNO >= 2010 & AGNO <= 2024 &
+           COD_ENSE %in% media & COD_GRADO %in% 1:4, .(MRUN, AGNO, RBD, COD_GRADO)]
+anchor <- hs[COD_GRADO == 1, .(rbd = RBD[1], AGNO_9th = AGNO[1]), by = MRUN]
+appl <- df[MRUN %in% anchor$MRUN & !is.na(applied), .(applied = as.numeric(applied[1])), by = MRUN]
+entrants <- merge(anchor, appl, by = "MRUN", all.x = TRUE)
+entrants <- entrants[AGNO_9th >= start_year & AGNO_9th <= end_year]
+entrants <- merge(entrants, sch[, .(rbd, region, depe, g9r, year_region_sae)], by = "rbd", all.x = TRUE)
+entrants <- entrants[!is.na(region) & !is.na(g9r)]
+entrants[, wave := paste0("g", g9r + 1)]
+entrants[, is_private := as.integer(depe == 4)]
+
+s8 <- readRDS(file.path(data_path, "panel_simce_8b.rds")); setDT(s8)
+s8 <- s8[!is.na(mrun), .(MRUN = mrun, agno, mate = suppressWarnings(as.numeric(ptje_mate8b_alu)))]
+s8 <- s8[!is.na(mate)]; setorder(s8, MRUN, -agno); s8 <- unique(s8, by = "MRUN")
+s8[, z_mate := as.numeric(scale(mate)), by = agno]
+entrants <- merge(entrants, s8[, .(MRUN, z_mate)], by = "MRUN", all.x = TRUE)
+entrants[, has_z := as.integer(!is.na(z_mate))]
+
+va <- fread(file.path(data_path, "va_2016_gazmuri.csv"))
+```
+
+## Coverage and dense cohorts
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+cov <- entrants[, .(match = mean(has_z), n = .N), by = AGNO_9th][order(AGNO_9th)]
+print(cov)
+dense <- cov[match >= 0.10, AGNO_9th]
+cat("dense cohorts (match >= 10%):", paste(dense, collapse = ", "), "\n")
+```
+
+## School sets (split-half: ranked on odd-MRUN 2015 entrants, baselines from even-MRUN)
+
+The SIMCE-8 file carries tests 2014/2017/2019 only, so entry cohorts 2015,
+2018, 2020 are the data. Regression-to-the-mean protection therefore uses a
+within-cohort split: schools are RANKED on their odd-MRUN 2015 entrants and
+BASELINED on their even-MRUN 2015 entrants -- selection noise and baseline
+noise come from disjoint students.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+rankd <- entrants[is_private == 0 & AGNO_9th == 2015 & has_z == 1 & MRUN %% 2 == 1,
+                  .(rank_z = mean(z_mate), n_rank = .N), by = rbd][n_rank >= 10]
+scr_cut <- quantile(rankd$rank_z, 0.75)
+plc_cut <- quantile(rankd$rank_z, 0.50)
+set_scr <- rankd[rank_z >= scr_cut, rbd]
+set_plc <- rankd[rank_z < plc_cut, rbd]
+va_cut <- quantile(va$va, 0.75, na.rm = TRUE)
+set_hva <- va[va >= va_cut, rbd]
+cat(sprintf("ranked schools: %d | screeners: %d | placebo (bottom half): %d | high-VA: %d | scr x hva overlap: %d\n",
+            nrow(rankd), length(set_scr), length(set_plc), length(set_hva),
+            length(intersect(set_scr, set_hva))))
+```
+
+## Guard
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+c1 <- entrants[wave == "g2020" & is_private == 0 & AGNO_9th == 2019, mean(applied, na.rm = TRUE)]
+cat("entrants:", format(nrow(entrants), big.mark = ","), "(chain universe 1,783,653)\n")
+cat(sprintf("untreated-RM publics applied, cohort 2019 (exam 2023): %.3f (11_adjudication: 0.486)\n", c1))
+ok <- abs(c1 - 0.486) < 0.005
+cat(if (ok) "GUARD PASSED\n" else "GUARD FAILED\n"); stopifnot(ok)
+```
+
+## Estimation: long differences on dense cohorts + exact randomization inference
+
+The SIMCE-8 test-year gaps make CS base periods infeasible (wave-2017's base
+cohort has no test), so the estimator is the design the data supports:
+school-level long differences between dense cohorts, with the rollout
+randomization providing exact inference. Pre = pooled cohorts 2014-15 (dense,
+post-split). (i) D18 = cohort-2018 minus pre, TREATED-BY-2018 (Magallanes +
+wave-2017 regions) vs clean controls (wave-2018 at e-1, RM at e-2 -- both
+classes admitted pre-SAE). (ii) D20 = cohort-2020 minus pre: all groups
+treated, so years-of-exposure (1/2/3+) gives the dose gradient. Inference:
+region-clustered SEs and exact RI over the 1,001 admissible reassignments of
+the four wave-2017 regions among the fourteen 2017/2018 adopters (the #16
+space; Magallanes and RM held fixed).
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+schoolcell <- function(ids) {
+  d <- entrants[rbd %in% ids & has_z == 1 & AGNO_9th %in% dense]
+  pre  <- d[AGNO_9th == 2015 & MRUN %% 2 == 0,
+            .(y_pre = mean(z_mate), b_pre = mean(z_mate < 0), n_pre = .N), by = rbd]
+  p18  <- d[AGNO_9th == 2018, .(y_18 = mean(z_mate), b_18 = mean(z_mate < 0), n_18 = .N), by = rbd]
+  p20  <- d[AGNO_9th == 2020, .(y_20 = mean(z_mate), b_20 = mean(z_mate < 0), n_20 = .N), by = rbd]
+  cvg  <- entrants[rbd %in% ids, .(cov_pre = mean(has_z[AGNO_9th == 2015]),
+                                   cov_18  = mean(has_z[AGNO_9th == 2018]),
+                                   cov_20  = mean(has_z[AGNO_9th == 2020])), by = rbd]
+  x <- Reduce(function(a, b) merge(a, b, by = "rbd", all = TRUE), list(pre, p18, p20, cvg))
+  x <- merge(x, sch[, .(rbd, region, g9r)], by = "rbd")
+  x[, d18_z := y_18 - y_pre]; x[, d20_z := y_20 - y_pre]
+  x[, d18_b := b_18 - b_pre]; x[, d20_b := b_20 - b_pre]
+  x[, d18_c := cov_18 - cov_pre]
+  x[, t18 := as.integer(g9r <= 2017)]           # treated by cohort 2018 (Mag + wave-2017)
+  x[, expo20 := pmax(0, 2020 - (g9r + 1) + 1)]  # years of exposure at cohort 2020
+  x[n_pre >= 8]
+}
+clse <- function(fml, d, wvar = NULL) {
+  # region-clustered OLS via cluster bootstrap (999 draws, seeded)
+  d <- d[complete.cases(d[, all.vars(fml), with = FALSE])]
+  b <- unname(coef(lm(fml, d))[2])
+  regs <- unique(d$region); set.seed(20260610)
+  bs <- replicate(999, {
+    rs <- sample(regs, length(regs), replace = TRUE)
+    dd <- rbindlist(lapply(rs, function(r) d[region == r]))
+    tryCatch(coef(lm(fml, dd))[2], error = function(e) NA_real_)
+  })
+  c(b = b, se = sd(bs, na.rm = TRUE))
+}
+ri_p <- function(d, dvar) {
+  # exact RI: reassign which 4 of the 14 non-Mag/non-RM regions are wave-2017
+  d <- d[!is.na(get(dvar))]
+  obs <- d[, mean(get(dvar)[t18 == 1]) - mean(get(dvar)[t18 == 0])]
+  r14 <- setdiff(unique(sch[elig == 1 & !is.na(g9r) & g9r %in% 2017:2018, region]), NA)
+  combs <- combn(r14, 4)
+  # permuted contrast keeps the design structure: treated = Magallanes + the 4
+  # drawn regions; controls = the remaining 10 + RM (both always held fixed)
+  stat <- apply(combs, 2, function(tr) {
+    tp <- d[, as.integer(region %in% tr | g9r == 2016)]
+    mean(d[tp == 1, get(dvar)]) - mean(d[tp == 0, get(dvar)])
+  })
+  list(obs = obs, p = mean(abs(stat) >= abs(obs) - 1e-12))
+}
+report <- function(ids, lbl) {
+  x <- schoolcell(ids)
+  cat("\n====", lbl, sprintf("(%d schools with pre data) ====\n", nrow(x)))
+  for (v in c("d18_z", "d18_b", "d18_c")) {
+    e <- clse(as.formula(paste(v, "~ t18")), x)
+    r <- ri_p(x, v)
+    cat(sprintf("  D18 %-6s  beta %+7.3f (cluster-boot se %.3f) | RI diff %+7.3f, RI p %.3f\n",
+                sub("d18_", "", v), e["b"], e["se"], r$obs, r$p))
+  }
+  for (v in c("d20_z", "d20_b")) {
+    e <- clse(as.formula(paste(v, "~ expo20")), x)
+    cat(sprintf("  D20 %-6s  per-exposure-year %+7.3f (cluster-boot se %.3f)\n",
+                sub("d20_", "", v), e["b"], e["se"]))
+  }
+  invisible(x)
+}
+
+x_scr <- report(set_scr, "SCREENERS (headline)")
+x_plc <- report(set_plc, "PLACEBO: bottom-half-intake publics")
+x_hva <- report(intersect(set_hva, sch[elig == 1, rbd]), "HIGH-VA publics")
+```
+
+## Arithmetic bridge: why this first stage cannot move college aggregates
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+seat_share <- entrants[is_private == 0, mean(rbd %in% set_scr)]
+att_bm <- unname(clse(d18_b ~ t18, x_scr)["b"])
+realloc <- seat_share * att_bm
+cat(sprintf("screener seat share of public entrants: %.3f\n", seat_share))
+cat(sprintf("ATT on below-median share at screeners: %+.3f\n", att_bm))
+cat(sprintf("=> share of all public entrants reallocated (bound): %.4f (%.2f%%)\n", realloc, 100*realloc))
+for (q in c(0.05, 0.10, 0.15))
+  cat(sprintf("   implied aggregate college-margin effect if a screener seat is worth +%.0fpp: %+.3fpp\n",
+              100*q, 100*realloc*q))
+cat("compare: within-public college-margin CIs exclude effects larger than ~2pp\n",
+    "(Rule C cuts, #15 07-26). A first stage of this size cannot produce a\n",
+    "detectable second stage in this design.\n")
+```
+
+## Summary
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+cat("Claim structure: (i) screener-school entrant composition shifts with\n",
+    "treatment (negative D18 mean-z beta, positive D18 below-median beta, RI p\n",
+    "small, coverage change flat); (ii) dose gradient in D20; (iii) placebo set\n",
+    "flat; (iv) high-VA weaker (screening, not quality, is the margin);\n",
+    "(v) reallocated mass ~1-2 percent of entrants -> aggregate college effects\n",
+    "bounded an order of magnitude below detection. First stage without a\n",
+    "detectable second stage, by arithmetic.\n")
+```

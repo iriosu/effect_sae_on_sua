@@ -1,0 +1,386 @@
+---
+title: "Effect of SAE on SUA - Gender Gap Gate (Issue #14)"
+output:
+  pdf_document:
+    keep_tex: true
+    extra_dependencies: ["booktabs"]
+  html_document: default
+---
+
+Minimum gate agreed in issue #14 after the adversarial review. Every gender
+comparison is reported as Female, Male, and the within-class gap (female mean
+minus male mean per school x cohort), with the gap estimated through the same
+Callaway--Sant'Anna machinery, so the F$-$M column carries joint
+region-clustered inference. (1) Pipeline and take-up gaps with event studies.
+(2) Application validity as unconditional counts over all class members (valid
+applications, invalid applications, any-invalid indicator), replacing the
+applicant-conditional shares. (3) Entrant-ITT rerun of the pipeline: all
+9th-grade entrants, outcomes zero-filled, no graduation filters. (4) The
+pre-specified direct sorting test: probability that an entrant's 9th-grade
+school is in the academic (HC) track, on a commune-of-residence x cohort
+panel; every region is eventually treated, so this design has no never-treated
+arm and leans on timing variation only. Observations rows count classes with a
+usable outcome, column by column. Estimator, seed and sample rules as in
+`3_effect_sae_am.Rmd`; `did` 2.5.1.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# Clean ---------------------------------------------------------------
+rm(list = ls())
+
+# Libraries ---------------------------------------------------------------
+library(dplyr)
+library(magrittr)
+library(purrr)
+library(data.table)
+library(did)
+
+start_year <- 2012
+end_year <- 2021
+media <- c(310, 410, 510, 610, 710, 810)
+clustering_var <- "region"
+
+# shared Dropbox data folder (resolves to each user's own Dropbox)
+home <- ifelse(Sys.getenv("USERPROFILE") != "", Sys.getenv("USERPROFILE"), path.expand("~"))
+data_path <- file.path(home, "Dropbox", "Effect SAE on SUA", "data")
+dir.create("tables", showWarnings = FALSE)
+
+outcomes_pipe <- c(scored_lm = "P(Take Exam)", applied = "Applied",
+                   assigned = "Assigned", enrolled = "Enrolled")
+outcomes_val  <- c(num_valid_reg = "Valid Apps", num_invalid_reg = "Invalid Apps",
+                   any_invalid_reg = "Any Invalid")
+outcomes_ent  <- c(applied = "Applied", assigned = "Assigned", enrolled = "Enrolled")
+outcomes_hc   <- c(hc_att = "P(HC Track)")
+
+# helpers: table formatting (fmt/star/row_tex verbatim from 3_effect_sae_am.Rmd)
+fmt  <- function(x) sub("^-(0\\.000)$", "\\1", sprintf("%.3f", x))
+star <- function(p) ifelse(p < .01, "$^{***}$",
+                    ifelse(p < .05, "$^{**}$",
+                    ifelse(p < .1,  "$^{*}$", "")))
+row_tex <- function(lbl, vals) paste0("      ", lbl, " & ", paste(vals, collapse = " & "), "\\\\\n")
+
+class_panel <- function(students, cols) {
+  d <- students[, c(.(num_students = .N), lapply(.SD, mean, na.rm = TRUE)),
+                by = .(rbd, AGNO_9th), .SDcols = cols]
+  d[, year := AGNO_9th - 1]
+  d <- merge(d, sch[, .(rbd, year_region_sae, region)], by = "rbd", all.x = TRUE)
+  d[year_region_sae > max(year), year_region_sae := 0]
+  d
+}
+
+# female-minus-male panel: classes with both genders present; the control is
+# total class size
+gap_panel <- function(fem, mal, cols) {
+  a <- class_panel(fem, cols)
+  b <- class_panel(mal, cols)
+  setnames(a, c(cols, "num_students"), c(paste0(cols, "_f"), "nf"))
+  setnames(b, c(cols, "num_students"), c(paste0(cols, "_m"), "nm"))
+  g <- merge(a, b[, c("rbd", "AGNO_9th", "nm", paste0(cols, "_m")), with = FALSE],
+             by = c("rbd", "AGNO_9th"))
+  for (cc in cols) set(g, j = cc, value = g[[paste0(cc, "_f")]] - g[[paste0(cc, "_m")]])
+  g[, num_students := nf + nm]
+  g
+}
+
+# helper: three columns per outcome (female / male / within-class gap), with
+# column-specific usable-class counts
+did_table_trio <- function(res_f, res_m, res_g, means_f, means_m, means_g,
+                           n_f, n_m, n_g, caption, label, file) {
+  ext <- function(res, fld) map_dbl(res, function(r) r$simple[[fld]])
+  att <- list(ext(res_f, "overall.att"), ext(res_m, "overall.att"), ext(res_g, "overall.att"))
+  se  <- list(ext(res_f, "overall.se"),  ext(res_m, "overall.se"),  ext(res_g, "overall.se"))
+  p   <- map2(att, se, ~2 * pnorm(-abs(.x / .y)))
+  k <- length(res_f)
+  i3 <- function(a, b, c) as.vector(rbind(a, b, c))
+  tab <- paste0(
+    "\\begin{table}[htbp]\n   \\caption{", caption, "}\\label{", label, "}\n",
+    "   \\centerline{\\scalebox{0.8}{\\begin{tabular}{l", strrep("c", 3 * k), "}\n      \\toprule\n",
+    paste0("      & \\multicolumn{3}{c}{", names(res_f), "}", collapse = "\n"), " \\\\\n      ",
+    paste0("\\cmidrule(lr){", 3 * seq_len(k) - 1, "-", 3 * seq_len(k) + 1, "}", collapse = ""), "\n",
+    "                   & ", paste(rep(c("Female", "Male", "F$-$M"), k), collapse = " & "), " \\\\\n",
+    "                   & ", paste0("(", seq_len(3 * k), ")", collapse = " & "), "\\\\\n      \\midrule\n",
+    row_tex("Treated", i3(paste0(fmt(att[[1]]), star(p[[1]])),
+                          paste0(fmt(att[[2]]), star(p[[2]])),
+                          paste0(fmt(att[[3]]), star(p[[3]])))),
+    row_tex("", i3(paste0("(", fmt(se[[1]]), ")"), paste0("(", fmt(se[[2]]), ")"),
+                   paste0("(", fmt(se[[3]]), ")"))),
+    "      \\midrule\n",
+    row_tex("Mean (pre-treatment)", i3(fmt(means_f), fmt(means_m), fmt(means_g))),
+    row_tex("Observations", i3(format(n_f, big.mark = ","), format(n_m, big.mark = ","),
+                               format(n_g, big.mark = ","))),
+    "      \\bottomrule\n   \\end{tabular}}}\n\\end{table}\n")
+  writeLines(tab, file)
+  tab
+}
+```
+
+## Data and treatment
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# Identical to 3_effect_sae_am.Rmd, keeping application counts, communes and track.
+df <- readRDS(file.path(data_path, "panel_9-12_2010_2021.rds"))
+setDT(df)
+df <- df[, .(MRUN, AGNO, RBD, COD_GRADO, COD_ENSE, year_rbd_first_sae,
+             graduated_secondary, COD_REG_RBD, COD_DEPE, GEN_ALU, COD_COM_ALU,
+             scored_lm, applied, assigned, enrolled,
+             num_apps_reg, num_valid_apps_reg)]
+df[, num_valid_reg   := coalesce(num_valid_apps_reg, 0)]
+df[, num_invalid_reg := pmax(coalesce(num_apps_reg, 0) - num_valid_reg, 0)]
+df[, any_invalid_reg := as.integer(num_invalid_reg > 0)]
+
+sch <- unique(df[, .(RBD, year_rbd_first_sae, COD_REG_RBD, COD_DEPE)])[, .(
+  yfs    = { v <- year_rbd_first_sae[!is.na(year_rbd_first_sae)]; if (length(v)) as.numeric(v[1]) else 0 },
+  region = { v <- COD_REG_RBD[!is.na(COD_REG_RBD)]; if (length(v)) as.integer(v[1]) else NA_integer_ },
+  depe   = { v <- COD_DEPE[!is.na(COD_DEPE)]; if (length(v)) as.integer(names(which.max(table(v)))) else NA_integer_ }
+), by = RBD]
+setnames(sch, "RBD", "rbd")
+
+sae <- readRDS(file.path(data_path, "sae_data_2016_2023.rds"))
+setDT(sae)
+nine <- sae[COD_ENSE %in% media & COD_GRADO == 1, .(g9 = as.numeric(min(AGNO))), by = RBD]
+setnames(nine, "RBD", "rbd")
+sch <- merge(sch, nine, by = "rbd", all.x = TRUE)
+reg9 <- sch[!is.na(g9), .(g9r = min(g9)), by = region][!is.na(region)]
+sch <- merge(sch, reg9, by = "region", all.x = TRUE)
+sch[, elig := fifelse(!is.na(depe), as.integer(depe != 4), as.integer(yfs > 0 | !is.na(g9)))]
+sch[, year_region_sae := fifelse(elig == 1 & !is.na(g9r), as.numeric(g9r), 0)]
+rm(sae, nine)
+
+# regular-track students; high school records for grades 9-12
+keep <- df[, all(COD_ENSE == 110 | COD_ENSE %in% media), by = MRUN][V1 == TRUE, MRUN]
+hs <- df[MRUN %in% keep & AGNO >= 2010 & AGNO <= 2024 &
+           COD_ENSE %in% media & COD_GRADO %in% 1:4, .(MRUN, AGNO, RBD, COD_GRADO)]
+setorder(hs, MRUN, AGNO, COD_GRADO)
+
+common_args <- list(
+  tname = "year",
+  idname = "rbd",
+  gname = "year_region_sae",
+  xformla = ~num_students,
+  control_group = "notyettreated",
+  anticipation = 2,
+  base_period = "universal",
+  est_method = "dr",
+  allow_unbalanced_panel = TRUE,
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+# same seed for each bootstrap; keep the group-time fit so both the simple ATT
+# and the event study come from one estimation
+run_both <- function(dat, ycols, id = "rbd") {
+  ca <- common_args
+  ca$data <- dat
+  ca$idname <- id
+  res <- map(ycols, function(y) {
+    set.seed(20260610)
+    m <- do.call(att_gt, c(list(yname = y), ca))
+    list(simple = suppressWarnings(aggte(m, type = "simple", na.rm = TRUE)),
+         dyn    = suppressWarnings(aggte(m, type = "dynamic", min_e = -6, max_e = 5, na.rm = TRUE)))
+  })
+  names(res) <- ycols
+  res
+}
+
+means_pre <- function(dat, ycols) {
+  dat[year_region_sae > 0 & year < year_region_sae,
+      sapply(.SD, mean, na.rm = TRUE), .SDcols = ycols]
+}
+n_usable <- function(dat, ycols) sapply(ycols, function(y) sum(!is.na(dat[[y]])))
+
+print_es <- function(res, lbl) {
+  d <- res$dyn
+  cat("\nEvent study —", lbl, "\n")
+  for (i in seq_along(d$egt)) cat(sprintf("  e=%+d  %7.3f (%.3f)\n", d$egt[i], d$att.egt[i], d$se.egt[i]))
+}
+```
+
+## Headline sample
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+anchor <- hs[COD_GRADO == 1, .(rbd = RBD[1], AGNO_9th = AGNO[1]), by = MRUN]
+hs1 <- merge(hs, anchor[, .(MRUN, rbd)], by = "MRUN")
+per <- hs1[, .(ng = uniqueN(COD_GRADO[RBD == rbd]), nsch = uniqueN(RBD)), by = MRUN]
+per <- merge(per, anchor, by = "MRUN")
+stayers <- per[ng == 4 & nsch == 1, .(MRUN, rbd, AGNO_9th)]
+setkey(stayers, MRUN)
+grad <- hs1[MRUN %in% stayers$MRUN, .(grad_year = max(AGNO)), by = MRUN]
+gate_cols <- c(names(outcomes_pipe), names(outcomes_val))
+vals <- df[MRUN %in% stayers$MRUN,
+           lapply(.SD, function(x) { v <- x[!is.na(x)]; if (length(v)) as.numeric(v[1]) else NA_real_ }),
+           by = MRUN, .SDcols = c(gate_cols, "graduated_secondary", "GEN_ALU")]
+students <- merge(stayers, vals, by = "MRUN")
+students <- merge(students, grad, by = "MRUN")
+students <- students[graduated_secondary == 1 & grad_year == AGNO_9th + 3 &
+                       AGNO_9th >= start_year & AGNO_9th <= end_year]
+
+female <- students[GEN_ALU == 2]
+male   <- students[GEN_ALU == 1]
+dr_f <- class_panel(female, gate_cols)
+dr_m <- class_panel(male,   gate_cols)
+dr_g <- gap_panel(female, male, gate_cols)
+```
+
+## 1. Pipeline and take-up, with joint F$-$M inference
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+res_f_pipe <- run_both(dr_f, names(outcomes_pipe))
+res_m_pipe <- run_both(dr_m, names(outcomes_pipe))
+res_g_pipe <- run_both(dr_g, names(outcomes_pipe))
+names(res_f_pipe) <- names(res_m_pipe) <- names(res_g_pipe) <- outcomes_pipe
+
+cat(did_table_trio(res_f_pipe, res_m_pipe, res_g_pipe,
+                   means_pre(dr_f, names(outcomes_pipe)), means_pre(dr_m, names(outcomes_pipe)),
+                   means_pre(dr_g, names(outcomes_pipe)),
+                   n_usable(dr_f, names(outcomes_pipe)), n_usable(dr_m, names(outcomes_pipe)),
+                   n_usable(dr_g, names(outcomes_pipe)),
+                   "Pipeline Outcomes by Gender with Within-Class Gap",
+                   "tab: gap pipeline", "tables/did_gap_pipeline_AM.tex"))
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+for (y in outcomes_pipe[c("applied", "assigned", "enrolled")])
+  print_es(res_g_pipe[[y]], paste("F-M gap,", y))
+```
+
+## 2. Application validity, unconditional
+
+Counts over all class members (zero for non-applicants): valid applications,
+invalid applications, and an indicator for listing at least one invalid
+program. These replace the applicant-conditional validity shares, so applier
+composition cannot drive them.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+res_f_val <- run_both(dr_f, names(outcomes_val))
+res_m_val <- run_both(dr_m, names(outcomes_val))
+res_g_val <- run_both(dr_g, names(outcomes_val))
+names(res_f_val) <- names(res_m_val) <- names(res_g_val) <- outcomes_val
+
+cat(did_table_trio(res_f_val, res_m_val, res_g_val,
+                   means_pre(dr_f, names(outcomes_val)), means_pre(dr_m, names(outcomes_val)),
+                   means_pre(dr_g, names(outcomes_val)),
+                   n_usable(dr_f, names(outcomes_val)), n_usable(dr_m, names(outcomes_val)),
+                   n_usable(dr_g, names(outcomes_val)),
+                   "Application Validity by Gender with Within-Class Gap (Unconditional)",
+                   "tab: gap validity", "tables/did_gap_validity_AM.tex"))
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+print_es(res_g_val[["Any Invalid"]], "F-M gap, any invalid application")
+```
+
+## 3. Entrant ITT: pipeline without graduation filters
+
+All 9th-grade entrants keyed to their entry school and cohort; outcomes are
+zero unless the student later registers with the admission system, so no
+post-treatment filter selects the sample.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+vals_e <- df[MRUN %in% anchor$MRUN,
+             lapply(.SD, function(x) { v <- x[!is.na(x)]; if (length(v)) as.numeric(v[1]) else NA_real_ }),
+             by = MRUN, .SDcols = c(names(outcomes_ent), "GEN_ALU")]
+entrants <- merge(anchor, vals_e, by = "MRUN")
+entrants <- entrants[AGNO_9th >= start_year & AGNO_9th <= end_year]
+fem_e <- entrants[GEN_ALU == 2]
+mal_e <- entrants[GEN_ALU == 1]
+dr_f_e <- class_panel(fem_e, names(outcomes_ent))
+dr_m_e <- class_panel(mal_e, names(outcomes_ent))
+dr_g_e <- gap_panel(fem_e, mal_e, names(outcomes_ent))
+
+res_f_ent <- run_both(dr_f_e, names(outcomes_ent))
+res_m_ent <- run_both(dr_m_e, names(outcomes_ent))
+res_g_ent <- run_both(dr_g_e, names(outcomes_ent))
+names(res_f_ent) <- names(res_m_ent) <- names(res_g_ent) <- outcomes_ent
+
+cat(did_table_trio(res_f_ent, res_m_ent, res_g_ent,
+                   means_pre(dr_f_e, names(outcomes_ent)), means_pre(dr_m_e, names(outcomes_ent)),
+                   means_pre(dr_g_e, names(outcomes_ent)),
+                   n_usable(dr_f_e, names(outcomes_ent)), n_usable(dr_m_e, names(outcomes_ent)),
+                   n_usable(dr_g_e, names(outcomes_ent)),
+                   "Entrant-ITT Pipeline by Gender with Within-Class Gap",
+                   "tab: gap entrant itt", "tables/did_gap_entrants_AM.tex"))
+```
+
+## 4. Direct sorting test: P(academic track), commune panel
+
+Share of a commune's 9th-grade entrants whose school is in the academic (HC)
+track, from each entrant's own 9th-grade record; commune of residence at 9th
+grade, region from the commune code. Every region joins SAE, so there is no
+never-treated arm: identification uses not-yet-treated timing variation only,
+and effects for the last-treated regions are not identified.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+ent9 <- df[MRUN %in% keep & COD_ENSE %in% media & COD_GRADO == 1 & !is.na(COD_COM_ALU),
+           .(MRUN, AGNO, com = as.numeric(COD_COM_ALU), hc_att = as.integer(COD_ENSE == 310))]
+setorder(ent9, MRUN, AGNO)
+ent9 <- unique(ent9, by = "MRUN")
+ent9[, AGNO_9th := AGNO]
+ent9 <- merge(ent9, vals_e[, .(MRUN, GEN_ALU)], by = "MRUN", all.x = TRUE)
+ent9 <- ent9[AGNO_9th >= start_year & AGNO_9th <= end_year]
+
+com_panel <- function(st, cols) {
+  d <- st[, c(.(num_students = .N), lapply(.SD, mean, na.rm = TRUE)),
+          by = .(com, AGNO_9th), .SDcols = cols]
+  d[, year := AGNO_9th - 1]
+  d[, region := as.integer(floor(com / 1000))]
+  d <- merge(d, reg9, by = "region", all.x = TRUE)
+  # communes whose region has no SAE timing (e.g., code remaps) are dropped
+  # rather than miscoded as never-treated
+  d <- d[!is.na(g9r)]
+  d[, year_region_sae := as.numeric(g9r)]
+  d[year_region_sae > max(year), year_region_sae := 0]
+  d
+}
+gap_com <- function(fem, mal, cols) {
+  a <- com_panel(fem, cols); b <- com_panel(mal, cols)
+  setnames(a, c(cols, "num_students"), c(paste0(cols, "_f"), "nf"))
+  setnames(b, c(cols, "num_students"), c(paste0(cols, "_m"), "nm"))
+  g <- merge(a, b[, c("com", "AGNO_9th", "nm", paste0(cols, "_m")), with = FALSE],
+             by = c("com", "AGNO_9th"))
+  for (cc in cols) set(g, j = cc, value = g[[paste0(cc, "_f")]] - g[[paste0(cc, "_m")]])
+  g[, num_students := nf + nm]
+  g
+}
+
+dr_f_c <- com_panel(ent9[GEN_ALU == 2], "hc_att")
+dr_m_c <- com_panel(ent9[GEN_ALU == 1], "hc_att")
+dr_g_c <- gap_com(ent9[GEN_ALU == 2], ent9[GEN_ALU == 1], "hc_att")
+
+res_f_hc <- run_both(dr_f_c, "hc_att", id = "com")
+res_m_hc <- run_both(dr_m_c, "hc_att", id = "com")
+res_g_hc <- run_both(dr_g_c, "hc_att", id = "com")
+names(res_f_hc) <- names(res_m_hc) <- names(res_g_hc) <- outcomes_hc
+
+cat(did_table_trio(res_f_hc, res_m_hc, res_g_hc,
+                   means_pre(dr_f_c, "hc_att"), means_pre(dr_m_c, "hc_att"), means_pre(dr_g_c, "hc_att"),
+                   n_usable(dr_f_c, "hc_att"), n_usable(dr_m_c, "hc_att"), n_usable(dr_g_c, "hc_att"),
+                   "P(Academic Track) by Gender with Within-Commune Gap",
+                   "tab: gap hc commune", "tables/did_gap_hc_commune_AM.tex"))
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+print_es(res_g_hc[["P(HC Track)"]], "F-M gap, P(HC track), commune panel")
+```
+
+## Summary
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+gline <- function(res, y) sprintf("%-14s gap %7.3f (%.3f)", y, res[[y]]$simple$overall.att, res[[y]]$simple$overall.se)
+cat("-- Within-class F-M gap ATTs --\n")
+for (y in outcomes_pipe) cat(gline(res_g_pipe, y), "\n")
+for (y in outcomes_val)  cat(gline(res_g_val, y), "\n")
+cat("-- Entrant ITT gaps --\n")
+for (y in outcomes_ent)  cat(gline(res_g_ent, y), "\n")
+cat("-- Commune P(HC) gap --\n")
+cat(gline(res_g_hc, outcomes_hc[[1]]), "\n")
+cat("\nThis gate adds 33 estimations (11 outcomes x female/male/gap;",
+    "event studies reuse the same fits). Cumulative for issue #14: 5",
+    "pre-specified channels, 81 estimations. All under did 2.5.1;",
+    "point estimates replicate the draft tables, SEs are 2.5.1-specific.\n")
+```

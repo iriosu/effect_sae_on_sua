@@ -1,0 +1,238 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Effect of SAE on SUA - Gender Mechanisms, Phase 1 (Issue \#14)},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{booktabs}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+
+\title{Effect of SAE on SUA - Gender Mechanisms, Phase 1 (Issue \#14)}
+\author{}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+\maketitle
+
+Phase 1 of issue \#14: where in the pipeline does the female effect
+originate, and which of two channels moves --- application behavior
+(frictions/uncertainty: portfolio size, application mistakes, targeting
+of attainable programs) or admission scores (NEM/ranking percentiles
+vs.~LM). Three gender tables: (A) application behavior, (B)
+admission-score percentiles, (C) upstream margins on entrant classes
+(retention, on-time graduation), the only section whose sample is not
+conditioned on graduating. Sample, estimator, seed and table helpers are
+identical to \texttt{3\_effect\_sae\_am.Rmd}; the \texttt{Applied}
+column of Table A must match the draft's gender table (replication
+guard).
+
+\hypertarget{data-and-treatment}{%
+\subsection{Data and treatment}\label{data-and-treatment}}
+
+\hypertarget{headline-sample}{%
+\subsection{Headline sample}\label{headline-sample}}
+
+Same sample as the headline table: graduated on time, all four grades in
+the same school, cohorts entering 9th grade 2012--2021; class means
+computed separately over the female and male students of each class.
+
+\hypertarget{a.-application-behavior}{%
+\subsection{A. Application behavior}\label{a.-application-behavior}}
+
+\texttt{Num.\ Apps} counts regular-track applications over all class
+members (zero for non-applicants); \texttt{Share\ Valid} and
+\texttt{Share\ Above\ Cutoff} are conditional on applying (share of the
+student's listed programs that are valid, and whose previous-year cutoff
+the student's score clears), so they capture portfolio quality among
+appliers. If application frictions bind more on women, the female effect
+starts at the take-exam/apply margin and new applicants list attainable
+programs.
+
+\begin{table}[htbp]
+   \caption{Application Behavior by Gender}\label{tab: gender application behavior}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcccccccccc}
+      \toprule
+      & \multicolumn{2}{c}{P(Take Exam)}
+      & \multicolumn{2}{c}{Applied}
+      & \multicolumn{2}{c}{Num. Apps}
+      & \multicolumn{2}{c}{Share Valid}
+      & \multicolumn{2}{c}{Share Above Cutoff} \\
+      \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}\cmidrule(lr){10-11}
+                   & Female & Male & Female & Male & Female & Male & Female & Male & Female & Male \\
+                   & (1) & (2) & (3) & (4) & (5) & (6) & (7) & (8) & (9) & (10)\\
+      \midrule
+      Treated & -0.013 & -0.030$^{*}$ & 0.078$^{***}$ & 0.020$^{**}$ & -0.008 & -0.474$^{**}$ & 0.156$^{***}$ & 0.101$^{***}$ & 0.035 & 0.008\\
+       & (0.014) & (0.018) & (0.008) & (0.009) & (0.307) & (0.209) & (0.033) & (0.019) & (0.046) & (0.027)\\
+      \midrule
+      Mean (pre-treatment) & 0.852 & 0.810 & 0.464 & 0.396 & 2.471 & 2.097 & 0.698 & 0.769 & 0.459 & 0.533\\
+      Observations & 27,708 & 27,240 & 27,708 & 27,240 & 27,708 & 27,240 & 27,708 & 27,240 & 27,708 & 27,240\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\hypertarget{b.-admission-score-percentiles}{%
+\subsection{B. Admission-score
+percentiles}\label{b.-admission-score-percentiles}}
+
+NEM and ranking percentiles are computed within admission year; the
+unconditional versions assign zero to students without a computed score,
+so they mix the registration margin with rank position. The
+\texttt{(takers)} versions condition on having a score. If the
+rank-based channel operates, girls' NEM/ranking percentiles rise while
+LM percentiles among takers do not.
+
+\begin{table}[htbp]
+   \caption{Admission-Score Percentiles by Gender}\label{tab: gender score percentiles}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcccccccccc}
+      \toprule
+      & \multicolumn{2}{c}{NEM Pct.}
+      & \multicolumn{2}{c}{Ranking Pct.}
+      & \multicolumn{2}{c}{NEM Pct. (takers)}
+      & \multicolumn{2}{c}{Ranking Pct. (takers)}
+      & \multicolumn{2}{c}{LM Pct. (takers)} \\
+      \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}\cmidrule(lr){10-11}
+                   & Female & Male & Female & Male & Female & Male & Female & Male & Female & Male \\
+                   & (1) & (2) & (3) & (4) & (5) & (6) & (7) & (8) & (9) & (10)\\
+      \midrule
+      Treated & 0.004 & 0.003 & -0.003 & -0.006 & -0.012$^{***}$ & -0.008 & -0.020$^{***}$ & -0.018$^{**}$ & -0.006 & -0.002\\
+       & (0.011) & (0.009) & (0.008) & (0.007) & (0.004) & (0.005) & (0.005) & (0.008) & (0.006) & (0.010)\\
+      \midrule
+      Mean (pre-treatment) & 0.491 & 0.397 & 0.504 & 0.406 & 0.552 & 0.466 & 0.569 & 0.479 & 0.457 & 0.480\\
+      Observations & 27,708 & 27,240 & 27,708 & 27,240 & 27,708 & 27,240 & 27,708 & 27,240 & 27,708 & 27,240\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\hypertarget{c.-upstream-margins-entrant-classes}{%
+\subsection{C. Upstream margins: entrant
+classes}\label{c.-upstream-margins-entrant-classes}}
+
+One observation per school x 9th-grade entering cohort, all entrants
+counted (the only sample in the paper not conditioned on graduating).
+\texttt{4\ Years\ Same\ School} is the headline sample's retention
+condition; \texttt{Graduated\ On\ Time} requires reaching 12th grade at
+entry year + 3 and graduating; \texttt{Graduated} drops the timing
+requirement. If SAE keeps girls on track through secondary school, more
+of them reach the college margin.
+
+\begin{table}[htbp]
+   \caption{Secondary-School Progression by Gender (Entrant Classes)}\label{tab: gender progression entrants}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcccccc}
+      \toprule
+      & \multicolumn{2}{c}{4 Years Same School}
+      & \multicolumn{2}{c}{Graduated On Time}
+      & \multicolumn{2}{c}{Graduated} \\
+      \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+                   & Female & Male & Female & Male & Female & Male \\
+                   & (1) & (2) & (3) & (4) & (5) & (6)\\
+      \midrule
+      Treated & 0.039$^{**}$ & 0.048$^{***}$ & 0.043$^{***}$ & 0.037$^{***}$ & 0.004 & 0.001\\
+       & (0.015) & (0.013) & (0.004) & (0.006) & (0.003) & (0.006)\\
+      \midrule
+      Mean (pre-treatment) & 0.695 & 0.705 & 0.842 & 0.790 & 0.929 & 0.893\\
+      Observations & 28,739 & 28,276 & 28,739 & 28,276 & 28,739 & 28,276\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\hypertarget{summary}{%
+\subsection{Summary}\label{summary}}
+
+\begin{verbatim}
+## -- A. Application behavior --
+\end{verbatim}
+
+\begin{verbatim}
+## P(Take Exam)             female  -0.013 (0.014) | male  -0.030 (0.018)
+## Applied                  female   0.078 (0.008) | male   0.020 (0.009)
+## Num. Apps                female  -0.008 (0.307) | male  -0.474 (0.209)
+## Share Valid              female   0.156 (0.033) | male   0.101 (0.019)
+## Share Above Cutoff       female   0.035 (0.046) | male   0.008 (0.027)
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## -- B. Score percentiles --
+\end{verbatim}
+
+\begin{verbatim}
+## NEM Pct.                 female   0.004 (0.011) | male   0.003 (0.009)
+## Ranking Pct.             female  -0.003 (0.008) | male  -0.006 (0.007)
+## NEM Pct. (takers)        female  -0.012 (0.004) | male  -0.008 (0.005)
+## Ranking Pct. (takers)    female  -0.020 (0.005) | male  -0.018 (0.008)
+## LM Pct. (takers)         female  -0.006 (0.006) | male  -0.002 (0.010)
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## -- C. Entrant progression --
+\end{verbatim}
+
+\begin{verbatim}
+## 4 Years Same School      female   0.039 (0.015) | male   0.048 (0.013)
+## Graduated On Time        female   0.043 (0.004) | male   0.037 (0.006)
+## Graduated                female   0.004 (0.003) | male   0.001 (0.006)
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Guard: the Applied column must match the draft gender table (female 0.078, male 0.020); if it does not, the sample replication is off.
+\end{verbatim}
+
+\end{document}

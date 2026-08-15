@@ -1,0 +1,150 @@
+---
+title: "Effect of SAE on SUA - First Stage: School Assignments (Issue #15)"
+output:
+  pdf_document:
+    keep_tex: true
+    extra_dependencies: ["booktabs"]
+  html_document: default
+---
+
+The missing first stage for the meeting: did SAE change WHERE students go at
+9th-grade entry -- quality-weighted assignment, access to high-VA schools,
+ability mixing across schools, private-sector avoidance, cross-commune
+mobility? These outcomes are realized at entry (calendar 2012-2021), so they
+avoid the grading-2020, promotion-2020/21 and PAES-2023 confounds entirely,
+and the within-public rollout comparison is clean here. Read = onset
+alignment: does anything move at each wave's first treated entry cohort
+(g2017/g2018/g2019/g2020)? All raw student-weighted descriptives by wave group
+of the ENTRY SCHOOL'S REGION (so private-school entrants belong to their
+region's market). Quality = SES-adjusted 2016 school value-added
+(`va_2016_gazmuri.csv`, public schools) and 8th-grade SIMCE of entrants.
+Guard: entrant count + two trajectory cells chained to
+`11_adjudication_trajectories.Rmd`.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+rm(list = ls())
+library(dplyr); library(magrittr); library(purrr); library(data.table)
+
+start_year <- 2012; end_year <- 2021
+media <- c(310, 410, 510, 610, 710, 810)
+home <- ifelse(Sys.getenv("USERPROFILE") != "", Sys.getenv("USERPROFILE"), path.expand("~"))
+data_path <- file.path(home, "Dropbox", "Effect SAE on SUA", "data")
+
+df <- readRDS(file.path(data_path, "panel_9-12_2010_2021.rds"))
+setDT(df)
+df <- df[, .(MRUN, AGNO, RBD, COD_GRADO, COD_ENSE, year_rbd_first_sae,
+             COD_REG_RBD, COD_DEPE, COD_COM_ALU, COD_COM_RBD, GEN_ALU, applied)]
+
+sch <- unique(df[, .(RBD, year_rbd_first_sae, COD_REG_RBD, COD_DEPE)])[, .(
+  yfs    = { v <- year_rbd_first_sae[!is.na(year_rbd_first_sae)]; if (length(v)) as.numeric(v[1]) else 0 },
+  region = { v <- COD_REG_RBD[!is.na(COD_REG_RBD)]; if (length(v)) as.integer(v[1]) else NA_integer_ },
+  depe   = { v <- COD_DEPE[!is.na(COD_DEPE)]; if (length(v)) as.integer(names(which.max(table(v)))) else NA_integer_ }
+), by = RBD]
+setnames(sch, "RBD", "rbd")
+sae <- readRDS(file.path(data_path, "sae_data_2016_2023.rds")); setDT(sae)
+nine <- sae[COD_ENSE %in% media & COD_GRADO == 1, .(g9 = as.numeric(min(AGNO))), by = RBD]
+setnames(nine, "RBD", "rbd")
+sch <- merge(sch, nine, by = "rbd", all.x = TRUE)
+reg9 <- sch[!is.na(g9), .(g9r = min(g9)), by = region][!is.na(region)]
+sch <- merge(sch, reg9, by = "region", all.x = TRUE)
+rm(sae, nine)
+
+keep <- df[, all(COD_ENSE == 110 | COD_ENSE %in% media), by = MRUN][V1 == TRUE, MRUN]
+hs <- df[MRUN %in% keep & AGNO >= 2010 & AGNO <= 2024 &
+           COD_ENSE %in% media & COD_GRADO %in% 1:4, .(MRUN, AGNO, RBD, COD_GRADO)]
+anchor <- hs[COD_GRADO == 1, .(rbd = RBD[1], AGNO_9th = AGNO[1]), by = MRUN]
+
+# entry-year student attributes (commune of residence at 9th grade, gender, applied)
+e9 <- df[COD_ENSE %in% media & COD_GRADO == 1,
+         .(MRUN, AGNO, COD_COM_ALU, COD_COM_RBD, GEN_ALU_e = GEN_ALU)]
+e9 <- unique(e9, by = c("MRUN", "AGNO"))
+appl <- df[MRUN %in% anchor$MRUN & !is.na(applied), .(applied = as.numeric(applied[1])), by = MRUN]
+
+entrants <- merge(anchor, e9, by.x = c("MRUN", "AGNO_9th"), by.y = c("MRUN", "AGNO"), all.x = TRUE)
+entrants <- merge(entrants, appl, by = "MRUN", all.x = TRUE)
+entrants <- entrants[AGNO_9th >= start_year & AGNO_9th <= end_year]
+entrants <- merge(entrants, sch[, .(rbd, region, depe, g9r)], by = "rbd", all.x = TRUE)
+entrants <- entrants[!is.na(region) & !is.na(g9r)]
+entrants[, wave := paste0("g", g9r + 1)]           # market wave = entry-school region's rollout
+entrants[, is_private := as.integer(depe == 4)]
+entrants[, exam := AGNO_9th + 4]
+
+# quality: SES-adjusted 2016 VA (Gazmuri), public schools
+va <- fread(file.path(data_path, "va_2016_gazmuri.csv"))
+qtop <- quantile(va$va, 0.75, na.rm = TRUE)
+entrants <- merge(entrants, va, by = "rbd", all.x = TRUE)
+entrants[, va_top := as.integer(!is.na(va) & va >= qtop)]
+
+# ability: 8th-grade SIMCE z (latest per student, standardized within test year)
+s8 <- readRDS(file.path(data_path, "panel_simce_8b.rds")); setDT(s8)
+s8 <- s8[!is.na(mrun), .(MRUN = mrun, agno, mate = suppressWarnings(as.numeric(ptje_mate8b_alu)))]
+s8 <- s8[!is.na(mate)]; setorder(s8, MRUN, -agno); s8 <- unique(s8, by = "MRUN")
+s8[, z_mate := as.numeric(scale(mate)), by = agno]
+entrants <- merge(entrants, s8[, .(MRUN, z_mate)], by = "MRUN", all.x = TRUE)
+entrants[, out_com := as.integer(!is.na(COD_COM_ALU) & !is.na(COD_COM_RBD) & COD_COM_ALU != COD_COM_RBD)]
+```
+
+## Guard
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+cat("entrants with region:", format(nrow(entrants), big.mark = ","), "(11_adjudication universe: 1,783,653)\n")
+pub <- entrants[is_private == 0]
+c1 <- entrants[wave == "g2020" & is_private == 0 & exam == 2023, mean(applied, na.rm = TRUE)]
+cat(sprintf("untreated-RM publics applied 2023: %.3f (11_adjudication: 0.486)\n", c1))
+cat(sprintf("VA coverage among public entrants: %.3f | SIMCE-8 coverage: %.3f\n",
+            pub[, mean(!is.na(va))], entrants[, mean(!is.na(z_mate))]))
+ok <- abs(c1 - 0.486) < 0.005
+cat(if (ok) "GUARD PASSED\n" else "GUARD FAILED\n"); stopifnot(ok)
+```
+
+## A. Quality of the entry school (public entrants)
+
+First treated entry cohort per wave: g2017 -> 2017, g2018 -> 2018, g2019 -> 2019, g2020 (RM) -> 2020.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+wt <- function(d, expr_txt, label, tv = "AGNO_9th", tmin = 2012) {
+  t <- dcast(d[get(tv) >= tmin, .(m = round(eval(parse(text = expr_txt)), 3)), by = c("wave", tv)],
+             as.formula(paste(tv, "~ wave")), value.var = "m")
+  setcolorder(t, intersect(c(tv, "g2017", "g2018", "g2019", "g2020"), names(t)))
+  cat("\n====", label, "====\n"); print(t, nrow = 20)
+}
+wt(pub[!is.na(va)], "mean(va)", "mean VA-2016 of entry school (public entrants)")
+wt(pub[!is.na(va)], "mean(va_top)", "share entering a top-quartile-VA school")
+wt(pub[!is.na(va) & !is.na(z_mate) & z_mate < 0], "mean(va_top)",
+   "  same, below-median-SIMCE-8 entrants (access margin for weaker students)")
+```
+
+## B. Ability mixing: between-school segregation of entering cohorts
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+seg <- pub[!is.na(z_mate), {
+  tot <- var(z_mate) * (.N - 1)
+  wi  <- sum((z_mate - ave(z_mate, rbd))^2)
+  .(btw_share = round((tot - wi) / tot, 3), n = .N)
+}, by = .(wave, AGNO_9th)]
+t <- dcast(seg, AGNO_9th ~ wave, value.var = "btw_share")
+setcolorder(t, intersect(c("AGNO_9th", "g2017", "g2018", "g2019", "g2020"), names(t)))
+cat("==== between-school share of SIMCE-8 variance (public entrants) ====\n")
+print(t, nrow = 20)
+cat("\n(lower = more mixing; SIMCE-8 gap cohorts are blank)\n")
+```
+
+## C. Private-sector entry and cross-commune mobility (all entrants)
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+wt(entrants, "mean(is_private)", "share of the region's entrants entering a PRIVATE school (avoidance margin)")
+wt(entrants[is_private == 0], "mean(out_com)", "out-of-commune entry share (public entrants)")
+```
+
+## Summary
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+cat("Onset-alignment read: SAE moved school assignments only if these series shift\n",
+    "at each wave's own g (2017/2018/2019/2020 diagonally), not at common calendar\n",
+    "years. Entry-year outcomes -- no exam-era or grading confounds; COVID caveat\n",
+    "for 2020-21 entries only.\n")
+```

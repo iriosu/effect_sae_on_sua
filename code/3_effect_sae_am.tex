@@ -1,0 +1,215 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Effect of SAE on SUA - Main Results},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+
+\title{Effect of SAE on SUA - Main Results}
+\author{}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+\maketitle
+
+\hypertarget{data-and-treatment}{%
+\subsection{Data and treatment}\label{data-and-treatment}}
+
+\hypertarget{headline-table}{%
+\subsection{Headline table}\label{headline-table}}
+
+Graduated high school on time, having spent all four years (grades 9 to
+12) in the same school. One observation per school x 9th-grade cohort;
+each outcome is the average over the entire graduating class.
+
+\begin{table}[htbp]
+   \caption{ Regression Results}\label{tab: main results}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcccccc}
+      \toprule
+                   & GPA & P(Take Exam) & Average LM & Applied & Assigned & Enrolled\\
+                   & (1) & (2) & (3) & (4) & (5) & (6)\\
+      \midrule
+      Treated & -0.005 & -0.026$^{**}$ & -0.016$^{***}$ & 0.045$^{***}$ & 0.051$^{***}$ & 0.041$^{***}$\\
+       & (0.018) & (0.011) & (0.004) & (0.006) & (0.005) & (0.009)\\
+      \midrule
+      Mean (pre-treatment) & 5.687 & 0.832 & 0.413 & 0.432 & 0.328 & 0.265\\
+      Observations & 28,483 & 28,483 & 28,483 & 28,483 & 28,483 & 28,483\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\hypertarget{robustness-relaxed-sample}{%
+\subsection{Robustness: relaxed
+sample}\label{robustness-relaxed-sample}}
+
+Same design, relaxing the headline sample in two ways. First, students
+no longer have to graduate on time: anyone who graduates counts, keyed
+to their graduating class. Second, the four-years-in-the-same-school
+requirement is relaxed to at most one publicly funded school in high
+school (so international students and private-to-public movers enter;
+public-to-public switchers drop, since there is no single class to
+attribute them to). Students entering 9th grade before their school
+joined SAE do not count as treated.
+
+\begin{table}[htbp]
+   \caption{Regression Results: Relaxed Sample}\label{tab: robustness relaxed sample}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcccccc}
+      \toprule
+                   & GPA & P(Take Exam) & Average LM & Applied & Assigned & Enrolled\\
+                   & (1) & (2) & (3) & (4) & (5) & (6)\\
+      \midrule
+      Treated & -0.016 & -0.020 & -0.013$^{***}$ & 0.048$^{***}$ & 0.054$^{***}$ & 0.040$^{***}$\\
+       & (0.028) & (0.014) & (0.003) & (0.006) & (0.005) & (0.012)\\
+      \midrule
+      Mean (pre-treatment) & 5.644 & 0.821 & 0.405 & 0.421 & 0.318 & 0.257\\
+      Observations & 28,688 & 28,688 & 28,688 & 28,688 & 28,688 & 28,688\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\hypertarget{heterogeneity-gender}{%
+\subsection{Heterogeneity: gender}\label{heterogeneity-gender}}
+
+Headline sample, class means computed separately over the female and
+male students of each class (students with unknown sex are dropped); the
+control is the subgroup class size.
+
+\begin{table}[htbp]
+   \caption{Regression Results by Gender}\label{tab: results by gender}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcccccccccccc}
+      \toprule
+      & \multicolumn{2}{c}{GPA}
+      & \multicolumn{2}{c}{P(Take Exam)}
+      & \multicolumn{2}{c}{Average LM}
+      & \multicolumn{2}{c}{Applied}
+      & \multicolumn{2}{c}{Assigned}
+      & \multicolumn{2}{c}{Enrolled} \\
+      \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}\cmidrule(lr){10-11}\cmidrule(lr){12-13}
+                   & Female & Male & Female & Male & Female & Male & Female & Male & Female & Male & Female & Male \\
+                   & (1) & (2) & (3) & (4) & (5) & (6) & (7) & (8) & (9) & (10) & (11) & (12)\\
+      \midrule
+      Treated & -0.005 & -0.009 & -0.013 & -0.030$^{*}$ & -0.011$^{***}$ & -0.015$^{***}$ & 0.078$^{***}$ & 0.020$^{**}$ & 0.075$^{***}$ & 0.030$^{***}$ & 0.064$^{***}$ & 0.024$^{***}$\\
+       & (0.013) & (0.013) & (0.014) & (0.018) & (0.004) & (0.005) & (0.008) & (0.009) & (0.007) & (0.006) & (0.017) & (0.008)\\
+      \midrule
+      Mean (pre-treatment) & 5.756 & 5.602 & 0.852 & 0.810 & 0.410 & 0.415 & 0.464 & 0.396 & 0.335 & 0.319 & 0.265 & 0.265\\
+      Observations & 27,708 & 27,240 & 27,708 & 27,240 & 27,708 & 27,240 & 27,708 & 27,240 & 27,708 & 27,240 & 27,708 & 27,240\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\hypertarget{heterogeneity-school-vulnerability}{%
+\subsection{Heterogeneity: school
+vulnerability}\label{heterogeneity-school-vulnerability}}
+
+Treated schools split at the within-region median of the 2015 IVE-SINAE
+vulnerability index, taken over treated schools (treated schools with no
+index are dropped); never-treated private schools serve as the
+comparison group in both arms.
+
+\begin{table}[htbp]
+   \caption{Regression Results by School Vulnerability}\label{tab: results by vulnerability}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcccccccccccc}
+      \toprule
+      & \multicolumn{2}{c}{GPA}
+      & \multicolumn{2}{c}{P(Take Exam)}
+      & \multicolumn{2}{c}{Average LM}
+      & \multicolumn{2}{c}{Applied}
+      & \multicolumn{2}{c}{Assigned}
+      & \multicolumn{2}{c}{Enrolled} \\
+      \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}\cmidrule(lr){10-11}\cmidrule(lr){12-13}
+                   & Low & High & Low & High & Low & High & Low & High & Low & High & Low & High \\
+                   & (1) & (2) & (3) & (4) & (5) & (6) & (7) & (8) & (9) & (10) & (11) & (12)\\
+      \midrule
+      Treated & 0.013 & -0.030 & -0.025$^{***}$ & -0.026 & -0.039$^{***}$ & 0.008 & 0.025$^{***}$ & 0.068$^{***}$ & 0.027$^{***}$ & 0.077$^{***}$ & 0.015$^{**}$ & 0.068$^{***}$\\
+       & (0.010) & (0.032) & (0.005) & (0.019) & (0.004) & (0.005) & (0.004) & (0.008) & (0.005) & (0.007) & (0.006) & (0.010)\\
+      \midrule
+      Mean (pre-treatment) & 5.796 & 5.569 & 0.939 & 0.725 & 0.561 & 0.265 & 0.589 & 0.273 & 0.467 & 0.187 & 0.379 & 0.150\\
+      Observations & 15,633 & 15,504 & 15,633 & 15,504 & 15,633 & 15,504 & 15,633 & 15,504 & 15,633 & 15,504 & 15,633 & 15,504\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\hypertarget{heterogeneity-program-selectivity}{%
+\subsection{Heterogeneity: program
+selectivity}\label{heterogeneity-program-selectivity}}
+
+Share of the graduating class assigned to a program, by the selectivity
+of the program (programs that fill their seats, and cutoff-decile bins);
+each flag is zero for students not assigned, so the shares are over the
+entire class.
+
+\begin{table}[htbp]
+   \caption{Regression Results by Program Selectivity}\label{tab: results by program selectivity}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcccccccc}
+      \toprule
+                   & All & Full & Not Full & Top 10 & Top 25 & Top 50 & Top 75 & Top 90\\
+                   & (1) & (2) & (3) & (4) & (5) & (6) & (7) & (8)\\
+      \midrule
+      Treated & 0.051$^{***}$ & -0.003 & 0.055$^{***}$ & -0.030$^{***}$ & -0.004 & 0.036$^{*}$ & 0.051$^{***}$ & 0.051$^{***}$\\
+       & (0.005) & (0.009) & (0.007) & (0.011) & (0.011) & (0.019) & (0.005) & (0.005)\\
+      \midrule
+      Mean (pre-treatment) & 0.328 & 0.250 & 0.078 & 0.047 & 0.115 & 0.250 & 0.322 & 0.328\\
+      Observations & 28,483 & 28,483 & 28,483 & 28,483 & 28,483 & 28,483 & 28,483 & 28,483\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\end{document}

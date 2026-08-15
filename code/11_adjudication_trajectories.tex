@@ -1,0 +1,290 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Effect of SAE on SUA - Adjudication Trajectories (Issue \#15)},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{booktabs}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+
+\title{Effect of SAE on SUA - Adjudication Trajectories (Issue \#15)}
+\author{}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+\maketitle
+
+Three descriptive checks for the exam-2023 adjudication (\#15, 07-26),
+all raw student-weighted means by wave group (labeled by first treated
+entry cohort g = region SAE start + 1) -- no estimation, no bootstrap.
+(A) Entrant-based replication of the applied/assigned/enrolled
+trajectories (the stayer-composition caveat). (B) Female-minus-male gap
+trajectories: within-class gap estimates difference out class-level
+calendar shocks only if the boom is gender-neutral -- the read is
+whether the F-M applied gap jumps at exam 2023 in still-untreated RM.
+(C) Graduation calendar check: on-time graduation for entry cohort t is
+realized in calendar t+3; if the +3-4pp graduation/retention effects are
+COVID promotion policy rather than SAE, untreated public groups should
+jump at graduation years 2020-21 too. Sample construction identical to
+\texttt{10\_gpa\_decomposition.Rmd} (guard: entrant count + six stayer
+trajectory cells recomputed from students must match the dr.rds-derived
+table posted on \#15).
+
+\hypertarget{guard}{%
+\subsection{Guard}\label{guard}}
+
+\begin{verbatim}
+## entrants: 1,783,653 (target 1,783,653)
+\end{verbatim}
+
+\begin{verbatim}
+##       wave  exam  this   ref   diff
+##     <char> <num> <num> <num>  <num>
+## 1: private  2023 0.887 0.887 -4e-04
+## 2:   g2020  2023 0.555 0.555  0e+00
+## 3:   g2017  2021 0.384 0.384  2e-04
+## 4:   g2019  2023 0.568 0.568  0e+00
+## 5: private  2019 0.851 0.851 -3e-04
+## 6:   g2018  2022 0.427 0.427 -4e-04
+\end{verbatim}
+
+\begin{verbatim}
+## GUARD PASSED
+\end{verbatim}
+
+\hypertarget{a.-entrant-based-trajectories-applied-assigned-enrolled-take}{%
+\subsection{A. Entrant-based trajectories (applied / assigned / enrolled
+/
+take)}\label{a.-entrant-based-trajectories-applied-assigned-enrolled-take}}
+
+\begin{verbatim}
+## 
+## ==== applied (entrants) by exam year ====
+## Key: <exam>
+##     exam private g2017 g2018 g2019 g2020
+##    <num>   <num> <num> <num> <num> <num>
+## 1:  2019   0.807 0.421 0.375 0.416 0.372
+## 2:  2020   0.800 0.358 0.359 0.402 0.356
+## 3:  2021   0.804 0.367 0.363 0.402 0.377
+## 4:  2022   0.788 0.378 0.381 0.414 0.385
+## 5:  2023   0.844 0.465 0.467 0.516 0.486
+## 6:  2024   0.834 0.462 0.452 0.493 0.474
+## 7:  2025   0.810 0.470 0.441 0.474 0.463
+## 
+## ==== assigned (entrants) by exam year ====
+## Key: <exam>
+##     exam private g2017 g2018 g2019 g2020
+##    <num>   <num> <num> <num> <num> <num>
+## 1:  2019   0.760 0.315 0.292 0.320 0.301
+## 2:  2020   0.743 0.264 0.279 0.308 0.291
+## 3:  2021   0.748 0.278 0.281 0.308 0.302
+## 4:  2022   0.722 0.288 0.293 0.315 0.309
+## 5:  2023   0.764 0.373 0.352 0.378 0.385
+## 6:  2024   0.752 0.344 0.350 0.371 0.376
+## 7:  2025   0.736 0.350 0.356 0.372 0.382
+## 
+## ==== enrolled (entrants) by exam year ====
+## Key: <exam>
+##     exam private g2017 g2018 g2019 g2020
+##    <num>   <num> <num> <num> <num> <num>
+## 1:  2019   0.665 0.263 0.239 0.263 0.232
+## 2:  2020   0.644 0.221 0.225 0.253 0.231
+## 3:  2021   0.641 0.240 0.230 0.252 0.237
+## 4:  2022   0.610 0.263 0.238 0.255 0.239
+## 5:  2023   0.683 0.348 0.290 0.324 0.311
+## 6:  2024   0.673 0.338 0.299 0.319 0.305
+## 7:  2025   0.650 0.369 0.304 0.320 0.311
+## 
+## ==== scored_lm (entrants) by exam year ====
+## Key: <exam>
+##     exam private g2017 g2018 g2019 g2020
+##    <num>   <num> <num> <num> <num> <num>
+## 1:  2019   0.963 0.809 0.774 0.797 0.834
+## 2:  2020   0.945 0.751 0.730 0.751 0.747
+## 3:  2021   0.950 0.708 0.687 0.724 0.746
+## 4:  2022   0.944 0.703 0.678 0.710 0.723
+## 5:  2023   0.940 0.684 0.693 0.735 0.735
+## 6:  2024   0.941 0.695 0.703 0.737 0.743
+## 7:  2025   0.917 0.715 0.674 0.709 0.708
+\end{verbatim}
+
+\hypertarget{b.-female-minus-male-gap-trajectories-entrants}{%
+\subsection{B. Female-minus-male gap trajectories
+(entrants)}\label{b.-female-minus-male-gap-trajectories-entrants}}
+
+\begin{verbatim}
+## 
+## ==== F-M applied_gap by exam year ====
+## Key: <exam>
+##     exam private g2017 g2018 g2019 g2020
+##    <num>   <num> <num> <num> <num> <num>
+## 1:  2019   0.013 0.065 0.114 0.107 0.075
+## 2:  2020   0.025 0.113 0.119 0.120 0.072
+## 3:  2021   0.028 0.109 0.128 0.119 0.084
+## 4:  2022   0.004 0.098 0.121 0.128 0.071
+## 5:  2023   0.019 0.121 0.168 0.167 0.127
+## 6:  2024   0.021 0.100 0.166 0.166 0.113
+## 7:  2025   0.010 0.148 0.165 0.160 0.116
+## 
+## ==== F-M assigned_gap by exam year ====
+## Key: <exam>
+##     exam private g2017 g2018 g2019 g2020
+##    <num>   <num> <num> <num> <num> <num>
+## 1:  2019  -0.002 0.003 0.062 0.050 0.036
+## 2:  2020  -0.001 0.062 0.063 0.059 0.029
+## 3:  2021  -0.003 0.055 0.070 0.061 0.031
+## 4:  2022  -0.020 0.050 0.065 0.064 0.028
+## 5:  2023  -0.006 0.092 0.096 0.087 0.067
+## 6:  2024   0.008 0.066 0.109 0.096 0.065
+## 7:  2025   0.008 0.100 0.118 0.104 0.077
+## 
+## ==== F-M enrolled_gap by exam year ====
+## Key: <exam>
+##     exam private  g2017 g2018 g2019 g2020
+##    <num>   <num>  <num> <num> <num> <num>
+## 1:  2019  -0.017 -0.003 0.038 0.022 0.017
+## 2:  2020  -0.023  0.020 0.037 0.032 0.009
+## 3:  2021  -0.030  0.024 0.044 0.033 0.013
+## 4:  2022  -0.050  0.020 0.042 0.037 0.009
+## 5:  2023  -0.034  0.075 0.070 0.061 0.040
+## 6:  2024  -0.020  0.029 0.078 0.067 0.047
+## 7:  2025  -0.025  0.061 0.089 0.079 0.058
+## 
+## ==== F-M take_gap by exam year ====
+## Key: <exam>
+##     exam private g2017 g2018 g2019 g2020
+##    <num>   <num> <num> <num> <num> <num>
+## 1:  2019   0.003 0.057 0.099 0.088 0.050
+## 2:  2020   0.001 0.079 0.117 0.096 0.055
+## 3:  2021   0.009 0.099 0.133 0.123 0.076
+## 4:  2022   0.005 0.106 0.130 0.125 0.067
+## 5:  2023   0.002 0.080 0.119 0.118 0.079
+## 6:  2024   0.005 0.082 0.123 0.114 0.064
+## 7:  2025   0.006 0.107 0.131 0.119 0.079
+\end{verbatim}
+
+\hypertarget{c.-graduation-calendar-check}{%
+\subsection{C. Graduation calendar
+check}\label{c.-graduation-calendar-check}}
+
+\begin{verbatim}
+## 
+## ==== on_time_grad (entrants) by graduation calendar year (entry + 3) ====
+## Key: <grad_cal>
+##    grad_cal private g2017 g2018 g2019 g2020
+##       <num>   <num> <num> <num> <num> <num>
+## 1:     2016   0.901 0.867 0.802 0.807 0.806
+## 2:     2017   0.909 0.850 0.812 0.829 0.813
+## 3:     2018   0.914 0.874 0.819 0.828 0.821
+## 4:     2019   0.921 0.875 0.828 0.835 0.817
+## 5:     2020   0.924 0.885 0.858 0.867 0.849
+## 6:     2021   0.925 0.906 0.856 0.883 0.858
+## 7:     2022   0.933 0.921 0.868 0.881 0.859
+## 8:     2023   0.933 0.920 0.879 0.895 0.864
+## 9:     2024   0.942 0.915 0.875 0.889 0.860
+## 
+## ==== grad_ever (entrants) by graduation calendar year (entry + 3) ====
+## Key: <grad_cal>
+##    grad_cal private g2017 g2018 g2019 g2020
+##       <num>   <num> <num> <num> <num> <num>
+## 1:     2016   0.954 0.938 0.924 0.923 0.921
+## 2:     2017   0.952 0.942 0.922 0.929 0.921
+## 3:     2018   0.953 0.949 0.925 0.929 0.924
+## 4:     2019   0.954 0.959 0.932 0.938 0.928
+## 5:     2020   0.946 0.956 0.941 0.946 0.935
+## 6:     2021   0.943 0.960 0.941 0.946 0.927
+## 7:     2022   0.947 0.957 0.929 0.935 0.910
+## 8:     2023   0.946 0.939 0.919 0.929 0.901
+## 9:     2024   0.942 0.915 0.875 0.889 0.860
+## 
+## ==== stayer (entrants) by graduation calendar year (entry + 3) ====
+## Key: <grad_cal>
+##    grad_cal private g2017 g2018 g2019 g2020
+##       <num>   <num> <num> <num> <num> <num>
+## 1:     2016   0.839 0.761 0.747 0.757 0.716
+## 2:     2017   0.852 0.769 0.742 0.770 0.716
+## 3:     2018   0.858 0.761 0.752 0.766 0.716
+## 4:     2019   0.856 0.773 0.753 0.771 0.724
+## 5:     2020   0.859 0.744 0.764 0.783 0.724
+## 6:     2021   0.838 0.762 0.761 0.793 0.729
+## 7:     2022   0.843 0.783 0.780 0.797 0.739
+## 8:     2023   0.842 0.774 0.779 0.795 0.729
+## 9:     2024   0.839 0.743 0.717 0.739 0.663
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## first treated GRADUATION year by group: g2017->2020, g2018->2021, g2019->2022, g2020(RM)->2023
+##  COVID promotion-flexibility years: 2020-21. If untreated groups jump at 2020-21
+##  like treated ones, the graduation margin is the promotion regime, not SAE.
+\end{verbatim}
+
+\hypertarget{summary}{%
+\subsection{Summary}\label{summary}}
+
+\begin{verbatim}
+## Key reads:
+##  A: does the exam-2023 jump replicate on the ITT sample (incl. untreated RM)?
+##  B: does the F-M applied gap move at exam 2023 in untreated RM (g2020)?
+##     If yes -> the gender gaps are partly the boom; if flat -> #14 survives.
+##  C: do on-time graduation trajectories jump at calendar 2020-21 regardless of
+##     treatment status? Compare each group's first treated graduation year.
+\end{verbatim}
+
+\end{document}

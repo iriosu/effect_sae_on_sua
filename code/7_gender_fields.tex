@@ -1,0 +1,203 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Effect of SAE on SUA - Gender Mechanisms, Phase 3: Destination Fields (Issue \#14)},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{booktabs}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+
+\title{Effect of SAE on SUA - Gender Mechanisms, Phase 3: Destination
+Fields (Issue \#14)}
+\author{}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+\maketitle
+
+Phase 3 of issue \#14: is the female effect a supply-composition story
+--- new admissions absorbed by female-typed programs? Programs are typed
+by their female share among students selected in the 2014--2019
+processes (before any SAE-treated cohort reaches college admission): top
+tercile = female-typed, bottom = male-typed, middle (and programs with
+fewer than 30 selected students) = mixed. Assigned and enrolled are then
+partitioned by the destination program's type, so the three columns add
+up to the baseline outcome, and the decomposition reports how much of
+the female--male gap each type accounts for. Sample, estimator, seed and
+helpers identical to \texttt{3\_effect\_sae\_am.Rmd}.
+
+\hypertarget{data-and-treatment}{%
+\subsection{Data and treatment}\label{data-and-treatment}}
+
+\hypertarget{program-typing-by-pre-reform-female-share}{%
+\subsection{Program typing by pre-reform female
+share}\label{program-typing-by-pre-reform-female-share}}
+
+\begin{verbatim}
+## programs typed: 1875 of 2117 ( 0.997 of selections ); tercile cutoffs: 0.429 / 0.625
+\end{verbatim}
+
+\begin{verbatim}
+## female share by type:
+\end{verbatim}
+
+\begin{verbatim}
+##     ptype programs mean_fem_share
+##    <char>    <int>          <num>
+## 1:    fem      634      0.7809598
+## 2:    mal      625      0.2491595
+## 3:    mix      616      0.5292182
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## partition check (assigned==1):
+\end{verbatim}
+
+\begin{verbatim}
+## asg_type
+##     fem     mal     mix 
+## 3344760 3448213 5631929
+\end{verbatim}
+
+\hypertarget{headline-sample}{%
+\subsection{Headline sample}\label{headline-sample}}
+
+\hypertarget{assignment-by-destination-program-type}{%
+\subsection{Assignment by destination-program
+type}\label{assignment-by-destination-program-type}}
+
+\begin{table}[htbp]
+   \caption{Assignment by Destination-Program Type and Gender}\label{tab: gender assigned by program type}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcccccc}
+      \toprule
+      & \multicolumn{2}{c}{Female-typed}
+      & \multicolumn{2}{c}{Mixed}
+      & \multicolumn{2}{c}{Male-typed} \\
+      \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+                   & Female & Male & Female & Male & Female & Male \\
+                   & (1) & (2) & (3) & (4) & (5) & (6)\\
+      \midrule
+      Treated & 0.025$^{***}$ & 0.001 & 0.054$^{***}$ & 0.018$^{***}$ & -0.004 & 0.011\\
+       & (0.007) & (0.005) & (0.004) & (0.005) & (0.004) & (0.007)\\
+      \midrule
+      Mean (pre-treatment) & 0.158 & 0.053 & 0.129 & 0.117 & 0.048 & 0.148\\
+      Observations & 27,708 & 27,240 & 27,708 & 27,240 & 27,708 & 27,240\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\hypertarget{enrollment-by-destination-program-type}{%
+\subsection{Enrollment by destination-program
+type}\label{enrollment-by-destination-program-type}}
+
+\begin{table}[htbp]
+   \caption{Enrollment by Destination-Program Type and Gender}\label{tab: gender enrolled by program type}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcccccc}
+      \toprule
+      & \multicolumn{2}{c}{Female-typed}
+      & \multicolumn{2}{c}{Mixed}
+      & \multicolumn{2}{c}{Male-typed} \\
+      \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+                   & Female & Male & Female & Male & Female & Male \\
+                   & (1) & (2) & (3) & (4) & (5) & (6)\\
+      \midrule
+      Treated & 0.026$^{***}$ & 0.003 & 0.049$^{***}$ & 0.020$^{***}$ & -0.010$^{**}$ & 0.001\\
+       & (0.010) & (0.004) & (0.005) & (0.006) & (0.005) & (0.008)\\
+      \midrule
+      Mean (pre-treatment) & 0.124 & 0.043 & 0.101 & 0.096 & 0.039 & 0.126\\
+      Observations & 27,708 & 27,240 & 27,708 & 27,240 & 27,708 & 27,240\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\hypertarget{decomposition}{%
+\subsection{Decomposition}\label{decomposition}}
+
+\begin{verbatim}
+## -- Assigned --
+\end{verbatim}
+
+\begin{verbatim}
+## type               female       male    gap F-M
+## Female-typed        0.025      0.001      0.024
+## Mixed               0.054      0.018      0.036
+## Male-typed         -0.004      0.011     -0.015
+## sum                 0.075      0.030      0.045
+## share of the F-M gap from each type: Female-typed 53%, Mixed 79%, Male-typed -33%
+\end{verbatim}
+
+\begin{verbatim}
+## -- Enrolled --
+\end{verbatim}
+
+\begin{verbatim}
+## type               female       male    gap F-M
+## Female-typed        0.026      0.003      0.024
+## Mixed               0.049      0.020      0.028
+## Male-typed         -0.010      0.001     -0.012
+## sum                 0.064      0.024      0.040
+## share of the F-M gap from each type: Female-typed 59%, Mixed 70%, Male-typed -29%
+\end{verbatim}
+
+\begin{verbatim}
+## Component ATTs are estimated on the same classes, so they sum to the baseline gender ATTs up to estimation error (Assigned F 0.075 / M 0.030, Enrolled F 0.064 / M 0.024 in the draft table).
+\end{verbatim}
+
+\end{document}

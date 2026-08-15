@@ -1,0 +1,535 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Effect of SAE on SUA - Outcomes Upgrade (Issue \#15)},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{booktabs}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+
+\title{Effect of SAE on SUA - Outcomes Upgrade (Issue \#15)}
+\author{}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+\maketitle
+
+Outcomes upgrade of issue \#15, in three parts. (A1) Net-enrollment
+margin: enrollment in any higher-education institution the year after
+on-time graduation, from the SIES enrollment records
+(\texttt{panel\_enrollment\_2007\_2024.rds}, all institutions
+2007--2024), split into the substitution margin (enrolled outside the
+centralized system) and destination type (CRUCH universities, private
+universities, professional institutes, technical centers), with
+institutional accreditation as a quality proxy; overall and by gender.
+(A2) Unconditional class ITT: the headline and gender tables
+re-estimated on all 9th-grade entrants keyed to their entry class,
+dropping the single-school, graduation, and on-time filters (the planned
+robustness check of Appendix 7.4), plus the net-enrollment margin on the
+same entrant classes. (A5) LM decomposition: the headline LM outcome
+split into the taking margin (P(take exam)) and the score conditional on
+taking, with the ranking-score percentile as the GPA-based sanity
+outcome (issues \#8/\#10). Sample, estimator, seed and table helpers are
+identical to \texttt{3\_effect\_sae\_am.Rmd}; the headline table is
+replicated first as a guard.
+
+\hypertarget{data-and-treatment}{%
+\subsection{Data and treatment}\label{data-and-treatment}}
+
+\hypertarget{higher-education-enrollment-records}{%
+\subsection{Higher-education enrollment
+records}\label{higher-education-enrollment-records}}
+
+SIES enrollment records, all institutions and years 2007--2024, one
+record per student x program x year. A student counts as enrolled in a
+year if they hold any undergraduate (pregrado) record in it; institution
+type comes from the SIES classification (CRUCH universities, private
+universities, professional institutes, technical centers), and the
+quality proxy is enrollment in an institution accredited in that year.
+\texttt{hei\_demre} marks enrollment in a program carrying a DEMRE code
+(a program admitting through the centralized system), printed below as a
+cross-check of the DEMRE-based enrollment flag.
+
+\begin{verbatim}
+## panel students with any pregrado enrollment, by year:
+\end{verbatim}
+
+\begin{verbatim}
+##      YEAR students  cruch  upriv     ip    cft demre_prog
+##     <num>    <int>  <int>  <int>  <int>  <int>      <int>
+##  1:  2007   296068 105425  89997  63590  38168      72133
+##  2:  2008   405570 141518 125177  85637  54142     106055
+##  3:  2009   530778 176804 166598 116974  71442     169231
+##  4:  2010   655899 207020 209198 151274  89715     198279
+##  5:  2011   766246 230291 249472 186425 101294     219816
+##  6:  2012   840851 244790 275592 216171 105865     263460
+##  7:  2013   909904 262381 287025 248453 113652     341100
+##  8:  2014   955184 272901 290801 273251 119672     353639
+##  9:  2015   989508 281823 294370 293361 121845     362852
+## 10:  2016  1016560 293460 300646 304945 119659    1015757
+## 11:  2017  1034620 303242 307651 306864 118430    1033225
+## 12:  2018  1057957 316578 312594 310447 119898    1057957
+## 13:  2019  1073202 346415 288285 317605 122244    1073202
+## 14:  2020  1045296 356362 268860 305317 116402    1045296
+## 15:  2021  1088040 376483 278400 316531 118786    1088040
+## 16:  2022  1094599 373500 275819 330718 116639    1094599
+## 17:  2023  1130524 377521 283090 350578 121480     660402
+## 18:  2024  1159715 382326 292307 358484 128917     674433
+\end{verbatim}
+
+\hypertarget{headline-sample-and-replication-guard}{%
+\subsection{Headline sample and replication
+guard}\label{headline-sample-and-replication-guard}}
+
+Same sample as the headline table: graduated on time, all four grades in
+the same school, cohorts entering 9th grade 2012--2021. The six headline
+outcomes replicate \texttt{3\_effect\_sae\_am.Rmd} (a check that this
+file reproduces it exactly) before any new outcome is estimated.
+
+\begin{verbatim}
+## students found in any-HEI enrollment at entry + 4, by entry cohort
+##  (cohorts through 2020 are covered by the SIES records):
+\end{verbatim}
+
+\begin{verbatim}
+##     AGNO_9th      n enrolled_sua   any_hei   outside
+##        <num>  <int>        <num>     <num>     <num>
+##  1:     2012 132368    0.3013644 0.5771712 0.2805739
+##  2:     2013 131771    0.3022137 0.5785188 0.2806156
+##  3:     2014 125643    0.3411730 0.5850465 0.2486728
+##  4:     2015 126317    0.3431130 0.5799694 0.2420102
+##  5:     2016 122858    0.3312361 0.5758030 0.2485634
+##  6:     2017 124962    0.3288760 0.5428370 0.2188905
+##  7:     2018 124761    0.3230817 0.5310714 0.2176241
+##  8:     2019 127391    0.3981521 0.5744676 0.1862847
+##  9:     2020 126978    0.3916269 0.5720361 0.1883712
+## 10:     2021 123067    0.4105975 0.0000000 0.0000000
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## cross-check: DEMRE enrollment flag vs. SIES enrollment at entry + 4
+##  (cohorts through 2020 ):
+\end{verbatim}
+
+\begin{verbatim}
+##         enrolled_any
+## enrolled      0      1
+##        0 485957 268622
+##        1   7043 381427
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## DEMRE-enrolled students found in a DEMRE-coded SIES program at entry + 4: 0.982
+\end{verbatim}
+
+\begin{table}[htbp]
+   \caption{Regression Results (Replication)}\label{tab: headline replication}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcccccc}
+      \toprule
+                   & GPA & P(Take Exam) & Average LM & Applied & Assigned & Enrolled\\
+                   & (1) & (2) & (3) & (4) & (5) & (6)\\
+      \midrule
+      Treated & -0.005 & -0.026$^{**}$ & -0.016$^{***}$ & 0.045$^{***}$ & 0.051$^{***}$ & 0.041$^{***}$\\
+       & (0.018) & (0.011) & (0.004) & (0.006) & (0.005) & (0.009)\\
+      \midrule
+      Mean (pre-treatment) & 5.687 & 0.832 & 0.413 & 0.432 & 0.328 & 0.265\\
+      Observations & 28,483 & 28,483 & 28,483 & 28,483 & 28,483 & 28,483\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\hypertarget{a5.-lm-decomposition}{%
+\subsection{A5. LM decomposition}\label{a5.-lm-decomposition}}
+
+The headline \texttt{Average\ LM} outcome is the within-admission-year
+percentile of the average Language and Math score, with zero assigned to
+students who never take the exam, so its treatment effect mixes the
+taking margin with performance conditional on taking.
+\texttt{P(Take\ Exam)} isolates the first margin;
+\texttt{LM\ Pct.\ (takers)} the second. The ranking-score percentile is
+a deterministic function of GPA relative to the school's recent history,
+so its taker-conditional effect is a composition gauge for the taker
+pool: it moves only if treatment changes who registers, not how they
+perform (issues \#8/\#10).
+
+\begin{table}[htbp]
+   \caption{Decomposition of the LM Effect: Taking vs. Performance}\label{tab: lm decomposition}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lccccc}
+      \toprule
+                   & P(Take Exam) & Average LM & LM Pct. (takers) & Ranking Pct. & Ranking Pct. (takers)\\
+                   & (1) & (2) & (3) & (4) & (5)\\
+      \midrule
+      Treated & -0.026$^{**}$ & -0.016$^{***}$ & -0.005 & -0.007 & -0.018$^{***}$\\
+       & (0.011) & (0.004) & (0.005) & (0.008) & (0.002)\\
+      \midrule
+      Mean (pre-treatment) & 0.832 & 0.413 & 0.467 & 0.459 & 0.530\\
+      Observations & 28,483 & 28,483 & 28,483 & 28,483 & 28,483\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\begin{verbatim}
+## LM decomposition arithmetic: ATT(unconditional) = -0.0163;
+##   taking margin  ATT(P take) x pre-mean cond. score = -0.0257 x 0.467 = -0.0120
+##   performance    pre-mean P take x ATT(cond. score) = 0.832 x -0.0046 = -0.0038
+##   sum of the two margins = -0.0158
+\end{verbatim}
+
+\hypertarget{a1.-net-enrollment-margin}{%
+\subsection{A1. Net-enrollment margin}\label{a1.-net-enrollment-margin}}
+
+Same headline sample and estimator, entry cohorts 2012--2020 (the last
+cohort whose first admission year is covered by the SIES records).
+\texttt{Enrolled\ SUA} is the headline enrollment outcome re-estimated
+on these cohorts; \texttt{Any\ HEI} is enrollment in any institution in
+the year after on-time graduation; \texttt{Outside\ SUA} is enrollment
+in some institution without an enrollment through the centralized
+system; the destination types and the accreditation proxy are
+unconditional class shares, so they add up over the \texttt{Any\ HEI}
+margin.
+
+\begin{table}[htbp]
+   \caption{Effect on Enrollment in Any Higher-Education Institution}\label{tab: net enrollment}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcccccccc}
+      \toprule
+                   & Enrolled SUA & Any HEI & Outside SUA & CRUCH & Private Univ. & IP & CFT & Accredited\\
+                   & (1) & (2) & (3) & (4) & (5) & (6) & (7) & (8)\\
+      \midrule
+      Treated & 0.028$^{*}$ & 0.035$^{***}$ & 0.009 & 0.000 & 0.035$^{***}$ & -0.003 & 0.003 & 0.034$^{***}$\\
+       & (0.014) & (0.009) & (0.014) & (0.013) & (0.005) & (0.007) & (0.004) & (0.009)\\
+      \midrule
+      Mean (pre-treatment) & 0.265 & 0.529 & 0.268 & 0.214 & 0.112 & 0.133 & 0.070 & 0.516\\
+      Observations & 25,526 & 25,526 & 25,526 & 25,526 & 25,526 & 25,526 & 25,526 & 25,526\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\begin{verbatim}
+## two-year window (cohorts through 2019, 22,588 classes):
+##   Any HEI (2y)       0.013 (0.005)   pre-mean 0.741
+##   Outside SUA (2y)   0.021 (0.009)   pre-mean 0.467
+\end{verbatim}
+
+\hypertarget{by-gender}{%
+\subsubsection{By gender}\label{by-gender}}
+
+\begin{table}[htbp]
+   \caption{Effect on Enrollment in Any Higher-Education Institution by Gender}\label{tab: net enrollment by gender}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcccccccccc}
+      \toprule
+      & \multicolumn{2}{c}{Enrolled SUA}
+      & \multicolumn{2}{c}{Any HEI}
+      & \multicolumn{2}{c}{Outside SUA}
+      & \multicolumn{2}{c}{IP or CFT}
+      & \multicolumn{2}{c}{Accredited} \\
+      \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}\cmidrule(lr){10-11}
+                   & Female & Male & Female & Male & Female & Male & Female & Male & Female & Male \\
+                   & (1) & (2) & (3) & (4) & (5) & (6) & (7) & (8) & (9) & (10)\\
+      \midrule
+      Treated & 0.046$^{**}$ & 0.012 & 0.032$^{***}$ & 0.038$^{***}$ & -0.010 & 0.024 & -0.014 & 0.016$^{*}$ & 0.030$^{**}$ & 0.034$^{***}$\\
+       & (0.021) & (0.010) & (0.012) & (0.013) & (0.015) & (0.016) & (0.009) & (0.009) & (0.013) & (0.012)\\
+      \midrule
+      Mean (pre-treatment) & 0.265 & 0.265 & 0.527 & 0.534 & 0.266 & 0.273 & 0.194 & 0.216 & 0.512 & 0.524\\
+      Observations & 24,841 & 24,413 & 24,841 & 24,413 & 24,841 & 24,413 & 24,841 & 24,413 & 24,841 & 24,413\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\hypertarget{a2.-unconditional-entrant-classes}{%
+\subsection{A2. Unconditional entrant
+classes}\label{a2.-unconditional-entrant-classes}}
+
+All 9th-grade entrants, keyed to their entry class (school x entry
+year), with no single-school, graduation, or on-time requirement: the
+class ITT of Appendix 7.4, on the same regular-track universe as the
+headline sample. Outcomes carry zeros for students who never register
+with DEMRE, so class means are over the entire entering class; GPA
+averages each student's recorded year grades over the secondary years
+they attended, so partial careers enter its class mean.
+\texttt{Grad.\ On\ Time} makes the margin between the entrant and
+headline samples visible in the same exhibit.
+
+1,783,653 entrants; 1,517,073 graduate on time; 1,266,116 pass the
+headline filters.
+
+\begin{table}[htbp]
+   \caption{Regression Results: All 9th-Grade Entrants}\label{tab: entrants}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lccccccc}
+      \toprule
+                   & Grad. On Time & GPA & P(Take Exam) & Average LM & Applied & Assigned & Enrolled\\
+                   & (1) & (2) & (3) & (4) & (5) & (6) & (7)\\
+      \midrule
+      Treated & 0.032$^{***}$ & 0.063$^{**}$ & -0.011 & 0.000 & 0.057$^{***}$ & 0.061$^{***}$ & 0.048$^{***}$\\
+       & (0.005) & (0.025) & (0.008) & (0.004) & (0.005) & (0.004) & (0.008)\\
+      \midrule
+      Mean (pre-treatment) & 0.819 & 5.357 & 0.758 & 0.371 & 0.383 & 0.287 & 0.231\\
+      Observations & 29,360 & 29,360 & 29,360 & 29,360 & 29,360 & 29,360 & 29,360\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\hypertarget{by-gender-1}{%
+\subsubsection{By gender}\label{by-gender-1}}
+
+\begin{table}[htbp]
+   \caption{Regression Results by Gender: All 9th-Grade Entrants}\label{tab: entrants by gender}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcccccccccccc}
+      \toprule
+      & \multicolumn{2}{c}{GPA}
+      & \multicolumn{2}{c}{P(Take Exam)}
+      & \multicolumn{2}{c}{Average LM}
+      & \multicolumn{2}{c}{Applied}
+      & \multicolumn{2}{c}{Assigned}
+      & \multicolumn{2}{c}{Enrolled} \\
+      \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}\cmidrule(lr){10-11}\cmidrule(lr){12-13}
+                   & Female & Male & Female & Male & Female & Male & Female & Male & Female & Male & Female & Male \\
+                   & (1) & (2) & (3) & (4) & (5) & (6) & (7) & (8) & (9) & (10) & (11) & (12)\\
+      \midrule
+      Treated & 0.044$^{***}$ & 0.034$^{***}$ & -0.010 & -0.027$^{***}$ & -0.001 & -0.007 & 0.077$^{***}$ & 0.022$^{**}$ & 0.072$^{***}$ & 0.030$^{***}$ & 0.064$^{***}$ & 0.020$^{**}$\\
+       & (0.011) & (0.013) & (0.007) & (0.007) & (0.006) & (0.006) & (0.010) & (0.010) & (0.014) & (0.010) & (0.019) & (0.010)\\
+      \midrule
+      Mean (pre-treatment) & 5.445 & 5.252 & 0.788 & 0.725 & 0.372 & 0.365 & 0.417 & 0.342 & 0.296 & 0.273 & 0.233 & 0.226\\
+      Observations & 28,739 & 28,276 & 28,739 & 28,276 & 28,739 & 28,276 & 28,739 & 28,276 & 28,739 & 28,276 & 28,739 & 28,276\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\hypertarget{net-enrollment-on-entrant-classes}{%
+\subsubsection{Net enrollment on entrant
+classes}\label{net-enrollment-on-entrant-classes}}
+
+The access question on the unconditional sample: does enrollment in any
+higher-education institution rise for the full entering class? Entry
+cohorts 2012--2020; enrollment measured in the year after on-time
+graduation (entry + 4), so late graduates enrolling later are picked up
+by the two-year window printed below the table.
+
+\begin{table}[htbp]
+   \caption{Effect on Enrollment in Any Higher-Education Institution: All 9th-Grade Entrants}\label{tab: entrants net enrollment}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcccc}
+      \toprule
+                   & Enrolled SUA & Any HEI & Outside SUA & IP or CFT\\
+                   & (1) & (2) & (3) & (4)\\
+      \midrule
+      Treated & 0.036$^{***}$ & 0.049$^{***}$ & 0.020$^{**}$ & 0.006\\
+       & (0.012) & (0.007) & (0.010) & (0.005)\\
+      \midrule
+      Mean (pre-treatment) & 0.231 & 0.438 & 0.223 & 0.169\\
+      Observations & 26,364 & 26,364 & 26,364 & 26,364\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\begin{verbatim}
+## two-year window (cohorts through 2019, 23,370 classes):
+##   Any HEI (2y)       0.019 (0.006)   pre-mean 0.661
+##   Outside SUA (2y)   0.022 (0.008)   pre-mean 0.424
+\end{verbatim}
+
+\begin{table}[htbp]
+   \caption{Effect on Enrollment in Any HEI by Gender: All 9th-Grade Entrants}\label{tab: entrants net enrollment by gender}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcccccccc}
+      \toprule
+      & \multicolumn{2}{c}{Enrolled SUA}
+      & \multicolumn{2}{c}{Any HEI}
+      & \multicolumn{2}{c}{Outside SUA}
+      & \multicolumn{2}{c}{IP or CFT} \\
+      \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}
+                   & Female & Male & Female & Male & Female & Male & Female & Male \\
+                   & (1) & (2) & (3) & (4) & (5) & (6) & (7) & (8)\\
+      \midrule
+      Treated & 0.052$^{***}$ & 0.012 & 0.043$^{***}$ & 0.041$^{***}$ & -0.001 & 0.038$^{***}$ & -0.006 & 0.024$^{***}$\\
+       & (0.019) & (0.012) & (0.014) & (0.008) & (0.012) & (0.009) & (0.007) & (0.007)\\
+      \midrule
+      Mean (pre-treatment) & 0.233 & 0.226 & 0.447 & 0.429 & 0.228 & 0.220 & 0.166 & 0.173\\
+      Observations & 25,810 & 25,397 & 25,810 & 25,397 & 25,810 & 25,397 & 25,810 & 25,397\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\hypertarget{summary}{%
+\subsection{Summary}\label{summary}}
+
+\begin{verbatim}
+## did version: 2.5.1 | R version 4.5.2 (2025-10-31)
+\end{verbatim}
+
+\begin{verbatim}
+## -- Replication guard: committed headline table (did_by 3_effect_sae_am.Rmd) --
+\end{verbatim}
+
+\begin{verbatim}
+## GPA              this run  -0.005 | draft table  -0.005 | diff  -0.0001
+## Average LM       this run  -0.016 | draft table  -0.016 | diff  -0.0003
+## Applied          this run   0.045 | draft table   0.045 | diff   0.0001
+## Assigned         this run   0.051 | draft table   0.051 | diff  -0.0003
+## Enrolled         this run   0.041 | draft table   0.041 | diff   0.0002
+\end{verbatim}
+
+\begin{verbatim}
+## (draft table is the committed 5-column vintage; P(Take Exam) is the HEAD
+##  6th outcome and has no committed counterpart. Bootstrap SEs under did
+##  2.5.1 differ from the draft tables even though point estimates match.)
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## -- A5. LM decomposition (headline sample) --
+\end{verbatim}
+
+\begin{verbatim}
+## P(Take Exam)              -0.026 (0.011)
+## Average LM                -0.016 (0.004)
+## LM Pct. (takers)          -0.005 (0.005)
+## Ranking Pct.              -0.007 (0.008)
+## Ranking Pct. (takers)     -0.018 (0.002)
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## -- A1. Net enrollment (headline sample, cohorts through 2020 ) --
+\end{verbatim}
+
+\begin{verbatim}
+## Enrolled SUA               0.028 (0.014)
+## Any HEI                    0.035 (0.009)
+## Outside SUA                0.009 (0.014)
+## CRUCH                      0.000 (0.013)
+## Private Univ.              0.035 (0.005)
+## IP                        -0.003 (0.007)
+## CFT                        0.003 (0.004)
+## Accredited                 0.034 (0.009)
+\end{verbatim}
+
+\begin{verbatim}
+## 
+##    by gender (female | male):
+\end{verbatim}
+
+\begin{verbatim}
+## Enrolled SUA             female   0.046 (0.021) | male   0.012 (0.010)
+## Any HEI                  female   0.032 (0.012) | male   0.038 (0.013)
+## Outside SUA              female  -0.010 (0.015) | male   0.024 (0.016)
+## IP or CFT                female  -0.014 (0.009) | male   0.016 (0.009)
+## Accredited               female   0.030 (0.013) | male   0.034 (0.012)
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## -- A2. Entrant classes --
+\end{verbatim}
+
+\begin{verbatim}
+## Grad. On Time              0.032 (0.005)
+## GPA                        0.063 (0.025)
+## P(Take Exam)              -0.011 (0.008)
+## Average LM                -0.000 (0.004)
+## Applied                    0.057 (0.005)
+## Assigned                   0.061 (0.004)
+## Enrolled                   0.048 (0.008)
+\end{verbatim}
+
+\begin{verbatim}
+## 
+##    by gender (female | male):
+\end{verbatim}
+
+\begin{verbatim}
+## GPA                      female   0.044 (0.011) | male   0.034 (0.013)
+## P(Take Exam)             female  -0.010 (0.007) | male  -0.027 (0.007)
+## Average LM               female  -0.001 (0.006) | male  -0.007 (0.006)
+## Applied                  female   0.077 (0.010) | male   0.022 (0.010)
+## Assigned                 female   0.072 (0.014) | male   0.030 (0.010)
+## Enrolled                 female   0.064 (0.019) | male   0.020 (0.010)
+\end{verbatim}
+
+\begin{verbatim}
+## 
+##    net enrollment on entrant classes (cohorts through 2020 ):
+\end{verbatim}
+
+\begin{verbatim}
+## Enrolled SUA               0.036 (0.012)
+## Any HEI                    0.049 (0.007)
+## Outside SUA                0.020 (0.010)
+## IP or CFT                  0.006 (0.005)
+\end{verbatim}
+
+\begin{verbatim}
+## 
+##    by gender (female | male):
+\end{verbatim}
+
+\begin{verbatim}
+## Enrolled SUA             female   0.052 (0.019) | male   0.012 (0.012)
+## Any HEI                  female   0.043 (0.014) | male   0.041 (0.008)
+## Outside SUA              female  -0.001 (0.012) | male   0.038 (0.009)
+## IP or CFT                female  -0.006 (0.007) | male   0.024 (0.007)
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Guard: the replication block must match the committed headline table;
+##  if it does not, the sample replication is off and the new rows are not
+##  comparable to the draft.
+\end{verbatim}
+
+\end{document}

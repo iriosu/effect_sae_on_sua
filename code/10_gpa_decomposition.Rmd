@@ -1,0 +1,400 @@
+---
+title: "Effect of SAE on SUA - GPA Decomposition (Issue #15, GPA puzzle)"
+output:
+  pdf_document:
+    keep_tex: true
+    extra_dependencies: ["booktabs"]
+  html_document: default
+---
+
+Why does GPA rise under the entrant ITT (+0.063** aggregate; event study
++0.07--0.08 at e +1..+3, -0.134 at e +4)? Two diagnostics on the entrant
+classes of `8_outcomes_upgrade.Rmd`, run under the identical spec. (A) A
+grade-year decomposition: class GPA is the mean of four school-year grades
+(entry year t through t+3), so each grade-year has its own calendar year; if
+the effect is the 2020--21 COVID grading regime (flexible assessment, no
+repetition) hitting publicly funded schools harder than private ones, the
+grade-year effects align on *calendar* years 2020--21 wherever they fall in
+the window; if it is a real treatment effect, they align on *treatment* and
+grow with exposure. (B) An entry-class composition test: 8th-grade SIMCE
+(measured before entry), share female, SIMCE coverage, and class size --
+pre-determined characteristics of the entering class; treatment happens at
+admission, so any movement is re-sorting, not school effects. Sample,
+estimator, seed and helpers are identical to `8_outcomes_upgrade.Rmd`; its
+entrant table (`did_entrants_AM.tex`) is replicated first as the guard, which
+also pins the panel to Abhijit's independent rebuild (#15, 07-21: identical on
+every column except the grad-on-time definition). Proposal-only: results land
+as an issue comment, nothing enters the draft.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# Clean ---------------------------------------------------------------
+rm(list = ls())
+
+# Libraries ---------------------------------------------------------------
+library(dplyr)
+library(magrittr)
+library(purrr)
+library(data.table)
+library(did)
+
+start_year <- 2012
+end_year <- 2021
+media <- c(310, 410, 510, 610, 710, 810)
+clustering_var <- "region"
+covid_years <- c(2020, 2021)
+
+home <- ifelse(Sys.getenv("USERPROFILE") != "", Sys.getenv("USERPROFILE"), path.expand("~"))
+data_path <- file.path(home, "Dropbox", "Effect SAE on SUA", "data")
+dir.create("tables", showWarnings = FALSE)
+
+# entrant outcomes (replication guard) = did_entrants_AM.tex columns
+outcomes_ent <- c(
+  on_time_grad   = "Grad. On Time",
+  gpa_secondary  = "GPA",
+  scored_lm      = "P(Take Exam)",
+  prom_lm_actual = "Average LM",
+  applied        = "Applied",
+  assigned       = "Assigned",
+  enrolled       = "Enrolled"
+)
+# A: grade-year GPA outcomes (calendar year of grade-year k = entry + k - 1)
+outcomes_gy <- c(
+  gpa_secondary = "GPA (full)",
+  gpa_y1 = "GPA yr 1 (9th)",
+  gpa_y2 = "GPA yr 2",
+  gpa_y3 = "GPA yr 3",
+  gpa_y4 = "GPA yr 4 (12th)"
+)
+# B: entry-class composition outcomes (pre-determined at entry)
+outcomes_comp <- c(
+  z_mate   = "SIMCE-8 Math",
+  z_lect   = "SIMCE-8 Reading",
+  s8_obs   = "Share SIMCE-8 Obs.",
+  female   = "Share Female",
+  log_size = "Log Class Size"
+)
+
+# helpers: table formatting (verbatim from 3_effect_sae_am.Rmd / 8_outcomes_upgrade.Rmd)
+fmt  <- function(x) sub("^-(0\\.000)$", "\\1", sprintf("%.3f", x))
+star <- function(p) ifelse(p < .01, "$^{***}$",
+                    ifelse(p < .05, "$^{**}$",
+                    ifelse(p < .1,  "$^{*}$", "")))
+row_tex <- function(lbl, vals) paste0("      ", lbl, " & ", paste(vals, collapse = " & "), "\\\\\n")
+
+class_panel <- function(students, cols) {
+  d <- students[, c(.(num_students = .N), lapply(.SD, mean, na.rm = TRUE)),
+                by = .(rbd, AGNO_9th), .SDcols = cols]
+  d[, year := AGNO_9th - 1]
+  d <- merge(d, sch[, .(rbd, year_region_sae, region)], by = "rbd", all.x = TRUE)
+  d[year_region_sae > max(year), year_region_sae := 0]
+  d
+}
+
+did_table <- function(res, means_pre, nobs, caption, label, file) {
+  att <- map_dbl(res, "overall.att")
+  se  <- map_dbl(res, "overall.se")
+  p   <- 2 * pnorm(-abs(att / se))
+  tab <- paste0(
+    "\\begin{table}[htbp]\n   \\caption{", caption, "}\\label{", label, "}\n",
+    "   \\centerline{\\scalebox{0.85}{\\begin{tabular}{l", strrep("c", length(res)), "}\n      \\toprule\n",
+    "                   & ", paste(names(res), collapse = " & "), "\\\\\n",
+    "                   & ", paste0("(", seq_along(res), ")", collapse = " & "), "\\\\\n      \\midrule\n",
+    row_tex("Treated", paste0(fmt(att), star(p))),
+    row_tex("", paste0("(", fmt(se), ")")),
+    "      \\midrule\n",
+    row_tex("Mean (pre-treatment)", fmt(means_pre)),
+    row_tex("Observations", rep(format(nobs, big.mark = ","), length(res))),
+    "      \\bottomrule\n   \\end{tabular}}}\n\\end{table}\n")
+  writeLines(tab, file)
+  tab
+}
+```
+
+## Data and treatment
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# Student panel; identical selection to 8_outcomes_upgrade.Rmd plus PROM_GRAL
+# (the per-year grade) for the grade-year decomposition.
+df <- readRDS(file.path(data_path, "panel_9-12_2010_2021.rds"))
+setDT(df)
+stopifnot("PROM_GRAL" %in% names(df))
+if (is.character(df$PROM_GRAL))
+  df[, PROM_GRAL := as.numeric(gsub(",", ".", PROM_GRAL))]
+df <- df[, .(MRUN, AGNO, RBD, COD_GRADO, COD_ENSE, year_rbd_first_sae,
+             graduated_secondary, COD_REG_RBD, COD_DEPE, GEN_ALU,
+             gpa_secondary, scored_lm, prom_lm_actual, applied, assigned, enrolled,
+             PROM_GRAL)]
+
+sch <- unique(df[, .(RBD, year_rbd_first_sae, COD_REG_RBD, COD_DEPE)])[, .(
+  yfs    = { v <- year_rbd_first_sae[!is.na(year_rbd_first_sae)]; if (length(v)) as.numeric(v[1]) else 0 },
+  region = { v <- COD_REG_RBD[!is.na(COD_REG_RBD)]; if (length(v)) as.integer(v[1]) else NA_integer_ },
+  depe   = { v <- COD_DEPE[!is.na(COD_DEPE)]; if (length(v)) as.integer(names(which.max(table(v)))) else NA_integer_ }
+), by = RBD]
+setnames(sch, "RBD", "rbd")
+
+sae <- readRDS(file.path(data_path, "sae_data_2016_2023.rds"))
+setDT(sae)
+nine <- sae[COD_ENSE %in% media & COD_GRADO == 1, .(g9 = as.numeric(min(AGNO))), by = RBD]
+setnames(nine, "RBD", "rbd")
+sch <- merge(sch, nine, by = "rbd", all.x = TRUE)
+reg9 <- sch[!is.na(g9), .(g9r = min(g9)), by = region][!is.na(region)]
+sch <- merge(sch, reg9, by = "region", all.x = TRUE)
+sch[, elig := fifelse(!is.na(depe), as.integer(depe != 4), as.integer(yfs > 0 | !is.na(g9)))]
+sch[, year_region_sae := fifelse(elig == 1 & !is.na(g9r), as.numeric(g9r), 0)]
+rm(sae, nine, reg9)
+
+# regular-track students; high school records for grades 9-12
+keep <- df[, all(COD_ENSE == 110 | COD_ENSE %in% media), by = MRUN][V1 == TRUE, MRUN]
+hs <- df[MRUN %in% keep & AGNO >= 2010 & AGNO <= 2024 &
+           COD_ENSE %in% media & COD_GRADO %in% 1:4, .(MRUN, AGNO, RBD, COD_GRADO)]
+setorder(hs, MRUN, AGNO, COD_GRADO)
+```
+
+## Entrant classes and replication guard
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+anchor <- hs[COD_GRADO == 1, .(rbd = RBD[1], AGNO_9th = AGNO[1]), by = MRUN]
+g12 <- hs[COD_GRADO == 4, .(g12_year = min(AGNO)), by = MRUN]
+vals_e <- df[MRUN %in% anchor$MRUN,
+             lapply(.SD, function(x) { v <- x[!is.na(x)]; if (length(v)) as.numeric(v[1]) else NA_real_ }),
+             by = MRUN, .SDcols = c("gpa_secondary", "scored_lm", "prom_lm_actual",
+                                    "applied", "assigned", "enrolled",
+                                    "graduated_secondary", "GEN_ALU")]
+entrants <- merge(anchor, vals_e, by = "MRUN", all.x = TRUE)
+entrants <- merge(entrants, g12, by = "MRUN", all.x = TRUE)
+entrants[, grad_ever    := as.integer(coalesce(graduated_secondary, 0) == 1)]
+entrants[, on_time_grad := as.integer(grad_ever == 1 & !is.na(g12_year) & g12_year == AGNO_9th + 3)]
+entrants <- entrants[AGNO_9th >= start_year & AGNO_9th <= end_year]
+
+cat(format(nrow(entrants), big.mark = ","), "entrants (guard target: 1,783,653).\n\n")
+
+dr_e <- class_panel(entrants, names(outcomes_ent))
+
+common_args <- list(
+  tname = "year",
+  idname = "rbd",
+  gname = "year_region_sae",
+  xformla = ~num_students,
+  data = NULL,
+  control_group = "notyettreated",
+  anticipation = 2,
+  base_period = "universal",
+  est_method = "dr",
+  allow_unbalanced_panel = TRUE,
+  clustervars = clustering_var,
+  panel = TRUE,
+  bstrap = TRUE,
+  biters = 10000,
+  cband = TRUE
+)
+
+# run one outcome, keeping both the group-time object (for cells) and the
+# simple aggregate; same seed before every fit (convention)
+run_full <- function(dat, y, xf = NULL) {
+  a <- common_args
+  a$data <- dat
+  if (!is.null(xf)) a$xformla <- xf
+  set.seed(20260610)
+  m <- do.call(att_gt, c(list(yname = y), a))
+  list(m = m, agg = suppressWarnings(aggte(m, type = "simple", na.rm = TRUE)))
+}
+run_set <- function(dat, ycols, xf = NULL) {
+  res <- map(ycols, function(y) run_full(dat, y, xf))
+  names(res) <- ycols
+  res
+}
+aggs <- function(res) map(res, "agg")
+
+means_pre <- function(dat, ycols) {
+  dat[year_region_sae > 0 & year < year_region_sae,
+      sapply(.SD, mean, na.rm = TRUE), .SDcols = ycols]
+}
+
+fits_guard <- run_set(dr_e, names(outcomes_ent))
+models_e <- aggs(fits_guard)
+names(models_e) <- outcomes_ent
+
+cat(did_table(models_e, means_pre(dr_e, names(outcomes_ent)), nrow(dr_e),
+              "Regression Results: All 9th-Grade Entrants (Guard Replication)",
+              "tab: entrants guard", "tables/did_entrants_guard10_AM.tex"))
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# DOUBLE GUARD: this run vs did_entrants_AM.tex (= Abhijit's 07-21 rebuild on
+# every column except Grad. On Time, where his enrollment-panel definition
+# gives +0.046; ours is the 9-12-panel definition, +0.032)
+ref <- c(on_time_grad = 0.032, gpa_secondary = 0.063, scored_lm = -0.011,
+         prom_lm_actual = 0.000, applied = 0.057, assigned = 0.061, enrolled = 0.048)
+cat("-- Replication guard vs tables/did_entrants_AM.tex --\n")
+ok <- TRUE
+for (y in names(ref)) {
+  d <- models_e[[outcomes_ent[[y]]]]$overall.att - ref[[y]]
+  ok <- ok && abs(d) < 0.002
+  cat(sprintf("%-16s this run %7.3f | reference %7.3f | diff %8.4f\n",
+              outcomes_ent[[y]], models_e[[outcomes_ent[[y]]]]$overall.att, ref[[y]], d))
+}
+cat(if (ok) "GUARD PASSED\n" else "GUARD FAILED -- do not use results below\n")
+stopifnot(ok)
+```
+
+## A. Grade-year decomposition of the GPA effect
+
+The class GPA averages each student's recorded year grades over the secondary
+years they attended (`gpa_secondary`). Here it is split into its four
+grade-years: `gpa_yk` is the class mean of members' year-k grade (calendar
+year = entry + k - 1), over the students with a recorded grade that year --
+so year-k grades condition on being enrolled in year k, and treatment raises
+retention (~+4pp); that selection is shared across calendar buckets within a
+grade-year and noted when reading levels.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+# per-student per-year grade over regular secondary records (any school: ITT)
+gy <- df[MRUN %in% entrants$MRUN & COD_ENSE %in% media & !is.na(PROM_GRAL),
+         .(g_raw = mean(PROM_GRAL), g_pos = mean(PROM_GRAL[PROM_GRAL > 0])),
+         by = .(MRUN, AGNO)]
+
+# convention check: which per-year mean reproduces the stored gpa_secondary?
+ent_win <- entrants[, .(MRUN, AGNO_9th, gpa_secondary)]
+chk <- merge(gy, ent_win, by = "MRUN")
+chk <- chk[AGNO >= AGNO_9th & AGNO <= AGNO_9th + 3]
+chk_s <- chk[, .(win_raw = mean(g_raw), win_pos = mean(g_pos, na.rm = TRUE),
+                 gpa = gpa_secondary[1]), by = MRUN]
+cat("convention check (window mean vs stored gpa_secondary):\n",
+    sprintf("raw (zeros in): cor %.4f, mean diff %+.4f | zeros dropped: cor %.4f, mean diff %+.4f\n",
+            cor(chk_s$win_raw, chk_s$gpa, use = "complete.obs"),
+            mean(chk_s$win_raw - chk_s$gpa, na.rm = TRUE),
+            cor(chk_s$win_pos, chk_s$gpa, use = "complete.obs"),
+            mean(chk_s$win_pos - chk_s$gpa, na.rm = TRUE)), "\n")
+use_pos <- {
+  d_raw <- abs(mean(chk_s$win_raw - chk_s$gpa, na.rm = TRUE))
+  d_pos <- abs(mean(chk_s$win_pos - chk_s$gpa, na.rm = TRUE))
+  d_pos <= d_raw
+}
+cat("using", if (use_pos) "zeros-dropped" else "raw", "per-year grades\n\n")
+gy[, g_use := if (use_pos) g_pos else g_raw]
+
+for (k in 1:4) {
+  gk <- gy[, .(MRUN, AGNO, gk = g_use)]
+  entrants[, tmp_y := AGNO_9th + k - 1]
+  entrants <- merge(entrants, gk, by.x = c("MRUN", "tmp_y"), by.y = c("MRUN", "AGNO"), all.x = TRUE)
+  setnames(entrants, "gk", paste0("gpa_y", k))
+}
+entrants[, tmp_y := NULL]
+rm(gy, chk, chk_s, ent_win)
+invisible(gc())
+
+dr_gy <- class_panel(entrants, setdiff(names(outcomes_gy), "gpa_secondary"))
+fits_gy <- run_set(dr_gy, setdiff(names(outcomes_gy), "gpa_secondary"))
+fits_gy <- c(list(gpa_secondary = fits_guard$gpa_secondary), fits_gy)
+models_gy <- aggs(fits_gy)
+names(models_gy) <- outcomes_gy[names(fits_gy)]
+
+mp_gy <- c(means_pre(dr_e, "gpa_secondary"), means_pre(dr_gy, setdiff(names(outcomes_gy), "gpa_secondary")))
+cat(did_table(models_gy, mp_gy, nrow(dr_gy),
+              "GPA Effect by Grade-Year: All 9th-Grade Entrants",
+              "tab: gpa by grade year", "tables/did_gpa_grade_year_AM.tex"))
+```
+
+### Calendar vs event-time alignment of the grade-year cells
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# group-time cells for each grade-year outcome; calendar year of the cell's
+# grade = entry + k - 1; treated cells only
+n_gt <- dr_gy[year_region_sae > 0, .N, by = .(g = year_region_sae, tt = year)]
+cells <- rbindlist(lapply(1:4, function(k) {
+  m <- fits_gy[[paste0("gpa_y", k)]]$m
+  data.table(k = k, g = m$group, tt = m$t, att = m$att, se = m$se)
+}))
+cells[, entry := tt + 1]
+cells[, e := tt - g]
+cells[, cal := entry + k - 1]
+cells[, bucket := fifelse(cal <= 2019, "pre-2020",
+                  fifelse(cal %in% covid_years, "2020-21 (COVID)", "2022+"))]
+cells <- merge(cells, n_gt, by = c("g", "tt"), all.x = TRUE)
+tr <- cells[e >= 0 & !is.na(att)]
+
+cat("treated grade-year cells: weighted mean ATT by calendar bucket of the grade-year\n")
+print(tr[, .(att = weighted.mean(att, N), cells = .N, classes = sum(N)),
+         by = bucket][order(bucket)])
+
+cat("\nby calendar year of the grade-year:\n")
+print(tr[, .(att = weighted.mean(att, N), cells = .N), by = cal][order(cal)])
+
+cat("\nalignment cross-tab: weighted mean ATT by event time x calendar bucket\n")
+print(dcast(tr[e <= 3], e ~ bucket, value.var = "att",
+            fun.aggregate = function(x) round(mean(x), 3)))
+
+cat("\ncell regressions (treated cells, weighted by class count):\n")
+r_e <- lm(att ~ factor(e), data = tr, weights = N)
+r_c <- lm(att ~ factor(bucket), data = tr, weights = N)
+r_b <- lm(att ~ factor(e) + factor(bucket), data = tr, weights = N)
+cat(sprintf("R2 event time only: %.3f | calendar bucket only: %.3f | both: %.3f\n",
+            summary(r_e)$r.squared, summary(r_c)$r.squared, summary(r_b)$r.squared))
+
+# full-GPA cells: COVID share of the class window
+mF <- fits_gy$gpa_secondary$m
+cf <- data.table(g = mF$group, tt = mF$t, att = mF$att)
+cf[, entry := tt + 1]; cf[, e := tt - g]
+cf[, covid_share := (pmin(entry + 3, max(covid_years)) - pmax(entry, min(covid_years)) + 1) / 4]
+cf[, covid_share := pmax(covid_share, 0)]
+cf <- merge(cf, n_gt, by = c("g", "tt"), all.x = TRUE)
+trF <- cf[e >= 0 & !is.na(att)]
+cat("\nfull-GPA treated cells: R2 event time only:",
+    sprintf("%.3f", summary(lm(att ~ factor(e), trF, weights = N))$r.squared),
+    "| COVID window share only:",
+    sprintf("%.3f", summary(lm(att ~ covid_share, trF, weights = N))$r.squared), "\n")
+print(trF[, .(att = weighted.mean(att, N), cells = .N), by = covid_share][order(covid_share)])
+```
+
+## B. Entry-class composition (pre-determined at entry)
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+s8 <- readRDS(file.path(data_path, "panel_simce_8b.rds"))
+setDT(s8)
+s8 <- s8[!is.na(mrun), .(MRUN = mrun, agno,
+                         lect = suppressWarnings(as.numeric(ptje_lect8b_alu)),
+                         mate = suppressWarnings(as.numeric(ptje_mate8b_alu)))]
+s8 <- s8[!is.na(lect) | !is.na(mate)]
+setorder(s8, MRUN, -agno)
+s8 <- unique(s8, by = "MRUN")
+s8[, z_lect := as.numeric(scale(lect)), by = agno]
+s8[, z_mate := as.numeric(scale(mate)), by = agno]
+
+entrants <- merge(entrants, s8[, .(MRUN, z_lect, z_mate)], by = "MRUN", all.x = TRUE)
+entrants[, s8_obs := as.integer(!is.na(z_lect) | !is.na(z_mate))]
+entrants[, female := as.integer(GEN_ALU == 2)]
+
+dr_c <- class_panel(entrants, c("z_mate", "z_lect", "s8_obs", "female"))
+dr_c[, log_size := log(num_students)]
+
+fits_comp <- run_set(dr_c, c("z_mate", "z_lect", "s8_obs", "female"))
+fits_size <- run_full(dr_c, "log_size", xf = ~1)   # size can't control for itself
+models_comp <- c(aggs(fits_comp), list(log_size = fits_size$agg))
+names(models_comp) <- outcomes_comp[names(models_comp)]
+
+cat(did_table(models_comp, means_pre(dr_c, c("z_mate", "z_lect", "s8_obs", "female", "log_size")),
+              nrow(dr_c),
+              "Entry-Class Composition: All 9th-Grade Entrants",
+              "tab: entrant composition", "tables/did_entrant_composition_AM.tex"))
+```
+
+## Summary
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+cat("did version:", as.character(packageVersion("did")), "|", R.version.string, "\n\n")
+line <- function(res, y) cat(sprintf("%-22s %7.3f (%.3f)\n", y,
+                                     res[[y]]$overall.att, res[[y]]$overall.se))
+cat("-- A. GPA by grade-year (aggregate ATT) --\n")
+for (y in names(models_gy)) line(models_gy, y)
+cat("\n-- B. Entry-class composition --\n")
+for (y in names(models_comp)) line(models_comp, y)
+cat("\nReading: if grade-year cells align on the 2020-21 calendar bucket\n",
+    "rather than event time, the GPA rise is the COVID grading regime; if\n",
+    "composition outcomes are flat, re-sorting is not the driver. Note the\n",
+    "grade-year outcomes condition on enrollment in that year (retention +4pp\n",
+    "under treatment), a small positive-selection caveat shared across buckets.\n")
+```

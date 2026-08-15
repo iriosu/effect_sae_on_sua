@@ -1,0 +1,29 @@
+\begin{table}[htbp]
+   \caption{Design-Based Inference for the Main Estimates}\label{tab: inference battery}
+   \centerline{\scalebox{0.8}{\begin{tabular}{lcccccc}
+      \toprule
+                   & GPA & P(Take Exam) & Average LM & Applied & Assigned & Enrolled\\
+                   & (1) & (2) & (3) & (4) & (5) & (6)\\
+      \midrule
+      \multicolumn{7}{l}{\textit{Callaway--Sant'Anna ATT (baseline estimator)}}\\
+      ATT & -0.005 & -0.026$^{**}$ & -0.016$^{***}$ & 0.045$^{***}$ & 0.051$^{***}$ & 0.041$^{***}$\\
+      Multiplier bootstrap SE & (0.018) & (0.011) & (0.004) & (0.006) & (0.005) & (0.009)\\
+      $p$, multiplier bootstrap & 0.776 & 0.016 & 0.000 & 0.000 & 0.000 & 0.000\\
+      $p$, randomization inference & 0.528 & 0.452 & 0.688 & 0.357 & 0.140 & 0.184\\
+      $p$, randomization inference (unstudentized) & 0.528 & 0.444 & 0.714 & 0.476 & 0.172 & 0.189\\
+      ATT range over the 1,001 reassignments & [-0.014, 0.001] & [-0.035, -0.019] & [-0.021, -0.013] & [0.038, 0.051] & [0.044, 0.053] & [0.036, 0.044]\\
+      \midrule
+      \multicolumn{7}{l}{\textit{Two-way fixed effects analogue}}\\
+      Treated & -0.016 & -0.033$^{***}$ & -0.005 & 0.050$^{***}$ & 0.061$^{***}$ & 0.055$^{***}$\\
+      Cluster-robust SE & (0.011) & (0.004) & (0.004) & (0.011) & (0.006) & (0.006)\\
+      $p$, cluster-robust $t_{15}$ & 0.186 & 0.000 & 0.209 & 0.000 & 0.000 & 0.000\\
+      $p$, wild cluster bootstrap (Rademacher) & 0.006 & 0.000 & 0.002 & 0.000 & 0.000 & 0.000\\
+      $p$, wild cluster bootstrap (Webb) & 0.006 & 0.000 & 0.009 & 0.000 & 0.000 & 0.000\\
+      $p$, wild subcluster bootstrap (school draws) & 0.023 & 0.000 & 0.004 & 0.001 & 0.000 & 0.000\\
+      \midrule
+      Observations & 28,483 & 28,483 & 28,483 & 28,483 & 28,483 & 28,483\\
+      Regions (clusters) & 16 & 16 & 16 & 16 & 16 & 16\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+

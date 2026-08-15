@@ -1,0 +1,210 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Effect of SAE on SUA - Gender Mechanisms, Phase 2: Sorting (Issue \#14)},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{booktabs}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+
+\title{Effect of SAE on SUA - Gender Mechanisms, Phase 2: Sorting (Issue
+\#14)}
+\author{}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+\maketitle
+
+Phase 2 of issue \#14: does SAE re-sort girls across schools? Three
+tests. (A) Class gender composition: effect of SAE on the share of
+female students, with treated schools split by academic vs vocational
+type and by pre-reform college-pipeline intensity --- if centralized
+choice moves girls toward college-pipeline schools, their share rises
+there and falls elsewhere. (B) Commuting: share of students enrolled
+outside their commune of residence in 9th grade, by gender --- a
+feasible-set test. (C) Composition: average 8th-grade SIMCE of the
+class's female and male students --- measured before high school, so it
+moves only through who sorts where. Sample, estimator, seed and helpers
+identical to \texttt{3\_effect\_sae\_am.Rmd}.
+
+\hypertarget{data-and-treatment}{%
+\subsection{Data and treatment}\label{data-and-treatment}}
+
+\hypertarget{headline-sample}{%
+\subsection{Headline sample}\label{headline-sample}}
+
+\hypertarget{a.-class-gender-composition-by-school-type-and-pipeline-intensity}{%
+\subsection{A. Class gender composition, by school type and pipeline
+intensity}\label{a.-class-gender-composition-by-school-type-and-pipeline-intensity}}
+
+One observation per school x cohort over the whole class; the outcome is
+the share of female students. Treated schools are split (i) by academic
+(HC) vs vocational (TP) type, classified by the majority track of their
+pre-2016 enrollment, and (ii) at the within-region median of pre-reform
+college-pipeline intensity (mean application share of the school's
+2012--2014 classes), taken over treated schools; never-treated private
+schools serve as the comparison group in every arm.
+
+\begin{table}[htbp]
+   \caption{Effect on Share of Female Students}\label{tab: share female by school type}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcccc}
+      \toprule
+                   & HC Schools & TP Schools & High Pipeline & Low Pipeline\\
+                   & (1) & (2) & (3) & (4)\\
+      \midrule
+      Treated & 0.002 & 0.007 & 0.000 & 0.008\\
+       & (0.007) & (0.007) & (0.004) & (0.010)\\
+      \midrule
+      Mean (pre-treatment) & 0.540 & 0.474 & 0.558 & 0.496\\
+      Observations & 23,128 &  8,397 & 15,730 & 15,411\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\hypertarget{b.-enrollment-outside-the-commune-of-residence}{%
+\subsection{B. Enrollment outside the commune of
+residence}\label{b.-enrollment-outside-the-commune-of-residence}}
+
+Share of the class's female (male) students whose 9th-grade school is in
+a different commune than their residence. If centralized choice relaxes
+constraints that bind more for daughters, girls' out-of-commune
+enrollment rises relative to boys'.
+
+\begin{table}[htbp]
+   \caption{Enrollment Outside the Commune of Residence by Gender}\label{tab: gender out of commune}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcc}
+      \toprule
+      & \multicolumn{2}{c}{Outside Own Commune} \\
+      \cmidrule(lr){2-3}
+                   & Female & Male \\
+                   & (1) & (2)\\
+      \midrule
+      Treated & -0.012 & -0.008$^{**}$\\
+       & (0.008) & (0.004)\\
+      \midrule
+      Mean (pre-treatment) & 0.262 & 0.255\\
+      Observations & 27,708 & 27,240\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\hypertarget{c.-baseline-composition-8th-grade-simce}{%
+\subsection{C. Baseline composition: 8th-grade
+SIMCE}\label{c.-baseline-composition-8th-grade-simce}}
+
+Average 8th-grade SIMCE of the class's female (male) students,
+standardized within test year. The score is measured before high school,
+so any effect reflects who sorts into the school, not what the school
+does --- separating re-sorting from behavior. The 8th-grade test is not
+administered every year, so only cohorts with a tested 8th-grade year
+contribute.
+
+\begin{table}[htbp]
+   \caption{Baseline 8th-Grade SIMCE Composition by Gender}\label{tab: gender simce8 composition}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcccc}
+      \toprule
+      & \multicolumn{2}{c}{SIMCE-8 Math}
+      & \multicolumn{2}{c}{SIMCE-8 Reading} \\
+      \cmidrule(lr){2-3}\cmidrule(lr){4-5}
+                   & Female & Male & Female & Male \\
+                   & (1) & (2) & (3) & (4)\\
+      \midrule
+      Treated & -0.176 & -0.006 & -0.255$^{*}$ & -0.142\\
+       & (0.120) & (0.078) & (0.149) & (0.098)\\
+      \midrule
+      Mean (pre-treatment) & -0.151 & 0.007 & 0.044 & -0.117\\
+      Observations & 27,708 & 27,240 & 27,708 & 27,240\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\hypertarget{summary}{%
+\subsection{Summary}\label{summary}}
+
+\begin{verbatim}
+## -- A. Share female --
+\end{verbatim}
+
+\begin{verbatim}
+## HC Schools         0.002 (0.007)
+## TP Schools         0.007 (0.007)
+## High Pipeline      0.000 (0.004)
+## Low Pipeline       0.008 (0.010)
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## -- B. Outside own commune --
+\end{verbatim}
+
+\begin{verbatim}
+## female  -0.012 (0.008) | male  -0.008 (0.004)
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## -- C. SIMCE-8 composition --
+\end{verbatim}
+
+\begin{verbatim}
+## SIMCE-8 Math     female  -0.176 (0.120) | male  -0.006 (0.078)
+## SIMCE-8 Reading  female  -0.255 (0.149) | male  -0.142 (0.098)
+\end{verbatim}
+
+\end{document}

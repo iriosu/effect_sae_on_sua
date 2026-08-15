@@ -1,0 +1,167 @@
+---
+title: "Effect of SAE on SUA - Scarce Seats: Who Gets the Good Schools (Issue #15)"
+output:
+  pdf_document:
+    keep_tex: true
+    extra_dependencies: ["booktabs"]
+  html_document: default
+---
+
+Market means cannot move under fixed capacity -- reallocation is zero-sum --
+so `13_first_stage_schools.Rmd` could not detect seat reshuffling (the margin
+Arteaga et al. show the mechanism moves at the individual level). The
+compositional test: at the schools with scarce, previously-screened seats,
+does WHO enters change at each wave's onset? School sets fixed in the
+pre-period (entry cohorts 2012-2015, publics): (i) REVEALED SCREENERS =
+top-quartile school mean entrant SIMCE-8 (>=20 matched entrants pooled);
+(ii) HIGH-VA = top-quartile va_2016_gazmuri. Outcomes by wave x entry cohort
+within each set: mean entrant SIMCE-8 z (screening ban should pull it DOWN),
+p25 (entry opening at the bottom), share below-median-ability entrants, share
+out-of-commune, and cohort size (capacity response). Plus economy-wide
+assortativity: corr(student z, school VA) and corr(student z, school
+pre-period mean z) among public entrants -- the vertical-sorting index that
+CAN move under fixed seats. SIMCE-8 gap cohorts are blank; dense cohorts
+(tests 2011/13/14/15/17/19 -> cohorts 2012/14/15/16/18/20) carry the signal;
+g2018's onset (2018) and RM's onset (2020) are directly readable, g2019's is
+read at its e+1 (2020). Guard chained to `11_adjudication_trajectories.Rmd`.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+rm(list = ls())
+library(dplyr); library(magrittr); library(purrr); library(data.table)
+
+start_year <- 2012; end_year <- 2021
+media <- c(310, 410, 510, 610, 710, 810)
+home <- ifelse(Sys.getenv("USERPROFILE") != "", Sys.getenv("USERPROFILE"), path.expand("~"))
+data_path <- file.path(home, "Dropbox", "Effect SAE on SUA", "data")
+
+df <- readRDS(file.path(data_path, "panel_9-12_2010_2021.rds"))
+setDT(df)
+df <- df[, .(MRUN, AGNO, RBD, COD_GRADO, COD_ENSE, year_rbd_first_sae,
+             COD_REG_RBD, COD_DEPE, COD_COM_ALU, COD_COM_RBD, applied)]
+
+sch <- unique(df[, .(RBD, year_rbd_first_sae, COD_REG_RBD, COD_DEPE)])[, .(
+  yfs    = { v <- year_rbd_first_sae[!is.na(year_rbd_first_sae)]; if (length(v)) as.numeric(v[1]) else 0 },
+  region = { v <- COD_REG_RBD[!is.na(COD_REG_RBD)]; if (length(v)) as.integer(v[1]) else NA_integer_ },
+  depe   = { v <- COD_DEPE[!is.na(COD_DEPE)]; if (length(v)) as.integer(names(which.max(table(v)))) else NA_integer_ }
+), by = RBD]
+setnames(sch, "RBD", "rbd")
+sae <- readRDS(file.path(data_path, "sae_data_2016_2023.rds")); setDT(sae)
+nine <- sae[COD_ENSE %in% media & COD_GRADO == 1, .(g9 = as.numeric(min(AGNO))), by = RBD]
+setnames(nine, "RBD", "rbd")
+sch <- merge(sch, nine, by = "rbd", all.x = TRUE)
+reg9 <- sch[!is.na(g9), .(g9r = min(g9)), by = region][!is.na(region)]
+sch <- merge(sch, reg9, by = "region", all.x = TRUE)
+rm(sae, nine)
+
+keep <- df[, all(COD_ENSE == 110 | COD_ENSE %in% media), by = MRUN][V1 == TRUE, MRUN]
+hs <- df[MRUN %in% keep & AGNO >= 2010 & AGNO <= 2024 &
+           COD_ENSE %in% media & COD_GRADO %in% 1:4, .(MRUN, AGNO, RBD, COD_GRADO)]
+anchor <- hs[COD_GRADO == 1, .(rbd = RBD[1], AGNO_9th = AGNO[1]), by = MRUN]
+appl <- df[MRUN %in% anchor$MRUN & !is.na(applied), .(applied = as.numeric(applied[1])), by = MRUN]
+e9 <- unique(df[COD_ENSE %in% media & COD_GRADO == 1,
+                .(MRUN, AGNO, COD_COM_ALU, COD_COM_RBD)], by = c("MRUN", "AGNO"))
+
+entrants <- merge(anchor, e9, by.x = c("MRUN", "AGNO_9th"), by.y = c("MRUN", "AGNO"), all.x = TRUE)
+entrants <- merge(entrants, appl, by = "MRUN", all.x = TRUE)
+entrants <- entrants[AGNO_9th >= start_year & AGNO_9th <= end_year]
+entrants <- merge(entrants, sch[, .(rbd, region, depe, g9r)], by = "rbd", all.x = TRUE)
+entrants <- entrants[!is.na(region) & !is.na(g9r)]
+entrants[, wave := paste0("g", g9r + 1)]
+entrants[, is_private := as.integer(depe == 4)]
+entrants[, out_com := as.integer(!is.na(COD_COM_ALU) & !is.na(COD_COM_RBD) & COD_COM_ALU != COD_COM_RBD)]
+
+s8 <- readRDS(file.path(data_path, "panel_simce_8b.rds")); setDT(s8)
+s8 <- s8[!is.na(mrun), .(MRUN = mrun, agno, mate = suppressWarnings(as.numeric(ptje_mate8b_alu)))]
+s8 <- s8[!is.na(mate)]; setorder(s8, MRUN, -agno); s8 <- unique(s8, by = "MRUN")
+s8[, z_mate := as.numeric(scale(mate)), by = agno]
+entrants <- merge(entrants, s8[, .(MRUN, z_mate)], by = "MRUN", all.x = TRUE)
+
+va <- fread(file.path(data_path, "va_2016_gazmuri.csv"))
+entrants <- merge(entrants, va, by = "rbd", all.x = TRUE)
+
+pub <- entrants[is_private == 0]
+
+# pre-period school sets (fixed forever after)
+pre <- pub[AGNO_9th <= 2015 & !is.na(z_mate),
+           .(pre_z = mean(z_mate), n_pre = .N), by = rbd]
+pre_ok <- pre[n_pre >= 20]
+scr_cut <- quantile(pre_ok$pre_z, 0.75)
+screeners <- pre_ok[pre_z >= scr_cut, rbd]
+va_cut <- quantile(va$va, 0.75, na.rm = TRUE)
+highva <- va[va >= va_cut, rbd]
+pub <- merge(pub, pre_ok[, .(rbd, pre_z)], by = "rbd", all.x = TRUE)
+pub[, scr := as.integer(rbd %in% screeners)]
+pub[, hva := as.integer(rbd %in% highva)]
+```
+
+## Guard
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+cat("entrants with region:", format(nrow(entrants), big.mark = ","), "(chain: 1,783,653 universe)\n")
+c1 <- pub[wave == "g2020" & AGNO_9th + 4 == 2023, mean(applied, na.rm = TRUE)]
+cat(sprintf("untreated-RM publics applied 2023: %.3f (11_adjudication: 0.486)\n", c1))
+cat(sprintf("screener schools: %d | high-VA schools: %d | overlap: %d\n",
+            length(screeners), length(highva), length(intersect(screeners, highva))))
+ok <- abs(c1 - 0.486) < 0.005
+cat(if (ok) "GUARD PASSED\n" else "GUARD FAILED\n"); stopifnot(ok)
+```
+
+## A. Entrant composition at revealed-screener schools
+
+Onsets: g2017 -> 2017, g2018 -> 2018, g2019 -> 2019 (blank; read 2020 = e+1), g2020 -> 2020.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+wt <- function(d, expr_txt, label) {
+  t <- dcast(d[, .(m = round(eval(parse(text = expr_txt)), 3)), by = .(wave, AGNO_9th)],
+             AGNO_9th ~ wave, value.var = "m")
+  setcolorder(t, intersect(c("AGNO_9th", "g2017", "g2018", "g2019", "g2020"), names(t)))
+  cat("\n====", label, "====\n"); print(t, nrow = 20)
+}
+sset <- pub[scr == 1 & !is.na(z_mate)]
+wt(sset, "mean(z_mate)", "mean entrant SIMCE-8 z at SCREENER schools")
+wt(sset, "quantile(z_mate, .25)", "p25 entrant SIMCE-8 z at SCREENER schools")
+wt(sset, "mean(z_mate < 0)", "share below-median-ability entrants at SCREENER schools")
+wt(pub[scr == 1], "mean(out_com)", "out-of-commune share at SCREENER schools")
+wt(pub[scr == 1], ".N", "entrant count at SCREENER schools (capacity check)")
+```
+
+## B. Entrant composition at high-VA schools
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+hset <- pub[hva == 1 & !is.na(z_mate)]
+wt(hset, "mean(z_mate)", "mean entrant SIMCE-8 z at HIGH-VA schools")
+wt(hset, "mean(z_mate < 0)", "share below-median-ability entrants at HIGH-VA schools")
+wt(pub[hva == 1], ".N", "entrant count at HIGH-VA schools")
+```
+
+## C. Assortativity: who matches where (economy-wide, public entrants)
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+aset <- pub[!is.na(z_mate) & !is.na(va)]
+at <- aset[, .(cor_va = round(cor(z_mate, va), 3)), by = .(wave, AGNO_9th)]
+t <- dcast(at, AGNO_9th ~ wave, value.var = "cor_va")
+setcolorder(t, intersect(c("AGNO_9th", "g2017", "g2018", "g2019", "g2020"), names(t)))
+cat("==== corr(entrant SIMCE-8 z, entry-school VA) ====\n"); print(t, nrow = 20)
+
+bset <- pub[!is.na(z_mate) & !is.na(pre_z)]
+bt <- bset[, .(cor_pz = round(cor(z_mate, pre_z), 3)), by = .(wave, AGNO_9th)]
+t2 <- dcast(bt, AGNO_9th ~ wave, value.var = "cor_pz")
+setcolorder(t2, intersect(c("AGNO_9th", "g2017", "g2018", "g2019", "g2020"), names(t2)))
+cat("\n==== corr(entrant SIMCE-8 z, school PRE-PERIOD mean z) — sorting persistence ====\n"); print(t2, nrow = 20)
+```
+
+## Summary
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+cat("Predictions if the screening ban moved scarce seats:\n",
+    "A/B: mean z at screener/high-VA schools FALLS at onset; below-median share\n",
+    "     RISES; p25 rises toward the market; out-of-commune may rise (choice).\n",
+    "C: assortativity (corr z, school quality) falls at onset.\n",
+    "Flat everywhere = seats reshuffled little: self-selection in applications +\n",
+    "priorities reproduce the pre-SAE allocation (consistent with Arteaga et al.:\n",
+    "individual-level gains within the mechanism, market allocation unchanged).\n")
+```

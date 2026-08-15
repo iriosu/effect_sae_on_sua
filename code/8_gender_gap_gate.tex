@@ -1,0 +1,321 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Effect of SAE on SUA - Gender Gap Gate (Issue \#14)},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{booktabs}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+
+\title{Effect of SAE on SUA - Gender Gap Gate (Issue \#14)}
+\author{}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+\maketitle
+
+Minimum gate agreed in issue \#14 after the adversarial review. Every
+gender comparison is reported as Female, Male, and the within-class gap
+(female mean minus male mean per school x cohort), with the gap
+estimated through the same Callaway--Sant'Anna machinery, so the F\(-\)M
+column carries joint region-clustered inference. (1) Pipeline and
+take-up gaps with event studies. (2) Application validity as
+unconditional counts over all class members (valid applications, invalid
+applications, any-invalid indicator), replacing the
+applicant-conditional shares. (3) Entrant-ITT rerun of the pipeline: all
+9th-grade entrants, outcomes zero-filled, no graduation filters. (4) The
+pre-specified direct sorting test: probability that an entrant's
+9th-grade school is in the academic (HC) track, on a
+commune-of-residence x cohort panel; every region is eventually treated,
+so this design has no never-treated arm and leans on timing variation
+only. Observations rows count classes with a usable outcome, column by
+column. Estimator, seed and sample rules as in
+\texttt{3\_effect\_sae\_am.Rmd}; \texttt{did} 2.5.1.
+
+\hypertarget{data-and-treatment}{%
+\subsection{Data and treatment}\label{data-and-treatment}}
+
+\hypertarget{headline-sample}{%
+\subsection{Headline sample}\label{headline-sample}}
+
+\hypertarget{pipeline-and-take-up-with-joint-f-m-inference}{%
+\subsection{\texorpdfstring{1. Pipeline and take-up, with joint F\(-\)M
+inference}{1. Pipeline and take-up, with joint F-M inference}}\label{pipeline-and-take-up-with-joint-f-m-inference}}
+
+\begin{table}[htbp]
+   \caption{Pipeline Outcomes by Gender with Within-Class Gap}\label{tab: gap pipeline}
+   \centerline{\scalebox{0.8}{\begin{tabular}{lcccccccccccc}
+      \toprule
+      & \multicolumn{3}{c}{P(Take Exam)}
+      & \multicolumn{3}{c}{Applied}
+      & \multicolumn{3}{c}{Assigned}
+      & \multicolumn{3}{c}{Enrolled} \\
+      \cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}\cmidrule(lr){11-13}
+                   & Female & Male & F$-$M & Female & Male & F$-$M & Female & Male & F$-$M & Female & Male & F$-$M \\
+                   & (1) & (2) & (3) & (4) & (5) & (6) & (7) & (8) & (9) & (10) & (11) & (12)\\
+      \midrule
+      Treated & -0.013 & -0.030$^{*}$ & 0.018$^{***}$ & 0.078$^{***}$ & 0.020$^{**}$ & 0.060$^{***}$ & 0.075$^{***}$ & 0.030$^{***}$ & 0.044$^{***}$ & 0.064$^{***}$ & 0.024$^{***}$ & 0.040$^{**}$\\
+       & (0.014) & (0.018) & (0.007) & (0.008) & (0.009) & (0.009) & (0.007) & (0.006) & (0.009) & (0.017) & (0.008) & (0.016)\\
+      \midrule
+      Mean (pre-treatment) & 0.852 & 0.810 & 0.040 & 0.464 & 0.396 & 0.064 & 0.335 & 0.319 & 0.014 & 0.265 & 0.265 & -0.002\\
+      Observations & 27,708 & 27,240 & 26,465 & 27,708 & 27,240 & 26,465 & 27,708 & 27,240 & 26,465 & 27,708 & 27,240 & 26,465\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\begin{verbatim}
+## 
+## Event study — F-M gap, Applied 
+##   e=-6   -0.001 (0.008)
+##   e=-5    0.002 (0.007)
+##   e=-4    0.015 (0.012)
+##   e=-3    0.000 (NA)
+##   e=-2    0.027 (0.008)
+##   e=-1    0.040 (0.008)
+##   e=+0    0.051 (0.007)
+##   e=+1    0.061 (0.011)
+##   e=+2    0.067 (0.011)
+##   e=+3    0.065 (0.016)
+##   e=+4    0.085 (0.021)
+## 
+## Event study — F-M gap, Assigned 
+##   e=-6   -0.004 (0.010)
+##   e=-5   -0.001 (0.003)
+##   e=-4    0.012 (0.012)
+##   e=-3    0.000 (NA)
+##   e=-2    0.028 (0.006)
+##   e=-1    0.036 (0.011)
+##   e=+0    0.039 (0.007)
+##   e=+1    0.042 (0.008)
+##   e=+2    0.049 (0.011)
+##   e=+3    0.055 (0.024)
+##   e=+4    0.096 (0.019)
+## 
+## Event study — F-M gap, Enrolled 
+##   e=-6   -0.013 (0.007)
+##   e=-5   -0.012 (0.004)
+##   e=-4   -0.000 (0.008)
+##   e=-3    0.000 (NA)
+##   e=-2    0.018 (0.005)
+##   e=-1    0.025 (0.024)
+##   e=+0    0.030 (0.021)
+##   e=+1    0.035 (0.010)
+##   e=+2    0.052 (0.017)
+##   e=+3    0.064 (0.023)
+##   e=+4    0.113 (0.011)
+\end{verbatim}
+
+\hypertarget{application-validity-unconditional}{%
+\subsection{2. Application validity,
+unconditional}\label{application-validity-unconditional}}
+
+Counts over all class members (zero for non-applicants): valid
+applications, invalid applications, and an indicator for listing at
+least one invalid program. These replace the applicant-conditional
+validity shares, so applier composition cannot drive them.
+
+\begin{table}[htbp]
+   \caption{Application Validity by Gender with Within-Class Gap (Unconditional)}\label{tab: gap validity}
+   \centerline{\scalebox{0.8}{\begin{tabular}{lccccccccc}
+      \toprule
+      & \multicolumn{3}{c}{Valid Apps}
+      & \multicolumn{3}{c}{Invalid Apps}
+      & \multicolumn{3}{c}{Any Invalid} \\
+      \cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}
+                   & Female & Male & F$-$M & Female & Male & F$-$M & Female & Male & F$-$M \\
+                   & (1) & (2) & (3) & (4) & (5) & (6) & (7) & (8) & (9)\\
+      \midrule
+      Treated & 0.027 & -0.473$^{***}$ & 0.486$^{***}$ & -0.035 & -0.001 & -0.039 & 0.014 & 0.019$^{***}$ & -0.006\\
+       & (0.223) & (0.164) & (0.071) & (0.084) & (0.044) & (0.046) & (0.015) & (0.006) & (0.009)\\
+      \midrule
+      Mean (pre-treatment) & 1.887 & 1.742 & 0.129 & 0.584 & 0.355 & 0.229 & 0.164 & 0.111 & 0.052\\
+      Observations & 27,708 & 27,240 & 26,465 & 27,708 & 27,240 & 26,465 & 27,708 & 27,240 & 26,465\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\begin{verbatim}
+## 
+## Event study — F-M gap, any invalid application 
+##   e=-6   -0.007 (0.005)
+##   e=-5   -0.003 (0.005)
+##   e=-4    0.002 (0.007)
+##   e=-3    0.000 (NA)
+##   e=-2   -0.000 (0.005)
+##   e=-1   -0.005 (0.007)
+##   e=+0   -0.010 (0.015)
+##   e=+1   -0.002 (0.008)
+##   e=+2   -0.007 (0.009)
+##   e=+3    0.002 (0.010)
+##   e=+4   -0.037 (0.010)
+\end{verbatim}
+
+\hypertarget{entrant-itt-pipeline-without-graduation-filters}{%
+\subsection{3. Entrant ITT: pipeline without graduation
+filters}\label{entrant-itt-pipeline-without-graduation-filters}}
+
+All 9th-grade entrants keyed to their entry school and cohort; outcomes
+are zero unless the student later registers with the admission system,
+so no post-treatment filter selects the sample.
+
+\begin{table}[htbp]
+   \caption{Entrant-ITT Pipeline by Gender with Within-Class Gap}\label{tab: gap entrant itt}
+   \centerline{\scalebox{0.8}{\begin{tabular}{lccccccccc}
+      \toprule
+      & \multicolumn{3}{c}{Applied}
+      & \multicolumn{3}{c}{Assigned}
+      & \multicolumn{3}{c}{Enrolled} \\
+      \cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}
+                   & Female & Male & F$-$M & Female & Male & F$-$M & Female & Male & F$-$M \\
+                   & (1) & (2) & (3) & (4) & (5) & (6) & (7) & (8) & (9)\\
+      \midrule
+      Treated & 0.077$^{***}$ & 0.022$^{**}$ & 0.054$^{***}$ & 0.072$^{***}$ & 0.030$^{***}$ & 0.037$^{***}$ & 0.064$^{***}$ & 0.020$^{**}$ & 0.037$^{***}$\\
+       & (0.010) & (0.010) & (0.008) & (0.014) & (0.010) & (0.010) & (0.019) & (0.010) & (0.012)\\
+      \midrule
+      Mean (pre-treatment) & 0.417 & 0.342 & 0.072 & 0.296 & 0.273 & 0.021 & 0.233 & 0.226 & 0.005\\
+      Observations & 28,739 & 28,276 & 27,655 & 28,739 & 28,276 & 27,655 & 28,739 & 28,276 & 27,655\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\hypertarget{direct-sorting-test-pacademic-track-commune-panel}{%
+\subsection{4. Direct sorting test: P(academic track), commune
+panel}\label{direct-sorting-test-pacademic-track-commune-panel}}
+
+Share of a commune's 9th-grade entrants whose school is in the academic
+(HC) track, from each entrant's own 9th-grade record; commune of
+residence at 9th grade, region from the commune code. Every region joins
+SAE, so there is no never-treated arm: identification uses
+not-yet-treated timing variation only, and effects for the last-treated
+regions are not identified.
+
+\begin{table}[htbp]
+   \caption{P(Academic Track) by Gender with Within-Commune Gap}\label{tab: gap hc commune}
+   \centerline{\scalebox{0.8}{\begin{tabular}{lccc}
+      \toprule
+      & \multicolumn{3}{c}{P(HC Track)} \\
+      \cmidrule(lr){2-4}
+                   & Female & Male & F$-$M \\
+                   & (1) & (2) & (3)\\
+      \midrule
+      Treated & -0.095$^{***}$ & -0.056$^{***}$ & -0.052$^{***}$\\
+       & (0.004) & (0.003) & (0.002)\\
+      \midrule
+      Mean (pre-treatment) & 0.762 & 0.700 & 0.064\\
+      Observations & 3,478 & 3,480 & 3,453\\
+      \bottomrule
+   \end{tabular}}}
+\end{table}
+
+\begin{verbatim}
+## 
+## Event study — F-M gap, P(HC track), commune panel 
+##   e=-6    0.017 (0.010)
+##   e=-5   -0.015 (0.010)
+##   e=-4    0.008 (0.015)
+##   e=-3    0.000 (NA)
+##   e=-2   -0.001 (0.011)
+##   e=-1    0.006 (0.021)
+##   e=+0   -0.052 (0.002)
+\end{verbatim}
+
+\hypertarget{summary}{%
+\subsection{Summary}\label{summary}}
+
+\begin{verbatim}
+## -- Within-class F-M gap ATTs --
+\end{verbatim}
+
+\begin{verbatim}
+## P(Take Exam)   gap   0.018 (0.007) 
+## Applied        gap   0.060 (0.009) 
+## Assigned       gap   0.044 (0.009) 
+## Enrolled       gap   0.040 (0.016)
+\end{verbatim}
+
+\begin{verbatim}
+## Valid Apps     gap   0.486 (0.071) 
+## Invalid Apps   gap  -0.039 (0.046) 
+## Any Invalid    gap  -0.006 (0.009)
+\end{verbatim}
+
+\begin{verbatim}
+## -- Entrant ITT gaps --
+\end{verbatim}
+
+\begin{verbatim}
+## Applied        gap   0.054 (0.008) 
+## Assigned       gap   0.037 (0.010) 
+## Enrolled       gap   0.037 (0.012)
+\end{verbatim}
+
+\begin{verbatim}
+## -- Commune P(HC) gap --
+\end{verbatim}
+
+\begin{verbatim}
+## P(HC Track)    gap  -0.052 (0.002)
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## This gate adds 33 estimations (11 outcomes x female/male/gap; event studies reuse the same fits). Cumulative for issue #14: 5 pre-specified channels, 81 estimations. All under did 2.5.1; point estimates replicate the draft tables, SEs are 2.5.1-specific.
+\end{verbatim}
+
+\end{document}
