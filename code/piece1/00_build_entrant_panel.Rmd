@@ -1,0 +1,437 @@
+---
+title: "Piece 1 -- Building the Entrant-Composition Panel"
+output:
+  pdf_document:
+    keep_tex: true
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+This document builds `entrant_composition_panel.rds` from raw MINEDUC files and the
+shared coauthor panels, in one pass. It is the single source of the panel the analysis
+file `1_effect_sae_alloc.Rmd` reads; nothing downstream depends on any intermediate CSV.
+Each stage below is documented so the construction can be audited end to end.
+
+**Inputs.** Two kinds.
+
+*Packed raw MINEDUC files* -- three rds files, built once from the public releases by
+`00a_pack_raw_data.R` (which documents the sources and the raw-csv handling; repoint its
+paths to your own copies to repack). They live in the shared data folder alongside the
+canonical panels; this package's `data/` folder works as a fallback location.
+
+- `sae_admissions.rds` -- the SAE offer (A1, processes 2016--2025), application (C1,
+  2017--2025) and assignment (D1, 2017--2025) tables. Feed the rollout doors and the
+  over-demand tag; A1 seats verified identical to the canonical `sae_data` `VACANTES`
+  (2026-08-15).
+- `matricula_2011_2023.rds` -- the annual enrolment census, one row per student per
+  school per grade code. Identifies entrants: the was-this-student-here-last-year check
+  must run against one consistent enrolment register. The graded panel is the wrong
+  instrument for that check (it implies enrolment from year-end academic records, and
+  its disagreement with the census drifts across years; see Stage 4).
+- `alumnos_sep_2012_2023.rds` -- the annual SEP-prioritario (low-income) roster, the
+  official beneficiary designation each year (`PRIORITARIO_ALU` from 2016; beneficiary
+  roster through 2015). Needed for the low-income share of entrants (the canonical
+  `panel_9-12` flag exists only for SAE applicants and cannot tag the pre-SAE baseline).
+
+*Shared coauthor panels* (in `Dropbox/Effect SAE on SUA/data`, = the project `code/data`).
+
+- `panel_performance_2002_2023.rds` -- the canonical graded-enrolment panel: supplies each
+  entrant's prior-year GPA and the pre-SAE enrolment for the fill test.
+- `panel_ee_2004_2025_homogenized.rds` -- school region.
+- `sae_data_2016_2023.rds` -- the (COD\_ENSE, COD\_GRADO) -> SAE level map and declared capacity.
+
+**Output.** One row per always-over-demanded school-grade cell x academic year, columns
+`rbd, cod_nivel, yr, region, is_entry, door, n_ent, n_gpa, gpa_z, sh_prio, slack_fail,
+door_year_tag`.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# Libraries ---------------------------------------------------------------
+library(data.table)
+
+setDTthreads(4); options(warn = 1)
+t0 <- proc.time()
+
+# Paths -------------------------------------------------------------------
+home <- ifelse(Sys.getenv("USERPROFILE") != "", Sys.getenv("USERPROFILE"), path.expand("~"))
+ROOT <- file.path(home, "Dropbox", "Effect of Centralization")
+# paths relative to this file (knitting sets the working directory here), so the
+# package runs wherever the folder is placed: the panel writes next to the code,
+# and data/ is the local fallback for the packed files
+DATA_RAW <- "data"
+OUTF <- "entrant_composition_panel.rds"
+# every data file resolves through one chain: the common shared Dropbox folder,
+# then the project's code/data mirror, then this package's own data/ folder
+data_path <- function(f) {
+  for (p in c(file.path(home, "Dropbox", "Effect SAE on SUA", "data", f),
+              file.path(ROOT, "code", "data", f),
+              file.path(DATA_RAW, f)))
+    if (file.exists(p)) return(p)
+  stop(sprintf("input file not found in any data location: %s", f))
+}
+
+say <- function(...) { cat(sprintf(...), "\n"); flush.console() }
+hdr <- function(x) cat("\n", strrep("=", 92), "\n", x, "\n", strrep("=", 92), "\n", sep = "")
+
+NIVLAB <- c("-1"="PreK","0"="Kinder","1"="1bas","2"="2bas","3"="3bas","4"="4bas","5"="5bas",
+            "6"="6bas","7"="7bas","8"="8bas","9"="1med","10"="2med","11"="3med","12"="4med")
+ENTRY <- c(-1L, 0L, 1L, 7L, 9L)          # grades a student can ENTER a school at
+
+# SAE tables come from the packed file: one call per table x process year.
+# (The packing script 00a_pack_raw_data.R handles the raw-csv quirks once:
+# case-resolved headers, Latin-1, course ids forced to character.)
+RAW_SAE <- readRDS(data_path("sae_admissions.rds"))
+rd_sae <- function(tb, pr) {
+  d <- RAW_SAE[[tolower(tb)]][proc == pr]
+  if (nrow(d)) copy(d) else NULL
+}
+
+# school -> region, and the (COD_ENSE, COD_GRADO) -> SAE level map, from shared panels
+ee  <- as.data.table(readRDS(data_path("panel_ee_2004_2025_homogenized.rds")))
+REG <- unique(ee[!is.na(cod_reg_rbd), .(rbd, region = cod_reg_rbd)], by = "rbd")
+rm(ee); invisible(gc())
+SD  <- as.data.table(readRDS(data_path("sae_data_2016_2023.rds")))
+SD  <- SD[!is.na(NIVEL) & !is.na(COD_ENSE) & !is.na(COD_GRADO)]
+MAP <- unique(SD[, .(COD_ENSE, COD_GRADO, cod_nivel = NIVEL)])
+if (nrow(MAP[, .N, by = .(COD_ENSE, COD_GRADO)][N > 1L]))
+  stop("a (COD_ENSE, COD_GRADO) pair maps to more than one SAE level; mapping is not a function")
+rm(SD); invisible(gc())
+```
+
+## Stage 1 -- the region x grade rollout door
+
+SAE phased in by region and, within a region, sometimes by grade. A (region, grade-level)
+cell is under SAE in the first process year any school in that region offers that level in
+the A1 file. This first year is the cell's *door*, read from the offer files. Reading it
+from first appearance in a later file would time the earliest-treated region wrong; the
+offer files time Magallanes at process 2016 correctly.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+ALL <- list()
+# the rollout map is fully determined by processes 2016-2023 (every door year is
+# 2016-2020); A1 2024-2025 feed Stage 2's demand window only
+for (pr in 2016L:2023L) {
+  d <- rd_sae("A1", pr)
+  stopifnot("A1 rows must exist for every rollout-map year" = !is.null(d))
+  niv <- d$cod_nivel   # 2016's `nivel` column is normalised to cod_nivel in the packed file
+  ALL[[as.character(pr)]] <- data.table(proc = pr, rbd = d$rbd, nivel = as.integer(niv))
+  rm(d); invisible(gc())
+}
+A0 <- rbindlist(ALL); rm(ALL); invisible(gc())
+A0 <- merge(A0, REG, by = "rbd", all.x = TRUE)
+A0 <- A0[!is.na(nivel) & !is.na(region)]
+ROLL <- A0[, .(first_proc = min(proc)), by = .(region, nivel)]
+stopifnot("rollout map must be one row per region-grade" =
+            !anyDuplicated(ROLL, by = c("region", "nivel")),
+          "process 2016 must have loaded (it times the Magallanes door)" =
+            min(ROLL$first_proc) == 2016L,
+          "every door year must be 2016-2020" =
+            all(ROLL$first_proc %in% 2016L:2020L))
+say("rollout doors: %s region-grade cells | door years %s",
+    format(nrow(ROLL), big.mark = ","), paste(sort(unique(ROLL$first_proc)), collapse = ", "))
+rm(A0); invisible(gc())
+```
+
+## Stage 2 -- effective demand and the over-demand tag
+
+A child *effectively demanded* a school-grade if they made a genuine (non-continuity)
+application to it and ranked it at least as high as the school they were finally assigned.
+Under deferred acceptance a student is rejected from a school only when it filled with
+students it ranked higher, so anyone preferring it to their outcome genuinely lost a
+contest for one of its seats. A school-grade is *over-demanded* (`tag_eff`) when effective
+demand exceeds the seats offered to the algorithm.
+
+Four constructions matter and are enforced here. Seats are `vacantes`, net of students
+continuing inside the school, and continuity application rows never create demand, so
+numerator and denominator sit on the same base (they otherwise diverge across the panel and
+manufacture a spurious trend). Zero-seat cells are kept in the demand panel and flagged
+(`zero_seats`); Stage 3 excludes them from the study set. The placement rank is located
+against the unfiltered application file, so every placement is recoverable. And effective
+demand is computed by two independent paths and asserted equal cell by cell, with an
+economic seat-base check that genuine admits fit inside `vacantes` in at least 98% of
+positive-seat cells each year (late-round seat additions make a small overage normal).
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+CELLS_ED <- list()
+for (pr in 2017L:2025L) {
+  A <- rd_sae("A1", pr); C <- rd_sae("C1", pr); D <- rd_sae("D1", pr)
+  if (is.null(A) || is.null(C) || is.null(D)) { say("process %d: missing table", pr); next }
+  if (!"agregada_por_continuidad" %in% names(C)) C[, agregada_por_continuidad := 0L]
+  C[is.na(agregada_por_continuidad), agregada_por_continuidad := 0L]
+  setnames(C, "preferencia_postulante", "pref")
+  stopifnot("preference rank must be positive" = C[, all(pref >= 1L)])
+
+  if (anyDuplicated(A, by = c("rbd", "cod_nivel", "cod_curso")))
+    stop(sprintf("process %d: A1 has duplicate rbd-nivel-curso rows; seats would double-count", pr))
+  if (!"cupos_totales" %in% names(A)) A[, cupos_totales := NA_integer_]
+  SEATS <- A[, .(seats = sum(vacantes, na.rm = TRUE),
+                 capacity = sum(cupos_totales, na.rm = TRUE)), by = .(rbd, cod_nivel)]
+
+  # placement rank: the best (lowest) preference the child gave to ANY course at the
+  # school-grade they were placed in, located against the UNFILTERED application file
+  BEST_ALL <- C[, .(best_pref = min(pref)), by = .(mrun, cod_nivel, rbd)]
+  DA <- unique(D[!is.na(rbd_admitido), .(mrun, cod_nivel, rbd = rbd_admitido)],
+               by = c("mrun", "cod_nivel"))
+  PL <- merge(DA, BEST_ALL, by = c("mrun", "cod_nivel", "rbd"), all.x = TRUE)
+  if (PL[, mean(!is.na(best_pref))] < 1)
+    stop(sprintf("process %d: a placement rank was not recoverable in the application file", pr))
+  PL[, a_rank := as.double(best_pref)]   # double, so Inf survives (into an int column it becomes NA)
+
+  AP <- merge(C[, .(mrun, rbd, cod_nivel, cod_curso, pref, cont = agregada_por_continuidad)],
+              SEATS[, .(rbd, cod_nivel)], by = c("rbd", "cod_nivel"))
+  AP <- merge(AP, PL[, .(mrun, cod_nivel, a_rank)], by = c("mrun", "cod_nivel"), all.x = TRUE)
+  AP[, a_rank := as.double(a_rank)]
+  AP[is.na(a_rank), a_rank := Inf]        # unassigned: every genuine listing contested
+  stopifnot("a_rank must be double so Inf survives" = is.double(AP$a_rank),
+            "no NA may remain in a_rank" = !anyNA(AP$a_rank))
+  AP <- merge(AP, DA[, .(mrun, cod_nivel, placed_rbd = rbd)],
+              by = c("mrun", "cod_nivel"), all.x = TRUE)
+  stopifnot("unassigned must agree across the D1 and C1 routes" =
+              AP[is.na(placed_rbd) != !is.finite(a_rank), .N] == 0L)
+
+  # PATH 1: a genuine listing at or above the placement is a contest; distinct children
+  AP[, contested := (cont != 1L) & (pref <= a_rank)]
+  M1 <- AP[contested == TRUE, .(eff_demand = uniqueN(mrun)), by = .(rbd, cod_nivel)]
+  # PATH 2: partition into took-a-seat / spurned / unassigned, then re-sum
+  G <- AP[cont != 1L & pref <= a_rank]
+  adm  <- G[!is.na(placed_rbd) & placed_rbd == rbd, .(n_adm  = uniqueN(mrun)), by = .(rbd, cod_nivel)]
+  spur <- G[!is.na(placed_rbd) & placed_rbd != rbd, .(n_spur = uniqueN(mrun)), by = .(rbd, cod_nivel)]
+  unas <- G[is.na(placed_rbd),                      .(n_unas = uniqueN(mrun)), by = .(rbd, cod_nivel)]
+  M2 <- Reduce(function(x, y) merge(x, y, by = c("rbd", "cod_nivel"), all = TRUE), list(adm, spur, unas))
+  for (v in c("n_adm", "n_spur", "n_unas")) M2[is.na(get(v)), (v) := 0L]
+  M2[, eff2 := n_adm + n_spur + n_unas]
+  CHK <- merge(M1, M2, by = c("rbd", "cod_nivel"), all = TRUE)
+  for (v in c("eff_demand", "eff2", "n_adm", "n_spur", "n_unas")) CHK[is.na(get(v)), (v) := 0L]
+  if (nrow(CHK[eff_demand != eff2])) stop("effective demand computed two ways does not agree")
+
+  # economic seat-base check: genuine admits must fit inside vacantes
+  SB <- merge(SEATS, CHK[, .(rbd, cod_nivel, n_adm)], by = c("rbd", "cod_nivel"), all.x = TRUE)
+  SB[is.na(n_adm), n_adm := 0L]
+  if (SB[seats > 0, mean(n_adm <= seats)] < 0.98) stop("seat base mismatched; numerator/denominator not comparable")
+
+  cell <- merge(SEATS, CHK[, .(rbd, cod_nivel, eff_demand)], by = c("rbd", "cod_nivel"), all.x = TRUE)
+  cell[is.na(eff_demand), eff_demand := 0L]
+  cell[, proc := pr]
+  CELLS_ED[[as.character(pr)]] <- cell
+  say("process %d | school-grades %s | seat-base OK", pr, format(nrow(SEATS), big.mark = ","))
+  rm(A, C, D, AP, G, DA, PL, BEST_ALL, M1, M2, CHK, SB, SEATS); invisible(gc())
+}
+X <- rbindlist(CELLS_ED); rm(CELLS_ED); invisible(gc())
+X <- merge(X, REG, by = "rbd", all.x = TRUE)
+X[, is_entry := as.integer(cod_nivel %in% ENTRY)]
+X[, level := NIVLAB[as.character(cod_nivel)]]
+X <- merge(X, ROLL, by.x = c("region", "cod_nivel"), by.y = c("region", "nivel"), all.x = TRUE)
+setnames(X, "first_proc", "door")
+X[, `:=`(zero_seats = as.integer(seats == 0),
+         tag_eff = as.integer(eff_demand > seats),
+         cell = paste(rbd, cod_nivel, sep = "|"))]
+stopifnot("no cell may be observed before its door (e < 0)" = X[proc - door < 0L, .N] == 0L)
+
+# first-observed-year tag: was the cell over-demanded at its first observed process
+# year? (= the door year for every wave except Magallanes: Stage 2 begins at process
+# 2017, the lineage window, so door-2016 cells are first observed at 2017. The 2016
+# C1/D1 files ship with the package but are not ingested here.)
+X[, snap := min(proc), by = cell]
+door_year_cells <- X[proc == snap & tag_eff == 1L, unique(cell)]
+say("effective-demand panel: %s school-grade-years | %s tagged | %s door-year-tagged cells",
+    format(nrow(X), big.mark = ","), format(X[tag_eff == 1L, .N], big.mark = ","),
+    format(length(door_year_cells), big.mark = ","))
+rm(RAW_SAE); invisible(gc())   # the SAE tables are not needed past this stage
+```
+
+## Stage 3 -- the always-over-demanded study cells
+
+The design tags cells on post-SAE demand and then assumes they were over-demanded before
+SAE too. That extrapolation is credible only where over-demand is a stable school trait; a
+cell that flips from year to year does not qualify. The study set is therefore the cells
+over-demanded in *every* year we observe them. The primary sample keeps positive-seat cells only; zero-seat cells turn away
+all demand but have no seats for SAE to reallocate.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+XP <- X[zero_seats == 0L]
+P  <- XP[, .(years = .N, n_tag = sum(tag_eff)), by = .(cell, rbd, cod_nivel, level, is_entry, region, door)]
+P[, always := as.integer(n_tag == years)]
+ALW <- P[always == 1L, .(rbd, cod_nivel, door, region, is_entry, cell)]
+say("always-over-demanded cells: %s of %s positive-seat cells (%.1f%%)",
+    format(nrow(ALW), big.mark = ","), format(nrow(P), big.mark = ","), 100 * nrow(ALW) / nrow(P))
+```
+
+## Stage 4 -- entrants and their composition
+
+An *entrant* to a cell in academic year `t` is a student enrolled there in `t` with no
+enrolment at that school in `t-1`. Enrolment is read from the annual matricula census,
+restricted to the enrolment streams that map to SAE grade levels (regular education; the
+same restriction as the validated construction). The `t-1` presence check runs against that
+register, so a continuing student is recognised whether or not they have a grade record; a
+student whose `t-1` enrolment at the school was in a stream outside the map (adult or
+special education) is counted as an entrant. An earlier version of this build ran the
+presence check against the graded panel instead. The two registers time enrolment
+differently: the census records who is enrolled at the annual snapshot; the graded panel
+implies enrolment from year-end academic records. Mid-year movers therefore land in
+different classes under the two constructions -- a student who arrived at the school
+during `t-1` has a year-end grade record there and reads as continuing under the graded
+panel, and reads as an entrant in `t` under the census -- and this disagreement class
+grew substantially across the panel window (student-level audit 2026-08-16,
+`_phantom_audit.R`; students enrolled with no grade record anywhere are a material class
+only at PreK/Kinder/1st, which carry no GPA). The event study of the discrepancy between
+the two constructions carries a pre-trend lead structure concentrated at the non-entry
+grades and also shifts the post-treatment entry-door estimate (`_delta_did_diag.R`), so
+the graded-panel construction imported a time-drifting entrant definition and
+manufactured the pre-trend; the census construction is one fixed instrument, uniform
+across years and regions, and is the validated original. Each entrant's prior-year
+GPA is their grade in `t-1` from the canonical `panel_performance_2002_2023.rds`, z-scored
+nationally within year. Entrants at grades 2-12 have a graded prior year and carry a GPA;
+1st grade is void for GPA (its prior year, Kinder, is ungraded, so the sole 1st-grade
+entrants with a prior grade are repeaters); PreK/Kinder carry no GPA. Each entrant's
+low-income status is their SEP-prioritario designation in the enrolment year, from the
+annual Alumnos-SEP roster (verified 2026-08-15 against the canonical `panel_9-12` flag:
+same concept, ~85% year-aligned agreement, the remainder a snapshot-timing difference
+between two official files).
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+YRS <- 2012:2023   # panel window of record (as the 2026-08-15 build); every prior-GPA
+                   # lookup (t-1 <= 2022) sits inside panel_performance; matricula read from 2011
+CELLS_T <- ALW[, .(rbd, cod_nivel, door, region, is_entry)]   # tagged cells only
+
+# prior-GPA lookup: national within-year z of PROM_GRAL in [1,7], from the canonical panel
+PF <- as.data.table(readRDS(data_path("panel_performance_2002_2023.rds")))
+PF <- PF[AGNO %in% (min(YRS) - 1L):2023L, .(MRUN, AGNO, PROM_GRAL)]
+PF <- PF[!is.na(PROM_GRAL) & PROM_GRAL >= 1 & PROM_GRAL <= 7]
+PF[, z := (PROM_GRAL - mean(PROM_GRAL)) / sd(PROM_GRAL), by = AGNO]
+GPA <- PF[, .(mrun = as.character(MRUN), agno = AGNO, z)]; rm(PF); invisible(gc())
+# ~0.5% of student-years are graded at two schools; collapse to one row per (mrun, agno)
+GPA <- GPA[, .(z = mean(z)), by = .(mrun, agno)]
+setkey(GPA, mrun, agno)
+stopifnot("GPA lookup unique on (mrun, agno)" = !anyDuplicated(GPA, by = c("mrun", "agno")))
+
+# SEP prioritario set for a given year (roster <=2015, PRIORITARIO_ALU flag from 2016;
+# the pre-2016 files have no PRIORITARIO_ALU column, packed as all-NA)
+SEPD <- readRDS(data_path("alumnos_sep_2012_2023.rds"))
+prio_set <- function(y) {
+  D <- SEPD[agno == y]
+  stopifnot("Alumnos-SEP year must be in the packed file" = nrow(D) > 0)
+  if (any(!is.na(D$PRIORITARIO_ALU)))
+    as.character(unique(D[PRIORITARIO_ALU == 1L & !is.na(RBD), MRUN]))
+  else as.character(unique(D[!is.na(CRITERIO_SEP) & CRITERIO_SEP != 0, MRUN]))
+}
+
+# entrants from the matricula census, year by year; prev = (student, school) pairs
+# enrolled in t-1 in SAE-mappable streams, so continuing students are recognised
+# regardless of grades (a t-1 enrolment in adult/special ed is outside prev)
+MATC <- readRDS(data_path("matricula_2011_2023.rds"))
+prev <- NULL
+RES <- list()
+for (t in (min(YRS) - 1L):max(YRS)) {
+  M <- MATC[agno == t, .(MRUN, RBD, COD_ENSE, COD_GRADO)]
+  stopifnot("matricula year must be in the packed file" = nrow(M) > 0)
+  M <- merge(M, MAP, by = c("COD_ENSE", "COD_GRADO"))          # -> cod_nivel; drops adult/special ed
+  M <- unique(M[, .(mrun = as.character(MRUN), rbd = RBD, cod_nivel)],
+              by = c("mrun", "rbd", "cod_nivel"))
+  if (t >= min(YRS) && !is.null(prev)) {
+    cur <- merge(M, CELLS_T, by = c("rbd", "cod_nivel"))       # enrolled in a tagged cell
+    cur[, in_prev := !is.na(prev[cur, on = c("mrun", "rbd"), which = TRUE])]
+    E <- cur[in_prev == FALSE]                                 # entrants
+    ps <- prio_set(t)
+    E[, prio := as.integer(mrun %chin% ps)]
+    E[, agno_prev := t - 1L]
+    E[, z := GPA[E, on = .(mrun, agno = agno_prev), x.z]]
+    cell <- E[, .(n_ent = .N, sh_prio = mean(prio), gpa_z = mean(z, na.rm = TRUE),
+                  n_gpa = sum(!is.na(z))),
+              by = .(rbd, cod_nivel, door, region, is_entry)]
+    cell[, yr := t]
+    RES[[as.character(t)]] <- cell
+    say("year %d | entrant cells %s | entrants %s | prio roster %s | %.1f min", t,
+        format(nrow(cell), big.mark = ","), format(nrow(E), big.mark = ","),
+        format(length(ps), big.mark = ","), (proc.time() - t0)[["elapsed"]] / 60)
+    rm(cur, E); invisible(gc())
+  }
+  prev <- unique(M[, .(mrun, rbd)]); setkey(prev, mrun, rbd)
+  rm(M); invisible(gc())
+}
+PANEL <- rbindlist(RES); rm(RES, prev, GPA, MATC, SEPD); invisible(gc())
+say("entrant panel: %s cell-years | %s cells", format(nrow(PANEL), big.mark = ","),
+    format(uniqueN(PANEL[, paste(rbd, cod_nivel)]), big.mark = ","))
+```
+
+## Stage 5 -- the pre-SAE slack flag
+
+The pre-SAE fill test asks whether an always-over-demanded cell was already full before SAE:
+mean enrolment over the four academic years up to the door, as a share of mean enrolment over
+the three years after it. A ratio near one is consistent with the cell having been equally
+full before; a ratio well below one is either genuine slack (the grade had empty seats and
+filled up) or school growth (the whole school got bigger). The two are separated by comparing
+each cell's ratio with its own school's ratio over the same window. Cells whose verdict is
+genuine slack or borderline are flagged; the analysis reports the estimate with these cells
+excluded as one robustness column.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+N_PRE <- 4L; N_POST <- 3L
+PFe <- as.data.table(readRDS(data_path("panel_performance_2002_2023.rds")))
+PFe <- merge(PFe[, .(AGNO, RBD, MRUN, COD_ENSE, COD_GRADO)], MAP, by = c("COD_ENSE", "COD_GRADO"))
+E   <- PFe[, .(enr = uniqueN(MRUN)), by = .(rbd = RBD, cod_nivel, AGNO)]
+SCH <- E[, .(school_enr = sum(enr)), by = .(rbd, AGNO)]
+rm(PFe); invisible(gc())
+
+# cell-level pre/post enrolment ratio for the always cells (graded levels only)
+G  <- ALW[cod_nivel >= 1L]
+W  <- merge(G, E, by = c("rbd", "cod_nivel"), allow.cartesian = TRUE)
+W[, per := fifelse(AGNO <= door, "pre", fifelse(AGNO <= door + N_POST, "post", "later"))]
+W  <- W[(per == "pre" & AGNO > door - N_PRE) | per == "post"]
+R  <- dcast(W[, .(n = .N, m = mean(enr)), by = .(rbd, cod_nivel, door, per)],
+            rbd + cod_nivel + door ~ per, value.var = c("n", "m"))
+for (v in c("n_pre", "n_post")) R[is.na(get(v)), (v) := 0L]
+R  <- R[n_pre >= 3L & n_post >= 2L & m_post > 0][, ratio := m_pre / m_post]
+
+# school-level ratio over the same window, to net out school growth
+K  <- unique(R[, .(rbd, door)])
+Ms <- merge(K, SCH, by = "rbd", allow.cartesian = TRUE)
+Ms[, per := fifelse(AGNO <= door & AGNO > door - N_PRE, "pre",
+             fifelse(AGNO > door & AGNO <= door + N_POST, "post", NA_character_))]
+Ms <- Ms[!is.na(per)]
+Zs <- dcast(Ms[, .(n = .N, m = mean(school_enr)), by = .(rbd, door, per)],
+            rbd + door ~ per, value.var = c("n", "m"))
+Zs <- Zs[n_pre >= 3L & n_post >= 2L & m_post > 0][, sch_ratio := m_pre / m_post]
+R  <- merge(R, Zs[, .(rbd, door, sch_ratio)], by = c("rbd", "door"))
+R[, excess := ratio / sch_ratio]
+R[, verdict := fifelse(ratio >= 0.90, "pass",
+                fifelse(sch_ratio < 0.90, "fail-growth",
+                 fifelse(excess < 0.90, "fail-slack", "fail-borderline")))]
+slack_cells <- R[verdict %in% c("fail-slack", "fail-borderline"), paste(rbd, cod_nivel, sep = "|")]
+say("testable cells %s | genuine-slack/borderline flagged %s",
+    format(nrow(R), big.mark = ","), format(length(slack_cells), big.mark = ","))
+```
+
+## Assemble and save
+
+The panel is restricted to the always-over-demanded cells and carries the two robustness
+flags (`slack_fail`, `door_year_tag`) as columns, so every column of the analysis table is a
+filter on this one file.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+OUT <- PANEL[, .(rbd, cod_nivel, yr, region, is_entry, door, n_ent, n_gpa, gpa_z, sh_prio)]
+# 1st grade has no graded prior year (Kinder is ungraded), so the only 1st-grade
+# entrants with a prior GPA are repeaters -- a non-representative sliver that produces
+# single-student cells with extreme z. Void gpa_z there; grades 2-12 all have a real
+# graded prior year and stay. n_ent and sh_prio are kept for 1st-grade cells.
+# (Deliberate deviation from the 94_quick_look construction, which kept these GPAs;
+# user decision 2026-08-15.)
+OUT[cod_nivel == 1L, `:=`(gpa_z = NA_real_, n_gpa = 0L)]
+OUT[, cell := paste(rbd, cod_nivel, sep = "|")]
+OUT[, slack_fail    := cell %chin% slack_cells]
+OUT[, door_year_tag := cell %chin% door_year_cells]
+OUT[, cell := NULL]
+setcolorder(OUT, c("rbd", "cod_nivel", "yr", "region", "is_entry", "door",
+                   "n_ent", "n_gpa", "gpa_z", "sh_prio", "slack_fail", "door_year_tag"))
+saveRDS(OUT, OUTF)
+say("wrote %s", OUTF)
+say("panel: %s cell-years | %s cells | years %s",
+    format(nrow(OUT), big.mark = ","), format(uniqueN(OUT[, paste(rbd, cod_nivel)]), big.mark = ","),
+    paste(range(OUT$yr), collapse = "-"))
+say("gpa_z non-missing cell-years: %s | door-year-tagged: %s | slack-flagged: %s",
+    format(OUT[!is.na(gpa_z), .N], big.mark = ","),
+    format(OUT[door_year_tag == TRUE, .N], big.mark = ","),
+    format(OUT[slack_fail == TRUE, .N], big.mark = ","))
+say("total elapsed %.1f min", (proc.time() - t0)[["elapsed"]] / 60)
+```

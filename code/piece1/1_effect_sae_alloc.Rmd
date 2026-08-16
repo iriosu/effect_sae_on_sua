@@ -1,0 +1,452 @@
+---
+title: "Effect of SAE on Allocation - Entrant Composition"
+output:
+  pdf_document:
+    keep_tex: true
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# Clean ---------------------------------------------------------------
+rm(list = ls())
+
+# Libraries ---------------------------------------------------------------
+library(data.table)
+library(did)
+# did 2.1.2 is the SE vintage of record for this panel (the region-clustered bootstrap SE
+# is version-specific; 2.5.1 reports a much tighter one). Stars come from randomization
+# inference, not this SE, but the reported SE must be the pinned vintage -- so halt on any other.
+stopifnot("this analysis requires the did package at version 2.1.2" =
+            as.character(packageVersion("did")) == "2.1.2")
+
+seed_head <- 20260815
+seed_batt <- 20260806
+biters    <- 10000
+B_ri      <- 9999
+B_rob     <- 2999   # RI draws for the robustness-column stars (resolves significance)
+
+# The analysis panel (built by 00_build_entrant_panel.Rmd). A copy next to this file
+# wins (a fresh local rebuild); otherwise the shared data folder's copy of record.
+home <- ifelse(Sys.getenv("USERPROFILE") != "", Sys.getenv("USERPROFILE"), path.expand("~"))
+panel_file <- "entrant_composition_panel.rds"
+if (!file.exists(panel_file))
+  panel_file <- file.path(home, "Dropbox", "Effect SAE on SUA", "data",
+                          "entrant_composition_panel.rds")
+stopifnot("panel not found next to the code or in the shared data folder" =
+            file.exists(panel_file))
+dir.create("tables", showWarnings = FALSE)
+dir.create("figures", showWarnings = FALSE)
+
+# helpers: table formatting
+fmt  <- function(x) sub("^-(0\\.000)$", "\\1", sprintf("%.3f", x))
+star <- function(p) ifelse(p < .01, "$^{***}$",
+                    ifelse(p < .05, "$^{**}$",
+                    ifelse(p < .1,  "$^{*}$", "")))
+row_tex <- function(lbl, vals) paste0("      ", lbl, " & ", paste(vals, collapse = " & "), "\\\\\n")
+
+# one CS-DiD fit, simple aggregate, region- or cell-clustered
+fit_cs <- function(D, yvar, clustervar = "region", anticipation = 0L,
+                   weightsname = NULL, bit = biters) {
+  d <- D[!is.na(get(yvar)), c(.(cell_id = cell_id, yr = yr, G = G, region = region,
+                                y = get(yvar)),
+                              if (!is.null(weightsname)) .(w = get(weightsname)))]
+  # cell clustering is did's default (idname = cell_id); region clustering is explicit
+  at <- att_gt(yname = "y", tname = "yr", idname = "cell_id", gname = "G",
+               data = d, control_group = "notyettreated", panel = TRUE,
+               allow_unbalanced_panel = TRUE, base_period = "universal",
+               anticipation = anticipation,
+               weightsname = if (!is.null(weightsname)) "w",
+               bstrap = TRUE, biters = bit,
+               clustervars = if (clustervar == "region") "region" else NULL,
+               print_details = FALSE)
+  # aggregate immediately after the fit so the bootstrap is independent of run order
+  s <- aggte(at, type = "simple", na.rm = TRUE)
+  list(att = s$overall.att, se = s$overall.se,
+       n_cellyears = nrow(d), n_cells = uniqueN(d$cell_id))
+}
+
+# treated cells' own pre-door means
+pre_mean <- function(D, yvar) D[yr < G & !is.na(get(yvar)), mean(get(yvar))]
+
+# randomization inference: permute the region-to-wave assignment, recompute the
+# hand-rolled simple ATT under each draw. wave sizes are held fixed.
+prep_ri <- function(D, yvar, minyr = -Inf, wcol = NULL) {
+  d <- D[!is.na(get(yvar)) & yr >= minyr]
+  d <- d[, c("cell", "region", "is_entry", "yr", yvar, wcol), with = FALSE]
+  setnames(d, yvar, "y")
+  Wd <- dcast(d, cell + region + is_entry ~ yr, value.var = "y")
+  yrs <- as.integer(setdiff(names(Wd), c("cell", "region", "is_entry")))
+  w <- NULL
+  if (!is.null(wcol)) {
+    wc <- unique(d[, .(cell, wv = get(wcol))])
+    w <- wc$wv[match(Wd$cell, wc$cell)]
+  }
+  list(M = as.matrix(Wd[, as.character(yrs), with = FALSE]),
+       region = Wd$region, is_entry = Wd$is_entry, yrs = yrs, w = w)
+}
+# hand-rolled CS simple ATT; base period shifts with anticipation, cells weighted if pp$w set
+simple_att_hand <- function(pp, wave_by_region, antic = 0L) {
+  G <- wave_by_region[as.character(pp$region)] + (1L - pp$is_entry) + 1L
+  yrs <- pp$yrs; M <- pp$M; W <- pp$w
+  num <- 0; den <- 0
+  for (g in sort(unique(G))) {
+    bi <- match(g - 1L - antic, yrs); if (is.na(bi)) next
+    tr <- G == g
+    for (t in yrs[yrs >= g]) {
+      ti <- match(t, yrs)
+      ok_t <- tr & !is.na(M[, ti]) & !is.na(M[, bi])
+      # control pool respects anticipation, matching did's notyettreated rule (G > t + antic)
+      ok_c <- (G > t + antic) & !is.na(M[, ti]) & !is.na(M[, bi])
+      if (!any(ok_t) || !any(ok_c)) next
+      if (is.null(W)) {
+        att <- mean(M[ok_t, ti] - M[ok_t, bi]) - mean(M[ok_c, ti] - M[ok_c, bi]); wt <- sum(ok_t)
+      } else {
+        att <- weighted.mean(M[ok_t, ti] - M[ok_t, bi], W[ok_t]) -
+               weighted.mean(M[ok_c, ti] - M[ok_c, bi], W[ok_c]); wt <- sum(W[ok_t])
+      }
+      num <- num + wt * att; den <- den + wt
+    }
+  }
+  if (den == 0) NA_real_ else num / den
+}
+wave_map <- function(D) {
+  WM <- unique(D[, .(region, door, is_entry)])
+  WM[, wave := door - (1L - is_entry)]
+  stopifnot("one wave per region" = WM[, uniqueN(wave), by = region][, all(V1 == 1L)])
+  W <- unique(WM[, .(region, wave)])[order(region)]
+  setNames(W$wave, as.character(W$region))
+}
+# event-time lead vector for the exact pre-trend test. Pre-period lead of cohort g
+# at t = g+e versus base g-1: controls must be untreated THROUGH the base year
+# (G > g-1), matching did's universal-base construction.
+ES_LEADS <- -6L:-2L
+leads_hand <- function(pp, wv) {
+  G <- wv[as.character(pp$region)] + (1L - pp$is_entry) + 1L
+  yrs <- pp$yrs; M <- pp$M
+  out <- setNames(rep(NA_real_, length(ES_LEADS)), as.character(ES_LEADS))
+  for (e in ES_LEADS) {
+    num <- 0; den <- 0
+    for (g in sort(unique(G))) {
+      bi <- match(g - 1L, yrs); ti <- match(g + e, yrs)
+      if (is.na(bi) || is.na(ti)) next
+      tr <- G == g
+      ok_t <- tr & !is.na(M[, ti]) & !is.na(M[, bi])
+      # controls: untreated through the base year AND not the treated cohort itself
+      # (G > g-1 alone admits G == g, which attenuates every lead toward zero)
+      ok_c <- (G > g - 1L) & !tr & !is.na(M[, ti]) & !is.na(M[, bi])
+      if (!any(ok_t) || !any(ok_c)) next
+      att <- mean(M[ok_t, ti] - M[ok_t, bi]) - mean(M[ok_c, ti] - M[ok_c, bi])
+      num <- num + sum(ok_t) * att; den <- den + sum(ok_t)
+    }
+    out[as.character(e)] <- if (den > 0) num / den else NA_real_
+  }
+  out
+}
+# exact joint pre-trend p: family-max studentized leads over region-to-wave permutations.
+# check = the did dynamic leads for the same sample; the hand statistic must track them
+# or the run halts (guards the control-pool construction against drift from did's)
+ri_pretrend <- function(D, check = NULL, B = 2999L) {
+  set.seed(seed_head)
+  wv <- wave_map(D); pp <- prep_ri(D, "gpa_z")
+  obs <- leads_hand(pp, wv)
+  if (!is.null(check))
+    stopifnot("hand leads must track the did dynamic leads" =
+                max(abs(obs[names(check)] - check), na.rm = TRUE) < 0.02)
+  regions <- as.integer(names(wv)); waves <- unname(wv)
+  P <- matrix(NA_real_, B, length(obs))
+  for (b in seq_len(B)) P[b, ] <- leads_hand(pp, setNames(sample(waves), as.character(regions)))
+  sdp <- apply(P, 2, sd, na.rm = TRUE)
+  fmax <- apply(abs(P) / rep(sdp, each = B), 1, max, na.rm = TRUE)
+  (1 + sum(fmax >= max(abs(obs) / sdp, na.rm = TRUE))) / (1 + length(fmax))
+}
+ri_p <- function(pps, wv, B = B_ri) {
+  obs <- vapply(pps, simple_att_hand, numeric(1), wave_by_region = wv)
+  regions <- as.integer(names(wv)); waves <- unname(wv)
+  P <- matrix(NA_real_, B, length(pps), dimnames = list(NULL, names(pps)))
+  for (b in seq_len(B)) {
+    wp <- setNames(sample(waves), as.character(regions))
+    for (nm in names(pps)) P[b, nm] <- simple_att_hand(pps[[nm]], wp)
+  }
+  p2 <- vapply(names(pps), function(nm) {
+    tp <- P[, nm]; tp <- tp[!is.na(tp)]
+    (1 + sum(abs(tp) >= abs(obs[nm]))) / (1 + length(tp))
+  }, numeric(1))
+  list(obs = obs, p2 = p2)
+}
+# single-outcome RI p on its own wave map (used per robustness column)
+ri_one <- function(pp, wv, antic = 0L, B = B_rob, seed = seed_head) {
+  set.seed(seed)
+  obs <- simple_att_hand(pp, wv, antic)
+  regions <- as.integer(names(wv)); waves <- unname(wv)
+  tp <- numeric(B)
+  for (b in seq_len(B)) tp[b] <- simple_att_hand(pp, setNames(sample(waves), as.character(regions)), antic)
+  tp <- tp[!is.na(tp)]
+  (1 + sum(abs(tp) >= abs(obs))) / (1 + length(tp))
+}
+```
+
+## Data and treatment
+
+The unit is a school-grade cell, one school by one entry grade level, observed each
+year. A cell is always over-demanded when, in every year we observe it, the children who
+made a genuine non-continuity application ranking the cell at least as high as the school
+they were finally assigned outnumber the seats the school offered. Treatment is the year
+the region's grade level entered SAE; a cell is treated from the following entering
+cohort, so the treatment cohort is `G = door + 1`. The entering class of year `t` is the
+students enrolled in the cell in `t` with no enrolment at that school the year before,
+identified from the annual matricula enrolment census (the full register, so a continuing
+student is recognised whether or not they have a grade record; see the build file). The
+two composition outcomes are the entering class's mean prior-year GPA,
+standardized nationally within year, and the share of the entering class carrying
+SEP-prioritario status, the national low-income tag. The analysis reads one panel,
+`entrant_composition_panel.rds`, built and documented in `00_build_entrant_panel.Rmd`.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+CP <- as.data.table(readRDS(panel_file))
+CP[, cell := paste(rbd, cod_nivel, sep = "|")]
+CP[, cell_id := as.integer(factor(cell))]
+CP[, G := door + 1L]
+CP[, w_ent := mean(n_ent), by = cell_id]
+stopifnot("every cell must carry a region" = !anyNA(CP$region),
+          "every cell must carry a treatment door" = !anyNA(CP$door))
+wv_real <- wave_map(CP)
+```
+
+## Headline: effect on entering-class composition
+
+Callaway and Sant'Anna group-time ATT with not-yet-treated cells as controls, a
+universal base period, aggregated to one average effect. Standard errors are from a
+region-clustered multiplier bootstrap. Significance is from within-rollout randomization
+inference: 9,999 permutations of the region-to-wave assignment holding the wave-size
+multiset fixed, with the two outcomes sharing one permutation stream. The
+share-prioritario column uses the 2016 and later subpanel, because the SEP record
+definition changes at calendar 2016.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+set.seed(seed_head)
+g_reg <- fit_cs(CP,              "gpa_z",   "region")
+p_reg <- fit_cs(CP[yr >= 2016L], "sh_prio", "region")
+
+# the randomization stream is seeded independently of the did bootstrap, so the
+# stars depend only on the permutations -- not on how many draws any fit consumed
+set.seed(seed_head)
+ri <- ri_p(list(gpa_z   = prep_ri(CP, "gpa_z"),
+                sh_prio = prep_ri(CP, "sh_prio", minyr = 2016L)), wv_real)
+# two-path check: the hand-rolled statistic must track the did estimand
+# (tolerance scaled per outcome: sh_prio is a share whose effect is an order smaller)
+stopifnot("hand statistic must track the did point" =
+            abs(ri$obs["gpa_z"] - g_reg$att) < 0.02 && abs(ri$obs["sh_prio"] - p_reg$att) < 0.005)
+
+att  <- c(g_reg$att, p_reg$att)
+se   <- c(g_reg$se,  p_reg$se)
+pri  <- ri$p2[c("gpa_z", "sh_prio")]
+prem <- c(pre_mean(CP, "gpa_z"), pre_mean(CP[yr >= 2016L], "sh_prio"))
+nobs <- c(g_reg$n_cellyears, p_reg$n_cellyears)
+
+tab <- paste0(
+  "\\begin{table}[htbp]\n   \\caption{Effect of SAE on Entering-Class Composition}",
+  "\\label{tab: alloc headline}\n",
+  "   \\centerline{\\scalebox{0.85}{\\begin{tabular}{lcc}\n      \\toprule\n",
+  "                   & Entrant GPA (z) & Share prioritario\\\\\n",
+  "                   & (1) & (2)\\\\\n      \\midrule\n",
+  row_tex("Treated", paste0(fmt(att), star(pri))),
+  row_tex("", paste0("(", fmt(se), ")")),
+  "      \\midrule\n",
+  row_tex("Mean (pre-treatment)", fmt(prem)),
+  row_tex("Observations", format(nobs, big.mark = ",")),
+  "      \\bottomrule\n   \\end{tabular}}}\n",
+  "   \\par\\smallskip{\\footnotesize Notes: Callaway--Sant'Anna ATT, not-yet-treated ",
+  "controls. Region-clustered multiplier-bootstrap standard errors in parentheses (did ",
+  "2.1.2 vintage). Stars from randomization inference over the region-to-wave assignment ",
+  "(9,999 permutations): $^{***}$p$<$0.01, $^{**}$p$<$0.05, $^{*}$p$<$0.1. Share ",
+  "prioritario uses the 2016+ subpanel (SEP definition break).}\n\\end{table}\n")
+writeLines(tab, "tables/alloc_headline.tex")
+cat(tab)
+```
+
+## Robustness
+
+One specification per column, same outcome as column (1) of the headline; the Baseline
+column repeats the headline fit so every check reads against it. *Drop Santiago*: the
+Metropolitan region is the last adopter and therefore the dominant not-yet-treated
+control in the late identifying comparisons, and it holds a third of the country's
+students; this column removes it entirely, treated and control alike, so the estimate
+rests on the other fifteen regions — anything specific to Santiago in 2019--2020 cannot
+drive a result that survives here. *$n_{gpa}\geq 5$*: a cell-year's outcome is the mean
+prior GPA of its graded entrants, and a mean over one or two students is noise; this
+column keeps only cell-years with at least five graded entrants, so thin cells cannot
+carry the unweighted estimator. *Slack excl.*: the over-demand tag is measured in SAE
+years and extrapolated to the pre-SAE period; Stage 5 of the build compares each cell's
+pre-door enrolment with its post-door fill and flags cells that look like they had empty
+seats before SAE. A cell with slack had no selection to lose, so this column drops the
+flagged cells and defends the extrapolation directly. *Entrant-wtd.*: the baseline
+weights every cell equally (the class-average estimand); this column weights cells by
+their average entrant count, moving the estimand to the average entering student, so the
+result is shown to hold where the students actually are. *Anticip.\ = 1*: the base year
+is the door year, when SAE was already announced, so the final pre-SAE intake could
+itself be distorted by anticipation; this column moves the base one year earlier, before
+any announcement behaviour. Region-clustered bootstrap standard errors are in
+parentheses; stars are from randomization inference on each column's own specification.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+set.seed(seed_batt)
+# label, panel, weight column, anticipation, outcome column
+specs <- list(
+  list(lab = "Baseline",         D = CP,                       w = NULL,    a = 0L, y = "gpa_z"),
+  list(lab = "Drop Santiago",    D = CP[region != 13L],        w = NULL,    a = 0L, y = "gpa_z"),
+  list(lab = "$n_{gpa}\\geq 5$", D = CP[n_gpa >= 5L],          w = NULL,    a = 0L, y = "gpa_z"),
+  list(lab = "Slack excl.",      D = CP[slack_fail == FALSE],  w = NULL,    a = 0L, y = "gpa_z"),
+  list(lab = "Entrant-wtd.",     D = CP,                       w = "w_ent", a = 0L, y = "gpa_z"),
+  list(lab = "Anticip.\\ = 1",   D = CP,                       w = NULL,    a = 1L, y = "gpa_z"))
+
+fitb   <- lapply(specs, function(s) fit_cs(s$D, s$y, "region", anticipation = s$a,
+                                           weightsname = s$w, bit = 999))
+fitb[[1]] <- g_reg   # Baseline repeats the headline spec: reuse the headline fit (biters 10000)
+b_att  <- vapply(fitb, `[[`, 0,  "att")
+b_se   <- vapply(fitb, `[[`, 0,  "se")
+b_nobs <- vapply(fitb, `[[`, 0L, "n_cellyears")
+b_pre  <- vapply(specs, function(s) pre_mean(s$D, s$y), 0)
+# stars from randomization inference, one p per column (statistic matches each spec)
+b_pri  <- vapply(specs, function(s)
+  ri_one(prep_ri(s$D, s$y, wcol = s$w), wave_map(s$D), antic = s$a), 0)
+b_pri[1] <- ri$p2[["gpa_z"]]   # and the headline RI p (9,999 shared-stream draws)
+
+labs <- vapply(specs, `[[`, "", "lab"); k <- length(labs)
+tab_b <- paste0(
+  "\\begin{table}[htbp]\n   \\caption{Robustness: Effect on Entrant Prior-GPA}",
+  "\\label{tab: alloc robustness}\n",
+  "   \\centerline{\\scalebox{0.8}{\\begin{tabular}{l", strrep("c", k), "}\n      \\toprule\n",
+  "                   & ", paste(labs, collapse = " & "), "\\\\\n",
+  "                   & ", paste0("(", seq_len(k), ")", collapse = " & "), "\\\\\n      \\midrule\n",
+  row_tex("Treated", paste0(fmt(b_att), star(b_pri))),
+  row_tex("", paste0("(", fmt(b_se), ")")),
+  "      \\midrule\n",
+  row_tex("Mean (pre-treatment)", fmt(b_pre)),
+  row_tex("Observations", format(b_nobs, big.mark = ",")),
+  "      \\bottomrule\n   \\end{tabular}}}\n",
+  "   \\par\\smallskip{\\footnotesize Notes: one specification change per column; Baseline ",
+  "repeats the headline fit. Region-clustered multiplier-bootstrap standard errors in ",
+  "parentheses; stars from randomization inference on each column's own specification: ",
+  "$^{***}$p$<$0.01, $^{**}$p$<$0.05, $^{*}$p$<$0.1.}\n\\end{table}\n")
+writeLines(tab_b, "tables/alloc_robustness.tex")
+cat(tab_b)
+```
+
+## Parallel trends: event studies
+
+Dynamic ATT on entrant prior-GPA, the same configuration as the headline. The reference
+period is the year before treatment. The full dynamic path is printed with the figure;
+the figure window ends at event time +1, where every point is identified by several
+rollout waves (the +2 estimate rests on the earliest adopters against the final wave
+alone, and no not-yet-treated control remains at +3). Two formal statistics are printed
+under the figure. The exact randomization joint test of the leads is the inference of
+record: the region-to-wave permutation, family-max studentized statistic, with the
+hand-computed leads asserted against the estimator's dynamic path at every run. The
+estimator's own Wald pre-test is printed beside it; its rejection is driven by the 2017
+cohort's disaggregated cells, which are identified by a single region (Magallanes)
+against its door-year base and carry single-region t-statistics of the kind this
+project's inference standard rejects; the identical rejection appears on the superseded
+build's panel (`_pretest_diag.R`, 2026-08-16), and the anticipation-1 robustness column
+addresses the door-year base directly.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+es_one <- function(D, fname) {
+  set.seed(seed_head)
+  d <- D[!is.na(gpa_z), .(cell_id, yr, G, region, y = gpa_z)]
+  at <- att_gt(yname = "y", tname = "yr", idname = "cell_id", gname = "G", data = d,
+               control_group = "notyettreated", panel = TRUE, allow_unbalanced_panel = TRUE,
+               base_period = "universal", anticipation = 0L, bstrap = TRUE, biters = biters,
+               clustervars = "region", print_details = FALSE)
+  ed <- aggte(at, type = "dynamic", na.rm = TRUE)
+  es <- data.table(e = ed$egt, att = ed$att.egt, se = ed$se.egt)
+  # did's pre-test of parallel trends: joint Wald on the pre-treatment group-time
+  # ATTs with their full covariance (the leads share a base period, so a
+  # sum-of-squared-t approximation would get the size wrong)
+  Wstat <- as.numeric(at$W); Wp <- as.numeric(at$Wpval)
+  # full dynamic path printed below; the FIGURE window ends at e = +1, where every
+  # point is identified by several waves. e = +2 is identified only by the earliest
+  # adopters against the final wave (SE ~5x the +1 value) and e = +3 has no
+  # not-yet-treated control left; both stay in the printed table.
+  print(es[is.finite(att), .(e, att = round(att, 4), se = round(se, 4))])
+  leads_did <- es[e %in% -6:-2, setNames(att, as.character(e))]
+  es <- es[e >= -6 & e <= 1 & is.finite(att) & is.finite(se)]
+  lo <- es$att - 1.96 * es$se
+  hi <- es$att + 1.96 * es$se
+  pdf(fname, width = 7.2, height = 4.8, family = "serif")
+  par(mar = c(4.6, 5.0, 1.2, 1.2), las = 1, mgp = c(3.1, 0.8, 0),
+      cex.axis = 1.05, cex.lab = 1.2)
+  plot(es$e, es$att, type = "n",
+       ylim = range(pretty(c(lo, hi))), xlim = c(min(es$e) - 0.4, max(es$e) + 0.4),
+       xlab = "Event time (years relative to SAE adoption)",
+       ylab = "Effect on entrant prior-GPA (z)", xaxt = "n")
+  axis(1, at = min(es$e):max(es$e))
+  abline(h = 0, col = "black", lwd = 1)
+  abline(v = -0.5, col = "black", lty = 2)
+  arrows(es$e, lo, es$e, hi, length = 0.045, angle = 90, code = 3,
+         col = "black", lwd = 1.3)
+  points(es$e, es$att, pch = 21, bg = "white", col = "black", cex = 1.25, lwd = 1.4)
+  points(-1, 0, pch = 21, bg = "white", col = "black", cex = 1.25, lwd = 1.4)  # reference period
+  invisible(dev.off())
+  list(W = Wstat, p = Wp, leads = leads_did)
+}
+j_all  <- es_one(CP, "figures/alloc_event_study.pdf")
+rp_all <- ri_pretrend(CP, check = j_all$leads)
+cat(sprintf(paste0("`alloc_event_study.pdf`: exact RI joint lead test $p = %.2f$; ",
+                   "Wald pre-test $W = %.1f$, $p = %.2f$.\n"),
+            rp_all, j_all$W, j_all$p))
+```
+
+## Interpretation guards
+
+Two checks that the headline is a change in who enters, with the measurement itself
+standing still. The first outcome is the number of entrants per cell. Seats at
+over-demanded schools are set by the school and were full before and after SAE, so the
+reform should change the identity of the entrants and leave their count alone; a
+door-aligned move in the count would mean the entrant definition or the seat base shifts
+with treatment. The second outcome is the share of a cell's entrants who carry a
+prior-year GPA. The GPA outcome can only be computed for students with a graded prior
+year inside Chile, and a student who just arrived in the country has none. Migration
+into Chile rose sharply over 2017--2019; if it tracked the rollout, the entering-class
+GPA could move because the measurable share of the class moved. A flat share closes
+that door. The share is computed for grades 2--12 (the grades where a prior GPA can
+exist). Same estimator, standard errors, and randomization inference as the headline.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+CP[, sh_gpa := fifelse(n_ent > 0L, n_gpa / n_ent, NA_real_)]
+CPg <- CP[cod_nivel >= 2L]
+set.seed(seed_head)
+g_ent <- fit_cs(CP,  "n_ent",  "region")
+g_cov <- fit_cs(CPg, "sh_gpa", "region")
+p_ent <- ri_one(prep_ri(CP,  "n_ent"),  wave_map(CP))
+p_cov <- ri_one(prep_ri(CPg, "sh_gpa"), wave_map(CPg))
+
+att_g  <- c(g_ent$att, g_cov$att)
+se_g   <- c(g_ent$se,  g_cov$se)
+pri_g  <- c(p_ent, p_cov)
+prem_g <- c(pre_mean(CP, "n_ent"), pre_mean(CPg, "sh_gpa"))
+nobs_g <- c(g_ent$n_cellyears, g_cov$n_cellyears)
+
+tab_g <- paste0(
+  "\\begin{table}[htbp]\n   \\caption{Interpretation Guards: Entrant Counts and GPA Coverage}",
+  "\\label{tab: alloc guards}\n",
+  "   \\centerline{\\scalebox{0.85}{\\begin{tabular}{lcc}\n      \\toprule\n",
+  "                   & Entrants per cell & Share with prior GPA\\\\\n",
+  "                   & (1) & (2)\\\\\n      \\midrule\n",
+  row_tex("Treated", paste0(fmt(att_g), star(pri_g))),
+  row_tex("", paste0("(", fmt(se_g), ")")),
+  "      \\midrule\n",
+  row_tex("Mean (pre-treatment)", fmt(prem_g)),
+  row_tex("Observations", format(nobs_g, big.mark = ",")),
+  "      \\bottomrule\n   \\end{tabular}}}\n",
+  "   \\par\\smallskip{\\footnotesize Notes: Callaway--Sant'Anna ATT, not-yet-treated ",
+  "controls, as in the headline. Column (2) covers grades 2--12, where a prior-year GPA ",
+  "can exist. Region-clustered multiplier-bootstrap standard errors in parentheses; ",
+  "stars from randomization inference: $^{***}$p$<$0.01, $^{**}$p$<$0.05, ",
+  "$^{*}$p$<$0.1.}\n\\end{table}\n")
+writeLines(tab_g, "tables/alloc_guards.tex")
+cat(tab_g)
+```
