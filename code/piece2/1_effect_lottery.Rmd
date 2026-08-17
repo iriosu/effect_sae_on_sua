@@ -1,0 +1,271 @@
+---
+title: "Piece 2 -- Effect of Winning an SAE Lottery on College Outcomes"
+output:
+  pdf_document:
+    keep_tex: true
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# Clean ---------------------------------------------------------------
+rm(list = ls())
+
+# Libraries ---------------------------------------------------------------
+library(data.table)
+library(fixest)
+
+# RNG contract: every results chunk re-seeds 20260919 at its own top, so each exhibit's
+# random draws do not depend on which chunks ran before it. Chunks share the frame
+# objects (P, As, A) built upstream, so run the document top to bottom. The RI p-values
+# of record are the ones this file writes; earlier scripts consumed the stream in a
+# different order.
+set.seed(20260919)
+B_RI <- 9999L
+
+# The panel (built by 00_build_lottery_panel.Rmd). A copy next to this file wins;
+# otherwise the shared data folder's copy of record.
+home <- ifelse(Sys.getenv("USERPROFILE") != "", Sys.getenv("USERPROFILE"), path.expand("~"))
+panel_file <- "lottery_panel.rds"
+if (!file.exists(panel_file))
+  panel_file <- file.path(home, "Dropbox", "Effect SAE on SUA", "data", "lottery_panel.rds")
+stopifnot("panel not found next to the code or in the shared data folder" =
+            file.exists(panel_file))
+dir.create("tables", showWarnings = FALSE)
+
+fmt  <- function(x) sprintf("%.4f", x)
+star <- function(p) ifelse(p < .01, "$^{***}$",
+                    ifelse(p < .05, "$^{**}$",
+                    ifelse(p < .1,  "$^{*}$", "")))
+row_tex <- function(lbl, vals) paste0("      ", lbl, " & ", paste(vals, collapse = " & "), "\\\\\n")
+
+# the primary frame: first-choice applications, lotteries with >= W winners, loser
+# violations <= pur, nearest losers capped at the winner count
+make_frame <- function(P, W, pur, cap, fc) {
+  M <- copy(P); if (fc) M <- M[PREF == 1L]
+  CU <- M[won == 1L, .(cutoff = max(loteria), n_win = .N), by = key]; M <- merge(M, CU, by = "key")[n_win >= W]
+  M[, viol := won == 0L & loteria < cutoff]
+  PU <- M[won == 0L, .(n_los = .N, n_viol = sum(viol)), by = key]
+  M <- merge(M, PU, by = "key")[n_los >= 1L][n_viol / n_los <= pur]
+  L <- M[won == 0L & loteria >= cutoff]
+  if (cap) { setorder(L, key, loteria); L[, rk := seq_len(.N), by = key]; L <- L[rk <= n_win] }
+  rbind(M[won == 1L], L, fill = TRUE)
+}
+# within-lottery ITT, precision-weighted across lotteries; the closed form is asserted
+# equal to the lottery-fixed-effects regression at every run; stars from reshuffling
+# winners within each lottery (winner count held fixed)
+core <- function(DT, y) {
+  DT <- DT[!is.na(get(y))]; setorder(DT, key)
+  KX <- DT[, .(i0 = .I[1], n = .N, m = sum(won)), by = key][m > 0L & m < n]
+  DT <- DT[key %in% KX$key]; setorder(DT, key)
+  KX <- DT[, .(i0 = .I[1], n = .N, m = sum(won)), by = key]
+  denom <- KX[, sum(m * (n - m) / n)]; yv <- as.numeric(DT[[y]])
+  base <- DT[, .(b = mean(get(y)) * sum(won)), by = key]$b
+  obs <- (sum(yv * DT$won) - sum(base)) / denom
+  pn <- numeric(B_RI)
+  for (r in seq_len(nrow(KX))) { i0 <- KX$i0[r]; n <- KX$n[r]; m <- KX$m[r]
+    yk <- yv[i0:(i0 + n - 1L)]; pn <- pn + .colSums(yk[replicate(B_RI, sample.int(n, m))], m, B_RI) }
+  perm <- (pn - sum(base)) / denom
+  fit <- feols(as.formula(paste0(y, " ~ won | key")), data = DT, cluster = ~sch_year, fixef.rm = "none")
+  ct <- summary(fit)$coeftable
+  stopifnot("closed form must equal the regression point" = abs(unname(ct["won", 1]) - obs) < 1e-8)
+  data.table(itt = obs, se = ct["won", 2],
+             ri_p = (1 + sum(abs(perm) >= abs(obs) - 1e-12)) / (B_RI + 1),
+             n = nrow(DT), k = uniqueN(DT$key),
+             lm = DT[won == 0L, mean(get(y))], win_mean = DT[won == 1L, mean(get(y))])
+}
+```
+
+## Design
+
+Inside an over-demanded school, SAE runs a lottery among the ordinary applicants. SAE
+reserves 15% of each school's seats for low-income (prioritario) children, so one
+classroom really holds two draws: one among the low-income applicants, one among the
+rest, each with its own effective cutoff. The comparison therefore happens **within
+tier**: the unit is classroom by year by income tier, and inside that unit every child
+faced the same doors and the same odds, so winning is a coin flip by construction (the
+marginal-priority-group design of Abdulkadiroglu, Angrist, Narita and Pathak 2017; one
+school per stratum in the 2016 pilot, which predates classroom identifiers).
+The panel (one row per child per application, built and documented in
+`00_build_lottery_panel.Rmd`) supplies the tier flag for every child. The question of
+record: **does winning a contested seat reduce on-time entry into the college
+system?** Outcomes are four yes/no facts on the cohort's own schedule: promoted out of
+12th grade in the on-time year (application + 4, from the school records), and -- five
+years after the application, when the cohort reaches the college admission process --
+applied, assigned a seat, enrolled. A child with no record carries zeros. The on-time
+year is the one point every cohort reaches inside the data (the college records end at
+process 2026, which is the 2021 cohort's on-time year), so every stratum is asked the
+identical question. Each stratum keeps at least five winners, a loser
+pool consistent with its winners' cutoff (up to 10% violations), and the nearest losers
+capped at the winner count -- all computed within the stratum. Standard errors cluster
+on school by year; stars come from randomization inference, reshuffling the winners
+within each stratum 9,999 times with the winner count held fixed.
+
+## Headline
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+set.seed(20260919)
+P <- as.data.table(readRDS(panel_file))
+stopifnot("every child must carry the income-tier flag" = P[, all(!is.na(prioritario))])
+Ps <- copy(P)[, key := paste(key, prioritario)]   # stratum = classroom x year x tier
+As <- make_frame(Ps, 5L, 0.10, TRUE, TRUE)
+stopifnot("no test-track winners may sit in the frame" = As[won == 1L & test_track == TRUE, .N] == 0L)
+
+# single-cutoff diagnostics. Within a tier every child faces one effective cutoff, so a
+# loser with a strictly better number than the worst same-tier winner should not exist;
+# the violation mass is the observable test of that claim, printed before it is filtered.
+Mf <- copy(Ps)[PREF == 1L]
+CU <- Mf[won == 1L, .(cutoff = max(loteria), n_win = .N), by = key]
+Mf <- merge(Mf, CU, by = "key")
+f1 <- uniqueN(Mf$key); Mf <- Mf[n_win >= 5L]; f2 <- uniqueN(Mf$key)
+Mf[, viol := won == 0L & loteria < cutoff]
+PU <- Mf[won == 0L, .(n_los = .N, n_viol = sum(viol)), by = key]
+Mf <- merge(Mf, PU, by = "key")[n_los >= 1L]; f3 <- uniqueN(Mf$key)
+keep <- Mf[n_viol / n_los <= 0.10]; f4 <- uniqueN(keep$key)
+cat(sprintf(paste0("Stratum funnel: %d with a winner; %d with at least 5 winners; %d also ",
+                   "with a loser; %d pass the 10%% violation screen.\n\n"), f1, f2, f3, f4))
+vd <- unique(keep[, .(key, vintage, n_viol, n_los)])
+vs <- vd[, .(strata = .N, with_any_violation = sum(n_viol > 0),
+             violating_losers = sum(n_viol), losers = sum(n_los)), by = vintage]
+for (i in seq_len(nrow(vs))) cat(sprintf(
+  "Vintage %s: %d surviving strata, %d contain a violation; %d violating losers of %d (share %.4f).\n\n",
+  vs$vintage[i], vs$strata[i], vs$with_any_violation[i], vs$violating_losers[i],
+  vs$losers[i], vs$violating_losers[i] / vs$losers[i]))
+rm(Mf, CU, PU, keep, vd, vs)
+
+res <- rbindlist(lapply(c("grad_ontime", "applied", "assigned", "enrolled"),
+                        function(y) core(As, y)[, outcome := y]))
+fwrite(res, "tables/lottery_headline_values.csv")
+
+tab <- paste0(
+  "\\begin{table}[htbp]\n   \\caption{Effect of Winning an SAE Lottery on On-Time Outcomes}",
+  "\\label{tab: lottery headline}\n",
+  "   \\centerline{\\scalebox{0.85}{\\begin{tabular}{lcccc}\n      \\toprule\n",
+  "                   & Grad.\\ on time & Applied & Assigned & Enrolled\\\\\n",
+  "                   & (1) & (2) & (3) & (4)\\\\\n      \\midrule\n",
+  row_tex("Won the lottery", paste0(fmt(res$itt), star(res$ri_p))),
+  row_tex("", paste0("(", fmt(res$se), ")")),
+  "      \\midrule\n",
+  row_tex("Loser-arm mean", fmt(res$lm)),
+  row_tex("Observations", format(res$n, big.mark = ",")),
+  row_tex("Strata (classroom x year x tier)", format(res$k, big.mark = ",")),
+  "      \\bottomrule\n   \\end{tabular}}}\n",
+  "   \\par\\smallskip{\\footnotesize Notes: within-stratum comparison of winners and ",
+  "nearest losers; a stratum is one classroom (one school in the 2016 pilot) in one ",
+  "application year within one income tier, so every compared child faced the same ",
+  "admission doors. First-choice applications, cohorts 2016--2021. Grad.\\ on time = ",
+  "promoted out of 12th grade in the on-time year (application + 4, school records); ",
+  "college outcomes at application year + 5; no record = 0 throughout. School-by-year ",
+  "clustered standard errors in parentheses. Stars from ",
+  "randomization inference (9,999 within-stratum reshuffles): $^{***}$p$<$0.01, ",
+  "$^{**}$p$<$0.05, $^{*}$p$<$0.1.}\n\\end{table}\n")
+writeLines(tab, "tables/lottery_headline.tex")
+cat(tab)
+cat(sprintf("\nHeadline frame: %s applications, %s strata.\n",
+            format(nrow(As), big.mark = ","), format(uniqueN(As$key), big.mark = ",")))
+```
+
+## The treatment happened
+
+Two facts from the enrolment census establish that the draw did what the headline
+assumes. First, winners and losers attend different schools: in the entry year, winners
+are at the lottery school and losers are overwhelmingly elsewhere. Second, both arms are
+enrolled in some school, so the headline compares attending this school against
+attending other schools -- with the difference in schools caused by the random draw and
+nothing else.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+set.seed(20260919)
+tk <- rbind(
+  core(As, "at_y1")[, m := "at the lottery school, entry year"],
+  core(As, "in_any")[, m := "enrolled at any school, entry year"], fill = TRUE)
+fwrite(tk, "tables/lottery_takeup_values.csv")
+for (i in seq_len(nrow(tk))) { b <- tk[i]
+  cat(sprintf("%s: winners %.4f, losers %.4f, difference %+.4f%s (%.4f), RI p %.4f.\n\n",
+              b$m, b$win_mean, b$lm, b$itt, gsub("[$^{}]", "", star(b$ri_p)), b$se, b$ri_p)) }
+```
+
+## Balance
+
+On the pooled frame (one classroom = one lottery, tiers mixed), is winning related to
+being low-income or female? A clean draw puts both differences at zero; this is the
+direct measurement of whether the quota tilts the winner group.
+
+Inside a stratum the tier is constant by construction, so the stratified frame's own
+balance tests use the predetermined traits that still vary within stratum: gender, and
+the strongest one the data offers, the child's 8th-grade GPA in the application year.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+set.seed(20260919)
+A <- make_frame(P, 5L, 0.10, TRUE, TRUE)   # pooled: tiers mixed inside each lottery
+stopifnot("no test-track winners may sit in the pooled frame" = A[won == 1L & test_track == TRUE, .N] == 0L)
+bal <- rbindlist(lapply(c("prioritario", "female"), function(y) core(A, y)[, covar := y]))
+bs  <- core(As, "female")[, covar := "female (within stratum)"]
+bg8 <- core(As[!is.na(gpa8_z)], "gpa8_z")[, covar := "8th-grade GPA (z, within stratum)"]
+bal <- rbind(bal, bs, bg8, fill = TRUE)
+fwrite(bal, "tables/lottery_balance_values.csv")
+cat(sprintf("8th-grade GPA matched: winners %.4f, losers %.4f.\n\n",
+            As[won == 1L, mean(!is.na(gpa8_z))], As[won == 0L, mean(!is.na(gpa8_z))]))
+for (i in seq_len(nrow(bal))) { b <- bal[i]
+  cat(sprintf("%s: winner-arm mean %.4f, loser-arm mean %.4f, difference %+.4f%s (%.4f), RI p %.4f.\n\n",
+              b$covar, b$win_mean, b$lm, b$itt, gsub("[$^{}]", "", star(b$ri_p)), b$se, b$ri_p)) }
+```
+
+## Robustness
+
+Five checks, one change each, all against the stratified headline. *Pooled*: one
+classroom = one lottery with tiers mixed, the simpler frame the stratified design
+refines. *No-priority tier only* and *Low-income tier only*: the headline frame
+restricted to one tier at a time, so each tier's answer is visible on its own. *Drop
+special-admission strata*: some schools admit part of the class through a
+special-education ordering the fair-coin-flip filter cannot see; a child admitted that
+way who also drew a lottery number would sit in the winner group without having won a
+coin flip -- every stratum containing such a winner is dropped. *Drop same-school
+losers*: a child coded as a loser at their first-choice classroom can have been placed
+in a different classroom of the same school; those children are dropped. The 2016 pilot
+files carry no admission-ordering columns; the pilot's screen is its priority-code
+filter, applied in the build.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+set.seed(20260919)
+pk <- As[won == 1L & pie_track == TRUE, unique(key)]
+cat(sprintf("Special-education-ordering winners: %d, in %d strata. Same-school losers: %d.\n\n",
+            As[won == 1L & pie_track == TRUE, .N], length(pk),
+            As[won == 0L & !is.na(rbd_a) & rbd_a == RBD, .N]))
+specs <- list(
+  list(lab = "Pooled (tiers mixed)",             D = A),
+  list(lab = "No-priority tier only",            D = As[prioritario == 0L]),
+  list(lab = "Low-income tier only",             D = As[prioritario == 1L]),
+  list(lab = "Drop special-admission strata",    D = As[!key %in% pk]),
+  list(lab = "Drop same-school losers",          D = As[!(won == 0L & !is.na(rbd_a) & rbd_a == RBD)]))
+rows <- ""; rvals <- list()
+for (s in specs) {
+  r <- rbindlist(lapply(c("grad_ontime", "applied", "assigned", "enrolled"),
+                        function(y) core(s$D, y)[, outcome := y]))
+  rvals[[s$lab]] <- copy(r)[, check := s$lab]
+  rows <- paste0(rows,
+    row_tex(s$lab, paste0(fmt(r$itt), star(r$ri_p))),
+    row_tex("", paste0("(", fmt(r$se), ")")),
+    row_tex("\\quad Observations / strata",
+            c(paste0(format(r$n[1], big.mark = ","), " / ", format(r$k[1], big.mark = ",")), "", "", "")))
+}
+fwrite(rbindlist(rvals), "tables/lottery_robustness_values.csv")
+tab_r <- paste0(
+  "\\begin{table}[htbp]\n   \\caption{Robustness: Frame and Arm-Composition Checks}",
+  "\\label{tab: lottery robustness}\n",
+  "   \\centerline{\\scalebox{0.85}{\\begin{tabular}{lcccc}\n      \\toprule\n",
+  "                   & Grad.\\ on time & Applied & Assigned & Enrolled\\\\\n",
+  "                   & (1) & (2) & (3) & (4)\\\\\n      \\midrule\n",
+  rows,
+  "      \\bottomrule\n   \\end{tabular}}}\n",
+  "   \\par\\smallskip{\\footnotesize Notes: same estimator, clustering, and ",
+  "randomization inference as the headline; outcomes as defined there; one row block ",
+  "per check. The pooled row ",
+  "counts lotteries; all other rows count strata. ",
+  "$^{***}$p$<$0.01, $^{**}$p$<$0.05, $^{*}$p$<$0.1.}\n\\end{table}\n")
+writeLines(tab_r, "tables/lottery_robustness.tex")
+cat(tab_r)
+```

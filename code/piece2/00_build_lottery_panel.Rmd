@@ -1,0 +1,345 @@
+---
+title: "Piece 2 -- Building the Lottery Panel"
+output:
+  pdf_document:
+    keep_tex: true
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+This document builds `lottery_panel.rds`: one row per child per school lottery at the
+9th-grade door, application years 2016--2021, with each child's on-time outcomes --
+promoted out of 12th grade on schedule, and the college outcomes five years after
+application. The analysis file `1_effect_lottery.Rmd` reads only this panel.
+
+**Inputs.** All resolve through one chain: the shared data folder
+(`~/Dropbox/Effect SAE on SUA/data`), then the project's `code/data` mirror, then the
+Piece 1 `data/` folder. The packed files are built from the public releases by
+`code/piece1/00a_pack_raw_data.R`.
+
+- `sae_admissions.rds` (packed) -- SAE applications with lottery numbers and priority
+  flags (C1), placements (D1), and applicant characteristics (B1), processes 2016--2025.
+- `paes_2026.rds` (packed) -- the 2026 college process: registrants with scores,
+  selection states, enrolment.
+- `data_students_2004_2025.rds` (shared, canonical) -- the college system's student
+  file: applied/assigned/enrolled plus scores, processes through 2025.
+- `entrant_composition_panel.rds` (shared; Piece 1's shipped panel) -- supplies the
+  over-demanded school list, so both pieces use one list from one artifact.
+- `panel_performance_2002_2023.rds` (shared, canonical) -- the graded panel: 8th-grade
+  GPA in the application year, and 12th-grade promotion records through 2023.
+- `rendimiento_2024_2025.rds` (packed) -- 12th-grade promotion records for 2024--2025,
+  so grad on time reaches the last cohorts' on-time years.
+- `matricula_2011_2023.rds` and `matricula_2024_2025.rds` (packed) -- the annual
+  enrolment census and its supplement: the take-up and persistence flags.
+
+**Output.** `lottery_panel.rds`, one row per contested regular application at a tagged
+9th-grade school: lottery id, child id, won/lost, preference rank, lottery number,
+application year, grad on time (promoted out of 12th grade in the on-time year,
+application + 4; no record or not promoted = 0), the three college outcomes at
+application year + 5 (non-appearance = 0), a tracked flag (the child has any
+college-process record that year), the
+low-income and gender flags, the child's 8th-grade GPA in the application year
+(z-scored nationally within year; missing where no graded record matches), and the
+census take-up flags: enrolled at the lottery school in each high-school year (entry
+through 12th grade), enrolled at the child's own SAE-assigned school at entry (missing
+where unassigned), enrolled at any school at entry, and the years-attended count. The winner/purity/cap filters are applied at analysis time,
+so every robustness dial reads this one file.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+suppressPackageStartupMessages({ library(data.table) })
+setDTthreads(4); options(warn = 1)
+t0 <- proc.time()
+home <- ifelse(Sys.getenv("USERPROFILE") != "", Sys.getenv("USERPROFILE"), path.expand("~"))
+ROOT <- file.path(home, "Dropbox", "Effect of Centralization")
+OUTF <- "lottery_panel.rds"
+data_path <- function(f) {
+  for (p in c(file.path(home, "Dropbox", "Effect SAE on SUA", "data", f),
+              file.path(ROOT, "code", "data", f),
+              file.path(ROOT, "Updated Paper Spine", "Piece 1", "data", f)))
+    if (file.exists(p)) return(p)
+  stop(sprintf("input file not found in any data location: %s", f))
+}
+say <- function(...) { cat(sprintf(...), "\n"); flush.console() }
+```
+
+## Stage 1 -- the college outcome table
+
+One row per student per college process year 2018--2026 with three 0/1 outcomes.
+*Applied*: the student submitted a preference list (or enrolled). *Assigned*: the
+system offered them a seat. *Enrolled*: they matriculated. Years 2018--2025 come from
+the canonical student file; 2026 comes from the packed raw files under definitions
+validated against process 2025 (assigned 158,218/158,218 exact; enrolled exact). The
+exam score (`exam_lm`) recodes each component to missing before averaging, so a student
+absent from one exam carries their sat score; earlier builds averaged first, which
+halved the score of single-exam absentees in the 2018--2025 rows (diagnosed in the
+2026-08-16 review). The three outcome columns are asserted unchanged against the
+verified panel wherever that reference exists.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+D <- as.data.table(readRDS(data_path("data_students_2004_2025.rds"))); setnames(D, toupper(names(D)))
+stopifnot("student file has APPLIED/ASSIGNED/ENROLLED" =
+            all(c("APPLIED", "ASSIGNED", "ENROLLED") %in% names(D)))
+P1 <- D[YEAR %in% 2018:2025 & !is.na(MRUN),
+        .(mrun = as.integer(MRUN), proc = as.integer(YEAR),
+          applied = as.integer(APPLIED == 1),
+          assigned = as.integer(ASSIGNED == 1), enrolled = as.integer(ENROLLED == 1),
+          L = as.numeric(LENGUAJE_ACTUAL), M = as.numeric(MATEMATICA_ACTUAL),
+          nem = as.numeric(NEM), ranking = as.numeric(RANKING))]
+rm(D); invisible(gc())
+P1[is.na(applied), applied := 0L]
+# a 0 is absence, never a score: recode each exam COMPONENT before averaging
+P1[!is.na(L) & L <= 0, L := NA_real_][!is.na(M) & M <= 0, M := NA_real_]
+P1[, exam_lm := rowMeans(cbind(L, M), na.rm = TRUE)][is.nan(exam_lm), exam_lm := NA_real_]
+P1[, c("L", "M") := NULL]
+P1[!is.na(nem) & nem <= 0, nem := NA_real_]
+P1[!is.na(ranking) & ranking <= 0, ranking := NA_real_]
+P1 <- unique(P1, by = c("mrun", "proc"))
+say("student-file rows 2018-2025: %s", format(nrow(P1), big.mark = ","))
+
+PAES <- readRDS(data_path("paes_2026.rds"))
+A <- PAES$a
+num <- function(x) as.numeric(sub(",", ".", as.character(x), fixed = TRUE))
+for (c in c("PTJE_NEM", "PTJE_RANKING", "CLEC_REG_ACTUAL", "MATE1_REG_ACTUAL")) set(A, j = c, value = num(A[[c]]))
+A[CLEC_REG_ACTUAL <= 0, CLEC_REG_ACTUAL := NA_real_][MATE1_REG_ACTUAL <= 0, MATE1_REG_ACTUAL := NA_real_]
+A[PTJE_NEM <= 0, PTJE_NEM := NA_real_][PTJE_RANKING <= 0, PTJE_RANKING := NA_real_]
+A <- unique(A, by = "MRUN")
+asg26  <- PAES$c[ESTADO_PREF == 24, unique(MRUN)]
+appl26 <- unique(PAES$c$MRUN)
+enr26  <- unique(PAES$d$MRUN)
+P2 <- A[, .(mrun = as.integer(MRUN), proc = 2026L,
+            applied  = as.integer(MRUN %in% appl26 | MRUN %in% enr26),
+            assigned = as.integer(MRUN %in% asg26),
+            enrolled = as.integer(MRUN %in% enr26),
+            nem = PTJE_NEM, ranking = PTJE_RANKING,
+            exam_lm = rowMeans(cbind(CLEC_REG_ACTUAL, MATE1_REG_ACTUAL), na.rm = TRUE))]
+P2[is.nan(exam_lm), exam_lm := NA_real_]
+rm(PAES, A); invisible(gc())
+
+CO <- rbind(P1, P2, fill = TRUE); rm(P1, P2)
+stopifnot("proc range 2018-2026" = min(CO$proc) == 2018L && max(CO$proc) == 2026L,
+          "outcomes are 0/1" = all(CO$applied %in% 0:1) && all(CO$assigned %in% 0:1) && all(CO$enrolled %in% 0:1),
+          "applied >= assigned on totals" = sum(CO$applied) >= sum(CO$assigned))
+setkey(CO, mrun, proc)
+say("outcome table: %s rows | applied %s assigned %s enrolled %s",
+    format(nrow(CO), big.mark = ","), format(sum(CO$applied), big.mark = ","),
+    format(sum(CO$assigned), big.mark = ","), format(sum(CO$enrolled), big.mark = ","))
+
+# guard: the three outcome columns must equal the verified panel wherever it exists
+ref <- file.path(ROOT, "explorations", "2026-08-12_enrollment_panel_probe", "output",
+                 "college_outcomes_2018_2026.rds")
+if (file.exists(ref)) {
+  R <- as.data.table(readRDS(ref))
+  MM <- merge(CO[, .(mrun, proc, applied, assigned, enrolled)],
+              R[, .(mrun, proc, a = applied, s = assigned, e = enrolled)],
+              by = c("mrun", "proc"), all = TRUE)
+  stopifnot("outcomes must match the verified panel row for row" =
+              MM[applied != a | assigned != s | enrolled != e, .N] == 0L &&
+              MM[is.na(applied) | is.na(a), .N] == 0L)
+  say("outcome columns identical to the verified reference panel (%s rows)", format(nrow(MM), big.mark = ","))
+  rm(R, MM); invisible(gc())
+} else say("reference panel not on this machine; identity guard skipped")
+saveRDS(CO, "college_outcomes_2018_2026.rds")
+```
+
+## Stage 2 -- the over-demanded school list (from Piece 1)
+
+Both pieces use one list: the schools in Piece 1's shipped panel. Its 9th-grade cells
+are the schools whose 9th-grade seats were over-demanded in every observed year.
+
+This list supersedes the earlier exploration-era list (`panel_always_overdemanded_v2`)
+by the consistency order of 2026-08-16: both pieces read one list from one shipped
+artifact. The delta against the earlier list is printed whenever that file is present.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+EC <- as.data.table(readRDS(data_path("entrant_composition_panel.rds")))
+CELLS <- unique(EC[cod_nivel == 9L, .(rbd)]); rm(EC); invisible(gc())
+say("over-demanded 9th-grade schools (Piece 1 list): %s", format(nrow(CELLS), big.mark = ","))
+v2 <- file.path(ROOT, "explorations", "2026-08-05_priority_quota", "output",
+                "panel_always_overdemanded_v2.csv")
+if (file.exists(v2)) {
+  O <- unique(fread(v2)[cod_nivel == 9L, .(rbd)])
+  say("list provenance: earlier v2 list %d schools | this list %d | removed %d | added %d",
+      nrow(O), nrow(CELLS), length(setdiff(O$rbd, CELLS$rbd)), length(setdiff(CELLS$rbd, O$rbd)))
+  rm(O)
+}
+```
+
+## Stage 3 -- the lottery frame
+
+For each application year 2016--2021: read the packed applications and placements; keep
+9th-grade applications at listed schools; keep the applications that were a fair coin
+flip (drop rows the system auto-added for continuing students, and children holding
+sibling, staff-child, returning-student, already-enrolled, or special-education
+priority -- the 2016 pilot files carry one priority code instead, kept for its
+prioritario and no-priority values); keep contested applications (ranked at least as
+high as the child's final placement). A lottery is one classroom in one year (one
+school in one year for the 2016 pilot). Winner = the placement file put the child
+there. One case needs a stated rule: a placed child whose placement school appears on
+none of their application rows (this occurs only in the 2016 pilot file) counts as
+having lost every listed lottery -- the contested screen cannot bind for them, so all
+their listed applications are kept as losses; the build prints how many children and
+frame rows this rule touches. Each child's outcomes are looked up at application year + 5; a child with no
+record that year has all three outcomes 0 and tracked 0. The low-income flag and
+gender come from the applicant-characteristics table of the same application year.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+SAE <- readRDS(data_path("sae_admissions.rds"))
+stopifnot("packed SAE file carries the lottery columns" =
+            all(c("loteria_original", "tipo_prioridad", "es_pie", "vintage") %in% names(SAE$c1)),
+          "packed SAE file carries the admission-ordering columns" =
+            all(c("orden_pie", "orden_alta_exigencia_transicion") %in% names(SAE$c1)),
+          "packed SAE file carries the placed course" = "cod_curso_admitido" %in% names(SAE$d1),
+          "B1 must cover every application year" = all(2016:2021 %in% unique(SAE$b1$proc)))
+
+build_raw <- function(pr) {
+  C <- SAE$c1[proc == pr & cod_nivel == 9L]; D <- SAE$d1[proc == pr & cod_nivel == 9L]
+  is16 <- C$vintage[1] == "2016"
+  C[is.na(agregada_por_continuidad), agregada_por_continuidad := 0L]
+  if (is16) {
+    C[, regular := agregada_por_continuidad != 1L & tipo_prioridad %in% c(4L, 7L)]
+    DA <- unique(D[!is.na(rbd_admitido), .(mrun, rbd_a = rbd_admitido)], by = "mrun")
+    AR <- merge(C[, .(mrun, rbd, PREF = preferencia_postulante)],
+                DA[, .(mrun, rbd = rbd_a, hit = 1L)], by = c("mrun", "rbd"), all.x = TRUE)
+    ARr <- AR[hit == 1L, .(a_rank = min(PREF)), by = mrun]
+    C <- merge(C, ARr, by = "mrun", all.x = TRUE); C[, a_rank := as.double(a_rank)][is.na(a_rank), a_rank := Inf]
+    C <- merge(C, DA, by = "mrun", all.x = TRUE)
+    C[, won := !is.na(rbd_a) & rbd == rbd_a]; C[, contested := preferencia_postulante <= a_rank]
+    C[, key := paste(pr, rbd)]
+  } else {
+    DA <- unique(D[!is.na(rbd_admitido), .(mrun, rbd_a = rbd_admitido, curso_a = cod_curso_admitido)], by = "mrun")
+    AR <- merge(C[, .(mrun, rbd, cod_curso, PREF = preferencia_postulante)],
+                DA[, .(mrun, rbd = rbd_a, cod_curso = curso_a, hit = 1L)],
+                by = c("mrun", "rbd", "cod_curso"), all.x = TRUE)
+    ARr <- AR[hit == 1L, .(a_rank = min(PREF)), by = mrun]
+    C <- merge(C, ARr, by = "mrun", all.x = TRUE); C[, a_rank := as.double(a_rank)][is.na(a_rank), a_rank := Inf]
+    C[, regular := agregada_por_continuidad != 1L &
+        (is.na(prioridad_matriculado) | prioridad_matriculado == 0) &
+        (is.na(prioridad_hermano) | prioridad_hermano == 0) &
+        (is.na(prioridad_hijo_funcionario) | prioridad_hijo_funcionario == 0) &
+        (is.na(prioridad_exalumno) | prioridad_exalumno == 0) &
+        (is.na(es_pie) | es_pie == 0)]
+    C <- merge(C, DA[, .(mrun, rbd_a, curso_a)], by = "mrun", all.x = TRUE)
+    C[, won := !is.na(rbd_a) & rbd == rbd_a & cod_curso == curso_a]
+    C[, contested := preferencia_postulante <= a_rank]
+    C[, key := paste(pr, rbd, cod_curso)]
+  }
+  M <- C[regular == TRUE & contested == TRUE & rbd %in% CELLS$rbd & !is.na(loteria_original)]
+  ol <- unique(C[!is.na(rbd_a) & is.infinite(a_rank), mrun])   # placed at an off-list school
+  if (length(ol)) say(paste0("  %d off-list placements: %d placed children have a placement school on ",
+    "none of their application rows; kept as losses on every listed application (%d frame rows)"),
+    pr, length(ol), M[mrun %in% ol, .N])
+  nb <- function(x) !is.na(x) & trimws(as.character(x)) != "" & trimws(as.character(x)) != "0"
+  M[, .(key, MRUN = as.integer(mrun), RBD = rbd, won = as.integer(won),
+        PREF = as.integer(preferencia_postulante), loteria = as.numeric(loteria_original),
+        proc = pr, vintage = fifelse(is16, "2016", "std"),
+        rbd_a,                                        # where the child was actually placed
+        tipo = tipo_prioridad,                        # 2016 pilot's processed priority code
+        test_track = nb(orden_alta_exigencia_transicion),  # academic test-track ordering present
+        pie_track  = nb(orden_pie))]                       # special-education ordering present
+}
+RAW <- rbindlist(lapply(2016:2021, build_raw))
+say("raw frame: %s applications | %s lotteries", format(nrow(RAW), big.mark = ","),
+    format(uniqueN(RAW$key), big.mark = ","))
+print(RAW[, .(apps = .N, lotteries = uniqueN(key), first_choice = sum(PREF == 1L)), by = proc][order(proc)])
+
+# outcomes at application year + 5; tracked = any college-process record that year
+q <- data.table(mrun = RAW$MRUN, proc = RAW$proc + 5L); o <- CO[q, on = .(mrun, proc)]
+RAW[, tracked := as.integer(!is.na(o$applied))]
+RAW[, `:=`(applied = fifelse(is.na(o$applied), 0L, o$applied),
+           assigned = fifelse(is.na(o$assigned), 0L, o$assigned),
+           enrolled = fifelse(is.na(o$enrolled), 0L, o$enrolled),
+           sch_year = paste(proc, RBD))]
+# low-income flag and gender from the applicant table of the same application year.
+# An NA flag would mean a frame child missing from the applicant table -- that fails
+# loudly below; duplicates must agree on the flags before deduplication keeps one row.
+bdup <- SAE$b1[, .(nfl = uniqueN(paste(prioritario, es_mujer))), by = .(proc, mrun)][nfl > 1L, .N]
+stopifnot("duplicate B1 rows must agree on the flags" = bdup == 0L)
+B <- unique(SAE$b1[, .(proc, MRUN = as.integer(mrun), prioritario = as.integer(prioritario == 1),
+                       female = as.integer(es_mujer == 1))], by = c("proc", "MRUN"))
+RAW <- merge(RAW, B, by = c("proc", "MRUN"), all.x = TRUE)
+rm(SAE, B, o, q, CO); invisible(gc())
+stopifnot("every frame child must carry the income-tier flag" = !anyNA(RAW$prioritario),
+          "every frame child must carry the gender flag" = !anyNA(RAW$female))
+
+# 2016 pilot: the analysis stratifies on the predetermined applicant flag; the pilot's
+# own processed priority code (4 = prioritario tier, 7 = no-priority tier) is printed
+# against it so the alignment is on the record, then the code column is dropped.
+say("2016 pilot crosstab, processed priority code x applicant low-income flag:")
+print(RAW[vintage == "2016", .N, by = .(tipo, prioritario)][order(tipo, prioritario)])
+RAW[, tipo := NULL]
+
+# predetermined achievement: the child's 8th-grade GPA in the application year, from the
+# canonical graded panel, z-scored nationally within year. Missing where no graded
+# record matches (match rates print; missingness is legitimate, never filled).
+PF <- as.data.table(readRDS(data_path("panel_performance_2002_2023.rds")))
+G8 <- PF[COD_GRADO == 8L & COD_ENSE == 110L & AGNO %in% 2016:2021 &
+         !is.na(PROM_GRAL) & PROM_GRAL >= 1 & PROM_GRAL <= 7, .(MRUN, AGNO, PROM_GRAL)]
+YM <- c(310L, 410L, 510L, 610L, 710L, 810L, 910L)     # 12th-grade school types (media)
+G12 <- unique(PF[COD_ENSE %in% YM & COD_GRADO == 4L & AGNO %in% 2020:2023,
+                 .(MRUN, agno = AGNO, sit = SIT_FIN_R)])
+rm(PF); invisible(gc())
+G8 <- G8[, .(gpa8 = mean(PROM_GRAL)), by = .(MRUN, AGNO)]
+G8[, gpa8_z := (gpa8 - mean(gpa8)) / sd(gpa8), by = AGNO]
+RAW[, gpa8_z := G8[RAW, on = .(MRUN, AGNO = proc), x.gpa8_z]]
+rm(G8); invisible(gc())
+say("8th-grade GPA matched: winners %.4f | losers %.4f",
+    RAW[won == 1L, mean(!is.na(gpa8_z))], RAW[won == 0L, mean(!is.na(gpa8_z))])
+
+# take-up and persistence: enrolment at the lottery school in each high-school year
+# (entry = application+1 = 9th grade, through entry+3 = 12th grade), enrolment at the
+# child's own SAE-assigned school at entry (NA where unassigned), and enrolment at any
+# school at entry. All from the census April snapshots; the last cohorts' 12th-grade
+# years come from the 2024-2025 supplement pack.
+MATC <- readRDS(data_path("matricula_2011_2023.rds"))
+MATS <- readRDS(data_path("matricula_2024_2025.rds"))
+ENT <- unique(rbind(MATC[agno %in% 2017:2023, .(agno, MRUN, RBD)],
+                    MATS[, .(agno, MRUN, RBD)]))
+rm(MATC, MATS); invisible(gc())
+for (k in 0:3) {
+  qk <- data.table(MRUN = RAW$MRUN, RBD = RAW$RBD, agno = RAW$proc + 1L + k)
+  RAW[, (paste0("at_y", k + 1L)) := as.integer(!is.na(ENT[qk, on = .(MRUN, RBD, agno), which = TRUE]))]
+}
+qa <- data.table(MRUN = RAW$MRUN, RBD = RAW$rbd_a, agno = RAW$proc + 1L)
+RAW[, at_assigned := fifelse(is.na(rbd_a), NA_integer_,
+                             as.integer(!is.na(ENT[qa, on = .(MRUN, RBD, agno), which = TRUE])))]
+E2 <- unique(ENT[, .(MRUN, agno)])
+RAW[, in_any := as.integer(!is.na(E2[data.table(MRUN = RAW$MRUN, agno = RAW$proc + 1L),
+                                     on = .(MRUN, agno), which = TRUE]))]
+RAW[, yrs_at_school := at_y1 + at_y2 + at_y3 + at_y4]
+rm(ENT, E2, qa, qk); invisible(gc())
+
+# graduation on time: promoted out of 12th grade (final status P) in the on-time year
+# (application + 4). 12th-grade records 2020-2023 come from the canonical graded panel,
+# 2024-2025 from the rendimiento supplement pack. No 12th-grade record in that year, or
+# a record without promotion, counts 0. Mirrors the audited 40_final_three.R
+# construction (2026-08-13).
+RND <- as.data.table(readRDS(data_path("rendimiento_2024_2025.rds")))
+G12 <- unique(rbind(G12, RND[COD_ENSE %in% YM & COD_GRADO == 4L,
+                             .(MRUN, agno, sit = SIT_FIN_R)]))
+rm(RND); invisible(gc())
+stopifnot("12th-grade records must cover every on-time year 2020-2025" =
+            all(2020:2025 %in% unique(G12$agno)))
+GPm <- unique(G12[sit == "P", .(MRUN, agno)])
+RAW[, grad_ontime := as.integer(!is.na(GPm[data.table(MRUN = RAW$MRUN, agno = RAW$proc + 4L),
+                                           on = .(MRUN, agno), which = TRUE]))]
+rm(G12, GPm); invisible(gc())
+say("promoted out of 12th on time: winners %.4f | losers %.4f",
+    RAW[won == 1L, mean(grad_ontime)], RAW[won == 0L, mean(grad_ontime)])
+say("at the lottery school, years 1-4: winners %.4f %.4f %.4f %.4f | losers %.4f %.4f %.4f %.4f",
+    RAW[won == 1L, mean(at_y1)], RAW[won == 1L, mean(at_y2)],
+    RAW[won == 1L, mean(at_y3)], RAW[won == 1L, mean(at_y4)],
+    RAW[won == 0L, mean(at_y1)], RAW[won == 0L, mean(at_y2)],
+    RAW[won == 0L, mean(at_y3)], RAW[won == 0L, mean(at_y4)])
+
+stopifnot("one row per child per lottery" = nrow(RAW) == uniqueN(RAW, by = c("key", "MRUN")),
+          "every cohort present" = identical(sort(unique(RAW$proc)), 2016:2021),
+          "outcomes are 0/1" = all(RAW$applied %in% 0:1) && all(RAW$assigned %in% 0:1) && all(RAW$enrolled %in% 0:1))
+saveRDS(RAW, OUTF)
+say("wrote %s: %s rows | %s lotteries | prioritario known %.4f | female known %.4f | %.1f min",
+    OUTF, format(nrow(RAW), big.mark = ","), format(uniqueN(RAW$key), big.mark = ","),
+    RAW[, mean(!is.na(prioritario))], RAW[, mean(!is.na(female))],
+    (proc.time() - t0)[["elapsed"]] / 60)
+```

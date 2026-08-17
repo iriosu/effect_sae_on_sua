@@ -55,8 +55,8 @@ student-level audit classifying every disagreement) is documented in
 
 | File | Role |
 |------|------|
-| `00a_pack_raw_data.R` | **Packing.** Reads the 55 raw MINEDUC csv files once → the three rds files in `data/`. Only needed to repack from the original public releases. |
-| `data/` | Fallback location for the three packed inputs: `sae_admissions.rds`, `matricula_2011_2023.rds`, `alumnos_sep_2012_2023.rds` (~0.4 GB; the copies of record live in the shared data folder). |
+| `00a_pack_raw_data.R` | **Packing.** Reads the 72 raw public csv files once → six rds files in `data/` serving both pieces (Piece 1 uses the first three; `paes_2026.rds`, `matricula_2024_2025.rds`, and `rendimiento_2024_2025.rds` serve Piece 2). Only needed to repack from the original public releases. |
+| `data/` | Fallback location for the packed inputs: `sae_admissions.rds`, `matricula_2011_2023.rds`, `alumnos_sep_2012_2023.rds`, `paes_2026.rds`, `matricula_2024_2025.rds`, `rendimiento_2024_2025.rds` (the copies of record live in the shared data folder). |
 | `00_build_entrant_panel.Rmd` | **Build.** The three packed files + canonical panels → `entrant_composition_panel.rds`. Documents every input and construction step. |
 | `entrant_composition_panel.rds` | The analysis panel (one row per always-over-demanded school-grade cell × year; 97,381 rows, 8,958 cells, 2012–2023). Shipped so the analysis runs without rebuilding. Built 2026-08-16 by the shipped build code; MD5 `8ccec73b5955b723485195d5085b669d`. |
 | `run_log_2026-08-16.txt` | Console log of the record analysis run: every table, the full dynamic path, and both pre-trend statistics as printed. |
@@ -74,13 +74,16 @@ project `code/data/`), which the coauthors already hold:
 - `sae_data_2016_2023.rds` — the (COD_ENSE, COD_GRADO) → SAE-level map and declared capacity.
 - `panel_ee_2004_2025_homogenized.rds` — school region.
 
-**Packed raw MINEDUC files** — three rds files (~0.4 GB total), built once from the
-public releases by `00a_pack_raw_data.R`. They live in the shared data folder alongside
-the canonical panels (this package's `data/` folder works as a fallback location; the
-build checks the shared folder first). They keep exactly the columns the pipeline reads;
-the packing script documents the sources and is the place to repoint if you re-download
-the originals. The panel built from these three files is verified identical, value by
-value, to the panel built directly from the 55 raw csv files (2026-08-16).
+**Packed raw files** — six rds files, built once from the public releases by
+`00a_pack_raw_data.R` (Piece 1's build reads the three below; the packer also writes
+`paes_2026.rds`, `matricula_2024_2025.rds`, and `rendimiento_2024_2025.rds` for
+Piece 2). They live in the shared
+data folder alongside the canonical panels (this package's `data/` folder works as a
+fallback location; the build checks the shared folder first). They keep exactly the
+columns the pipelines read; the packing script documents the sources and is the place
+to repoint if you re-download the originals. The Piece 1 panel built from the packed
+files is verified identical, value by value, to the panel built directly from the raw
+csv files (2026-08-16).
 
 - `sae_admissions.rds` — the SAE offer (A1, processes 2016–2025; the 2016 table times
   the Magallanes door), application (C1) and assignment (D1) tables, processes

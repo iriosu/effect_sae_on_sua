@@ -1,0 +1,324 @@
+================================================================================
+Piece 2 record runs, 2026-08-17. R 4.5.1 (x64, Windows), Rscript --vanilla,
+data.table + fixest + knitr. Every estimating chunk re-seeds set.seed(20260919);
+RI = 9,999 within-stratum reshuffles, winner counts fixed.
+Question of record: does winning a contested seat reduce on-time entry into the
+college system? Headline and robustness carry four on-time outcomes: grad on time
+(promoted out of 12th in the on-time year) + applied / assigned / enrolled.
+Panels of record (both carry grad_ontime):
+  lottery_panel.rds      MD5 acb5b2fff844f8692f234442273ab4c8  (395,950 rows)
+  lottery_panel_7th.rds  MD5 966e7ae8e033e95a13f8d19c85c447c4  ( 44,643 rows)
+Each produced byte-identically by two independent from-scratch builds; shared-folder
+copies carry the same MD5s. Grad-on-time inputs: canonical graded panel (12th-grade
+promotion through 2023, untouched) + rendimiento_2024_2025.rds supplement packed
+12:09 from the two public releases (7,109,910 rows, MD5 7017ca7e, existing packed
+files byte-unchanged, shared copy identical).
+Ledger: RUN-299 (grad-on-time certified loop), RUN-300 (grad-on-time added to the
+robustness battery). Earlier same-day runs RUN-293..298 are superseded record
+vintages and remain on the ledger.
+================================================================================
+
+--------------------------------------------------------------------------------
+[1] 9TH DOOR BUILD -- purl+run 00_build_lottery_panel.Rmd, 2026-08-17 12:12
+    (second from-scratch build 12:16, byte-identical MD5 acb5b2ff...)
+--------------------------------------------------------------------------------
+
+=== PIECE 2 BUILD ===
+student-file rows 2018-2025: 2,402,410
+outcome table: 2,722,497 rows | applied 1,525,327 assigned 1,215,305 enrolled 1,025,371
+outcome columns identical to the verified reference panel (2,722,497 rows)
+over-demanded 9th-grade schools (Piece 1 list): 1,043
+list provenance: earlier v2 list 1065 schools | this list 1043 | removed 22 | added 0
+  2016 off-list placements: 74 placed children have a placement school on none of their application rows; kept as losses on every listed application (201 frame rows)
+raw frame: 395,950 applications | 3,987 lotteries
+    proc   apps lotteries first_choice
+1:  2016    671         9          298
+2:  2017  18521       204         8618
+3:  2018  61109       654        29413
+4:  2019 105423      1035        47909
+5:  2020 102867      1039        45788
+6:  2021 107359      1046        47284
+2016 pilot crosstab, processed priority code x applicant low-income flag:
+    tipo prioritario     N
+1:     4           1     7
+2:     7           0   407
+3:     7           1   257
+8th-grade GPA matched: winners 0.9861 | losers 0.9839
+promoted out of 12th on time: winners 0.7984 | losers 0.8329
+at the lottery school, years 1-4: winners 0.8335 0.7442 0.6711 0.6238 | losers 0.0462 0.0593 0.0630 0.0621
+wrote lottery_panel.rds: 395,950 rows | 3,987 lotteries | prioritario known 1.0000 | female known 1.0000 | 3.5 min
+=== BUILD DONE ===
+
+--------------------------------------------------------------------------------
+[2] 9TH DOOR PANEL VALIDATION -- checks/86_panel_validation.R, 2026-08-17 12:19
+    (full population, every column against its source file)
+--------------------------------------------------------------------------------
+
+panel: 395,950 rows | 3,987 lotteries | 27 columns
+columns missing or unexpected                                    0  OK
+duplicate (key, MRUN) rows                                       0  OK
+NA in any core column                                            0  OK
+won outside {0,1} / outcomes outside {0,1}                       0  OK
+PREF < 1 or loteria <= 0                                         0  OK
+proc outside 2016-2021                                           0  OK
+vintage mislabeled (2016 flag vs proc)                           0  OK
+sch_year != paste(proc, RBD)                                     0  OK
+key does not start with its own proc                             0  OK
+key school does not match RBD column                             0  OK
+won=1 but rbd_a missing or != RBD                                0  OK
+rbd_a disagrees with the placement file                          0  OK
+won=1 (2017+) but placed course != key course                    0  OK
+won=0 but placement file says placed at that exact classroom     0  OK
+tracked flag wrong (row exists vs tracked)                       0  OK
+applied mismatch vs outcome table                                0  OK
+assigned mismatch vs outcome table                               0  OK
+enrolled mismatch vs outcome table                               0  OK
+outcome nonzero while untracked                                  0  OK
+assigned=1 & applied=0 (impossible)                              0  OK
+prioritario disagrees with applicant file                        0  OK
+female disagrees with applicant file                             0  OK
+panel row with no matching application row                       0  OK
+test_track flag disagrees with application file                  0  OK
+pie_track flag disagrees with application file                   0  OK
+gpa8_z NA-status disagrees with the graded panel                 0  OK
+gpa8_z value disagrees with the graded panel                     0  OK
+at_y1 disagrees with the census                                  0  OK
+at_y2 disagrees with the census                                  0  OK
+at_y3 disagrees with the census                                  0  OK
+at_y4 disagrees with the census                                  0  OK
+yrs_at_school != sum of the four year flags                      0  OK
+at_assigned disagrees with the census                            0  OK
+in_any disagrees with the census                                 0  OK
+at_assigned NA-status != rbd_a NA-status                         0  OK
+grad_ontime disagrees with the school records                    0  OK
+per-cohort rows/lotteries (compare to the build log):
+    proc   apps lotteries winners
+1:  2016    671         9      26
+2:  2017  18521       204    3972
+3:  2018  61109       654   12757
+4:  2019 105423      1035   18913
+5:  2020 102867      1039   16789
+6:  2021 107359      1046   16181
+first-choice rows: 179,310 | children in >1 lottery same year (first-choice): 0
+
+PANEL VALIDATION: ALL CHECKS 0 -- CLEAN | 0.8 min
+
+--------------------------------------------------------------------------------
+[3] 7TH DOOR BUILD -- purl+run 00b_build_lottery_panel_7th.Rmd, 2026-08-17 12:21
+    (second from-scratch build 12:23, byte-identical MD5 966e7ae8...)
+--------------------------------------------------------------------------------
+
+=== PIECE 2 BUILD, 7TH DOOR ===
+over-demanded 7-grade schools (Piece 1 list): 697
+  2016 off-list placements: 4 placed children have a placement school on none of their application rows; kept as losses on every listed application (2 frame rows)
+raw frame: 44,643 applications | 1,273 lotteries
+    proc  apps lotteries first_choice
+1:  2016   141         8           71
+2:  2017  4328       133         1956
+3:  2018 11944       433         6270
+4:  2019 28230       699        13305
+2016 pilot crosstab, processed priority code x applicant low-income flag:
+    tipo prioritario     N
+1:     4           1     6
+2:     7           0   117
+3:     7           1    18
+6th-grade GPA matched: winners 0.9750 | losers 0.9723
+take-up at entry: at lottery school winners 0.8172 losers 0.0301 | any school 0.9915 / 0.9811
+promoted out of 12th on time: winners 0.8305 | losers 0.8380
+wrote lottery_panel_7th.rds: 44,643 rows | 1,273 lotteries | prioritario known 1.0000 | 2.0 min
+MD5 966e7ae8e033e95a13f8d19c85c447c4
+
+--------------------------------------------------------------------------------
+[4] 7TH DOOR PANEL VALIDATION -- checks/87_panel7_validation.R, 2026-08-17 12:26
+    (full population, every column against its source file)
+--------------------------------------------------------------------------------
+
+panel: 44,643 rows | 1,273 lotteries | 22 columns
+columns missing or unexpected                                    0  OK
+duplicate (key, MRUN) rows                                       0  OK
+NA in any core column                                            0  OK
+won outside {0,1} / outcomes outside {0,1}                       0  OK
+PREF < 1 or loteria <= 0                                         0  OK
+proc outside 2016-2019                                           0  OK
+vintage mislabeled (2016 flag vs proc)                           0  OK
+sch_year != paste(proc, RBD)                                     0  OK
+key does not start with its own proc                             0  OK
+key school does not match RBD column                             0  OK
+won=1 but rbd_a missing or != RBD                                0  OK
+at_y1=1 but in_any=0 (impossible)                                0  OK
+panel school not on the Piece-1 7th-grade list                   0  OK
+rbd_a disagrees with the placement file                          0  OK
+won=1 (2017+) but placed course != key course                    0  OK
+won=0 but placement file says placed at that exact classroom     0  OK
+tracked flag wrong (row exists vs tracked)                       0  OK
+applied mismatch vs outcome table                                0  OK
+assigned mismatch vs outcome table                               0  OK
+enrolled mismatch vs outcome table                               0  OK
+outcome nonzero while untracked                                  0  OK
+assigned=1 & applied=0 (impossible)                              0  OK
+prioritario disagrees with applicant file                        0  OK
+female disagrees with applicant file                             0  OK
+panel row with no matching application row                       0  OK
+test_track flag disagrees with application file                  0  OK
+pie_track flag disagrees with application file                   0  OK
+gpa_pre_z NA-status disagrees with the graded panel              0  OK
+gpa_pre_z value disagrees with the graded panel                  0  OK
+at_y1 disagrees with the census                                  0  OK
+in_any disagrees with the census                                 0  OK
+grad_ontime disagrees with the school records                    0  OK
+per-cohort rows/lotteries (compare to the build log):
+    proc  apps lotteries winners
+1:  2016   141         8      22
+2:  2017  4328       133     698
+3:  2018 11944       433    1789
+4:  2019 28230       699    3138
+first-choice rows: 21,602 | children in >1 lottery same year (first-choice): 0
+
+PANEL VALIDATION (7TH DOOR): ALL CHECKS 0 -- CLEAN | 0.6 min
+
+--------------------------------------------------------------------------------
+[5] 9TH DOOR ANALYSIS -- purl+run 1_effect_lottery.Rmd, 2026-08-17 13:00
+--------------------------------------------------------------------------------
+
+=== PIECE 2 ANALYSIS ===
+Stratum funnel: 3199 with a winner; 1509 with at least 5 winners; 1465 also with a loser; 1215 pass the 10% violation screen.
+
+Vintage 2016: 1 surviving strata, 0 contain a violation; 0 violating losers of 51 (share 0.0000).
+
+Vintage std: 1214 surviving strata, 29 contain a violation; 45 violating losers of 38255 (share 0.0012).
+
+\begin{table}[htbp]
+   \caption{Effect of Winning an SAE Lottery on On-Time Outcomes}\label{tab: lottery headline}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcccc}
+      \toprule
+                   & Grad.\ on time & Applied & Assigned & Enrolled\\
+                   & (1) & (2) & (3) & (4)\\
+      \midrule
+      Won the lottery & -0.0212$^{***}$ & -0.0109$^{**}$ & -0.0184$^{***}$ & -0.0152$^{***}$\\
+       & (0.0052) & (0.0047) & (0.0043) & (0.0040)\\
+      \midrule
+      Loser-arm mean & 0.8033 & 0.3703 & 0.2830 & 0.2409\\
+      Observations & 45,123 & 45,123 & 45,123 & 45,123\\
+      Strata (classroom x year x tier) & 1,215 & 1,215 & 1,215 & 1,215\\
+      \bottomrule
+   \end{tabular}}}
+   \par\smallskip{\footnotesize Notes: within-stratum comparison of winners and nearest losers; a stratum is one classroom (one school in the 2016 pilot) in one application year within one income tier, so every compared child faced the same admission doors. First-choice applications, cohorts 2016--2021. Grad.\ on time = promoted out of 12th grade in the on-time year (application + 4, school records); college outcomes at application year + 5; no record = 0 throughout. School-by-year clustered standard errors in parentheses. Stars from randomization inference (9,999 within-stratum reshuffles): $^{***}$p$<$0.01, $^{**}$p$<$0.05, $^{*}$p$<$0.1.}
+\end{table}
+
+Headline frame: 45,123 applications, 1,215 strata.
+at the lottery school, entry year: winners 0.8948, losers 0.1879, difference +0.6979*** (0.0077), RI p 0.0001.
+
+enrolled at any school, entry year: winners 0.9894, losers 0.9830, difference +0.0061*** (0.0012), RI p 0.0001.
+
+8th-grade GPA matched: winners 0.9883, losers 0.9891.
+
+prioritario: winner-arm mean 0.6006, loser-arm mean 0.5854, difference +0.0022 (0.0047), RI p 0.6552.
+
+female: winner-arm mean 0.4718, loser-arm mean 0.4772, difference +0.0040 (0.0045), RI p 0.3769.
+
+female (within stratum): winner-arm mean 0.4634, loser-arm mean 0.4660, difference +0.0045 (0.0045), RI p 0.3121.
+
+8th-grade GPA (z, within stratum): winner-arm mean 0.0629, loser-arm mean 0.0838, difference +0.0040 (0.0091), RI p 0.6509.
+
+Special-education-ordering winners: 94, in 60 strata. Same-school losers: 90.
+
+\begin{table}[htbp]
+   \caption{Robustness: Frame and Arm-Composition Checks}\label{tab: lottery robustness}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcccc}
+      \toprule
+                   & Grad.\ on time & Applied & Assigned & Enrolled\\
+                   & (1) & (2) & (3) & (4)\\
+      \midrule
+      Pooled (tiers mixed) & -0.0224$^{***}$ & -0.0103$^{**}$ & -0.0169$^{***}$ & -0.0150$^{***}$\\
+       & (0.0053) & (0.0048) & (0.0045) & (0.0041)\\
+      \quad Observations / strata & 43,405 / 793 &  &  & \\
+      No-priority tier only & -0.0178$^{***}$ & -0.0077 & -0.0155$^{**}$ & -0.0124$^{*}$\\
+       & (0.0066) & (0.0068) & (0.0067) & (0.0064)\\
+      \quad Observations / strata & 19,039 / 601 &  &  & \\
+      Low-income tier only & -0.0238$^{***}$ & -0.0132$^{**}$ & -0.0205$^{***}$ & -0.0174$^{***}$\\
+       & (0.0066) & (0.0064) & (0.0055) & (0.0051)\\
+      \quad Observations / strata & 26,084 / 614 &  &  & \\
+      Drop special-admission strata & -0.0207$^{***}$ & -0.0124$^{***}$ & -0.0185$^{***}$ & -0.0159$^{***}$\\
+       & (0.0054) & (0.0048) & (0.0044) & (0.0041)\\
+      \quad Observations / strata & 42,321 / 1,155 &  &  & \\
+      Drop same-school losers & -0.0209$^{***}$ & -0.0105$^{**}$ & -0.0181$^{***}$ & -0.0150$^{***}$\\
+       & (0.0053) & (0.0048) & (0.0044) & (0.0040)\\
+      \quad Observations / strata & 45,026 / 1,214 &  &  & \\
+      \bottomrule
+   \end{tabular}}}
+   \par\smallskip{\footnotesize Notes: same estimator, clustering, and randomization inference as the headline; outcomes as defined there; one row block per check. The pooled row counts lotteries; all other rows count strata. $^{***}$p$<$0.01, $^{**}$p$<$0.05, $^{*}$p$<$0.1.}
+\end{table}
+=== ANALYSIS DONE ===
+
+--------------------------------------------------------------------------------
+[6] 7TH DOOR ANALYSIS -- purl+run 1b_effect_lottery_7th.Rmd, 2026-08-17 13:24
+--------------------------------------------------------------------------------
+
+=== PIECE 2 ANALYSIS, 7TH DOOR ===
+Stratum funnel: 606 with a winner; 112 with at least 5 winners; 109 also with a loser; 89 pass the 10% violation screen.
+
+Vintage std: 89 surviving strata, 8 contain a violation; 12 violating losers of 3590 (share 0.0033).
+
+\begin{table}[htbp]
+   \caption{Effect of Winning an SAE Lottery on On-Time Outcomes, 7th-Grade Door}\label{tab: lottery7 headline}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcccc}
+      \toprule
+                   & Grad.\ on time & Applied & Assigned & Enrolled\\
+                   & (1) & (2) & (3) & (4)\\
+      \midrule
+      Won the lottery & -0.0153 & -0.0009 & 0.0011 & -0.0044\\
+       & (0.0139) & (0.0224) & (0.0205) & (0.0184)\\
+      \midrule
+      Loser-arm mean & 0.8716 & 0.5237 & 0.4439 & 0.3827\\
+      Observations & 3,755 & 3,755 & 3,755 & 3,755\\
+      Strata (classroom x year x tier) & 89 & 89 & 89 & 89\\
+      \bottomrule
+   \end{tabular}}}
+   \par\smallskip{\footnotesize Notes: within-stratum comparison of winners and nearest losers; a stratum is one classroom (one school in the 2016 pilot) in one application year within one income tier. First-choice applications, cohorts 2016--2019 (no 2016 stratum clears the five-winner screen, so the realized sample is 2017--2019). Grad.\ on time = promoted out of 12th grade in the on-time year (application + 6, school records); college outcomes at application year + 7; no record = 0 throughout. School-by-year clustered standard errors in parentheses. Stars from randomization inference (9,999 within-stratum reshuffles): $^{***}$p$<$0.01, $^{**}$p$<$0.05, $^{*}$p$<$0.1.}
+\end{table}
+
+Headline frame: 3,755 applications, 89 strata.
+at the lottery school, entry year: winners 0.9344, losers 0.0936, difference +0.8404*** (0.0189), RI p 0.0001.
+
+enrolled at any school, entry year: winners 0.9947, losers 0.9922, difference +0.0034 (0.0026), RI p 0.2050.
+
+6th-grade GPA matched: winners 0.9813, losers 0.9922.
+
+prioritario: winner-arm mean 0.4512, loser-arm mean 0.4536, difference -0.0140 (0.0165), RI p 0.4110.
+
+female: winner-arm mean 0.5125, loser-arm mean 0.5000, difference +0.0159 (0.0136), RI p 0.3443.
+
+female (within stratum): winner-arm mean 0.4626, loser-arm mean 0.4571, difference +0.0160 (0.0137), RI p 0.3016.
+
+6th-grade GPA (z, within stratum): winner-arm mean 0.4201, loser-arm mean 0.4233, difference +0.0161 (0.0220), RI p 0.5583.
+
+Special-education-ordering winners: 3, in 3 strata. Same-school losers: 0.
+
+\begin{table}[htbp]
+   \caption{Robustness, 7th-Grade Door}\label{tab: lottery7 robustness}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcccc}
+      \toprule
+                   & Grad.\ on time & Applied & Assigned & Enrolled\\
+                   & (1) & (2) & (3) & (4)\\
+      \midrule
+      Pooled (tiers mixed) & -0.0395$^{***}$ & 0.0001 & -0.0024 & -0.0035\\
+       & (0.0114) & (0.0238) & (0.0218) & (0.0187)\\
+      \quad Observations / strata & 3,520 / 70 &  &  & \\
+      No-priority tier only & -0.0117 & 0.0024 & 0.0123 & 0.0080\\
+       & (0.0171) & (0.0271) & (0.0300) & (0.0270)\\
+      \quad Observations / strata & 1,992 / 43 &  &  & \\
+      Low-income tier only & -0.0194 & -0.0047 & -0.0118 & -0.0187\\
+       & (0.0224) & (0.0312) & (0.0256) & (0.0262)\\
+      \quad Observations / strata & 1,763 / 46 &  &  & \\
+      Drop special-admission strata & -0.0248$^{**}$ & -0.0041 & -0.0028 & -0.0090\\
+       & (0.0127) & (0.0238) & (0.0218) & (0.0194)\\
+      \quad Observations / strata & 3,478 / 86 &  &  & \\
+      Drop same-school losers & -0.0153 & -0.0009 & 0.0011 & -0.0044\\
+       & (0.0139) & (0.0224) & (0.0205) & (0.0184)\\
+      \quad Observations / strata & 3,755 / 89 &  &  & \\
+      \bottomrule
+   \end{tabular}}}
+   \par\smallskip{\footnotesize Notes: same estimator, clustering, and randomization inference as the headline; outcomes as defined there; one row block per check. The pooled row counts lotteries; all other rows count strata. $^{***}$p$<$0.01, $^{**}$p$<$0.05, $^{*}$p$<$0.1.}
+\end{table}
+
+=== ANALYSIS DONE ===
