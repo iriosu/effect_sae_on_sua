@@ -1,0 +1,272 @@
+---
+title: "Piece 3 -- Building the Mechanism Panel"
+output:
+  pdf_document:
+    keep_tex: true
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+This document builds `lottery_panel_mech.rds`: the STAMPED Piece 2 panel
+(asserted by MD5, its columns re-asserted byte-identical at the end -- never
+modified) plus the mechanism outcome columns, one row per child per lottery.
+The analysis file `1_effect_mech.Rmd` reads only this panel.
+
+**Inputs.** All resolve through one chain: the shared data folder
+(`~/Dropbox/Effect SAE on SUA/data`), the project's `code/data` mirror, the
+Piece 2 folder, the Piece 1 `data/` folder, then this folder.
+
+- `lottery_panel.rds` -- Piece 2's stamped panel of record
+  (MD5 `acb5b2fff844f8692f234442273ab4c8`, asserted).
+- `college_outcomes_2018_2026.rds` -- Piece 2's stamped outcome table
+  (MD5 `28dd1874092a0835bbcb11839ff2e57c`, asserted): exam scores and the
+  official NEM/rank scores, processes 2018--2026.
+- `panel_performance_2002_2023.rds` -- the canonical graded panel: grades,
+  schools, promotion status through 2023.
+- `rendimiento_grades_2024_2025.rds` -- Piece 3's grades supplement (built by
+  `00a_pack_rendimiento_grades.R` from the two raw public releases): grades,
+  school id, and promotion status for academic years 2024--2025.
+- `matricula_2011_2023.rds` -- the packed enrolment census: who sits in which
+  school (the peer measure's rooms).
+
+**The new columns.** For each child: the strength of the room they enter
+(leave-one-out mean 8th-grade GPA, national z, of the census 9th-grade cohort
+at the school attended in the entry year); own 9th-grade GPA (raw and national
+z) and midrank percentile in the school-grade graded cohort; the on-time 4-year
+GPA (grades 9-12 in proc+1..proc+4, all four required; raw and national
+entry-cohort z) and the 12th-grade percentile; rank vs school history (the
+4-year GPA against the pooled media-GPA of the three promoted classes preceding
+the child's own at the child's 12th-grade school; promoted = ANY record of the
+student-year-school key says so, decided before dedup, so row order can never
+decide membership; guards: 3 class years, n >= 5, sd > 0); the college exam
+score at proc+5 (NA where no exam sat -- NEVER 0), its floor-imputed version
+(no-show = the process's minimum observed score, which equals the scale
+minimum, in taker-z units), and DEMRE's official NEM and rank scores with
+national within-process z versions; and the coverage flags. Conventions carried
+from the certified pieces: 8th grade = COD_ENSE 110 grade 8; media years =
+COD_ENSE in {310..910} grades 1-4; valid grades PROM_GRAL in [1,7]; national z
+within year; duplicate graded student-years collapse by mean. The 8th-grade z
+is recomputed and asserted equal to the stamped panel's `gpa8_z`. No stochastic
+element: no seed needed.
+
+```{r build, echo=FALSE, warning=FALSE, message=FALSE}
+suppressPackageStartupMessages({ library(data.table); library(tools) })
+setDTthreads(4); options(warn = 1)
+stopifnot("R 4.5.1 required (piece standard)" = getRversion() == "4.5.1")
+t0 <- proc.time()
+home <- ifelse(Sys.getenv("USERPROFILE") != "", Sys.getenv("USERPROFILE"), path.expand("~"))
+ROOT <- file.path(home, "Dropbox", "Effect of Centralization")
+OUTF <- "lottery_panel_mech.rds"
+data_path <- function(f) {
+  for (p in c(file.path(home, "Dropbox", "Effect SAE on SUA", "data", f),
+              file.path(ROOT, "code", "data", f),
+              file.path(ROOT, "Updated Paper Spine", "Piece 2", f),
+              file.path(ROOT, "Updated Paper Spine", "Piece 1", "data", f),
+              f))
+    if (file.exists(p)) return(p)
+  stop(sprintf("input file not found in any data location: %s", f))
+}
+say <- function(...) { cat(sprintf(...), "\n"); flush.console() }
+
+MD5_PANEL <- "acb5b2fff844f8692f234442273ab4c8"
+MD5_CO    <- "28dd1874092a0835bbcb11839ff2e57c"
+YM <- c(310L, 410L, 510L, 610L, 710L, 810L, 910L)   # media school types (shipped list)
+
+## Stage A -- the stamped panel
+fp <- data_path("lottery_panel.rds")
+stopifnot("lottery_panel.rds must match the stamped MD5" =
+            unname(md5sum(fp)) == MD5_PANEL)
+PT <- as.data.table(readRDS(fp))
+stopifnot("row count of record" = nrow(PT) == 395950L,
+          "one row per child per lottery" = nrow(PT) == uniqueN(PT, by = c("key", "MRUN")))
+ORIG <- copy(PT)
+say("panel loaded: %s rows | MD5 ok", format(nrow(PT), big.mark = ","))
+
+## Stage B -- graded records (canonical panel + 2024-25 grades supplement)
+PF <- as.data.table(readRDS(data_path("panel_performance_2002_2023.rds")))
+G8 <- PF[COD_GRADO == 8L & COD_ENSE == 110L & AGNO %in% 2016:2021 &
+           !is.na(PROM_GRAL) & PROM_GRAL >= 1 & PROM_GRAL <= 7, .(MRUN, AGNO, PROM_GRAL)]
+G8 <- G8[, .(gpa8 = mean(PROM_GRAL)), by = .(MRUN, AGNO)]
+G8[, z := (gpa8 - mean(gpa8)) / sd(gpa8), by = AGNO]
+qz <- data.table(MRUN = PT$MRUN, AGNO = PT$proc)
+z_new <- G8[qz, on = .(MRUN, AGNO), x.z]
+stopifnot("recomputed 8th-grade z must match the stamped panel (values)" =
+            max(abs(PT$gpa8_z - z_new), na.rm = TRUE) < 1e-12,
+          "recomputed 8th-grade z must match the stamped panel (NA pattern)" =
+            sum(is.na(PT$gpa8_z) != is.na(z_new)) == 0L)
+rm(qz, z_new); say("8th-grade z recomputation matches the stamped panel")
+
+MED <- PF[COD_ENSE %in% YM & COD_GRADO %in% 1:4 & AGNO %in% 2014:2023 &
+            !is.na(PROM_GRAL) & PROM_GRAL >= 1 & PROM_GRAL <= 7,
+          .(MRUN, AGNO, RBD, COD_GRADO, PROM_GRAL, sit = SIT_FIN_R)]
+rm(PF); invisible(gc())
+RS <- as.data.table(readRDS(data_path("rendimiento_grades_2024_2025.rds")))
+RS <- RS[COD_ENSE %in% YM & COD_GRADO %in% 1:4 &
+           !is.na(PROM_GRAL) & PROM_GRAL >= 1 & PROM_GRAL <= 7,
+         .(MRUN, AGNO, RBD, COD_GRADO, PROM_GRAL, sit = SIT_FIN_R)]
+MED <- rbind(MED, RS); rm(RS); invisible(gc())
+# promoted-12th membership is decided BEFORE the keep-first dedup: a student is
+# promoted if ANY record of the key says so (the certified Piece 2 convention
+# for promotion status), so row order can never decide history-class membership
+P12A <- unique(MED[COD_GRADO == 4L & sit == "P", .(MRUN, AGNO, RBD)])
+MED <- unique(MED, by = c("MRUN", "AGNO", "RBD", "COD_GRADO"))
+stopifnot("media records must cover 2014-2025" = all(2014:2025 %in% unique(MED$AGNO)))
+say("media graded records 2014-2025: %s rows", format(nrow(MED), big.mark = ","))
+MC <- MED[, .(v = mean(PROM_GRAL)), by = .(MRUN, AGNO, COD_GRADO)]
+
+## Stage C -- own 9th-grade GPA, national z, school percentile
+R9 <- MED[COD_GRADO == 1L]
+R9[, pct := (frank(PROM_GRAL, ties.method = "average") - 0.5) / .N, by = .(RBD, AGNO)]
+P9 <- R9[, .(gpa9 = mean(PROM_GRAL), pct9 = mean(pct), nsch = uniqueN(RBD)), by = .(MRUN, AGNO)]
+stopifnot("P9 unique per student-year" = !anyDuplicated(P9, by = c("MRUN", "AGNO")))
+P9[, gpa9_z := (gpa9 - mean(gpa9)) / sd(gpa9), by = AGNO]
+say("9th-grade student-years: %s | graded at >1 school %.4f",
+    format(nrow(P9), big.mark = ","), P9[, mean(nsch > 1L)])
+q1 <- data.table(MRUN = PT$MRUN, AGNO = PT$proc + 1L)
+PT[, gpa9   := P9[q1, on = .(MRUN, AGNO), x.gpa9]]
+PT[, gpa9_z := P9[q1, on = .(MRUN, AGNO), x.gpa9_z]]
+PT[, pct9   := P9[q1, on = .(MRUN, AGNO), x.pct9]]
+PT[, has_g9 := as.integer(!is.na(gpa9))]
+rm(R9); invisible(gc())
+
+## Stage D -- on-time 4-year GPA with national cohort z
+G4L <- list()
+for (e in 2017L:2022L) {
+  X <- MC[AGNO == e & COD_GRADO == 1L, .(MRUN, v1 = v)]
+  for (k in 2:4) {
+    Xk <- MC[AGNO == e + k - 1L & COD_GRADO == k, .(MRUN, vk = v)]
+    setnames(Xk, "vk", paste0("v", k))
+    X <- merge(X, Xk, by = "MRUN", all.x = TRUE)
+  }
+  X[, gpa4 := (v1 + v2 + v3 + v4) / 4][, e := e]
+  G4L[[as.character(e)]] <- X[, .(MRUN, e, gpa4)]
+}
+G4 <- rbindlist(G4L); rm(G4L)
+stopifnot("one row per student per entry cohort" = !anyDuplicated(G4, by = c("MRUN", "e")))
+G4[!is.na(gpa4), gpa4_z := (gpa4 - mean(gpa4)) / sd(gpa4), by = e]
+say("national entry cohorts 2017-2022: %s students | all-four-years share %.4f",
+    format(nrow(G4), big.mark = ","), G4[, mean(!is.na(gpa4))])
+qe <- data.table(MRUN = PT$MRUN, e = PT$proc + 1L)
+PT[, gpa4   := G4[qe, on = .(MRUN, e), x.gpa4]]
+PT[, gpa4_z := G4[qe, on = .(MRUN, e), x.gpa4_z]]
+PT[, has_4yr := as.integer(!is.na(gpa4))]
+
+## Stage E -- 12th-grade school percentile, on-time year
+R12 <- MED[COD_GRADO == 4L]
+R12[, pct := (frank(PROM_GRAL, ties.method = "average") - 0.5) / .N, by = .(RBD, AGNO)]
+P12 <- R12[, .(pct12 = mean(pct), nsch = uniqueN(RBD), RBD1 = RBD[1L]), by = .(MRUN, AGNO)]
+stopifnot("P12 unique per student-year" = !anyDuplicated(P12, by = c("MRUN", "AGNO")))
+q4 <- data.table(MRUN = PT$MRUN, AGNO = PT$proc + 4L)
+PT[, pct12 := P12[q4, on = .(MRUN, AGNO), x.pct12]]
+n_amb12 <- P12[q4, on = .(MRUN, AGNO), nomatch = 0L][nsch > 1L, .N]
+say("12th-grade student-years: %s | panel children graded at two 12th-grade schools: %d",
+    format(nrow(P12), big.mark = ","), n_amb12)
+
+## Stage F -- rank vs the school's last three promoted classes
+S12 <- P12[nsch == 1L, .(MRUN, AGNO, RBD = RBD1)]
+CH <- data.table(MRUN = PT$MRUN, g = PT$proc + 4L)
+CH[, RBD := S12[CH, on = .(MRUN, AGNO = g), x.RBD]]
+say("children with an unambiguous 12th-grade school: %s of %s rows",
+    format(CH[!is.na(RBD), .N], big.mark = ","), format(nrow(CH), big.mark = ","))
+HS <- unique(CH[!is.na(RBD), .(RBD, g)])
+ME <- unique(R12[P12A, on = .(MRUN, AGNO, RBD), nomatch = 0L][
+  RBD %in% HS$RBD & AGNO %in% 2017:2024, .(MRUN, gy = AGNO, RBD)])
+ME[, `:=`(lo = gy - 3L, hi = gy)]
+ME[, m := MC[ME, on = .(MRUN, AGNO >= lo, AGNO <= hi), mean(x.v), by = .EACHI]$V1]
+stopifnot("every promoted 12th grader has at least their own graded year" = !anyNA(ME$m))
+HX <- HS[rep(seq_len(nrow(HS)), each = 3L)]
+HX[, gy := g - rep(1:3, times = nrow(HS))]
+HP <- merge(HX, ME[, .(RBD, gy, m)], by = c("RBD", "gy"), allow.cartesian = TRUE)[
+  , .(hist_mean = mean(m), hist_sd = sd(m), hist_n = .N, hist_yrs = uniqueN(gy)),
+  by = .(RBD, g)]
+n_needed <- nrow(HS)
+HP <- HP[hist_yrs == 3L & hist_n >= 5L & hist_sd > 0]
+say("school-class history pools: %s usable of %s needed (3 class years, n>=5, sd>0)",
+    format(nrow(HP), big.mark = ","), format(n_needed, big.mark = ","))
+CH[, hist_mean := HP[CH, on = .(RBD, g), x.hist_mean]]
+CH[, hist_sd   := HP[CH, on = .(RBD, g), x.hist_sd]]
+CH[, hist_n    := HP[CH, on = .(RBD, g), x.hist_n]]
+PT[, rank_hist_z := (gpa4 - CH$hist_mean) / CH$hist_sd]
+PT[, hist_n := CH$hist_n]
+rm(R12, ME, HX, HP, S12, MC, MED, CH, HS, P12, P12A, q4, qe, q1); invisible(gc())
+
+## Stage G -- the room: peer 8th-grade GPA of the 9th-grade census cohort
+MATC <- readRDS(data_path("matricula_2011_2023.rds"))
+C9 <- unique(MATC[COD_ENSE %in% YM & COD_GRADO == 1L & agno %in% 2017:2022,
+                  .(agno, MRUN = as.integer(MRUN), RBD = as.integer(RBD))])
+rm(MATC); invisible(gc())
+C9[, agno8 := agno - 1L]
+C9[, z8 := G8[C9, on = .(MRUN, AGNO = agno8), x.z]]
+CS <- C9[, .(S = sum(z8, na.rm = TRUE), K = sum(!is.na(z8)), N = .N), by = .(RBD, agno)]
+CC <- C9[, .(nsch = uniqueN(RBD), RBD = RBD[1L], z8 = z8[1L]), by = .(MRUN, agno)]
+say("census 9th-grade cohorts: %s | children at two schools in the entry census: %d",
+    format(nrow(CS), big.mark = ","), CC[nsch > 1L, .N])
+CC <- CC[nsch == 1L]
+Q <- data.table(MRUN = PT$MRUN, agno = PT$proc + 1L)
+Q[, RBD := CC[Q, on = .(MRUN, agno), x.RBD]]
+Q[, z8  := CC[Q, on = .(MRUN, agno), x.z8]]
+Q[, S := CS[Q, on = .(RBD, agno), x.S]]
+Q[, K := CS[Q, on = .(RBD, agno), x.K]]
+Q[, N := CS[Q, on = .(RBD, agno), x.N]]
+Q[, own := as.integer(!is.na(z8))]
+Q[, Kx := K - own][, Nx := N - 1L]
+PT[, in_room9    := as.integer(!is.na(Q$RBD))]
+PT[, peer_n      := fifelse(is.na(Q$RBD) | Q$Nx < 1L, NA_integer_, Q$Nx)]
+PT[, peer_cov    := fifelse(is.na(Q$RBD) | Q$Nx < 1L, NA_real_, Q$Kx / Q$Nx)]
+PT[, peer_gpa8_z := fifelse(is.na(Q$RBD) | Q$Kx < 1L, NA_real_,
+                            (Q$S - fifelse(Q$own == 1L, Q$z8, 0)) / Q$Kx)]
+rm(C9, CS, CC, Q, G8, P9, G4); invisible(gc())
+
+## Stage H -- exam score and the official NEM/rank scores at proc+5
+fc <- data_path("college_outcomes_2018_2026.rds")
+stopifnot("college outcome table must match the stamped MD5" = unname(md5sum(fc)) == MD5_CO)
+CO <- as.data.table(readRDS(fc))
+CO[!is.na(exam_lm), exam_z    := (exam_lm - mean(exam_lm)) / sd(exam_lm), by = proc]
+CO[!is.na(nem),     nem_z     := (nem     - mean(nem))     / sd(nem),     by = proc]
+CO[!is.na(ranking), ranking_z := (ranking - mean(ranking)) / sd(ranking), by = proc]
+q <- data.table(mrun = PT$MRUN, proc = PT$proc + 5L)
+o <- CO[q, on = .(mrun, proc)]
+PT[, exam_lm := o$exam_lm]
+PT[, nem     := o$nem]
+PT[, ranking := o$ranking]
+PT[, exam_z    := o$exam_z]
+PT[, nem_z     := o$nem_z]
+PT[, ranking_z := o$ranking_z]
+PT[, has_exam := as.integer(!is.na(exam_lm))]
+stopifnot("z NA patterns must mirror the raw scores" =
+            !any(is.na(PT$exam_z) != is.na(PT$exam_lm)) &&
+            !any(is.na(PT$nem_z) != is.na(PT$nem)) &&
+            !any(is.na(PT$ranking_z) != is.na(PT$ranking)))
+# floor-imputed exam column (spec LOTTERY-MECH-FLOOR-2026-08-18): a no-show
+# counts as the process's floor -- the minimum observed national score among
+# scored students, which equals the scale minimum (150 raw in processes
+# 2021-2022, 100 in 2023-2026) -- in the same taker-z units; every row covered
+FL <- CO[!is.na(exam_lm), .(floor_z = (min(exam_lm) - mean(exam_lm)) / sd(exam_lm)), by = proc]
+qf <- data.table(proc = PT$proc + 5L)
+PT[, exam_z_floor := fifelse(!is.na(exam_z), exam_z, FL[qf, on = .(proc), x.floor_z])]
+stopifnot("exam_z_floor must cover every row" = !anyNA(PT$exam_z_floor),
+          "floor column equals exam_z wherever a score exists" =
+            PT[has_exam == 1L & exam_z_floor != exam_z, .N] == 0L)
+rm(FL, qf, CO, q, o); invisible(gc())
+
+## Assemble, guard, save
+same <- vapply(names(ORIG), function(cn) identical(ORIG[[cn]], PT[[cn]]), logical(1))
+stopifnot("stamped columns must be identical to the stamped panel" = all(same),
+          "row count unchanged" = nrow(PT) == 395950L)
+saveRDS(PT, OUTF)
+say("wrote %s: %s rows, %d columns (%d new)",
+    OUTF, format(nrow(PT), big.mark = ","), ncol(PT), ncol(PT) - ncol(ORIG))
+for (v in c("in_room9", "has_g9", "has_4yr", "has_exam"))
+  say("coverage %-9s winners %.4f | losers %.4f", v,
+      PT[won == 1L, mean(get(v))], PT[won == 0L, mean(get(v))])
+say("peer measure present: winners %.4f | losers %.4f",
+    PT[won == 1L, mean(!is.na(peer_gpa8_z))], PT[won == 0L, mean(!is.na(peer_gpa8_z))])
+say("rank_hist_z present:  winners %.4f | losers %.4f",
+    PT[won == 1L, mean(!is.na(rank_hist_z))], PT[won == 0L, mean(!is.na(rank_hist_z))])
+say("official scores present (registrants): nem %.4f | ranking %.4f",
+    PT[, mean(!is.na(nem))], PT[, mean(!is.na(ranking))])
+say("total elapsed %.1f min", (proc.time() - t0)[["elapsed"]] / 60)
+```

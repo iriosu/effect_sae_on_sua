@@ -1,0 +1,294 @@
+---
+title: "Piece 3 -- Why Winning Hurts: the Room, the Transcript, and the Exam"
+output:
+  pdf_document:
+    keep_tex: true
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# Libraries ---------------------------------------------------------------
+library(data.table)
+library(fixest)
+library(tools)
+
+# RNG contract: every results chunk re-seeds 20260919 at its own top, so each
+# exhibit's random draws do not depend on which chunks ran before it. Chunks
+# share the frame objects built upstream, so run the document top to bottom.
+set.seed(20260919)
+B_RI <- 9999L
+
+# The panel (built by 00_build_mech_panel.Rmd). A copy next to this file wins;
+# otherwise the shared data folder's copy of record. Pinned by MD5 to the
+# validated build of record.
+home <- ifelse(Sys.getenv("USERPROFILE") != "", Sys.getenv("USERPROFILE"), path.expand("~"))
+panel_file <- "lottery_panel_mech.rds"
+if (!file.exists(panel_file))
+  panel_file <- file.path(home, "Dropbox", "Effect SAE on SUA", "data", "lottery_panel_mech.rds")
+stopifnot("panel not found next to the code or in the shared data folder" =
+            file.exists(panel_file),
+          "mech panel must be the validated build of record" =
+            unname(md5sum(panel_file)) == "6296a6de9feb98a18b5fc850e7b3a275")
+dir.create("tables", showWarnings = FALSE)
+
+fmt  <- function(x) sprintf("%.4f", x)
+star <- function(p) ifelse(p < .01, "$^{***}$",
+                    ifelse(p < .05, "$^{**}$",
+                    ifelse(p < .1,  "$^{*}$", "")))
+row_tex <- function(lbl, vals) paste0("      ", lbl, " & ", paste(vals, collapse = " & "), "\\\\\n")
+
+# the primary frame and the estimator: copied VERBATIM from certified Piece 2
+# (1_effect_lottery.Rmd). make_frame: first-choice applications, lotteries with
+# >= W winners, loser violations <= pur, nearest losers capped at the winner
+# count. core: within-lottery ITT, precision-weighted across lotteries; the
+# closed form is asserted equal to the lottery-fixed-effects regression at every
+# run; stars from reshuffling winners within each lottery (winner count fixed).
+# For an NA-bearing outcome, core drops the NA rows and any stratum left
+# single-armed, then reshuffles within what remains -- the same certified
+# treatment the Piece 2 balance test applied to the continuous 8th-grade GPA z.
+make_frame <- function(P, W, pur, cap, fc) {
+  M <- copy(P); if (fc) M <- M[PREF == 1L]
+  CU <- M[won == 1L, .(cutoff = max(loteria), n_win = .N), by = key]; M <- merge(M, CU, by = "key")[n_win >= W]
+  M[, viol := won == 0L & loteria < cutoff]
+  PU <- M[won == 0L, .(n_los = .N, n_viol = sum(viol)), by = key]
+  M <- merge(M, PU, by = "key")[n_los >= 1L][n_viol / n_los <= pur]
+  L <- M[won == 0L & loteria >= cutoff]
+  if (cap) { setorder(L, key, loteria); L[, rk := seq_len(.N), by = key]; L <- L[rk <= n_win] }
+  rbind(M[won == 1L], L, fill = TRUE)
+}
+core <- function(DT, y) {
+  DT <- DT[!is.na(get(y))]; setorder(DT, key)
+  KX <- DT[, .(i0 = .I[1], n = .N, m = sum(won)), by = key][m > 0L & m < n]
+  DT <- DT[key %in% KX$key]; setorder(DT, key)
+  KX <- DT[, .(i0 = .I[1], n = .N, m = sum(won)), by = key]
+  denom <- KX[, sum(m * (n - m) / n)]; yv <- as.numeric(DT[[y]])
+  base <- DT[, .(b = mean(get(y)) * sum(won)), by = key]$b
+  obs <- (sum(yv * DT$won) - sum(base)) / denom
+  pn <- numeric(B_RI)
+  for (r in seq_len(nrow(KX))) { i0 <- KX$i0[r]; n <- KX$n[r]; m <- KX$m[r]
+    yk <- yv[i0:(i0 + n - 1L)]; pn <- pn + .colSums(yk[replicate(B_RI, sample.int(n, m))], m, B_RI) }
+  perm <- (pn - sum(base)) / denom
+  fit <- feols(as.formula(paste0(y, " ~ won | key")), data = DT, cluster = ~sch_year, fixef.rm = "none")
+  ct <- summary(fit)$coeftable
+  stopifnot("closed form must equal the regression point" = abs(unname(ct["won", 1]) - obs) < 1e-8)
+  data.table(itt = obs, se = ct["won", 2],
+             ri_p = (1 + sum(abs(perm) >= abs(obs) - 1e-12)) / (B_RI + 1),
+             n = nrow(DT), k = uniqueN(DT$key),
+             lm = DT[won == 0L, mean(get(y))], win_mean = DT[won == 1L, mean(get(y))])
+}
+```
+
+## Design
+
+Piece 2 established that winning a contested 9th-grade seat reduces on-time
+entry into the college system. Piece 3 asks why, with the same frame, the same
+estimator, and the same inference -- only the outcomes change. The frame is the
+certified Piece 2 headline frame (first-choice applications, at least five
+winners per stratum, the 10% violation screen, nearest losers capped, one
+stratum = classroom by year by income tier), asserted below to contain exactly
+the certified 45,123 applications in 1,215 strata. The outcomes come in two
+kinds. The transcript outcomes are read from the education ministry's school
+records, which cover every enrolled child in Chile, so they need no college
+participation of any kind: the strength of the room the child enters, their own
+grades, their position in their class, and their standing against the bar their
+school's last three graduating classes set -- the object the admission
+formula's rank component prices. The score outcomes are read from the college
+admission records and exist only for children who show up to that system;
+winning itself moves who shows up, so those columns sit in a separate table,
+their denominators are reported per arm, and a registered check compares the arms
+on their predetermined records inside each denominator, which is what licenses
+reading the exam column. Two further registered checks -- scoring every absent
+child at the scale floor, and the score at which an assumed value for the absent
+would flip the comparison -- bound how far the absent could move it. Standard errors cluster on school by year
+and are reported for scale; significance comes from randomization inference,
+reshuffling winners within each stratum 9,999 times with winner counts fixed.
+
+## The room and the transcript
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+set.seed(20260919)
+P <- as.data.table(readRDS(panel_file))
+stopifnot("every child must carry the income-tier flag" = P[, all(!is.na(prioritario))])
+P[, has_nem := as.integer(!is.na(nem))]   # holds an official NEM score at proc+5
+Ps <- copy(P)[, key := paste(key, prioritario)]   # stratum = classroom x year x tier
+As <- make_frame(Ps, 5L, 0.10, TRUE, TRUE)
+stopifnot("frame must equal the certified headline frame" =
+            nrow(As) == 45123L && uniqueN(As$key) == 1215L,
+          "no test-track winners may sit in the frame" =
+            As[won == 1L & test_track == TRUE, .N] == 0L)
+cat(sprintf("Frame: %s applications, %s strata (asserted equal to the certified headline frame).\n\n",
+            format(nrow(As), big.mark = ","), format(uniqueN(As$key), big.mark = ",")))
+
+OUT1 <- c("peer_gpa8_z", "gpa9_z", "pct9", "gpa4_z", "pct12", "rank_hist_z")
+res1 <- rbindlist(lapply(OUT1, function(y) core(As, y)[, outcome := y]))
+fwrite(res1, file.path("tables", "mech_transcript_values.csv"))
+tab1 <- paste0(
+  "\\begin{table}[htbp]\n   \\caption{Effect of Winning an SAE Lottery on the Classroom and the Transcript}",
+  "\\label{tab: mech transcript}\n",
+  "   \\centerline{\\scalebox{0.80}{\\begin{tabular}{lcccccc}\n      \\toprule\n",
+  "                   & Peer 8th GPA & 9th GPA & 9th pctile & 4-yr GPA & 12th pctile & Rank vs.\\ hist.\\\\\n",
+  "                   & (1) & (2) & (3) & (4) & (5) & (6)\\\\\n      \\midrule\n",
+  row_tex("Won the lottery", paste0(fmt(res1$itt), star(res1$ri_p))),
+  row_tex("", paste0("(", fmt(res1$se), ")")),
+  "      \\midrule\n",
+  row_tex("Loser-arm mean", fmt(res1$lm)),
+  row_tex("Observations", format(res1$n, big.mark = ",")),
+  row_tex("Strata (classroom x year x tier)", format(res1$k, big.mark = ",")),
+  "      \\bottomrule\n   \\end{tabular}}}\n",
+  "   \\par\\smallskip{\\footnotesize Notes: same frame, estimator, clustering, and ",
+  "randomization inference as the on-time headline (first-choice applications, cohorts ",
+  "2016--2021; within-stratum comparison of winners and nearest losers). Column (1): ",
+  "leave-one-out mean 8th-grade GPA (national z, application year) of the 9th-grade ",
+  "cohort at the school the child attends in the entry year. (2): own 9th-grade GPA, ",
+  "national z. (3): position within the child's school-grade graded cohort, 0--1. (4): mean ",
+  "GPA over the four on-time high-school years (all four required), national ",
+  "entry-cohort z. (5): position within the 12th-grade school cohort, on-time year. ",
+  "(6): 4-year GPA measured against the pooled final GPAs of the three classes ",
+  "promoted from the child's 12th-grade school just before their own, in that ",
+  "group's SDs. Observations vary by column: each outcome exists only where its ",
+  "underlying record exists, and strata left with only winners or only losers after ",
+  "that restriction drop out. The non-NA share of every column by arm is in the ",
+  "accompanying coverage file (mech_column_coverage_values.csv). School-by-year ",
+  "clustered standard errors in parentheses. Stars from randomization ",
+  "inference (9,999 within-stratum reshuffles): $^{***}$p$<$0.01, $^{**}$p$<$0.05, ",
+  "$^{*}$p$<$0.1.}\n\\end{table}\n")
+writeLines(tab1, file.path("tables", "mech_transcript.tex"))
+cat(tab1)
+```
+
+## The exam and the official scores
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+set.seed(20260919)
+OUT2 <- c("exam_z", "nem_z", "ranking_z")
+res2 <- rbindlist(lapply(OUT2, function(y) core(As, y)[, outcome := y]))
+fwrite(res2, file.path("tables", "mech_scores_values.csv"))
+tab2 <- paste0(
+  "\\begin{table}[htbp]\n   \\caption{Effect of Winning an SAE Lottery on the Exam and the Official Admission Scores}",
+  "\\label{tab: mech scores}\n",
+  "   \\centerline{\\scalebox{0.85}{\\begin{tabular}{lccc}\n      \\toprule\n",
+  "                   & Exam score & Official NEM & Official rank\\\\\n",
+  "                   & (1) & (2) & (3)\\\\\n      \\midrule\n",
+  row_tex("Won the lottery", paste0(fmt(res2$itt), star(res2$ri_p))),
+  row_tex("", paste0("(", fmt(res2$se), ")")),
+  "      \\midrule\n",
+  row_tex("Loser-arm mean", fmt(res2$lm)),
+  row_tex("Observations", format(res2$n, big.mark = ",")),
+  row_tex("Strata (classroom x year x tier)", format(res2$k, big.mark = ",")),
+  "      \\bottomrule\n   \\end{tabular}}}\n",
+  "   \\par\\smallskip{\\footnotesize Notes: same frame, estimator, clustering, and ",
+  "randomization inference as the on-time headline. All three columns in national ",
+  "within-process SDs, measured at the cohort's on-time college process (application ",
+  "year + 5). Column (1): average of the language and mathematics exam scores, ",
+  "existing only for children who sat an exam. (2)--(3): DEMRE's official NEM and ",
+  "rank scores, existing only for score-carrying college-process registrants. ",
+  "Winning moves these denominators (per-arm shares and their estimated differences ",
+  "are in the accompanying coverage files). Strata left with only winners or only ",
+  "losers after the restriction drop out. School-by-year clustered standard errors ",
+  "in parentheses. Stars from randomization inference (9,999 within-stratum ",
+  "reshuffles): $^{***}$p$<$0.01, $^{**}$p$<$0.05, $^{*}$p$<$0.1.}\n\\end{table}\n")
+writeLines(tab2, file.path("tables", "mech_scores.tex"))
+cat(tab2)
+```
+
+## Coverage: who each column can see
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+set.seed(20260919)
+COVV <- c("in_room9", "has_g9", "has_4yr", "has_exam", "has_nem")
+cov <- rbindlist(lapply(COVV, function(y) core(As, y)[, margin := y]))
+fwrite(cov, file.path("tables", "mech_coverage_values.csv"))
+for (i in seq_len(nrow(cov))) { b <- cov[i]
+  cat(sprintf("%s: winners %.4f, losers %.4f, difference %+.4f%s (%.4f), RI p %.4f.\n\n",
+              b$margin, b$win_mean, b$lm, b$itt, gsub("[$^{}]", "", star(b$ri_p)), b$se, b$ri_p)) }
+csh <- rbindlist(lapply(c(OUT1, OUT2), function(y) data.table(
+  column = y,
+  win_share  = As[won == 1L, mean(!is.na(get(y)))],
+  lose_share = As[won == 0L, mean(!is.na(get(y)))])))
+fwrite(csh, file.path("tables", "mech_column_coverage_values.csv"))
+for (i in seq_len(nrow(csh)))
+  cat(sprintf("Column %s: non-NA share winners %.4f, losers %.4f.\n\n",
+              csh$column[i], csh$win_share[i], csh$lose_share[i]))
+```
+
+## The exam column: who it compares, and how far the absent could move it
+
+The takers-only exam column conditions on a decision the child made after the
+draw, so the first question is whether the two arms inside that column are still
+comparable. The tilt check answers it: the predetermined traits of winners
+versus losers inside the sitter pool and inside the no-show pool -- a
+composition measurement of post-draw-defined groups, stated as such, never a
+causal effect. The remaining two exhibits bound how far the absent children
+could move the column. The floor scores every absent child as if they sat and
+answered nothing (the scale minimum, recovered from the records below), so every
+frame child counts. The crossing point uses the fact that the estimate is
+exactly linear in the common score assigned to the absent, so one number
+says what the absent would all have to score for the exam difference to reach
+zero.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+set.seed(20260919)
+ef <- core(As, "exam_z_floor")[, outcome := "exam_z_floor"]
+fwrite(ef, file.path("tables", "mech_exam_floor_values.csv"))
+cat(sprintf("Exam, no-show = floor: %+.4f%s (%.4f), RI p %.4f, n %s, strata %s, loser-arm mean %.4f.\n\n",
+            ef$itt, gsub("[$^{}]", "", star(ef$ri_p)), ef$se, ef$ri_p,
+            format(ef$n, big.mark = ","), format(ef$k, big.mark = ","), ef$lm))
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+set.seed(20260919)
+tl <- rbind(
+  core(As[has_exam == 1L], "gpa8_z")[, `:=`(trait = "gpa8_z", subset = "sitters")],
+  core(As[has_exam == 0L], "gpa8_z")[, `:=`(trait = "gpa8_z", subset = "no-shows")],
+  core(As[has_exam == 1L], "female")[, `:=`(trait = "female", subset = "sitters")],
+  core(As[has_exam == 0L], "female")[, `:=`(trait = "female", subset = "no-shows")])
+fwrite(tl, file.path("tables", "mech_tilt_values.csv"))
+for (i in seq_len(nrow(tl))) { b <- tl[i]
+  cat(sprintf("Tilt, %s among %s: winners %.4f, losers %.4f, difference %+.4f%s (%.4f), RI p %.4f, n %s.\n\n",
+              b$trait, b$subset, b$win_mean, b$lm, b$itt,
+              gsub("[$^{}]", "", star(b$ri_p)), b$se, b$ri_p, format(b$n, big.mark = ","))) }
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+set.seed(20260919)
+grid <- c(-4, -3, -2, -1, 0)
+cr <- rbindlist(lapply(grid, function(v) {
+  Av <- copy(As)[, ev := fifelse(!is.na(exam_z), exam_z, v)]
+  core(Av, "ev")[, v := v]
+}))
+fwrite(cr, file.path("tables", "mech_crossing_values.csv"))
+b_slope <- (cr[v == 0, itt] - cr[v == -4, itt]) / 4
+a_int   <- cr[v == 0, itt]
+v_star  <- -a_int / b_slope
+stopifnot("estimate must be exactly linear in v" =
+            max(abs(cr$itt - (a_int + b_slope * cr$v))) < 1e-10)
+for (i in seq_len(nrow(cr))) { b <- cr[i]
+  cat(sprintf("Assumed score for every absent child, %+.0f taker-SD: %+.4f%s (%.4f), RI p %.4f.\n\n",
+              b$v, b$itt, gsub("[$^{}]", "", star(b$ri_p)), b$se, b$ri_p)) }
+
+# Raw-point translation of the crossing point and of the floor, recovered from
+# the panel itself: within a process, raw = mu + sd * z holds row by row, so two
+# rows with distinct z identify the national mean and SD (asserted exact against
+# every scored row). No scale constant is typed by hand.
+SC <- As[!is.na(exam_lm) & !is.na(exam_z), .(po = proc + 5L, exam_lm, exam_z)]
+sc <- SC[, {
+  i <- which.min(exam_z); j <- which.max(exam_z)
+  sdv <- (exam_lm[j] - exam_lm[i]) / (exam_z[j] - exam_z[i])
+  mu  <- exam_lm[i] - sdv * exam_z[i]
+  stopifnot("raw = mu + sd*z must hold exactly on every scored row" =
+              max(abs(exam_lm - (mu + sdv * exam_z))) < 1e-6)
+  .(mu = mu, sdv = sdv, raw_vstar = mu + v_star * sdv)
+}, by = po][order(po)]
+fz <- unique(As[has_exam == 0L, .(po = proc + 5L, floor_z = exam_z_floor)])
+sc <- merge(sc, fz, by = "po")[, raw_floor := mu + floor_z * sdv]
+fwrite(sc, file.path("tables", "mech_scale_translation_values.csv"))
+cat(sprintf("The estimate is exactly linear in the assumed score (slope %+.6f per SD); it reaches zero at %+.3f taker-SD.\n\n",
+            b_slope, v_star))
+for (i in seq_len(nrow(sc))) cat(sprintf(
+  "Process %d: scale floor %.0f raw points (%.3f taker-SD); the crossing point is %.0f raw points.\n\n",
+  sc$po[i], sc$raw_floor[i], sc$floor_z[i], sc$raw_vstar[i]))
+```

@@ -1,0 +1,221 @@
+﻿=== Record runs, Piece 3 package (2026-08-18) ===
+
+Every shipped script was run from this folder and reproduces its shipped artifact:
+  00a_pack_rendimiento_grades.R  -> rendimiento_grades_2024_2025.rds, byte-identical
+                                    (MD5 5f222bbc8ad544f9863aab63cf1c949f)
+  00_build_mech_panel.Rmd        -> lottery_panel_mech.rds, byte-identical
+                                    (MD5 6296a6de9feb98a18b5fc850e7b3a275)
+  checks/88_mech_panel_validation.R -> 44/44 PASS over the full population
+  1_effect_mech.Rmd              -> every values CSV identical to the estimation
+                                    record of the development runs
+The .Rmd documents were executed with knitr::purl + source (the certified launcher
+pattern), so the sections below are their complete console output.
+
+The development history -- the full arc RUN-302..315 with every console transcript,
+including the review-caught defects and their fixes -- lives in
+explorations/2026-08-17_piece3_mechanism/run_log_2026-08-17.txt.
+
+=== 00a_pack_rendimiento_grades.R (from this folder) ===
+Rendimiento 2024 resolved by content: 20250212_Rendimiento_2024_20250131_WEB.csv 
+year 2024: 3,568,930 rows | graded [1,7] 0.8678 | zero 0.1322 | NA 0.0000 | promoted (P) 0.8877 
+Rendimiento 2025 resolved by content: 20260210_Rendimiento_2025_20260202_WEB.csv 
+year 2025: 3,540,980 rows | graded [1,7] 0.8707 | zero 0.1293 | NA 0.0000 | promoted (P) 0.8901 
+wrote rendimiento_grades_2024_2025.rds | 7,109,910 rows | 0.1 min 
+DONE
+supplement MD5 before 5f222bbc8ad544f9863aab63cf1c949f | after 5f222bbc8ad544f9863aab63cf1c949f | BYTE-IDENTICAL
+DRIVER DONE
+
+[exited with code 0]
+
+=== 00_build_mech_panel.Rmd (purl + source, from this folder) ===
+[1] "_tmp_build.R"
+panel loaded: 395,950 rows | MD5 ok 
+8th-grade z recomputation matches the stamped panel 
+media graded records 2014-2025: 10,956,896 rows 
+9th-grade student-years: 3,022,330 | graded at >1 school 0.0000 
+national entry cohorts 2017-2022: 1,471,369 students | all-four-years share 0.8174 
+12th-grade student-years: 2,464,636 | panel children graded at two 12th-grade schools: 1 
+children with an unambiguous 12th-grade school: 329,457 of 395,950 rows 
+school-class history pools: 10,478 usable of 10,758 needed (3 class years, n>=5, sd>0) 
+census 9th-grade cohorts: 17,981 | children at two schools in the entry census: 0 
+wrote lottery_panel_mech.rds: 395,950 rows, 49 columns (22 new) 
+coverage in_room9  winners 0.9781 | losers 0.9655 
+coverage has_g9    winners 0.9684 | losers 0.9619 
+coverage has_4yr   winners 0.7990 | losers 0.8293 
+coverage has_exam  winners 0.6337 | losers 0.7043 
+peer measure present: winners 0.9781 | losers 0.9654 
+rank_hist_z present:  winners 0.7934 | losers 0.8197 
+official scores present (registrants): nem 0.7600 | ranking 0.7600 
+total elapsed 2.8 min 
+PACKAGE PANEL MD5: 6296a6de9feb98a18b5fc850e7b3a275
+DRIVER DONE
+
+[exited with code 0]
+
+=== checks/88_mech_panel_validation.R (from this folder) ===
+V1a stamped panel MD5                                PASS  
+V1b stamped columns identical, row order preserved   PASS cols equal: 27 of 27 
+V1c column set = 27 stamped + exactly the 22 new (both directions) PASS  
+V2 supplement 2024 equals raw csv (all rows, all cols) PASS raw 3,568,930 vs packed 3,568,930 rows 
+V2 supplement 2025 equals raw csv (all rows, all cols) PASS raw 3,540,980 vs packed 3,540,980 rows 
+V2c supplement carries ONLY years 2024-2025          PASS  
+input anchor: panel_performance_2002_2023.rds MD5 78f4b9d975976c33ace9c85629e84ae6 
+input anchor: matricula_2011_2023.rds MD5 7944b87dca73b1555324d7cf318045ab 
+V2d 8th-grade z base: years 2016-2021 present, >= 150k students each PASS  
+V2e media base: years 2014-2025 present, >= 500k graded rows each PASS  
+duplicate keys pre-dedup: 33 | conflicting grade: 2 | conflicting status: 33 
+V2f no conflicting-grade key on a panel child's on-time cell PASS  
+V2g no conflicting-grade key belongs to a history-class member PASS  
+V3 gpa9 re-derivation (values + NA pattern)          PASS maxdiff 0.00e+00 
+V4 gpa9_z re-derivation                              PASS maxdiff 0.00e+00 
+V5 pct9 via independent counting formula             PASS maxdiff 0.00e+00 
+V6 gpa4 via long-format on-time bucketing            PASS maxdiff 8.88e-16 
+V7 gpa4_z national-cohort z                          PASS maxdiff 2.66e-15 
+V8 pct12 via independent counting formula            PASS maxdiff 0.00e+00 
+V9a rank_hist_z via sufficient statistics            PASS maxdiff 2.77e-13 
+V9b hist_n matches                                   PASS  
+V10e census 9th-grade base: years 2017-2022 present, >= 150k rows each PASS  
+V10a peer_gpa8_z via cohort-mean algebra             PASS maxdiff 4.44e-16 
+V10b peer_n matches                                  PASS  
+V10c peer_cov matches                                PASS  
+V10d in_room9 = census presence                      PASS  
+V11a outcome table MD5                               PASS  
+V11b exam_lm identical to outcome table              PASS  
+V11c nem identical                                   PASS  
+V11d ranking identical                               PASS  
+V11e exam_lm never 0 (NA for non-takers, no zero scores) PASS  
+V11f exam_z national within-process z re-derived     PASS maxdiff 0.00e+00 
+V11f nem_z national within-process z re-derived      PASS maxdiff 0.00e+00 
+V11f ranking_z national within-process z re-derived  PASS maxdiff 0.00e+00 
+V11g z NA patterns mirror the raw scores             PASS  
+V11h exam_z_floor re-derived (score where sat, process floor z where not) PASS maxdiff 8.88e-16 
+V12a has_g9 = !is.na(gpa9)                           PASS  
+V12b has_4yr = !is.na(gpa4)                          PASS  
+V12c has_exam = !is.na(exam)                         PASS  
+V12d gpa9, gpa4 inside [1,7]                         PASS  
+V12e pct9, pct12 inside (0,1)                        PASS  
+V12f peer_cov inside [0,1]                           PASS  
+V12g hist_n >= 5 wherever rank_hist_z present        PASS  
+V12h rank/pct12 only where 12th-grade record exists  PASS  
+V12i gpa9_z / gpa4_z / peer_gpa8_z / rank_hist_z all finite PASS  
+V13a status-mixed keys in used history classes: membership = any-record-promoted PASS mixed keys 30, resolved order-invariantly 
+V13b no grade-conflict key inside a panel child's school cohort PASS hits 0 
+
+44 checks | 44 PASS | 0 FAIL | 8.0 min 
+ALL CHECKS PASS
+
+[exited with code 0]
+
+=== 1_effect_mech.Rmd (purl + source, from this folder) ===
+[1] "_tmp_an.R"
+Frame: 45,123 applications, 1,215 strata (asserted equal to the certified headline frame).
+
+\begin{table}[htbp]
+   \caption{Effect of Winning an SAE Lottery on the Classroom and the Transcript}\label{tab: mech transcript}
+   \centerline{\scalebox{0.80}{\begin{tabular}{lcccccc}
+      \toprule
+                   & Peer 8th GPA & 9th GPA & 9th pctile & 4-yr GPA & 12th pctile & Rank vs.\ hist.\\
+                   & (1) & (2) & (3) & (4) & (5) & (6)\\
+      \midrule
+      Won the lottery & 0.1335$^{***}$ & -0.1188$^{***}$ & -0.0542$^{***}$ & -0.0836$^{***}$ & -0.0278$^{***}$ & -0.1888$^{***}$\\
+       & (0.0084) & (0.0188) & (0.0043) & (0.0137) & (0.0038) & (0.0164)\\
+      \midrule
+      Loser-arm mean & -0.0153 & -0.0917 & 0.5194 & -0.1569 & 0.5135 & 0.2194\\
+      Observations & 44,055 & 43,610 & 43,610 & 35,461 & 35,650 & 35,172\\
+      Strata (classroom x year x tier) & 1,214 & 1,214 & 1,214 & 1,204 & 1,204 & 1,200\\
+      \bottomrule
+   \end{tabular}}}
+   \par\smallskip{\footnotesize Notes: same frame, estimator, clustering, and randomization inference as the on-time headline (first-choice applications, cohorts 2016--2021; within-stratum comparison of winners and nearest losers). Column (1): leave-one-out mean 8th-grade GPA (national z, application year) of the 9th-grade cohort at the school the child attends in the entry year. (2): own 9th-grade GPA, national z. (3): position within the child's school-grade graded cohort, 0--1. (4): mean GPA over the four on-time high-school years (all four required), national entry-cohort z. (5): position within the 12th-grade school cohort, on-time year. (6): 4-year GPA measured against the pooled final GPAs of the three classes promoted from the child's 12th-grade school just before their own, in that group's SDs. Observations vary by column: each outcome exists only where its underlying record exists, and strata left with only winners or only losers after that restriction drop out. The non-NA share of every column by arm is in the accompanying coverage file (mech_column_coverage_values.csv). School-by-year clustered standard errors in parentheses. Stars from randomization inference (9,999 within-stratum reshuffles): $^{***}$p$<$0.01, $^{**}$p$<$0.05, $^{*}$p$<$0.1.}
+\end{table}
+\begin{table}[htbp]
+   \caption{Effect of Winning an SAE Lottery on the Exam and the Official Admission Scores}\label{tab: mech scores}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lccc}
+      \toprule
+                   & Exam score & Official NEM & Official rank\\
+                   & (1) & (2) & (3)\\
+      \midrule
+      Won the lottery & 0.0227$^{**}$ & -0.0941$^{***}$ & -0.1194$^{***}$\\
+       & (0.0099) & (0.0146) & (0.0147)\\
+      \midrule
+      Loser-arm mean & -0.3080 & -0.0547 & -0.0386\\
+      Observations & 26,757 & 30,806 & 30,806\\
+      Strata (classroom x year x tier) & 1,179 & 1,192 & 1,192\\
+      \bottomrule
+   \end{tabular}}}
+   \par\smallskip{\footnotesize Notes: same frame, estimator, clustering, and randomization inference as the on-time headline. All three columns in national within-process SDs, measured at the cohort's on-time college process (application year + 5). Column (1): average of the language and mathematics exam scores, existing only for children who sat an exam. (2)--(3): DEMRE's official NEM and rank scores, existing only for score-carrying college-process registrants. Winning moves these denominators (per-arm shares and their estimated differences are in the accompanying coverage files). Strata left with only winners or only losers after the restriction drop out. School-by-year clustered standard errors in parentheses. Stars from randomization inference (9,999 within-stratum reshuffles): $^{***}$p$<$0.01, $^{**}$p$<$0.05, $^{*}$p$<$0.1.}
+\end{table}
+in_room9: winners 0.9800, losers 0.9732, difference +0.0068*** (0.0015), RI p 0.0001.
+
+has_g9: winners 0.9684, losers 0.9658, difference +0.0029* (0.0019), RI p 0.0972.
+
+has_4yr: winners 0.7818, losers 0.8051, difference -0.0210*** (0.0052), RI p 0.0001.
+
+has_exam: winners 0.5910, losers 0.6087, difference -0.0126*** (0.0052), RI p 0.0047.
+
+has_nem: winners 0.6787, losers 0.7005, difference -0.0206*** (0.0052), RI p 0.0001.
+
+Column peer_gpa8_z: non-NA share winners 0.9800, losers 0.9731.
+
+Column gpa9_z: non-NA share winners 0.9684, losers 0.9658.
+
+Column pct9: non-NA share winners 0.9684, losers 0.9658.
+
+Column gpa4_z: non-NA share winners 0.7818, losers 0.8051.
+
+Column pct12: non-NA share winners 0.7852, losers 0.8104.
+
+Column rank_hist_z: non-NA share winners 0.7771, losers 0.7972.
+
+Column exam_z: non-NA share winners 0.5910, losers 0.6087.
+
+Column nem_z: non-NA share winners 0.6787, losers 0.7005.
+
+Column ranking_z: non-NA share winners 0.6787, losers 0.7005.
+
+Exam, no-show = floor: -0.0288 (0.0201), RI p 0.1015, n 45,123, strata 1,215, loser-arm mean -1.7642.
+
+Tilt, gpa8_z among sitters: winners 0.3447, losers 0.3496, difference +0.0090 (0.0110), RI p 0.3914, n 26,597.
+
+Tilt, gpa8_z among no-shows: winners -0.3443, losers -0.3379, difference +0.0151 (0.0158), RI p 0.2941, n 17,289.
+
+Tilt, female among sitters: winners 0.5231, losers 0.5206, difference +0.0069 (0.0061), RI p 0.2405, n 26,757.
+
+Tilt, female among no-shows: winners 0.3782, losers 0.3804, difference +0.0059 (0.0066), RI p 0.3976, n 17,680.
+
+Assumed score for every absent child, -4 taker-SD: -0.0291* (0.0199), RI p 0.0943.
+
+Assumed score for every absent child, -3 taker-SD: -0.0165 (0.0151), RI p 0.2170.
+
+Assumed score for every absent child, -2 taker-SD: -0.0039 (0.0105), RI p 0.6757.
+
+Assumed score for every absent child, -1 taker-SD: +0.0087 (0.0070), RI p 0.1853.
+
+Assumed score for every absent child, +0 taker-SD: +0.0213*** (0.0064), RI p 0.0007.
+
+The estimate is exactly linear in the assumed score (slope +0.012589 per SD); it reaches zero at -1.688 taker-SD.
+
+Process 2021: scale floor 150 raw points (-3.573 taker-SD); the crossing point is 334 raw points.
+
+Process 2022: scale floor 150 raw points (-3.543 taker-SD); the crossing point is 333 raw points.
+
+Process 2023: scale floor 100 raw points (-4.229 taker-SD); the crossing point is 402 raw points.
+
+Process 2024: scale floor 100 raw points (-3.979 taker-SD); the crossing point is 388 raw points.
+
+Process 2025: scale floor 100 raw points (-4.096 taker-SD); the crossing point is 400 raw points.
+
+Process 2026: scale floor 100 raw points (-4.071 taker-SD); the crossing point is 404 raw points.
+
+
+=== CSV identity vs exploration record ===
+mech_transcript_values.csv           IDENTICAL
+mech_scores_values.csv               IDENTICAL
+mech_coverage_values.csv             IDENTICAL
+mech_column_coverage_values.csv      IDENTICAL
+mech_exam_floor_values.csv           IDENTICAL
+mech_tilt_values.csv                 IDENTICAL
+mech_crossing_values.csv             IDENTICAL
+DRIVER DONE
+
+[exited with code 0]
+

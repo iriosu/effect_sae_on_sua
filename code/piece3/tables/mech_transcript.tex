@@ -1,0 +1,18 @@
+\begin{table}[htbp]
+   \caption{Effect of Winning an SAE Lottery on the Classroom and the Transcript}\label{tab: mech transcript}
+   \centerline{\scalebox{0.80}{\begin{tabular}{lcccccc}
+      \toprule
+                   & Peer 8th GPA & 9th GPA & 9th pctile & 4-yr GPA & 12th pctile & Rank vs.\ hist.\\
+                   & (1) & (2) & (3) & (4) & (5) & (6)\\
+      \midrule
+      Won the lottery & 0.1335$^{***}$ & -0.1188$^{***}$ & -0.0542$^{***}$ & -0.0836$^{***}$ & -0.0278$^{***}$ & -0.1888$^{***}$\\
+       & (0.0084) & (0.0188) & (0.0043) & (0.0137) & (0.0038) & (0.0164)\\
+      \midrule
+      Loser-arm mean & -0.0153 & -0.0917 & 0.5194 & -0.1569 & 0.5135 & 0.2194\\
+      Observations & 44,055 & 43,610 & 43,610 & 35,461 & 35,650 & 35,172\\
+      Strata (classroom x year x tier) & 1,214 & 1,214 & 1,214 & 1,204 & 1,204 & 1,200\\
+      \bottomrule
+   \end{tabular}}}
+   \par\smallskip{\footnotesize Notes: same frame, estimator, clustering, and randomization inference as the on-time headline (first-choice applications, cohorts 2016--2021; within-stratum comparison of winners and nearest losers). Column (1): leave-one-out mean 8th-grade GPA (national z, application year) of the 9th-grade cohort at the school the child attends in the entry year. (2): own 9th-grade GPA, national z. (3): position within the child's school-grade graded cohort, 0--1. (4): mean GPA over the four on-time high-school years (all four required), national entry-cohort z. (5): position within the 12th-grade school cohort, on-time year. (6): 4-year GPA measured against the pooled final GPAs of the three classes promoted from the child's 12th-grade school just before their own, in that group's SDs. Observations vary by column: each outcome exists only where its underlying record exists, and strata left with only winners or only losers after that restriction drop out. The non-NA share of every column by arm is in the accompanying coverage file (mech_column_coverage_values.csv). School-by-year clustered standard errors in parentheses. Stars from randomization inference (9,999 within-stratum reshuffles): $^{***}$p$<$0.01, $^{**}$p$<$0.05, $^{*}$p$<$0.1.}
+\end{table}
+
