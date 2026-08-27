@@ -1,0 +1,125 @@
+﻿[1] "_tmp_an.R"
+input lottery_panel_mech.rds               MD5 6296a6de9feb98a18b5fc850e7b3a275 
+input score_students.rds                   MD5 d2105966ea24a5f566f06e45a1dc29b6 
+input score_prefs.rds                      MD5 5193b52fea672eea878ea3e385f5c4d8 
+input pref_scores_final.rds                MD5 d86284b29625afe365a69cc5ed0d6ccf 
+input program_weights_final.rds            MD5 633af950033f87f87ca3912c86f63bad 
+input panel_programs_2007_2026.rds         MD5 e6633231a08ed47048627dc9ec7b31ca 
+input f1_selection_check.rds               MD5 c459ad46538256bf61235e1d03d22458 
+input panel_performance_2002_2023.rds      MD5 78f4b9d975976c33ace9c85629e84ae6 
+input rendimiento_grades_2024_2025.rds     MD5 5f222bbc8ad544f9863aab63cf1c949f 
+input C_POSTULACIONES_SELECCION_CUPOS_PACE_2023_PAES_MRUN.csv MD5 7da866a46c9a4721c9509f7ab7caf0e3 
+input C_POSTULACIONES_SELECCION_CUPOS_SUPERNUMERARIOS_2023_PAES_PUB_MRUN.csv MD5 9a52d267e5784463fead56b345e9681d 
+input C_POSTULANTES_SELECCION_PDT_CUPOS_PACE_2021_PUB_MRUN.csv MD5 044466502d5b6aa6466999e2c11bf519 
+input C_POSTULANTES_SELECCION_PDT_CUPOS_PACE_2022_PUB_MRUN.csv MD5 390b3bb15dea38768668fabb6c582c7a 
+input C_POSTULANTES_SELECCION_PDT_CUPOS_SUPERNUMERADOS_2021_PUB_MRUN.csv MD5 3ac2bd0a5ae164068ddde5f5033875f5 
+input C_POSTULANTES_SELECCION_PDT_CUPOS_SUPERNUMERADOS_2022_PUB_MRUN.csv MD5 7d673e853457f711ee1435344184f679 
+input pace_pdf_rbds.csv                    MD5 c745d44083c6dfd563408c1674344471 
+input lottery_headline_values.csv          MD5 84b83ec74de4392fc39c907ee5f7a5e2 
+gate counts: 35,614 | 25,972 | 15,906 | 11,925 
+gate counts by arm (children in study | pass gates 1-4): 
+  winners: 26,397 children | 20,571 | 14,975 | 9,045 | 6,661 
+  losers: 18,726 children | 15,043 | 10,997 | 6,861 | 5,264 
+anchor: assignment ITT -0.0184 (SE 0.0043) = certified Piece 2 row, to machine precision 
+assigned in the certified panel 12,006 | folded final gate 11,925 | difference 81 
+folded ITT -1.8215 (clustered SE 0.4278, RI p 0.0001) vs certified assignment ITT -1.8356 
+\begin{table}[htbp]
+   \caption{Where the Fall in On-Time Assignment Happens}\label{tab: gate decomposition}
+   \centerline{\scalebox{0.9}{\begin{tabular}{lccc}
+      \toprule
+                   & \multicolumn{2}{c}{Pass rate (per 100 reaching)} & Contribution\\
+                   & Winners & Losers & (seats per 100)\\
+      \midrule
+      Finished school on time & 78.17 & 80.29 & -0.7361$^{***}$\\
+      Has a usable exam score & 73.18 & 73.01 & +0.0644\\
+      Submitted an application & 61.71 & 62.00 & -0.1249\\
+      Selected where she listed & 73.72 & 76.63 & -1.0249$^{***}$\\
+      \midrule
+      Gets a seat (all four) & 26.03 & 27.85 & -1.8215$^{***}$\\
+      \bottomrule
+   \end{tabular}}}
+   \par\smallskip{\footnotesize Notes: the chance of a seat is the product of the four pass rates; the winner--loser difference in the product is divided into one additive piece per step by substituting one rate at a time in time order (Kitagawa 1955; Das Gupta 1993; ordering per Kim and Strobino 1984; funnel-decomposition precedent Chetty, Deming and Friedman 2026). A usable exam score requires both compulsory tests. Rates are measured within each draw and averaged with precision weights; the pieces sum to the difference exactly (clustered SE of the total 0.4278). Counted strictly step by step, 11,925 of the certified panel's 12,006 assigned children clear all four steps; the 81 remaining are recorded with a seat despite failing an earlier step on paper, which is the whole gap between this table's total and the certified assignment row ($-$1.8356 seats per 100). Stars from randomization inference (9,999 within-draw reshuffles of who wins, the whole split recomputed on each reshuffle): $^{***}$p$<$0.01, $^{**}$p$<$0.05, $^{*}$p$<$0.1.}
+\end{table}
+applicant estimation frame: 15,392 children, 1,069 draws 
+assignment file 0, status codes 0: 3,859 children 
+assignment file 1, status codes 1: 11,533 children 
+\begin{table}[htbp]
+   \caption{Why Applicants Are Selected Less: the Score Contest and the Special Routes}\label{tab: route decomposition}
+   \centerline{\scalebox{0.9}{\begin{tabular}{lccc}
+      \toprule
+                   & Winner--loser diff. & (SE) & Loser mean\\
+      \midrule
+      Got a seat & -2.9295$^{***}$ & (0.7842) & 76.77\\
+      \quad her score beat a program cutoff & -1.2982$^{*}$ & (0.8315) & 72.08\\
+      \quad selected through a special route & -1.6312$^{***}$ & (0.3195) & 4.69\\
+      \qquad through PACE & -1.3483$^{***}$ & (0.2522) & 2.84\\
+      \qquad through BEA & -0.3656$^{**}$ & (0.1765) & 1.28\\
+      \qquad through the gender quota & +0.0826 & (0.1249) & 0.57\\
+      Listed or held the PACE route & -8.9680$^{***}$ & (1.0289) & 21.56\\
+      Listed or held the BEA route & -4.0972$^{***}$ & (0.5774) & 14.51\\
+      Listed a gender-quota preference & +0.4010 & (0.4605) & 8.53\\
+      \midrule
+      Observations / draws & 15,392 & 1,069 & \\
+      \bottomrule
+   \end{tabular}}}
+   \par\smallskip{\footnotesize Notes: per 100 applicants -- children who finished school on time, hold both compulsory test scores, and submitted an application (15,906 of the 45,123 frame children; the estimation frame keeps their two-sided draws), within-draw comparisons. Special-route selections of 2021--2023 come from DEMRE's separate PACE and BEA files, folded in so the published statuses agree with the assignment file for every child; the two doors and the three routes are exact partitions, so the sub-lines add to their parents to machine precision. School-by-year clustered SEs; stars from randomization inference (9,999 within-draw reshuffles): $^{***}$p$<$0.01, $^{**}$p$<$0.05, $^{*}$p$<$0.1.}
+\end{table}
+funnel (by arm):                              winners   losers 
+  estimation frame                              8,591    6,801 
+  with official NEM and rank                    8,591    6,800 
+  + at least one scoreable listed program       8,356    6,617 
+  + eligible loser in the draw (COUNTED)        8,356 
+  excluded winners: no NEM/rank 0 | no usable program 235 | empty donor pool 0 | missing gpa8 (companion only) 43 
+counted winners 8,356 | own clears 77.48 | with loser transcript 79.56 | net -2.0872 plain, -2.3415 weighted 
+anchor (ITT on own-transcript clearing, counted subsample): +0.0029 (clustered SE 0.7834, RI p 1.0000) n 15,142 k 1,063 
+bridge: transcript piece -2.3415 + exam and own-list remainder +2.3444 = +0.0029 (asserted) 
+placebo (winners with a same-arm donor, 8,268 of the counted): net -0.1902 
+mirror image, per 100 counted LOSERS (6,617): own 80.17 | with winner transcript 77.56 | net +2.6162 
+companion (nearest-gpa8 single match, 8,310 matched winners): net -2.1540 | |gpa8 z-gap| median 0.145 p90 0.700 
+DISCLOSURES (pre-committed): (1) descriptive counts, no stars; the placebo is the noise floor. 
+(2) transcript-swapped-first path: exam scores and the program list stay at treated values; 
+    a different swap order gives a different attribution; pieces not claimed to add across channels. 
+(3) cutoffs are the realized clearing scores held fixed (partial equilibrium). 
+(4) removed by user order 2026-08-26: the registered has_nem disclosure was a full-frame 
+    number restating the graduation gate and served no purpose here. 
+(5) the counting lives in the computed-rule world (96.6% agreement with the assignment file 
+    over all applicants); counted-subsample agreement 0.9655. 
+\begin{table}[htbp]
+   \caption{The Transcript Swap: Seats at Real Weights and Real Cutoffs}\label{tab: transcript swap}
+   \centerline{\scalebox{0.9}{\begin{tabular}{lc}
+      \toprule
+                   & Per 100 counted\\
+      \midrule
+      Clears a listed cutoff, own transcript (winners) & 77.48\\
+      Same girl, a draw-loser's GPA and class-rank points (winners) & 79.56\\
+      \midrule
+      Net transcript piece, per 100 counted winners & -2.09$^{***}$\\
+      Noise floor (same-arm placebo), per 100 counted winners & -0.19\\
+      Mirror image (winners' transcripts), per 100 counted losers & +2.62$^{***}$\\
+      Companion (closest 8th-grade-GPA loser), per 100 matched winners & -2.15\\
+      \bottomrule
+   \end{tabular}}}
+   \par\smallskip{\footnotesize Notes: the two level rows are counts. The net transcript piece and the mirror carry permutation p-values from a registered addendum test (spec DECOMP-COUNT-RI-2026-08-26, run log in the package): reshuffle who wins within each draw exactly as the lottery did, rebuild the entire count, 9,999 times; the observed nets exceed all 9,999 reshuffles, p $=$ .0001 each, as does the estimator-weighted net ($-$2.34, p $=$ .0001). The re-randomization template is Cullen, Jacob and Levitt (2006); the counterfactual-recomputation practice follows Ellison and Pathak (2021) and Dur, Kominers, Pathak and S\"onmez (2018). The same-arm placebo is the noise floor and sits inside the reshuffled distribution. A counted winner has her official GPA score (called NEM in the admission system) and class-rank points on file, at least one scoreable listed program, and at least one eligible loser in her draw (a loser with her own GPA and rank points on file). Her GPA and rank points are replaced jointly by each eligible same-draw loser's, her own exam scores and program list kept, clearing re-evaluated at real weights and real cutoffs and averaged over the draw's losers; exact by linearity of the score in the GPA and rank points. This is the transcript-swapped-first path: exam scores and the program list stay at their treated values, a different swap order gives a different attribution, and the pieces are not claimed to add across channels. Cutoffs are the realized clearing scores held fixed. Clearing is evaluated in the reconstructed-score world, which agrees with the assignment file for 96.6\% of applicants.}
+\end{table}
+route-holders whose school the join could not locate (counted into the school gate only through their own route-holding): 0 of 15,392 
+non-door children with no located single 12th-grade school (fold to not-PACE): 0 (0.0000; lineage diagnostic, disclosed not halting) 
+\begin{table}[htbp]
+   \caption{The PACE Route Loss: the School Piece and the Standing Piece}\label{tab: pace split}
+   \centerline{\scalebox{0.9}{\begin{tabular}{lccc}
+      \toprule
+                   & Derived flag & Official lists & Any-school rule\\
+      \midrule
+      Her school is not in the PACE program & -8.9751$^{***}$ & -8.8919$^{***}$ & -8.9751$^{***}$\\
+      Standing inside a PACE school & +0.0071 & -0.0761 & +0.0071\\
+      \midrule
+      Adds to the route line & -8.9680 & -8.9680 & -8.9680\\
+      \bottomrule
+   \end{tabular}}}
+   \par\smallskip{\footnotesize Notes: per 100 applicants. The route line is the winner--loser difference in listing or holding the PACE route. A school counts as PACE-enrolled for admission year X when any of its year X$-$1 12th-graders appears in the year-X PACE application data (derived flag); the second column substitutes the official school lists for the three admission years such lists exist (2022, 2023, 2025) -- no official list exists for admissions 2021, 2024, or 2026, where the derived flag stands alone in every column; the third column locates children graded at more than one school by any of their schools. Standing absorbs program completion, school tenure, and listing behavior; the official rank rule (top 25\% of her school's ranking score, or 830 points nationally; Subsecretar\'ia de Educaci\'on Superior, REX 7.447/2025 as consolidated by REX 4042/2026) gates the guaranteed seat itself, downstream of this line. Winner and loser rates: school in PACE 13.60 vs 23.38 per 100; holds the route among children at PACE schools 91.78 vs 91.73. The school piece prices the school gap at the losers' route-holding rate, the standing piece prices the standing gap at the winners' PACE-school exposure. The 12th-grade school is itself part of what the draw changed, so this split sorts children by an outcome of the draw; it is an accounting of the route loss. Reading either piece as a separate causal effect would require more than this table claims. Route line: -8.9680 (clustered SE 1.0289, RI p 0.0001). Stars from randomization inference (9,999 within-draw reshuffles): $^{***}$p$<$0.01, $^{**}$p$<$0.05, $^{*}$p$<$0.1.}
+\end{table}
+split conditions on the post-lottery 12th-grade school; in-frame under the decomposition ruling of 2026-08-18 
+PIECE 4 ANALYSIS COMPLETE 
+
+=== gate values vs the exploratory record (both-tests definition) ===
+IDENTICAL
+DRIVER DONE

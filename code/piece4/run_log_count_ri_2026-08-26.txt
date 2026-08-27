@@ -1,0 +1,26 @@
+﻿building the per-draw clearing grids... 
+grid rows (recipient x donor): 438,598 
+observed: counted winners 8,356 | plain net -2.087217 | weighted net -2.341504 | mirror +2.616248 (losers 6,617) 
+record run reproduced exactly from the pair grid; starting the reshuffles 
+  reshuffle 500 of 9999 
+  reshuffle 1000 of 9999 
+  reshuffle 1500 of 9999 
+  reshuffle 2000 of 9999 
+  reshuffle 2500 of 9999 
+  reshuffle 3000 of 9999 
+  reshuffle 3500 of 9999 
+  reshuffle 4000 of 9999 
+  reshuffle 4500 of 9999 
+  reshuffle 5000 of 9999 
+  reshuffle 5500 of 9999 
+  reshuffle 6000 of 9999 
+  reshuffle 6500 of 9999 
+  reshuffle 7000 of 9999 
+  reshuffle 7500 of 9999 
+  reshuffle 8000 of 9999 
+  reshuffle 8500 of 9999 
+  reshuffle 9000 of 9999 
+  reshuffle 9500 of 9999 
+permutation p (two-sided, plus-one): plain 0.0001 | weighted 0.0001 | mirror 0.0001 
+placebo position: |placebo net| 0.1902 per 100; share of the 9999 reshuffled |plain nets| at or above it 0.5941; reshuffled |plain net| min 0.0001 median 0.2407 max 1.3816 (per 100) 
+DONE

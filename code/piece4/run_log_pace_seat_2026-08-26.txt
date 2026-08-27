@@ -1,0 +1,16 @@
+﻿record reproduced: seated through PACE -1.3483 | route line -8.9680 
+  reshuffles: stratum 400 of 1069 
+  reshuffles: stratum 800 of 1069 
+
+conditional pass rates:                          winners    losers 
+  school in PACE (of 100 applicants)                13.60     23.38 
+  lists the route (of 100 at a PACE school)         91.78     91.73 
+  seated through PACE (of 100 route-listers)        11.56     13.01 
+
+the seat loss -1.3483 (SE 0.2522) splits into: 
+  her school is not in the PACE program            -1.1678 ***  RI p 0.0001 
+  she does not list the route, at a PACE school    +0.0009      RI p 0.9713 
+  she lists and is not seated (conversion)         -0.1814      RI p 0.4193 
+  adds to   -1.3483 
+
+DONE
