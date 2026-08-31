@@ -1,0 +1,17 @@
+\begin{table}[htbp]
+   \caption{Robustness: Effect on Entrant Prior-GPA}\label{tab: alloc robustness}
+   \centerline{\scalebox{0.8}{\begin{tabular}{lcccccc}
+      \toprule
+                   & Baseline & Drop Santiago & $n_{gpa}\geq 5$ & Slack excl. & Entrant-wtd. & Anticip.\ = 1\\
+                   & (1) & (2) & (3) & (4) & (5) & (6)\\
+      \midrule
+      Treated & -0.150$^{***}$ & -0.087$^{***}$ & -0.180$^{***}$ & -0.151$^{***}$ & -0.173$^{***}$ & -0.146$^{***}$\\
+       & (0.031) & (0.036) & (0.034) & (0.040) & (0.023) & (0.031)\\
+      \midrule
+      Mean (pre-treatment) & 0.339 & 0.426 & 0.288 & 0.355 & 0.339 & 0.339\\
+      Observations & 76,702 & 48,085 & 40,513 & 69,157 & 76,702 & 76,702\\
+      \bottomrule
+   \end{tabular}}}
+   \par\smallskip{\footnotesize Notes: one specification change per column; Baseline repeats the headline fit. Region-clustered multiplier-bootstrap standard errors in parentheses. Stars from randomization inference over the region-to-wave assignment (9,999 permutations for the Baseline column, 2,999 per other column), each draw scored against its own delete-one-region jackknife scale following Young (2019) and MacKinnon and Webb (2020): $^{***}$p$<$0.01, $^{**}$p$<$0.05, $^{*}$p$<$0.1.}
+\end{table}
+

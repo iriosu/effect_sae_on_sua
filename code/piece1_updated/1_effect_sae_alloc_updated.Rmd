@@ -1,0 +1,466 @@
+---
+title: "Effect of SAE on Allocation - Entrant Composition"
+output:
+  pdf_document:
+    keep_tex: true
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# Clean ---------------------------------------------------------------
+rm(list = ls())
+
+# Libraries ---------------------------------------------------------------
+library(data.table)
+library(did)
+library(parallel)
+library(tools)
+# did 2.1.2 is the SE vintage of record for this panel; stars come from randomization
+# inference, but the reported SE must be the pinned vintage -- halt on any other.
+stopifnot("this analysis requires the did package at version 2.1.2" =
+            as.character(packageVersion("did")) == "2.1.2",
+          "R 4.5.1 required (default RNG; seeds reproduce the permutation draws)" =
+            paste(R.version$major, R.version$minor, sep = ".") == "4.5.1")
+
+seed_head <- 20260815   # headline, robustness, and guard permutation streams
+seed_batt <- 20260806   # robustness SE fits
+seed_es   <- 20260830   # share-prioritario event study and its lead test
+biters    <- 10000
+B_ri      <- 9999L      # permutation draws, headline
+B_rob     <- 2999L      # permutation draws per robustness column and per guard
+N_CORES   <- min(16L, max(1L, parallel::detectCores() - 2L))
+                        # permutation scoring only; assignments are drawn sequentially
+                        # in the main process, so results are worker-count invariant
+
+# The analysis panel (built by Piece 1's 00_build_entrant_panel.Rmd). A copy next to
+# this file wins; otherwise the shared data folder's copy of record. MD5-pinned.
+home <- ifelse(Sys.getenv("USERPROFILE") != "", Sys.getenv("USERPROFILE"), path.expand("~"))
+panel_file <- "entrant_composition_panel.rds"
+if (!file.exists(panel_file))
+  panel_file <- file.path(home, "Dropbox", "Effect of Centralization",
+                          "Updated Paper Spine", "Piece 1", "entrant_composition_panel.rds")
+if (!file.exists(panel_file))
+  panel_file <- file.path(home, "Dropbox", "Effect SAE on SUA", "data",
+                          "entrant_composition_panel.rds")
+stopifnot("panel not found" = file.exists(panel_file),
+          "panel MD5 must match the Piece 1 record" =
+            unname(md5sum(panel_file)) == "8ccec73b5955b723485195d5085b669d")
+dir.create("tables", showWarnings = FALSE)
+dir.create("figures", showWarnings = FALSE)
+
+# helpers: table formatting
+fmt  <- function(x) sub("^-(0\\.000)$", "\\1", sprintf("%.3f", x))
+star <- function(p) ifelse(p < .01, "$^{***}$",
+                    ifelse(p < .05, "$^{**}$",
+                    ifelse(p < .1,  "$^{*}$", "")))
+row_tex <- function(lbl, vals) paste0("      ", lbl, " & ", paste(vals, collapse = " & "), "\\\\\n")
+
+# one CS-DiD fit, simple aggregate, region-clustered
+fit_cs <- function(D, yvar, clustervar = "region", anticipation = 0L,
+                   weightsname = NULL, bit = biters) {
+  d <- D[!is.na(get(yvar)), c(.(cell_id = cell_id, yr = yr, G = G, region = region,
+                                y = get(yvar)),
+                              if (!is.null(weightsname)) .(w = get(weightsname)))]
+  at <- att_gt(yname = "y", tname = "yr", idname = "cell_id", gname = "G",
+               data = d, control_group = "notyettreated", panel = TRUE,
+               allow_unbalanced_panel = TRUE, base_period = "universal",
+               anticipation = anticipation,
+               weightsname = if (!is.null(weightsname)) "w",
+               bstrap = TRUE, biters = bit,
+               clustervars = if (clustervar == "region") "region" else NULL,
+               print_details = FALSE)
+  s <- aggte(at, type = "simple", na.rm = TRUE)
+  list(att = s$overall.att, se = s$overall.se,
+       n_cellyears = nrow(d), n_cells = uniqueN(d$cell_id))
+}
+pre_mean <- function(D, yvar) D[yr < G & !is.na(get(yvar)), mean(get(yvar))]
+
+# randomization machinery
+wave_map <- function(D) {
+  WM <- unique(D[, .(region, door, is_entry)])
+  WM[, wave := door - (1L - is_entry)]
+  stopifnot("one wave per region" = WM[, uniqueN(wave), by = region][, all(V1 == 1L)])
+  W <- unique(WM[, .(region, wave)])[order(region)]
+  setNames(W$wave, as.character(W$region))
+}
+prep_ri <- function(D, yvar, minyr = -Inf, wcol = NULL) {
+  d <- D[!is.na(get(yvar)) & yr >= minyr]
+  d <- d[, c("cell", "region", "is_entry", "yr", yvar, wcol), with = FALSE]
+  setnames(d, yvar, "y")
+  Wd <- dcast(d, cell + region + is_entry ~ yr, value.var = "y")
+  yrs <- as.integer(setdiff(names(Wd), c("cell", "region", "is_entry")))
+  w <- NULL
+  if (!is.null(wcol)) {
+    wc <- unique(d[, .(cell, wv = get(wcol))])
+    w <- wc$wv[match(Wd$cell, wc$cell)]
+  }
+  list(M = as.matrix(Wd[, as.character(yrs), with = FALSE]),
+       region = Wd$region, is_entry = Wd$is_entry, yrs = yrs, w = w)
+}
+simple_att_hand <- function(pp, wave_by_region, antic = 0L) {
+  G <- wave_by_region[as.character(pp$region)] + (1L - pp$is_entry) + 1L
+  yrs <- pp$yrs; M <- pp$M; W <- pp$w
+  num <- 0; den <- 0
+  for (g in sort(unique(G))) {
+    bi <- match(g - 1L - antic, yrs); if (is.na(bi)) next
+    tr <- G == g
+    for (t in yrs[yrs >= g]) {
+      ti <- match(t, yrs)
+      ok_t <- tr & !is.na(M[, ti]) & !is.na(M[, bi])
+      ok_c <- (G > t + antic) & !is.na(M[, ti]) & !is.na(M[, bi])
+      if (!any(ok_t) || !any(ok_c)) next
+      if (is.null(W)) {
+        att <- mean(M[ok_t, ti] - M[ok_t, bi]) - mean(M[ok_c, ti] - M[ok_c, bi]); wt <- sum(ok_t)
+      } else {
+        att <- weighted.mean(M[ok_t, ti] - M[ok_t, bi], W[ok_t]) -
+               weighted.mean(M[ok_c, ti] - M[ok_c, bi], W[ok_c]); wt <- sum(W[ok_t])
+      }
+      num <- num + wt * att; den <- den + wt
+    }
+  }
+  if (den == 0) NA_real_ else num / den
+}
+ES_LEADS <- -6L:-2L
+leads_hand <- function(pp, wv) {
+  G <- wv[as.character(pp$region)] + (1L - pp$is_entry) + 1L
+  yrs <- pp$yrs; M <- pp$M
+  out <- setNames(rep(NA_real_, length(ES_LEADS)), as.character(ES_LEADS))
+  for (e in ES_LEADS) {
+    num <- 0; den <- 0
+    for (g in sort(unique(G))) {
+      bi <- match(g - 1L, yrs); ti <- match(g + e, yrs)
+      if (is.na(bi) || is.na(ti)) next
+      tr <- G == g
+      ok_t <- tr & !is.na(M[, ti]) & !is.na(M[, bi])
+      ok_c <- (G > g - 1L) & !tr & !is.na(M[, ti]) & !is.na(M[, bi])
+      if (!any(ok_t) || !any(ok_c)) next
+      att <- mean(M[ok_t, ti] - M[ok_t, bi]) - mean(M[ok_c, ti] - M[ok_c, bi])
+      num <- num + sum(ok_t) * att; den <- den + sum(ok_t)
+    }
+    out[as.character(e)] <- if (den > 0) num / den else NA_real_
+  }
+  out
+}
+# exact joint pre-trend p: family-max studentized leads over region-to-wave draws
+ri_pretrend_y <- function(D, yvar, seed, check = NULL, B = B_rob) {
+  set.seed(seed)
+  wv <- wave_map(D); pp <- prep_ri(D, yvar)
+  obs <- leads_hand(pp, wv)
+  if (!is.null(check))
+    stopifnot("hand leads must track the did dynamic leads" =
+                max(abs(obs[names(check)] - check), na.rm = TRUE) < 0.02)
+  regions <- as.integer(names(wv)); waves <- unname(wv)
+  P <- matrix(NA_real_, B, length(obs))
+  for (b in seq_len(B)) P[b, ] <- leads_hand(pp, setNames(sample(waves), as.character(regions)))
+  sdp <- apply(P, 2, sd, na.rm = TRUE)
+  fmax <- apply(abs(P) / rep(sdp, each = B), 1, max, na.rm = TRUE)
+  (1 + sum(fmax >= max(abs(obs) / sdp, na.rm = TRUE))) / (1 + length(fmax))
+}
+
+# the test statistic: the simple ATT scored against its own delete-one-region
+# jackknife scale, at the observed and at every permuted wave map
+jk_stat <- function(pp, w, regs, idx, antic = 0L) {
+  th <- simple_att_hand(pp, w, antic)
+  loo <- vapply(seq_along(regs), function(i) {
+    k <- idx[[i]]
+    simple_att_hand(list(M = pp$M[k, , drop = FALSE], region = pp$region[k],
+                         is_entry = pp$is_entry[k], yrs = pp$yrs,
+                         w = if (is.null(pp$w)) NULL else pp$w[k]), w, antic)
+  }, numeric(1))
+  ok <- !is.na(loo); Rp <- sum(ok)
+  v  <- if (Rp >= 2L) (Rp - 1) / Rp * sum((loo[ok] - mean(loo[ok]))^2) else NA_real_
+  c(th = th, t = th / sqrt(v))
+}
+# one permutation test: seed, then B sequential draws (the statistic consumes no
+# randomness); only the per-draw scoring is distributed to workers
+score_stream <- function(pp, wv, seed, B, antic = 0L) {
+  regs <- sort(unique(pp$region))
+  idx  <- lapply(regs, function(r) which(pp$region != r))
+  set.seed(seed)
+  obs <- jk_stat(pp, wv, regs, idx, antic)
+  regions <- as.integer(names(wv)); waves <- unname(wv)
+  WPS <- vector("list", B)
+  for (b in seq_len(B)) WPS[[b]] <- setNames(sample(waves), as.character(regions))
+  RES <- do.call(rbind, parLapplyLB(cl, WPS, function(w) jk_stat(pp, w, regs, idx, antic),
+                                    chunk.size = 64L))
+  TT <- RES[, "t"]
+  p  <- (1 + sum(abs(TT[is.finite(TT)]) >= abs(obs["t"]))) / (1 + sum(is.finite(TT)))
+  stopifnot("non-finite draws must stay under 5%" = mean(!is.finite(TT)) <= 0.05)
+  list(th = unname(obs["th"]), t = unname(obs["t"]), p = p,
+       n_dropped = sum(!is.finite(TT)))
+}
+cl <- makeCluster(N_CORES)
+clusterExport(cl, c("simple_att_hand", "jk_stat"))
+```
+
+## Data and treatment
+
+The unit is a school-grade cell, one school by one grade level, observed each year
+from 2012 to 2023. A cell is always over-demanded when, in every year we observe
+it, the children who made a genuine non-continuity application ranking the cell at
+least as high as their final placement outnumber the seats the school offered.
+Treatment is the year the region's grade level entered SAE; a cell is treated from
+the following entering cohort. The entering class of year $t$ is the students
+enrolled in the cell in $t$ with no enrolment at that school the year before,
+identified from the annual matricula enrolment census. The two composition
+outcomes are the entering class's mean prior-year GPA, standardized nationally
+within year, and share prioritario, the share of the entering class carrying the
+government's low-income designation, each entrant tagged by that year's published
+rule. The analysis reads one panel, `entrant_composition_panel.rds`, built and
+documented in the Piece 1 package.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+CP <- as.data.table(readRDS(panel_file))
+CP[, cell := paste(rbd, cod_nivel, sep = "|")]
+CP[, cell_id := as.integer(factor(cell))]
+CP[, G := door + 1L]
+CP[, w_ent := mean(n_ent), by = cell_id]
+stopifnot("every cell must carry a region" = !anyNA(CP$region),
+          "every cell must carry a treatment door" = !anyNA(CP$door))
+wv_real <- wave_map(CP)
+stopifnot("wave multiset must be {1,4,10,1}" =
+            identical(as.integer(sort(as.vector(table(wv_real)))), c(1L, 1L, 4L, 10L)))
+```
+
+## Inference
+
+Significance in every table comes from randomization inference over the
+region-to-wave assignment: permute which regions received which rollout wave,
+holding the wave-size multiset fixed, with 9,999 draws for the headline and 2,999
+per robustness column and guard. The test statistic is the hand-computed simple
+ATT divided by its own delete-one-region jackknife standard error, computed at the
+observed assignment and at every permuted one; the two-sided p compares the
+observed studentized value with the permuted ones. Studentized randomization
+statistics are the standard treatment when the units being reassigned differ
+greatly in size, as they do here with the Metropolitan region holding about a
+third of the cells: Young (2019, QJE) adopts the randomization-t as the default
+statistic, and MacKinnon and Webb (2020, Journal of Econometrics) show for
+difference-in-differences that randomization inference on the raw coefficient is
+distorted by heterogeneous cluster sizes while the studentized version holds its
+size in their designs. The joint pre-trend test applies the same principle,
+scaling each lead by its permutation spread. Exactness under the sharp null is
+unaffected by the choice of statistic. Region-clustered multiplier-bootstrap
+standard errors (did 2.1.2 vintage) are reported for scale.
+
+## Headline: effect on entering-class composition
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+set.seed(seed_head)
+g_reg <- fit_cs(CP, "gpa_z",   "region")
+p_reg <- fit_cs(CP, "sh_prio", "region")
+
+pp_g <- prep_ri(CP, "gpa_z")
+pp_p <- prep_ri(CP, "sh_prio")
+set.seed(seed_head)   # one shared permutation stream scores both outcomes
+regs16 <- sort(unique(pp_g$region))
+idx_g <- lapply(regs16, function(r) which(pp_g$region != r))
+idx_p <- lapply(regs16, function(r) which(pp_p$region != r))
+obs_g <- jk_stat(pp_g, wv_real, regs16, idx_g)
+obs_p <- jk_stat(pp_p, wv_real, regs16, idx_p)
+stopifnot("hand gpa statistic must track the did point"  = abs(obs_g["th"] - g_reg$att) < 0.02,
+          "hand prio statistic must track the did point" = abs(obs_p["th"] - p_reg$att) < 0.005)
+regions <- as.integer(names(wv_real)); waves <- unname(wv_real)
+WPS <- vector("list", B_ri)
+for (b in seq_len(B_ri)) WPS[[b]] <- setNames(sample(waves), as.character(regions))
+clusterExport(cl, c("pp_g", "pp_p", "regs16", "idx_g", "idx_p"))
+RES <- do.call(rbind, parLapplyLB(cl, WPS, function(w)
+  c(jk_stat(pp_g, w, regs16, idx_g), jk_stat(pp_p, w, regs16, idx_p)), chunk.size = 64L))
+stopifnot("no draw may be non-finite on the headline stream" = all(is.finite(RES)))
+p_g <- (1 + sum(abs(RES[, 2]) >= abs(obs_g["t"]))) / (1 + B_ri)
+p_p <- (1 + sum(abs(RES[, 4]) >= abs(obs_p["t"]))) / (1 + B_ri)
+cat(sprintf("Randomization test: gpa T %+.2f, p %.4f; share prioritario T %+.2f, p %.4f.\n\n",
+            obs_g["t"], p_g, obs_p["t"], p_p))
+
+att  <- c(g_reg$att, p_reg$att)
+se   <- c(g_reg$se,  p_reg$se)
+pri  <- c(p_g, p_p)
+prem <- c(pre_mean(CP, "gpa_z"), pre_mean(CP, "sh_prio"))
+nobs <- c(g_reg$n_cellyears, p_reg$n_cellyears)
+note_core <- paste0(
+  "each draw scored against its own delete-one-region jackknife scale following ",
+  "Young (2019) and MacKinnon and Webb (2020): ",
+  "$^{***}$p$<$0.01, $^{**}$p$<$0.05, $^{*}$p$<$0.1.")
+note_head <- paste0(
+  "Stars from randomization inference over the region-to-wave assignment (9,999 ",
+  "permutations), ", note_core)
+note_rob <- paste0(
+  "Stars from randomization inference over the region-to-wave assignment (9,999 ",
+  "permutations for the Baseline column, 2,999 per other column), ", note_core)
+note_gua <- paste0(
+  "Randomization inference over the region-to-wave assignment (2,999 permutations ",
+  "per column), ", note_core)
+tab <- paste0(
+  "\\begin{table}[htbp]\n   \\caption{Effect of SAE on Entering-Class Composition}",
+  "\\label{tab: alloc headline}\n",
+  "   \\centerline{\\scalebox{0.85}{\\begin{tabular}{lcc}\n      \\toprule\n",
+  "                   & Entrant GPA (z) & Share prioritario\\\\\n",
+  "                   & (1) & (2)\\\\\n      \\midrule\n",
+  row_tex("Treated", paste0(fmt(att), star(pri))),
+  row_tex("", paste0("(", fmt(se), ")")),
+  "      \\midrule\n",
+  row_tex("Mean (pre-treatment)", fmt(prem)),
+  row_tex("Observations", format(nobs, big.mark = ",")),
+  "      \\bottomrule\n   \\end{tabular}}}\n",
+  "   \\par\\smallskip{\\footnotesize Notes: Callaway--Sant'Anna ATT, not-yet-treated ",
+  "controls. Region-clustered multiplier-bootstrap standard errors in parentheses (did ",
+  "2.1.2 vintage). Both outcomes cover 2012--2023; each entrant's prioritario status is ",
+  "that year's published designation. ", note_head, "}\n\\end{table}\n")
+writeLines(tab, "tables/alloc_headline.tex")
+cat(tab)
+```
+
+## Robustness
+
+One specification per column, same outcome as column (1) of the headline; the
+Baseline column repeats the headline fit so every check reads against it. The
+column definitions follow the Piece 1 package: dropping Santiago entirely,
+requiring at least five graded entrants per cell-year, excluding cells whose
+pre-SAE fill test flags slack, weighting cells by their average entrant count, and
+moving the base period one year before the door.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+set.seed(seed_batt)
+specs <- list(
+  list(lab = "Baseline",         D = CP,                       w = NULL,    a = 0L, y = "gpa_z"),
+  list(lab = "Drop Santiago",    D = CP[region != 13L],        w = NULL,    a = 0L, y = "gpa_z"),
+  list(lab = "$n_{gpa}\\geq 5$", D = CP[n_gpa >= 5L],          w = NULL,    a = 0L, y = "gpa_z"),
+  list(lab = "Slack excl.",      D = CP[slack_fail == FALSE],  w = NULL,    a = 0L, y = "gpa_z"),
+  list(lab = "Entrant-wtd.",     D = CP,                       w = "w_ent", a = 0L, y = "gpa_z"),
+  list(lab = "Anticip.\\ = 1",   D = CP,                       w = NULL,    a = 1L, y = "gpa_z"))
+fitb <- lapply(specs, function(s) fit_cs(s$D, s$y, "region", anticipation = s$a,
+                                         weightsname = s$w, bit = 999))
+fitb[[1]] <- g_reg   # Baseline repeats the headline spec: reuse the headline fit
+b_att <- vapply(fitb, `[[`, 0, "att"); b_se <- vapply(fitb, `[[`, 0, "se")
+b_nobs <- vapply(fitb, `[[`, 0L, "n_cellyears")
+b_pre  <- vapply(specs, function(s) pre_mean(s$D, s$y), 0)
+b_p <- numeric(6L); b_p[1] <- p_g
+for (i in 2:6) {
+  s <- specs[[i]]
+  z <- score_stream(prep_ri(s$D, s$y, wcol = s$w), wave_map(s$D),
+                    seed_head, B_rob, antic = s$a)
+  b_p[i] <- z$p
+}
+cat(sprintf("Randomization p by column: %s.\n\n", paste(sprintf("%.4f", b_p), collapse = ", ")))
+
+labs <- vapply(specs, `[[`, "", "lab"); k <- length(labs)
+tab_b <- paste0(
+  "\\begin{table}[htbp]\n   \\caption{Robustness: Effect on Entrant Prior-GPA}",
+  "\\label{tab: alloc robustness}\n",
+  "   \\centerline{\\scalebox{0.8}{\\begin{tabular}{l", strrep("c", k), "}\n      \\toprule\n",
+  "                   & ", paste(labs, collapse = " & "), "\\\\\n",
+  "                   & ", paste0("(", seq_len(k), ")", collapse = " & "), "\\\\\n      \\midrule\n",
+  row_tex("Treated", paste0(fmt(b_att), star(b_p))),
+  row_tex("", paste0("(", fmt(b_se), ")")),
+  "      \\midrule\n",
+  row_tex("Mean (pre-treatment)", fmt(b_pre)),
+  row_tex("Observations", format(b_nobs, big.mark = ",")),
+  "      \\bottomrule\n   \\end{tabular}}}\n",
+  "   \\par\\smallskip{\\footnotesize Notes: one specification change per column; Baseline ",
+  "repeats the headline fit. Region-clustered multiplier-bootstrap standard errors in ",
+  "parentheses. ", note_rob, "}\n\\end{table}\n")
+writeLines(tab_b, "tables/alloc_robustness.tex")
+cat(tab_b)
+```
+
+## Parallel trends: event studies, both outcomes
+
+Dynamic ATT in the headline configuration, one figure per outcome, each cut at
+event time $+1$ where several rollout waves identify every point; the full paths
+print below. The exact randomization joint test of the leads (event times $-6$
+through $-2$) is the inference of record for the pre-adoption years. The share
+prioritario deep leads ($-8$, $-7$) are identified by the latest adopters; the
+printed path shows them, and the joint test of leads $-6$ through $-2$ does not
+reject.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+es_one <- function(D, yvar, ylab, fname, seed) {
+  set.seed(seed)
+  d <- D[!is.na(get(yvar)), .(cell_id, yr, G, region, y = get(yvar))]
+  at <- att_gt(yname = "y", tname = "yr", idname = "cell_id", gname = "G", data = d,
+               control_group = "notyettreated", panel = TRUE, allow_unbalanced_panel = TRUE,
+               base_period = "universal", anticipation = 0L, bstrap = TRUE, biters = biters,
+               clustervars = "region", print_details = FALSE)
+  ed <- aggte(at, type = "dynamic", na.rm = TRUE)
+  es <- data.table(e = ed$egt, att = ed$att.egt, se = ed$se.egt)
+  Wstat <- as.numeric(at$W); Wp <- as.numeric(at$Wpval)
+  print(es[is.finite(att), .(e, att = round(att, 4), se = round(se, 4))])
+  leads_did <- es[e %in% -6:-2, setNames(att, as.character(e))]
+  es <- es[e >= -6 & e <= 1 & is.finite(att) & is.finite(se)]
+  lo <- es$att - 1.96 * es$se; hi <- es$att + 1.96 * es$se
+  pdf(fname, width = 7.2, height = 4.8, family = "serif")
+  par(mar = c(4.6, 5.0, 1.2, 1.2), las = 1, mgp = c(3.1, 0.8, 0),
+      cex.axis = 1.05, cex.lab = 1.2)
+  plot(es$e, es$att, type = "n",
+       ylim = range(pretty(c(lo, hi))), xlim = c(min(es$e) - 0.4, max(es$e) + 0.4),
+       xlab = "Event time (years relative to SAE adoption)", ylab = ylab, xaxt = "n")
+  axis(1, at = min(es$e):max(es$e))
+  abline(h = 0, col = "black", lwd = 1)
+  abline(v = -0.5, col = "black", lty = 2)
+  arrows(es$e, lo, es$e, hi, length = 0.045, angle = 90, code = 3, col = "black", lwd = 1.3)
+  points(es$e, es$att, pch = 21, bg = "white", col = "black", cex = 1.25, lwd = 1.4)
+  points(-1, 0, pch = 21, bg = "white", col = "black", cex = 1.25, lwd = 1.4)
+  invisible(dev.off())
+  list(W = Wstat, p = Wp, leads = leads_did)
+}
+j_g <- es_one(CP, "gpa_z", "Effect on entrant prior-GPA (z)",
+              "figures/alloc_event_study.pdf", seed_head)
+rp_g <- ri_pretrend_y(CP, "gpa_z", seed_head, check = j_g$leads)
+cat(sprintf(paste0("`alloc_event_study.pdf`: exact RI joint lead test $p = %.2f$; ",
+                   "Wald pre-test $W = %.1f$, $p = %.2f$.\n\n"), rp_g, j_g$W, j_g$p))
+j_p <- es_one(CP, "sh_prio", "Effect on share prioritario",
+              "figures/alloc_event_study_prio.pdf", seed_es)
+rp_p <- ri_pretrend_y(CP, "sh_prio", seed_es, check = j_p$leads)
+cat(sprintf(paste0("`alloc_event_study_prio.pdf`: exact RI joint lead test $p = %.2f$; ",
+                   "Wald pre-test $W = %.1f$, $p = %.2f$.\n\n"), rp_p, j_p$W, j_p$p))
+stopifnot("every gpa lead must stay under 0.03 SD" = max(abs(j_g$leads), na.rm = TRUE) < 0.03)
+```
+
+## Interpretation guards
+
+Two checks that the headline is a change in who enters, with the measurement
+itself standing still: the number of entrants per cell (seats are set by the
+school and were full before and after SAE) and the share of a cell's entrants who
+carry a prior-year GPA, computed for grades 2--12 where a prior GPA can exist.
+Same estimator, standard errors, and randomization test as the headline; these are
+the design's negative controls and are meant to stay unstarred, so the table
+reports the randomization p directly.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+CP[, sh_gpa := fifelse(n_ent > 0L, n_gpa / n_ent, NA_real_)]
+CPg <- CP[cod_nivel >= 2L]
+set.seed(seed_head)
+g_ent <- fit_cs(CP,  "n_ent",  "region")
+g_cov <- fit_cs(CPg, "sh_gpa", "region")
+z_ent <- score_stream(prep_ri(CP,  "n_ent"),  wave_map(CP),  seed_head, B_rob)
+z_cov <- score_stream(prep_ri(CPg, "sh_gpa"), wave_map(CPg), seed_head, B_rob)
+
+att_g  <- c(g_ent$att, g_cov$att)
+se_g   <- c(g_ent$se,  g_cov$se)
+pri_g  <- c(z_ent$p, z_cov$p)
+prem_g <- c(pre_mean(CP, "n_ent"), pre_mean(CPg, "sh_gpa"))
+nobs_g <- c(g_ent$n_cellyears, g_cov$n_cellyears)
+tab_g <- paste0(
+  "\\begin{table}[htbp]\n   \\caption{Interpretation Guards: Entrant Counts and GPA Coverage}",
+  "\\label{tab: alloc guards}\n",
+  "   \\centerline{\\scalebox{0.85}{\\begin{tabular}{lcc}\n      \\toprule\n",
+  "                   & Entrants per cell & Share with prior GPA\\\\\n",
+  "                   & (1) & (2)\\\\\n      \\midrule\n",
+  row_tex("Treated", fmt(att_g)),
+  row_tex("", paste0("(", fmt(se_g), ")")),
+  row_tex("RI two-sided p", sprintf("%.2f", pri_g)),
+  "      \\midrule\n",
+  row_tex("Mean (pre-treatment)", fmt(prem_g)),
+  row_tex("Observations", format(nobs_g, big.mark = ",")),
+  "      \\bottomrule\n   \\end{tabular}}}\n",
+  "   \\par\\smallskip{\\footnotesize Notes: Callaway--Sant'Anna ATT, not-yet-treated ",
+  "controls, as in the headline. Column (2) covers grades 2--12, where a prior-year GPA ",
+  "can exist. Region-clustered multiplier-bootstrap standard errors in parentheses. ",
+  note_gua, "}\n\\end{table}\n")
+writeLines(tab_g, "tables/alloc_guards.tex")
+cat(tab_g)
+stopCluster(cl)
+```

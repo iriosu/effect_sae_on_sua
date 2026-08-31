@@ -1,0 +1,176 @@
+Warning message:
+package 'data.table' was built under R version 4.5.3 
+Warning messages:
+1: In BMisc::rhs.vars(xformla) : 'BMisc::rhs.vars' is deprecated.
+Use 'rhs_vars' instead.
+See help("Deprecated")
+2: In BMisc::getListElement(attgt.list, "group") :
+  'BMisc::getListElement' is deprecated.
+Use 'get_list_element' instead.
+See help("Deprecated")
+3: In BMisc::getListElement(attgt.list, "year") :
+  'BMisc::getListElement' is deprecated.
+Use 'get_list_element' instead.
+See help("Deprecated")
+Warning messages:
+1: In BMisc::rhs.vars(xformla) : 'BMisc::rhs.vars' is deprecated.
+Use 'rhs_vars' instead.
+See help("Deprecated")
+2: In BMisc::getListElement(attgt.list, "group") :
+  'BMisc::getListElement' is deprecated.
+Use 'get_list_element' instead.
+See help("Deprecated")
+3: In BMisc::getListElement(attgt.list, "year") :
+  'BMisc::getListElement' is deprecated.
+Use 'get_list_element' instead.
+See help("Deprecated")
+Randomization test: gpa T -2.67, p 0.0007; share prioritario T +6.69, p 0.0004.
+
+\begin{table}[htbp]
+   \caption{Effect of SAE on Entering-Class Composition}\label{tab: alloc headline}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcc}
+      \toprule
+                   & Entrant GPA (z) & Share prioritario\\
+                   & (1) & (2)\\
+      \midrule
+      Treated & -0.150$^{***}$ & 0.035$^{***}$\\
+       & (0.031) & (0.009)\\
+      \midrule
+      Mean (pre-treatment) & 0.339 & 0.354\\
+      Observations & 76,702 & 97,381\\
+      \bottomrule
+   \end{tabular}}}
+   \par\smallskip{\footnotesize Notes: Callaway--Sant'Anna ATT, not-yet-treated controls. Region-clustered multiplier-bootstrap standard errors in parentheses (did 2.1.2 vintage). Both outcomes cover 2012--2023; each entrant's prioritario status is that year's published designation. Stars from randomization inference over the region-to-wave assignment (9,999 permutations), each draw scored against its own delete-one-region jackknife scale following Young (2019) and MacKinnon and Webb (2020): $^{***}$p$<$0.01, $^{**}$p$<$0.05, $^{*}$p$<$0.1.}
+\end{table}
+There were 18 warnings (use warnings() to see them)
+Randomization p by column: 0.0007, 0.0040, 0.0020, 0.0007, 0.0003, 0.0003.
+
+\begin{table}[htbp]
+   \caption{Robustness: Effect on Entrant Prior-GPA}\label{tab: alloc robustness}
+   \centerline{\scalebox{0.8}{\begin{tabular}{lcccccc}
+      \toprule
+                   & Baseline & Drop Santiago & $n_{gpa}\geq 5$ & Slack excl. & Entrant-wtd. & Anticip.\ = 1\\
+                   & (1) & (2) & (3) & (4) & (5) & (6)\\
+      \midrule
+      Treated & -0.150$^{***}$ & -0.087$^{***}$ & -0.180$^{***}$ & -0.151$^{***}$ & -0.173$^{***}$ & -0.146$^{***}$\\
+       & (0.031) & (0.036) & (0.034) & (0.040) & (0.023) & (0.031)\\
+      \midrule
+      Mean (pre-treatment) & 0.339 & 0.426 & 0.288 & 0.355 & 0.339 & 0.339\\
+      Observations & 76,702 & 48,085 & 40,513 & 69,157 & 76,702 & 76,702\\
+      \bottomrule
+   \end{tabular}}}
+   \par\smallskip{\footnotesize Notes: one specification change per column; Baseline repeats the headline fit. Region-clustered multiplier-bootstrap standard errors in parentheses. Stars from randomization inference over the region-to-wave assignment (9,999 permutations for the Baseline column, 2,999 per other column), each draw scored against its own delete-one-region jackknife scale following Young (2019) and MacKinnon and Webb (2020): $^{***}$p$<$0.01, $^{**}$p$<$0.05, $^{*}$p$<$0.1.}
+\end{table}
+        e     att     se
+    <int>   <num>  <num>
+ 1:    -8  0.0166 0.0374
+ 2:    -7  0.0072 0.0288
+ 3:    -6  0.0241 0.0227
+ 4:    -5  0.0123 0.0236
+ 5:    -4  0.0263 0.0241
+ 6:    -3  0.0169 0.0267
+ 7:    -2  0.0280 0.0308
+ 8:    -1  0.0000     NA
+ 9:     0 -0.1311 0.0366
+10:     1 -0.1924 0.0416
+11:     2 -0.1759 0.1490
+12:     3 -0.1551     NA
+Warning messages:
+1: In BMisc::rhs.vars(xformla) : 'BMisc::rhs.vars' is deprecated.
+Use 'rhs_vars' instead.
+See help("Deprecated")
+2: In BMisc::getListElement(attgt.list, "group") :
+  'BMisc::getListElement' is deprecated.
+Use 'get_list_element' instead.
+See help("Deprecated")
+3: In BMisc::getListElement(attgt.list, "year") :
+  'BMisc::getListElement' is deprecated.
+Use 'get_list_element' instead.
+See help("Deprecated")
+4: In BMisc::getListElement(dynamic.se.inner, "se") :
+  'BMisc::getListElement' is deprecated.
+Use 'get_list_element' instead.
+See help("Deprecated")
+5: In BMisc::getListElement(dynamic.se.inner, "inf.func") :
+  'BMisc::getListElement' is deprecated.
+Use 'get_list_element' instead.
+See help("Deprecated")
+`alloc_event_study.pdf`: exact RI joint lead test $p = 0.81$; Wald pre-test $W = 41.6$, $p = 0.01$.
+
+        e     att     se
+    <int>   <num>  <num>
+ 1:    -8 -0.0347 0.0193
+ 2:    -7 -0.0224 0.0119
+ 3:    -6 -0.0165 0.0081
+ 4:    -5 -0.0174 0.0090
+ 5:    -4 -0.0133 0.0114
+ 6:    -3  0.0001 0.0062
+ 7:    -2 -0.0049 0.0084
+ 8:    -1  0.0000     NA
+ 9:     0  0.0330 0.0097
+10:     1  0.0385 0.0140
+11:     2  0.0310 0.0300
+12:     3  0.0795     NA
+Warning messages:
+1: In BMisc::rhs.vars(xformla) : 'BMisc::rhs.vars' is deprecated.
+Use 'rhs_vars' instead.
+See help("Deprecated")
+2: In BMisc::getListElement(attgt.list, "group") :
+  'BMisc::getListElement' is deprecated.
+Use 'get_list_element' instead.
+See help("Deprecated")
+3: In BMisc::getListElement(attgt.list, "year") :
+  'BMisc::getListElement' is deprecated.
+Use 'get_list_element' instead.
+See help("Deprecated")
+4: In BMisc::getListElement(dynamic.se.inner, "se") :
+  'BMisc::getListElement' is deprecated.
+Use 'get_list_element' instead.
+See help("Deprecated")
+5: In BMisc::getListElement(dynamic.se.inner, "inf.func") :
+  'BMisc::getListElement' is deprecated.
+Use 'get_list_element' instead.
+See help("Deprecated")
+`alloc_event_study_prio.pdf`: exact RI joint lead test $p = 0.86$; Wald pre-test $W = 59.6$, $p = 0.00$.
+
+Warning messages:
+1: In BMisc::rhs.vars(xformla) : 'BMisc::rhs.vars' is deprecated.
+Use 'rhs_vars' instead.
+See help("Deprecated")
+2: In BMisc::getListElement(attgt.list, "group") :
+  'BMisc::getListElement' is deprecated.
+Use 'get_list_element' instead.
+See help("Deprecated")
+3: In BMisc::getListElement(attgt.list, "year") :
+  'BMisc::getListElement' is deprecated.
+Use 'get_list_element' instead.
+See help("Deprecated")
+Warning messages:
+1: In BMisc::rhs.vars(xformla) : 'BMisc::rhs.vars' is deprecated.
+Use 'rhs_vars' instead.
+See help("Deprecated")
+2: In BMisc::getListElement(attgt.list, "group") :
+  'BMisc::getListElement' is deprecated.
+Use 'get_list_element' instead.
+See help("Deprecated")
+3: In BMisc::getListElement(attgt.list, "year") :
+  'BMisc::getListElement' is deprecated.
+Use 'get_list_element' instead.
+See help("Deprecated")
+\begin{table}[htbp]
+   \caption{Interpretation Guards: Entrant Counts and GPA Coverage}\label{tab: alloc guards}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcc}
+      \toprule
+                   & Entrants per cell & Share with prior GPA\\
+                   & (1) & (2)\\
+      \midrule
+      Treated & -0.200 & -0.009\\
+       & (0.394) & (0.010)\\
+      RI two-sided p & 0.87 & 0.56\\
+      \midrule
+      Mean (pre-treatment) & 13.928 & 0.949\\
+      Observations & 97,381 & 77,160\\
+      \bottomrule
+   \end{tabular}}}
+   \par\smallskip{\footnotesize Notes: Callaway--Sant'Anna ATT, not-yet-treated controls, as in the headline. Column (2) covers grades 2--12, where a prior-year GPA can exist. Region-clustered multiplier-bootstrap standard errors in parentheses. Randomization inference over the region-to-wave assignment (2,999 permutations per column), each draw scored against its own delete-one-region jackknife scale following Young (2019) and MacKinnon and Webb (2020): $^{***}$p$<$0.01, $^{**}$p$<$0.05, $^{*}$p$<$0.1.}
+\end{table}
