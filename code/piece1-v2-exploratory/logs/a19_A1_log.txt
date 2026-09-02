@@ -1,0 +1,24 @@
+﻿Rscript.exe : Warning message:
+At line:1 char:302
++ ... tch {} } }; & "C:\Users\amarar\AppData\Local\Programs\R\R-4.5.1\bin\x ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Warning message::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+package 'data.table' was built under R version 4.5.3 
+[A comp R1 | gpa_z] verify path: max |fast - package| = 1.11e-16 over 11 cells 
+[A comp R1 | gpa_z] cells NOT scorable by RI (support < 95%): e=3 (100% dropped) 
+[A comp R1 | gpa_z] joint max-|T| lead p = 0.4878 | 14.1 min 
+[A comp R1 | sh_prio] verify path: max |fast - package| = 4.16e-17 over 11 cells 
+[A comp R1 | sh_prio] cells NOT scorable by RI (support < 95%): e=3 (100% dropped) 
+[A comp R1 | sh_prio] joint max-|T| lead p = 0.0920 | 31.1 min 
+[A col R1 | grad_ontime] verify path: max |fast - package| = 5.55e-17 over 12 cells 
+[A col R1 | grad_ontime] joint max-|T| lead p = 0.0122 | 52.7 min 
+[A col R1 | applied] verify path: max |fast - package| = 8.33e-17 over 12 cells 
+[A col R1 | applied] joint max-|T| lead p = 0.0045 | 74.4 min 
+[A col R1 | assigned] verify path: max |fast - package| = 2.43e-17 over 12 cells 
+[A col R1 | assigned] joint max-|T| lead p = 0.0043 | 94.6 min 
+[A col R1 | enrolled] verify path: max |fast - package| = 8.33e-17 over 12 cells 
+[A col R1 | enrolled] joint max-|T| lead p = 0.0002 | 111.5 min 
+There were 26 warnings (use warnings() to see them)
+stream A rule 1 complete | total 111.5 min 

@@ -1,0 +1,54 @@
+﻿Rscript.exe : Warning message:
+At line:1 char:302
++ ... tch {} } }; & "C:\Users\amarar\AppData\Local\Programs\R\R-4.5.1\bin\x ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Warning message::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+package 'data.table' was built under R version 4.5.3 
+private paid schools (modal cod_depe 4): 2,017 
+year 2012 | private entrant cells 5,112 | entrants 44,713 | entrant sh_prio 0.0551 | 1.0 min 
+year 2013 | private entrant cells 5,083 | entrants 51,837 | entrant sh_prio 0.0790 | 1.1 min 
+year 2014 | private entrant cells 5,067 | entrants 48,129 | entrant sh_prio 0.0727 | 1.2 min 
+year 2015 | private entrant cells 5,145 | entrants 49,466 | entrant sh_prio 0.0725 | 1.3 min 
+year 2016 | private entrant cells 5,132 | entrants 48,500 | entrant sh_prio 0.0639 | 1.5 min 
+year 2017 | private entrant cells 5,148 | entrants 48,447 | entrant sh_prio 0.0358 | 1.6 min 
+year 2018 | private entrant cells 5,179 | entrants 46,409 | entrant sh_prio 0.0330 | 1.7 min 
+year 2019 | private entrant cells 5,214 | entrants 50,679 | entrant sh_prio 0.0319 | 1.9 min 
+year 2020 | private entrant cells 5,072 | entrants 44,472 | entrant sh_prio 0.0390 | 2.0 min 
+year 2021 | private entrant cells 5,205 | entrants 49,033 | entrant sh_prio 0.0415 | 2.1 min 
+year 2022 | private entrant cells 5,258 | entrants 53,263 | entrant sh_prio 0.0593 | 2.3 min 
+year 2023 | private entrant cells 5,235 | entrants 48,230 | entrant sh_prio 0.0801 | 2.4 min 
+
+verification print 1 — private entrant prioritario share by year: 
+Key: <yr>
+       yr    sh_prio
+    <int>      <num>
+ 1:  2012 0.05510702
+ 2:  2013 0.07897834
+ 3:  2014 0.07274201
+ 4:  2015 0.07251445
+ 5:  2016 0.06385567
+ 6:  2017 0.03579169
+ 7:  2018 0.03296774
+ 8:  2019 0.03188697
+ 9:  2020 0.03901331
+10:  2021 0.04152306
+11:  2022 0.05927191
+12:  2023 0.08013684
+verification print 2 — private prior-GPA coverage by grade (grades 2-12): 
+Key: <cod_nivel>
+    cod_nivel  coverage
+        <int>     <num>
+ 1:         2 0.9145266
+ 2:         3 0.8912805
+ 3:         4 0.8990216
+ 4:         5 0.8985879
+ 5:         6 0.9049939
+ 6:         7 0.9185559
+ 7:         8 0.8984033
+ 8:         9 0.9114146
+ 9:        10 0.8976721
+10:        11 0.8812014
+11:        12 0.8659604
+wrote C:\Users\amarar/Dropbox/Effect of Centralization/explorations/2026-08-31_did_college_outcomes/output/private_entrant_cells.rds | 61,850 cell-years | 692 schools | MD5 e43faa7be42d02cfe190fad6924ce6a2 | 2.5 min 

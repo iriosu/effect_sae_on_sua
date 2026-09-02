@@ -1,0 +1,39 @@
+﻿Rscript.exe : Warning message:
+At line:1 char:302
++ ... tch {} } }; & "C:\Users\amarar\AppData\Local\Programs\R\R-4.5.1\bin\x ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Warning message::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+package 'data.table' was built under R version 4.5.3 
+[comp A gpa_z] -0.1503 (0.0314) T -2.49 RI p 0.0014 *** | 5.4 min 
+[comp A sh_prio] +0.0346 (0.0091) T +6.58 RI p 0.0003 *** | 11.8 min 
+Warning messages:
+1: In BMisc::rhs.vars(xformla) : 'BMisc::rhs.vars' is deprecated.
+Use 'rhs_vars' instead.
+See help("Deprecated")
+2: In BMisc::getListElement(attgt.list, "group") :
+  'BMisc::getListElement' is deprecated.
+Use 'get_list_element' instead.
+See help("Deprecated")
+3: In BMisc::getListElement(attgt.list, "year") :
+  'BMisc::getListElement' is deprecated.
+Use 'get_list_element' instead.
+See help("Deprecated")
+4: In BMisc::rhs.vars(xformla) : 'BMisc::rhs.vars' is deprecated.
+Use 'rhs_vars' instead.
+See help("Deprecated")
+5: In BMisc::getListElement(attgt.list, "group") :
+  'BMisc::getListElement' is deprecated.
+Use 'get_list_element' instead.
+See help("Deprecated")
+6: In BMisc::getListElement(attgt.list, "year") :
+  'BMisc::getListElement' is deprecated.
+Use 'get_list_element' instead.
+See help("Deprecated")
+[col A grad_ontime] -0.0214 (0.0082) T -2.90 RI p 0.0071 *** | era_old +0.0037 p 0.9861  | era_new -0.0232 p 0.0015 *** | 21.7 min 
+[col A applied] -0.0202 (0.0155) T -2.65 RI p 0.0086 *** | era_old -0.0117 p 0.6098  | era_new -0.0208 p 0.0042 *** | 31.6 min 
+[col A assigned] -0.0310 (0.0118) T -3.83 RI p 0.0226 ** | era_old -0.0197 p 0.4654  | era_new -0.0318 p 0.0199 ** | 41.6 min 
+There were 20 warnings (use warnings() to see them)
+[col A enrolled] -0.0216 (0.0085) T -2.94 RI p 0.0069 *** | era_old -0.0298 p 0.4462  | era_new -0.0211 p 0.0028 *** | 51.5 min 
+total 51.5 min 

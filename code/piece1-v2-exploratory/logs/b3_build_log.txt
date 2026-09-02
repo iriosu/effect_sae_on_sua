@@ -1,0 +1,37 @@
+﻿Rscript.exe : Warning message:
+At line:1 char:302
++ ... tch {} } }; & "C:\Users\amarar\AppData\Local\Programs\R\R-4.5.1\bin\x ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Warning message::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+package 'data.table' was built under R version 4.5.3 
+cells: 8,958 over-demanded (all grades) | 692 private schools 
+year 2012 | entrants pub 127,027 priv 44,713 | 3.5 min 
+year 2013 | entrants pub 116,512 priv 51,837 | 3.6 min 
+year 2014 | entrants pub 118,247 priv 48,129 | 3.7 min 
+year 2015 | entrants pub 120,255 priv 49,466 | 3.8 min 
+year 2016 | entrants pub 117,937 priv 48,500 | 3.9 min 
+year 2017 | entrants pub 112,677 priv 48,447 | 4.0 min 
+year 2018 | entrants pub 112,728 priv 46,409 | 4.1 min 
+year 2019 | entrants pub 110,286 priv 50,679 | 4.2 min 
+year 2020 | entrants pub 101,742 priv 44,472 | 4.3 min 
+year 2021 | entrants pub 89,905 priv 49,033 | 4.4 min 
+year 2022 | entrants pub 96,767 priv 53,263 | 4.5 min 
+year 2023 | entrants pub 105,669 priv 48,230 | 4.6 min 
+class-member rows in the process window: 821,249 (pub 634,609 / priv 186,640) 
+class panel: 82,752 cell-procs (pub 51,679 / priv 31,073) | 14,898 cells | G (pub) range 2020-2034 
+pub class-years by process year: 
+Key: <proc>
+    proc cells treated      grad   applied
+   <int> <int>   <int>     <num>     <num>
+1:  2018  3006       0 0.7269663 0.4205795
+2:  2019  3767       0 0.7324001 0.4094317
+3:  2020  4522       9 0.7367830 0.3799752
+4:  2021  5207     102 0.7658641 0.3958109
+5:  2022  5906     542 0.7874426 0.3973463
+6:  2023  6514    1330 0.7861633 0.4947803
+7:  2024  7273    2083 0.7865551 0.4782513
+8:  2025  7724    2663 0.8013789 0.4846228
+9:  2026  7760    2880 0.8065482 0.4892658
+wrote C:\Users\amarar/Dropbox/Effect of Centralization/explorations/2026-08-31_did_college_outcomes/output/class_college_allgrades_panel.rds | MD5 9b2a5f80a0dc3a1400cc12195665a382 | 4.8 min 
