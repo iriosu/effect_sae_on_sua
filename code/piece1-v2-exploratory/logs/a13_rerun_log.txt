@@ -1,5 +1,0 @@
-[comp A gpa_z] -0.1735 (0.0234) T -3.84 RI p 0.0002 *** | 5.0 min 
-[comp A sh_prio] +0.0239 (0.0090) T +4.40 RI p 0.0006 *** | 10.4 min 
-[col A grad_ontime] -0.0425 (0.0078) T -6.64 RI p 0.0026 *** | era_old -0.0373 p 0.1547  | era_new -0.0428 p 0.0018 *** | 19.2 min 
-[col A applied] -0.0354 (0.0126) T -5.42 RI p 0.0008 *** | era_old -0.0354 p 0.0418 ** | era_new -0.0354 p 0.0013 *** | 28.4 min 
-[col A assigned] -0.0386 (0.0147) T -6.88 RI p 0.0013 *** | era_old -0.0332 p 0.0409 ** | era_new -0.0389 p 0.0018 *** | 38.2 min 
