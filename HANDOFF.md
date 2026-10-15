@@ -1,0 +1,209 @@
+# Handoff: branch `finalized-design-v1`
+
+This branch adds the two R notebooks that write Tables 1 to 4, Figure 1 and Appendix Tables A1 to A3 of the working draft of *Effect of Centralized School Choice on College Admissions Outcomes* (Rios, Larroucau and Marar), with the package versions they ran under and a manifest of their data.
+
+## Status (2026-10-15)
+
+**Ran.** Each notebook ran with its README's command, from its folder in this branch, on a Windows 11 machine with R 4.5.1 and 20 cores, reading the shared data folder.
+
+**Matched.** Every table file the two notebooks write is byte-identical to the working draft's. Figure 1's two PDF files equal the draft's except for each file's creation and modification dates.
+
+**Reviewed.** The code review of the two notebooks, their READMEs, the data manifest and the runs passed at 98/100 (the gate is 95).
+
+**Outside this branch.**
+
+- Appendix Table A4, "Characteristics of the Children Whose Attendance Depends on the Offer" (`lottery_characteristics.tex`), and Appendix Table A5, "Effect of Attending an Over-Demanded School on Graduation and College Outcomes, On Time and Ever, with First-Choice Admission Lotteries" (`lottery_college_first_choice.tex`), both cited in Section 3, come from the project's internal code.
+- `section3/README.md` lists the numbers of Section 3's text that need data outside the two Section 3 panels. Section 2's notebook prints one of them, the share of the school-grades in the Metropolitan Region, which Section 3.1 quotes.
+- Neither notebook prints these counts of Section 2.1: the 7,106 school-grades with the prior-year grade point average (GPA) outcome, the other 1,785, and the 728 school-grades the pre-adoption enrollment check flags (`SLACK_FAIL`).
+
+## The question
+
+"How did SAE affect college admissions outcomes?" SAE (Sistema de Admisión Escolar) is Chile's centralized admission system for publicly funded schools. The working draft answers in two parts:
+
+- Section 2, "Centralized Assignment Changed Who Enters Over-Demanded Schools", compares entering classes across SAE's staggered rollout.
+- Section 3, "Attending an Over-Demanded School Lowers On-Time Graduation and College Assignment", compares 9th-grade applicants with the same chance of an offer at an over-demanded school.
+
+## The branch and the data
+
+The branch is `main` with the files below added; every other file is `main`'s, unchanged.
+
+| File | What it is |
+|---|---|
+| `HANDOFF.md` | this file |
+| `code/finalized_design_v1/section2/section2_cs_did.Rmd` | Section 2's notebook; its header holds the panel's data dictionary and the rules the panel was built by |
+| `code/finalized_design_v1/section2/README.md` | Section 2's data files, command, requirements, run time and memory |
+| `code/finalized_design_v1/section3/Section3_IV.Rmd` | Section 3's notebook |
+| `code/finalized_design_v1/section3/README.md` | Section 3's command, setup and standard errors, the dictionaries of its two panels, and the numbers of Section 3's text: those the notebook prints and those that need data outside its panels |
+| `code/finalized_design_v1/environment/renv.lock` | the R version of the machine that ran the tables and the versions of 97 of its packages, among them every package outside R's base packages that the two notebooks load, as an renv lockfile |
+| `code/finalized_design_v1/environment/package_versions.csv` | the same 97 packages and 10 of R's base packages (among them `parallel` and `tools`, which Section 2 loads), one row per package |
+| `code/finalized_design_v1/data_manifest.csv` | each data file's path inside the Dropbox folder (`path_in_dropbox`), its size in bytes, its MD5 checksum and the notebook that reads it (`read_by`, a path in this repository) |
+
+Each notebook writes its outputs into its own folder (see [Running the notebooks](#running-the-notebooks)). The repository's `.gitignore` excludes `.rds`, `.csv` and `.pdf` files, so a run's `.tex` and `.md` outputs appear as untracked files; `data_manifest.csv` and `package_versions.csv` are tracked on purpose.
+
+The data are in the coauthors' shared Dropbox folder `<home>/Dropbox/Effect SAE on SUA/data/finalized_design_v1/`, where `<home>` is the `USERPROFILE` environment variable when it is set (as on Windows) and `~` otherwise:
+
+| File | What it is |
+|---|---|
+| `section2/section2_panel.rds` | Section 2's panel: one row per entrant child-year in an over-demanded school-grade, academic years 2012-2023; 1,324,477 rows covering 8,891 school-grades |
+| `section2/draws/did/regional/` | 14 files of saved reassignments of SAE's rollout across the 16 regions, 9,999 or 2,999 each, for Section 2's randomization tests |
+| `section3/section3_panel.rds` | Section 3's sample: one row per child, the 304,547 children whose applications to 9th grade in SAE's 2016-2021 processes pass the steps of [Section 3's design](#section-3-attending-an-over-demanded-school) ("Sample"); 30 columns |
+| `section3/table_a3_panel.rds` | one row per school, for Appendix Table A3: the 1,045 over-demanded schools and the comparison's 1,500 other SAE schools; 2,545 rows, 40 columns |
+
+Section 2's notebook checks the MD5 checksums of its panel and of the 14 files and stops on a mismatch. Section 3's notebook reads its two panels without a check, so compare them with `data_manifest.csv` before a run. This code builds the two files' paths the way the notebooks do and prints the MD5 checksums to compare:
+
+```r
+home <- ifelse(Sys.getenv("USERPROFILE") != "", Sys.getenv("USERPROFILE"), path.expand("~"))
+tools::md5sum(file.path(home, "Dropbox", "Effect SAE on SUA", "data", "finalized_design_v1", "section3",
+                        c("section3_panel.rds", "table_a3_panel.rds")))
+```
+
+On a machine whose `Dropbox` folder sits elsewhere, run `Sys.setenv(USERPROFILE = path.expand("<the folder that holds Dropbox>"))` in the R session before knitting: both notebooks build their data paths from it, and Section 2 reads a path that starts with `~` as relative to its own folder, which `path.expand()` prevents. Section 2 also takes the two paths as the parameters `panel_file` and `schedules_dir`, as `section2/README.md` shows.
+
+## The two designs
+
+### Section 2: who enters over-demanded schools
+
+Section 2 compares the classes entering under SAE with the last classes the schools selected, in a staggered difference-in-differences design. Its unit is the over-demanded school-grade: one grade of one school (a cell, in the notebook) that turns applicants away.
+
+**Rollout.** SAE runs one admission process a year, which assigns the class entering the next academic year. Its staggered rollout reached Chile's 16 regions in four waves of 1, 4, 10 and 1 regions: Magallanes ran the first process in 2016, four regions followed in 2017, ten in 2018, and the Metropolitan Region in 2019. In each region, the first process covered the entry grades (pre-kindergarten, kindergarten, 1st, 7th and 9th grade), and the other grades joined one process later. A school-grade's adoption year, g, is the academic year of its first SAE-assigned entering class.
+
+**Comparison.** Sofía enters the 9th grade of an over-demanded school in one of the ten regions of the 2018 wave. The 2018 process assigned her class, which entered in 2019, so the school-grade's adoption year is g = 2019, and the class of 2018 (g-1) is the last class the school selected. The comparison takes the change in the entrants' mean prior-year GPA, and separately in their low-income share, from the class of 2018 to Sofía's class of 2019, and subtracts the same change at the school-grades SAE had not yet reached in 2019: the Metropolitan Region's entry grades (g = 2020) and the later-adopting grades of the 2018 wave's regions and of the Metropolitan Region (g = 2020 and g = 2021). The estimate repeats this for every adoption group (the school-grades with the same g) and year with a comparison group, then averages the post-adoption effects, weighting each by its adoption group's number of school-grades.
+
+**Sample.** The panel covers 8,891 over-demanded school-grades in academic years 2012-2023. A school-grade is over-demanded when its applicants exceeded its seats in the main stage (the first assignment round of each year's process) of every SAE process from 2016 through 2025 in which it offered seats, counting an applicant for each school-grade she ranked at least as high as her final assignment; Magallanes's first process, in 2016, counts. An entrant is a child in the school's enrollment census in year t who is absent from that school's census in year t-1, regardless of how she was admitted.
+
+**Outcomes.** Each is a mean over a school-grade's entrants in a year: the mean prior-year GPA (each entrant's GPA of year t-1, standardized over every graded student in Chile that year; entrants to grades 2-12) and the low-income share (the share classified as low-income, prioritario, in the entry year; every grade).
+
+**Estimator.** `did` 2.1.2's `att_gt` estimates the group-time average effects of Callaway and Sant'Anna (2021, *Journal of Econometrics*), with school-grades SAE had not yet reached as the comparison (`control_group = "notyettreated"`), the universal base period g-1 (`base_period = "universal"`), no anticipation (`anticipation = 0`; the class of g-1 entered before the admission process that assigned the class of g), an unbalanced panel and no covariates. `did`'s `aggte` averages them into the overall effect (Table 1, Appendix Tables A1 and A2) and the effects by year relative to adoption (Figure 1). Every school-grade adopts by 2021, so the estimates use the cell-years (a school-grade in one year) of 2012-2020. The notebook's function `fit_did` holds these arguments.
+
+**Inference.** Standard errors (SE) come from `did`'s multiplier bootstrap clustered by region, with 10,000 draws (999 for Appendix Table A1's rows 2-5), and Figure 1's bars are the estimate plus or minus 1.96 SE. Stars come from a randomization test over SAE's rollout. Each saved reassignment gives the 16 regions the observed wave years in a random order, keeping the wave sizes; under each, the notebook recomputes a paired version of the estimate (from the school-grades observed in both years of each comparison) divided by its delete-one-region jackknife SE, and the p-value is the share of reassignments, the actual one included, whose statistic is at least as large in absolute value. Table 1 and Appendix Table A1's last row use 9,999 saved reassignments; Appendix Table A1's rows 2-5, Appendix Table A2 and the joint test of Figure 1's leads (the years g-6 to g-2; its statistic is the largest absolute lead, each lead standardized by its spread across the reassignments) use 2,999.
+
+### Section 3: attending an over-demanded school
+
+Section 3 compares 9th-grade applicants with the same chance of an offer at one of the 1,045 over-demanded schools, with the offer as the instrument for attending one.
+
+**Comparison.** María applies to 9th grade, ranking schools A and B, both over-demanded, and then school C. If 600,000 of one million reruns of SAE's main stage, each with new random numbers drawn the way SAE draws them, place her at A or B, her chance of an offer is 60% (`CHANCE_GROUP` = 60, the chance rounded to the nearest hundredth). She is compared with the other children whose chance is also 60%, whatever their lists: in SAE's actual main stage, their random numbers gave some of them an offer and left the rest without one. The estimate divides the offer's effect on an outcome by its effect on attendance at an over-demanded school, the first stage. Each chance group pools the 2016-2021 processes, and application-year fixed effects hold the year fixed.
+
+**Sample.** The 1,045 over-demanded schools are the schools whose 9th grade is in Section 2's sample. Section 3's panel holds 304,547 children: those who applied to 9th grade in SAE's 2016-2021 processes, ranked one of the 1,045 schools or were enrolled at one, and were enrolled in 8th grade in the application year, each with her earliest application, after dropping the applications of children who had applied in the previous year's main stage. The lottery sample is the 176,321 children whose chance is above 0 and below 1; each of its hundredths groups holds a child with an offer and a child without one. The other 128,226 have a chance of exactly 0 or 1 and are in groups 0 and 100, which also hold children of the lottery sample: 14,136 whose chance rounds to 0 and 1,063 whose chance rounds to 1. The column `LOTTERY_SAMPLE` marks the lottery sample. Tables 3 and 4 use the 175,869 children of the lottery sample with every characteristic (Table 4, those among them with each score).
+
+**Offer and attendance.** An offer at an over-demanded school (`OFFER` = 1) is SAE's main-stage placement at any of the 1,045 schools. Attendance at an over-demanded school (`D_OD` = 1) means the enrollment census of the entry year, the year after the application, shows the child at any of the 1,045 schools. Every other child has `D_OD` = 0, including one enrolled at a fee-paying private school or with no enrollment record that year. A child who later changes or leaves school keeps her entry-year value.
+
+**Outcomes.** Applying and being assigned refer to the centralized college admission system (formerly the Sistema Único de Admisión, SUA; the Sistema de Acceso a la Educación Superior since the 2021 process). Table 3's outcomes are Graduated from high school; Applied to a college program; Assigned a college seat; Enrolled (In SUA); and Enrolled (Outside SUA). The two enrollment rows count each child once, by her first enrollment. Each outcome is measured on time, by the year a student who advances one grade each year would reach it (the fourth school year after the application for graduation; the admission process five years after it for the college outcomes), and ever, at any time through the 2025 year-end academic records and the 2026 admission process and higher-education enrollment registry. A child with no record counts as 0. Table 4 reports three admission scores in standard deviations (SD) within the admission process, each among the children who have it: the reading-mathematics mean of the national admission tests, the NEM score (Notas de Enseñanza Media, the grade-based admission score) and the ranking score.
+
+**Estimator.** Each outcome is regressed on `D_OD` by two-stage least squares (2SLS) in `fixest`, with `OFFER` as the instrument, chance-group fixed effects (`CHANCE_GROUP`), application-year fixed effects (`YEAR`) and the characteristics as controls: the 8th-grade average (`GPA8_Z`, in SD), female (`ES_MUJER`), low income (`PRIORITARIO`), top 20% of the school's grade ranking (`ALTO`, set to 0 for the 2016 applicants, whose process did not record it) and enrolled at an over-demanded school in 8th grade (`ORIGIN_OD`). Table 2 compares the children with and without an offer on their ranked list and characteristics, holding fixed the application year (column 2), and the chance group and application year, with the chance in hundredths (column 3) or in thousandths (`CHANCE_GROUP_THOUSANDTHS`, column 4). Column 4 uses `LOTTERY_SAMPLE_THOUSANDTHS`: the 167,348 children of the lottery sample whose thousandths group holds a child with an offer and a child without one. Table 2's Panel C reports two effects of the offer: on attending an over-demanded school (the first stage) and on being enrolled at any school. Table 3's note gives the first stage with the characteristics as controls.
+
+**Inference.** Section 3 reports heteroskedasticity-robust SE without clustering and marks estimates significant at the 10, 5 and 1% levels, as Abdulkadiroğlu, Angrist, Narita and Pathak (2017, *Econometrica*) do. The setup chunk sets robust SE for every fit (`setFixest_vcov(all = "hetero")`) and keeps chance groups that hold a single child (`setFixest_estimation(fixef.rm = "none")`); each 2SLS call adds `ssc = ssc(K.adj = FALSE)`, and the notebook's `effect()` takes 2SLS p-values from the normal distribution. `section3/README.md` ("Standard errors") gives the conventions of each table and of the joint tests.
+
+## Running the notebooks
+
+Paths are relative to `code/finalized_design_v1/`; exhibit numbers are the working draft's.
+
+| Exhibit | Title | File |
+|---|---|---|
+| Table 1 | Effect of Centralized Assignment (SAE) on Entering-Class Composition | `section2/section2_output/tables/alloc_headline.tex` |
+| Figure 1, Panels A and B | Entering-class composition by year relative to adoption | `section2/section2_output/figures/alloc_event_study.pdf`, `alloc_event_study_prio.pdf` |
+| Appendix Table A1 | Checks on the Change in Entrant Composition | `section2/section2_output/tables/appendix14_a1_allocation.tex` |
+| Appendix Table A2 | Intake Size and Availability of Prior Grades | `section2/section2_output/tables/appendix14_a2_intake.tex` |
+| Table 2 | Lottery Balance and Enrollment, Application Years 2016-2021 | `section3/output/lottery_balance.tex` |
+| Table 3 | Effect of Attending an Over-Demanded School on Graduation and College Outcomes, On Time and Ever | `section3/output/lottery_college.tex` |
+| Table 4 | Effect of Attending an Over-Demanded School on Admission Scores | `section3/output/lottery_scores.tex` |
+| Appendix Table A3, Panels A and B | Historical Academic Records of Over-Demanded Schools and Other SAE Schools | `section3/output/lottery_od_historical_records.tex`, `lottery_od_historical_va_checks.tex` |
+| Table A3's numbers in the text | the macros through which the text quotes them | `section3/output/lottery_od_historical_macros.tex` |
+
+**Section 2**, from `section2/` (on a machine whose main library holds another `did` version, use the command under [Versions and installation](#versions-and-installation)):
+
+```
+Rscript -e "knitr::knit('section2_cs_did.Rmd')"
+```
+
+It writes `section2_cs_did.md` (the code with its printed results, warnings and messages, among them the panel's counts, the event-time estimates and the joint randomization tests of the leads that Section 2's text quotes) and `section2_output/`: `tables/`, `figures/`, `staggered_did/` (every intermediate file and result) and `draws/bootstrap/` (the bootstrap draws, drawn anew). The bootstrap folder must start empty, so remove `section2_output/` before a second run. The notebook stops at its first error, its version check included. The run of this branch's notebook on 2026-10-15 took 138 seconds on all 20 cores. The notebook uses every core it finds; `section2/README.md` gives the command for fewer and its measurements: 4.3 minutes and 1.9 GB of memory on 4 cores, 14.2 minutes and 1.1 GB on one core, and 5.4 GB at the peak with every core.
+
+**Section 3**, from `section3/`:
+
+```
+Rscript -e "knitr::knit('Section3_IV.Rmd', 'output/Section3_IV.md')"
+```
+
+It writes the six Section 3 files of the table above to `output/`, and `output/Section3_IV.md`, the code with its printed results, among them the numbers of Section 3's text that `section3/README.md` lists. The run of 2026-10-15 took 6 seconds. This command keeps knitting after an error in a chunk and still ends with exit status 0, so a complete run is one whose `output/Section3_IV.md` holds no line starting with `## Error` and whose six table files have modification times from the run.
+
+**On another machine.** The working draft's table files end each line with a carriage return and a line feed (CRLF, the Windows convention); on macOS and Linux R writes a line feed alone, so compare a table there with `identical(readLines(a), readLines(b))` (`section3/README.md`). Section 2 numbers its school-grades in the R session's collation order of the labels `rbd|cod_nivel`; the runs behind the paper's tables used `English_United States.utf8` on Windows, and another collation can move the last digits of the estimates and SE (the notebook's "Analysis sample" chunk).
+
+## The instrument's assumptions
+
+Section 3.4 of the working draft estimates, by 2SLS,
+
+```math
+D_i = \gamma_{c(i)} + \mu_{t(i)} + \pi Z_i + X_i'\lambda + u_i, \qquad Y_i = \alpha_{c(i)} + \delta_{t(i)} + \beta D_i + X_i'\theta + \varepsilon_i,
+```
+
+with $Z_i$ the offer (`OFFER`), $D_i$ attendance (`D_OD`), $c(i)$ the chance group (`CHANCE_GROUP`), $t(i)$ the application year (`YEAR`), $X_i$ the characteristics and $Y_i$ an outcome. The coefficient $\pi$ is the first stage, and $\beta$ is the effect of attending an over-demanded school. The notebook fits the first stage and the 2SLS of Table 3 in the chunk `table3`, and the 2SLS of Table 4 in `table4`; its function `effect()` reads $\beta$ as the coefficient `fit_D_OD`.
+
+Section 3.4 rests the comparison on the first statement below; reading $\beta$ as an attendance effect adds the other two:
+
+- **The offer is as good as random within a chance group.** "Within a group, the offer is as good as random. A child's chance depends only on her ranked list and her priorities, so two children in the same group had the same chance of an offer, to the hundredth, before the random numbers were drawn, and the numbers alone decided which of them received one." This statement enters through the chance-group and application-year fixed effects of both equations, on the lottery sample.
+- **Exclusion.** "Exclusion requires the offer to affect outcomes only through attendance at an over-demanded school and what follows from it; it rules out an effect of the offer on a child whose attendance is the same with and without it, including a child who moves from one over-demanded school to another."
+- **Monotonicity.** "Monotonicity requires that an offer never causes a child to forgo an over-demanded school she would have attended without it."
+
+Exclusion and monotonicity enter the reading of $\beta$: "Under these assumptions, $\beta$ is a weighted average of the effects of attending an over-demanded school for the children whose attendance depends on the offer (compliers): those who attend one with the offer and would not without it. Children who attend an over-demanded school with or without the offer (always-takers) contribute to neither the first stage nor $\beta$."
+
+The columns that bear on each statement, in `section3_panel.rds` unless the table says otherwise (`section3/README.md` defines each):
+
+| Statement | Columns |
+|---|---|
+| The offer is as good as random within a chance group | `CHANCE_GROUP` (hundredths, 0-100), `CHANCE_GROUP_THOUSANDTHS` (thousandths, 0-1,000), `YEAR`, `LOTTERY_SAMPLE`, `LOTTERY_SAMPLE_THOUSANDTHS`, `OFFER`; the variables Table 2 compares: `N_CLASS`, `N_OD`, `FC_OD` (choices ranked, over-demanded schools ranked, an over-demanded school ranked first) and the characteristics |
+| Exclusion | `OFFER`, `D_OD` and `ENTRY_RBD` (the child's school in the entry year's census, missing without an enrollment record). Joined to `table_a3_panel.rds`'s `RBD` and `IS_OD`, `ENTRY_RBD` names which of the 1,045 schools a child attends and brings in that table's school measures (historical records and value added), so the children who attend an over-demanded school with and without an offer can be compared school by school. The outcome columns: `GRAD`, `APPLIED`, `ASSIGNED`, `INSUA` and `OUTSIDE`, each with `_OT` (on time) and `_EVER`, and the scores `LM_Z_MAX`, `NEM_Z_LATEST` and `RANK_Z_LATEST` |
+| Monotonicity | `OFFER` and `D_OD` within `CHANCE_GROUP` and `YEAR` in the lottery sample (or within `CHANCE_GROUP_THOUSANDTHS` and `YEAR` in `LOTTERY_SAMPLE_THOUSANDTHS`) give the offer's effect on attendance, the first stage that Table 2's Panel C reports; the characteristics and `N_CLASS`, `N_OD`, `FC_OD` define groups of children within which that effect can be measured |
+
+`ENTRY_RBD` and `table_a3_panel.rds`'s `RBD` are the same school identifier: the panel's 100,527 children with `D_OD` = 1 are exactly the children whose `ENTRY_RBD` is among the 1,045 schools with `IS_OD`.
+
+The panel holds no column for the over-demanded school at which SAE's main stage placed the child, for the schools on her list or her priority at each, for the funding status (publicly funded or fee-paying) of her entry-year school, which Section 3.6's shares of 96.8% and 2.0% need, or for the one million reruns themselves; each child's chance, rounded to the hundredth and to the thousandth, is in `CHANCE_GROUP` and `CHANCE_GROUP_THOUSANDTHS`, and `section3/README.md` lists every number of Section 3's text that needs data outside the panels. Its one school identifier, `ENTRY_RBD`, records the entry year's school. Outside the lottery sample, `N_CLASS`, `N_OD`, `FC_OD` and Table 3's outcome columns other than `GRAD_EVER` and `ASSIGNED_EVER` are missing; the three score columns hold each applicant's score whenever she has one.
+
+## Rules every new analysis keeps
+
+A new analysis keeps each design as described above and these rules, each settled by the authors:
+
+1. Section 3 uses SAE's 9th-grade lotteries of every process from 2016 through 2021, Magallanes's first process, in 2016, included.
+2. Every child whose offer a random number could change is in the lottery sample, whatever her priority group.
+3. Every set of schools an analysis builds (Section 2's over-demanded school-grades, Section 3's 1,045 over-demanded schools, Table A3's schools) holds publicly funded schools only: municipal, Local Public Education Service (SLEP), delegated administration, and subsidized private, including those that charge families a copayment. SAE covers these schools; fee-paying private schools stayed outside it. A school that moves between publicly funded and fee-paying private status (`COD_DEPE` = 4 on its students' year-end records) at any point in 2012-2025 is dropped from every analysis, whole. A child of the lottery sample stays in it wherever she enrolls; at a fee-paying private school she has `D_OD` = 0.
+4. Section 3 measures each outcome on time and ever, as defined above, and the two enrollment rows count each child once, by her first enrollment.
+5. Section 3's inference: heteroskedasticity-robust SE without clustering, stars at the 10, 5 and 1% levels.
+6. Section 2's comparison: the school-grades SAE had not yet reached, the universal base period g-1, and no anticipation (`anticipation = 0`).
+7. Section 2's inference: SE from `did`'s bootstrap clustered by region; stars from the randomization test over the saved reassignments, drawn once and reused by every run; Figure 1's bars at the estimate plus or minus 1.96 SE.
+8. In Section 2, each `did` aggregation (`aggte`) runs right after its `att_gt` fit, in the notebook's order: the bootstrap SE depend on the random-number state `att_gt` leaves behind.
+
+## Versions and installation
+
+**Section 2** needs R 4.5.1 and `did` 2.1.2; its setup chunk stops on any other version of either. The notebook also prints the versions of BMisc, data.table, DRDID, Matrix, Rcpp and RcppArmadillo; the machine that ran the tables had BMisc 1.4.10, data.table 1.18.4, DRDID 1.3.0, Matrix 1.7-3, Rcpp 1.1.2 and RcppArmadillo 15.4.2-1. With these versions a run prints 37 warnings, as the runs behind the paper's tables did: each `did` fit prints two, that `BMisc::rhs.vars` and `BMisc::getListElement` are deprecated (36 in all), and one notes that data.table was built under R 4.5.3.
+
+**Section 3** needs `fixest`, dplyr, tidyr, purrr and knitr; its `ssc(K.adj = FALSE)` needs `fixest` 0.13.0 or later. The paper's tables ran with R 4.5.1, `fixest` 0.14.2, dplyr 1.2.1, tidyr 1.3.2, purrr 1.2.2, tibble 3.3.1 and knitr 1.51.
+
+`environment/renv.lock` and `environment/package_versions.csv` give, for every package the two notebooks load, the version on the machine that ran the tables. To install every package the notebooks load except `did` and the packages that come with it (BMisc and DRDID among them):
+
+```r
+install.packages(c("data.table", "knitr", "remotes", "dplyr", "tidyr", "purrr"), repos = "https://cloud.r-project.org")
+remotes::install_version("fixest", "0.14.2", upgrade = "never", repos = "https://cloud.r-project.org")
+```
+
+`upgrade = "never"` keeps the installed versions of a package's dependencies and installs the missing ones; run from a script without it, `remotes` upgrades every outdated one. `remotes::install_version` builds a package from its source: `fixest` compiles C++ code, which needs Rtools on Windows and the Xcode command-line tools on macOS; `did` 2.1.2 is pure R.
+
+To put `did` 2.1.2 in the main library, run the `install_version` call of `section2/README.md` with the same options:
+
+```r
+remotes::install_version("did", "2.1.2", upgrade = "never", repos = "https://cloud.r-project.org")
+```
+
+To keep another `did` version in the main library, install 2.1.2 into a separate library, where its missing dependencies also go:
+
+```r
+lib <- path.expand("~/R/did-2.1.2")
+dir.create(lib, recursive = TRUE, showWarnings = FALSE)
+.libPaths(c(lib, .libPaths()))
+remotes::install_version("did", version = "2.1.2", lib = lib, upgrade = "never", repos = "https://cloud.r-project.org")
+```
+
+On either route, to match the machine that ran the tables, check `packageVersion("BMisc")` and `packageVersion("DRDID")` against 1.4.10 and 1.3.0, and install those versions with `remotes::install_version` and the same options (with `lib = lib` on the separate-library route) if they differ. On the separate-library route, run Section 2 from `section2/` with that library first in the search path:
+
+```
+Rscript -e ".libPaths(c(path.expand('~/R/did-2.1.2'), .libPaths())); knitr::knit('section2_cs_did.Rmd')"
+```
+
+The notebook passes its library paths to the separate R process in which every `did` fit runs, so that process loads `did` 2.1.2 as well.

@@ -1,0 +1,1569 @@
+---
+title: "Section 2: SAE and entering-class composition"
+output: html_document
+params:
+  panel_file: !r file.path(ifelse(Sys.getenv("USERPROFILE") != "", Sys.getenv("USERPROFILE"), path.expand("~")), "Dropbox", "Effect SAE on SUA", "data", "finalized_design_v1", "section2", "section2_panel.rds")
+  schedules_dir: !r file.path(ifelse(Sys.getenv("USERPROFILE") != "", Sys.getenv("USERPROFILE"), path.expand("~")), "Dropbox", "Effect SAE on SUA", "data", "finalized_design_v1", "section2", "draws", "did")
+  output_dir: "section2_output"
+  cores: 0
+---
+
+This notebook reproduces Section 2 of *Effect of Centralized School Choice on College Admissions
+Outcomes* (Rios, Larroucau and Marar): Table 1, Figure 1 (its two event-study panels), Appendix
+Tables A1 and A2, and the numbers Section 2's text quotes (the event-time estimates, the joint
+randomization tests of the leads, the check on the largest GPA lead, and the panel's counts).
+
+**Inputs.** The notebook reads its inputs from the coauthors' shared Dropbox folder
+`<home>/Dropbox/Effect SAE on SUA/data/finalized_design_v1/section2/` (`<home>` is `USERPROFILE` on
+Windows and `~` on macOS and Linux) and checks each input by its MD5 before it reads it.
+
+- `section2_panel.rds` (`params$panel_file`): Section 2's panel, one row per entrant child-year in
+  an over-demanded school-grade, academic years 2012-2023; 1,324,477 rows, 8,891 school-grades,
+  MD5 `3104b4b2b1b6998941311667fa0ab785`. Its columns are listed in the data dictionary below.
+- `draws/did/regional/` (under `params$schedules_dir`): 14 files of saved reassignments of SAE's
+  rollout across the 16 regions, 9,999 or 2,999 each, that the randomization tests use.
+
+**Command.** From the folder that holds this notebook (see the README):
+
+    Rscript -e "knitr::knit('section2_cs_did.Rmd')"
+
+This writes `section2_cs_did.md` (code, printed results, warnings and messages) and the folder
+`section2_output/`: `tables/` (the three table files the paper inputs), `figures/` (Figure 1's two
+panels), `staggered_did/` (every intermediate file and result) and `draws/bootstrap/` (the
+bootstrap draws, drawn anew from the seeds below; the folder must start empty, so a second run
+needs `section2_output/` removed first). `params$cores` sets the number of processes (0: every core).
+
+**Run time and memory.** On a Windows 11 machine with 20 cores and 64 GB (R 4.5.1), with every core
+(`cores: 0`): 2.5 min, the knit and its worker processes holding 5.4 GB together at the peak. On 4
+processors (`cores: 4`): 4.3 min and 1.9 GB. With one core (`cores: 1`): 14.2 min and 1.1 GB.
+
+**Versions.** R 4.5.1 and did 2.1.2 are required; the notebook stops otherwise. Any current version
+of data.table and knitr works; the notebook prints the versions it runs with.
+
+**The rules the panel embodies.** The project's pipeline built the panel from the administrative
+records under these rules (Section 2.1, "Over-demanded schools, entrants, and outcomes"):
+
+- *Over-demanded school-grades.* A school-grade is in the panel when effective demand exceeded the
+  seats it offered in the main stage of every SAE process from 2016 through 2025 in which it
+  offered seats. Magallanes's first process, in 2016, counts.
+- *Schools left out.* A school that moves between publicly funded and fee-paying status at any
+  point in 2012-2025, read from the dependency code on its students' year-end records, is left out
+  whole.
+- *Grades.* Every youth secondary program's census rows carry their grade, including the program
+  codes SAE's applicant file does not list.
+- *Entrants.* An entrant is a child in the school's census in year $t$ who is absent from that
+  school's census in year $t-1$, in any of its programs.
+- *Prior-year GPA.* Each entrant's GPA of year $t-1$ is the mean of her graded year-end records that
+  year (GPA from 1 to 7), standardized over every graded student in Chile that year, one value per
+  student; a record without a student ID counts as its own value.
+
+The notebook's own code applies four more: the GPA outcome covers entrants to grades 2-12 (the
+PreKinder, Kinder and 1st-grade cell-years are left blank), the Observations rows count the
+cell-years of 2012-2020 (the years the estimates use), Appendix Table A1 has five specification
+rows and the restricted-sample row, and the largest GPA lead is recorded against 0.03 SD.
+
+**Data dictionary.** Section 2's panel (one row per entrant child-year):
+
+| Column | Meaning |
+|---|---|
+| `MRUN` | the child's student ID (the census's own name) |
+| `AGNO` | the academic year $t$ of the census in which she enters |
+| `RBD` | the school's ID (the census's own name) |
+| `COD_NIVEL` | the grade she enters: -1 PreKinder, 0 Kinder, 1-8 grades 1-8, 9-12 secondary grades 1-4 |
+| `REGION` | the school's region, 1-16 (13 is the Metropolitan Region) |
+| `IS_ENTRY` | 1 for the grades a child usually enters a school at (PreKinder, Kinder, 1, 7 and 9) |
+| `DOOR` | the year of the first SAE admission process with offers in the cell's region and grade; that process assigns the class entering in `DOOR + 1` |
+| `SLACK_FAIL` | TRUE when the pre-adoption enrollment check flags the cell: the grade's mean enrollment in the four years up to `DOOR` is below 90% of its mean in the three years after, while the school's enrollment shows no such rise (Appendix Table A1's row "Slack cells excluded") |
+| `DOOR_YEAR_TAG` | TRUE when the cell turned applicants away in its first SAE process (carried for reference; no exhibit here uses it) |
+| `PRIO` | 1 when the child is on the low-income (prioritario) roster of year $t$ |
+| `PRIOR_GPA_Z` | her prior-year GPA, as defined above; NA when she has no graded record in $t-1$ |
+| `N_PRIOR_RECORDS` | the number of her graded records in $t-1$ (NA when none) |
+| `UNKNOWN_SCHOOL`, `UNKNOWN_REGION`, `UNKNOWN_GRADE`, `UNKNOWN_CALENDAR` | TRUE when one of her records of $t-1$ lacks a school, the school's region, a grade, or the first SAE process of that region and grade |
+| `EXPOSURE_KNOWN` | TRUE when none of the four is missing for any of her records of $t-1$ |
+| `EXPOSED` | TRUE when one of her records of $t-1$ was earned in a region and grade SAE already covered |
+| `SIGNATURE` | the regions and entry-grade status of her records of $t-1$ (used to recompute `EXPOSED` under each reassigned rollout) |
+| `ELIGIBLE_HISTORY` | `EXPOSURE_KNOWN` and not `EXPOSED`: her prior-year grades were earned before SAE reached the region and grade of her prior-year records (the sample of Appendix Table A1's last row) |
+
+Names the notebook builds: a *cell* is a school-grade (`rbd|cod_nivel`), with an integer `cell_id`;
+the cell-year panel holds `n_ent` (entrants), `n_gpa` (entrants with a prior-year GPA), `gpa_z`
+(their mean prior-year GPA), `sh_prio` (the low-income share) and `w_ent` (the cell's mean `n_ent`,
+the weight of the entrant-weighted row); `G = DOOR + 1` is the cell's adoption year $g$, the
+academic year of the first class SAE assigns; a region's *wave* is the `DOOR` of its entry grades
+(SAE reached a region's other grades a year later), and the rollout's four waves hold 1, 4, 10 and
+1 regions.
+
+## Setup
+
+Loads the packages, checks the R and did versions, and sets the seeds, the draw counts and the
+output folders. The random-number state is set from these seeds before each estimate, as in the run
+of record (the run that produced the paper's exhibits).
+
+```{r setup, error = FALSE}
+library(data.table)
+library(did)
+library(parallel)
+library(tools)
+
+knitr::opts_chunk$set(echo = TRUE, warning = TRUE, message = TRUE, error = FALSE)
+if (!exists("params"))
+  params <- local({
+    home <- ifelse(Sys.getenv("USERPROFILE") != "", Sys.getenv("USERPROFILE"), path.expand("~"))
+    data_dir <- file.path(home, "Dropbox", "Effect SAE on SUA", "data", "finalized_design_v1", "section2")
+    list(panel_file = file.path(data_dir, "section2_panel.rds"), schedules_dir = file.path(data_dir, "draws", "did"),
+         output_dir = "section2_output", cores = 0L)
+  })
+options(warn = 1)
+say <- function(...) { message(sprintf(...)); invisible(NULL) }
+
+# R 4.5.1 and did 2.1.2 are required
+local({
+  r_now <- paste(R.version$major, R.version$minor, sep = ".")
+  bad <- c(if (r_now != "4.5.1") sprintf("R %s (required: 4.5.1)", r_now),
+           if (as.character(packageVersion("did")) != "2.1.2")
+             sprintf("did %s (required: 2.1.2)", packageVersion("did")))
+  if (length(bad)) stop("this notebook needs R 4.5.1 and did 2.1.2: ", paste(bad, collapse = "; "), call. = FALSE)
+})
+say("R %s.%s; did %s; data.table %s; knitr %s", R.version$major, R.version$minor, packageVersion("did"),
+    packageVersion("data.table"), packageVersion("knitr"))
+
+# seeds and draw counts (RI, in names such as B_RI and ri_p, stands for randomization inference: the
+# tests over the saved reassignments of the rollout)
+SEED_MAIN <- 20260815       # Table 1, Appendix Table A2 and Figure 1's GPA panel
+SEED_ROBUST <- 20260806     # Appendix Table A1, rows 2-5 (both columns restart it)
+SEED_PRIO_ES <- 20260830    # Figure 1's low-income panel
+SEED_PRIOR <- 20260915L     # Appendix Table A1, last row
+B_BOOT <- 10000             # bootstrap draws: Table 1, Figure 1, Table A2, Table A1's last row
+B_BOOT_ROBUST <- 999        # bootstrap draws: Table A1, rows 2-5
+B_RI <- 9999L               # saved rollout reassignments: Table 1 and Table A1's last row
+B_RI_ROBUST <- 2999L        # saved reassignments: Table A1 rows 2-5, Table A2, the joint lead tests
+# the paired estimate the randomization test studentizes uses the cells observed in both years of
+# each comparison; did also uses cells observed in one year. Each paired estimate must stay this
+# close to did's (prior-year GPA in SD; low-income share as a proportion)
+TRACK_TOL <- c(gpa_z = 0.02, sh_prio = 0.005)
+# the paired leads g-6 .. g-2 (the joint lead test's statistic) must stay this close to did's dynamic leads
+LEADS_TRACK_TOL <- 0.02
+LEAD_LIMIT_SD <- 0.03       # the largest GPA lead is recorded against this size (gpa_leads_check.csv)
+
+# folders: a relative path is read from this notebook's folder
+NOTEBOOK_DIR <- normalizePath(getwd(), winslash = "/")
+in_notebook_dir <- function(p) if (grepl("^([A-Za-z]:|/)", p)) p else file.path(NOTEBOOK_DIR, p)
+output_dir <- normalizePath(in_notebook_dir(params$output_dir), winslash = "/", mustWork = FALSE)
+TAB_DIR <- file.path(output_dir, "tables")
+FIG_DIR <- file.path(output_dir, "figures")
+OUT_DIR <- file.path(output_dir, "staggered_did")
+PRIOR_DIR <- file.path(OUT_DIR, "prior_gpa")
+AUDIT_DIR <- file.path(PRIOR_DIR, "child_audit")
+BOOT_DIR <- file.path(output_dir, "draws", "bootstrap")
+for (folder in c(TAB_DIR, FIG_DIR, OUT_DIR, PRIOR_DIR, AUDIT_DIR, BOOT_DIR))
+  dir.create(folder, recursive = TRUE, showWarnings = FALSE)
+CELL_PANEL_FILE <- file.path(OUT_DIR, "entrant_composition_panel.rds")
+
+available_cores <- parallel::detectCores(logical = TRUE)
+if (is.na(available_cores)) available_cores <- 1L
+N_CORES <- if (is.null(params$cores) || params$cores == 0L) available_cores else
+  min(available_cores, as.integer(params$cores))
+stopifnot(length(N_CORES) == 1L, is.finite(N_CORES), N_CORES >= 1L)
+setDTthreads(N_CORES)
+say("cores: %d found, %d used", available_cores, N_CORES)
+```
+
+## Computing resources
+
+Defines how many worker processes the randomization tests use: as many as the cores allow and the
+free memory holds. Each worker scores whole reassignments, and the scores are combined in the
+reassignments' order.
+
+```{r computing-resources}
+# The memory free for worker processes, in bytes (NA when it cannot be read): on Windows the free
+# physical memory; on Linux MemAvailable, bounded by the control group's limit (cgroup v2: memory.max
+# less memory.current at every level of the group's path; cgroup v1: memory.limit_in_bytes less
+# memory.usage_in_bytes); on macOS the free, inactive, speculative and purgeable pages
+available_memory <- function() {
+  read_number <- function(f) if (file.exists(f)) suppressWarnings(as.numeric(readLines(f, warn = FALSE)[1L])) else NA_real_
+  bytes <- tryCatch({
+    os <- Sys.info()[["sysname"]]
+    if (os == "Windows") {
+      value <- system2("powershell.exe", c("-NoProfile", "-NonInteractive", "-Command",
+        shQuote("(Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory * 1024")),
+        stdout = TRUE, stderr = FALSE)
+      as.numeric(tail(value, 1L))
+    } else if (os == "Linux") {
+      info <- readLines("/proc/meminfo", warn = FALSE)
+      available <- as.numeric(sub("^MemAvailable:\\s*([0-9]+).*", "\\1",
+        grep("^MemAvailable:", info, value = TRUE))) * 1024
+      groups <- readLines("/proc/self/cgroup", warn = FALSE)
+      v1 <- grep("^[0-9]+:([^:]+,)?memory(,[^:]+)?:", groups, value = TRUE)
+      if (length(v1)) {
+        base <- "/sys/fs/cgroup/memory"
+        dirs <- unique(c(file.path(base, sub("^/", "", sub("^[^:]*:[^:]*:", "", v1[1L]))), base))
+        limit <- vapply(file.path(dirs, "memory.limit_in_bytes"), read_number, 0)
+        used <- vapply(file.path(dirs, "memory.usage_in_bytes"), read_number, 0)
+        ok <- is.finite(limit) & is.finite(used) & limit < 2^60
+        if (any(ok)) available <- min(available, max(0, limit[ok][1L] - used[ok][1L])) else
+          message("cgroup v1: no memory limit could be read; using MemAvailable")
+        return(available)
+      }
+      group <- grep("^0::", groups, value = TRUE)
+      root <- "/sys/fs/cgroup"
+      parts <- if (length(group)) strsplit(sub("^0::/?", "", group[1L]), "/", fixed = TRUE)[[1L]] else character(0)
+      parts <- parts[nzchar(parts)]
+      dirs <- c(root, if (length(parts)) file.path(root, Reduce(file.path, parts, accumulate = TRUE)))
+      limit <- vapply(file.path(dirs, "memory.max"), read_number, 0)         # "max" (no limit) reads as NA
+      used <- vapply(file.path(dirs, "memory.current"), read_number, 0)
+      readable <- file.exists(file.path(dirs, "memory.max")) & file.exists(file.path(dirs, "memory.current"))
+      if (length(group) && !any(readable)) return(NA_real_)
+      ok <- is.finite(limit) & is.finite(used)
+      if (any(ok)) available <- min(available, max(0, min(limit[ok] - used[ok])))
+      available
+    } else if (os == "Darwin") {
+      info <- system2("/usr/bin/vm_stat", stdout = TRUE, stderr = FALSE)
+      page <- as.numeric(sub(".*page size of ([0-9]+) bytes.*", "\\1", info[1L]))
+      pages <- function(label) {
+        x <- grep(paste0("^", label, ":"), info, value = TRUE)
+        if (length(x)) as.numeric(gsub("[^0-9]", "", x[1L])) else 0
+      }
+      page * sum(vapply(c("Pages free", "Pages inactive", "Pages speculative", "Pages purgeable"), pages, 0))
+    } else NA_real_
+  }, error = function(e) NA_real_)
+  if (length(bytes) != 1L || !is.finite(bytes) || bytes <= 0) NA_real_ else bytes
+}
+
+# The number of worker processes for a set of tasks: at most `cores`, and as many as the free memory
+# holds after a reserve of a quarter of it (at least 2 GB), given each task's estimated bytes; one
+# worker when the free memory cannot be read. Prints the count and the reason
+worker_limit <- function(bytes_per_task, cores, label) {
+  n <- min(as.integer(cores), length(bytes_per_task))
+  available <- available_memory()
+  if (!is.finite(available)) {
+    say("%s: the free memory could not be read; one worker process", label)
+    return(1L)
+  }
+  budget <- max(0, available - max(2 * 1024^3, .25 * available))
+  largest <- sort(bytes_per_task, decreasing = TRUE)
+  while (n > 1L && sum(head(largest, n)) > budget) n <- n - 1L
+  if (largest[1L] > budget) say("%s: one task's estimated memory exceeds the budget", label)
+  say("%s: %d worker process%s (cores %d; free memory %.1f GB, budget %.1f GB, about %.2f GB a task)",
+      label, n, if (n == 1L) "" else "es", as.integer(cores), available / 1024^3, budget / 1024^3, largest[1L] / 1024^3)
+  n
+}
+```
+
+## Saved schedules and bootstrap draws
+
+Reads the 14 files of saved rollout reassignments (9,999 or 2,999 each) and checks that the R and
+package versions equal those the draws were drawn with. Every randomization test of Table 1, Figure 1 and Appendix Tables A1 and
+A2 scores its saved reassignments. The bootstrap draws are drawn anew and saved in
+`section2_output/draws/bootstrap/`.
+
+```{r saved-draws}
+schedules_dir <- in_notebook_dir(params$schedules_dir)
+SCHEDULES <- c(headline = "8fba99598b055af2420780f23eb437a2",
+               gpa_robustness_2 = "c9787f96b13f289545dcbedd9e6d2063", gpa_robustness_3 = "cc1f2d7fc419f1d1ad20e7d7320d8755",
+               gpa_robustness_4 = "464b1e06f3167adfed2c5c5940443535", gpa_robustness_5 = "14d412aca01afa701b4eca3a4cdbd443",
+               prioritario_robustness_2 = "50178860510ed5712ebd54e8121a9357",
+               prioritario_robustness_3 = "d3df74661b4854f97bcd650b79352d82",
+               prioritario_robustness_4 = "e3fae3f52e7902f763a78b00266c91e2",
+               prioritario_robustness_5 = "ed74a2de4087a98d5605de3fb017fa3f",
+               pretrends_gpa_z = "d8458dada6abaff6d23c90ab3496e3ab", pretrends_sh_prio = "fcaf1037de00f4da8bd2c865ca765a9d",
+               intake_count = "18d6e5bce437c6874ba43f408334c97d", intake_gpa_coverage = "c1582c9a654ba50abf95cf922cd06b51",
+               prior_gpa = "9a6b78b0a82c594f1bdc07066cb8844b")
+schedule_files <- file.path(schedules_dir, "regional", paste0(names(SCHEDULES), ".rds"))
+if (!all(file.exists(schedule_files)))
+  stop("missing: ", paste(schedule_files[!file.exists(schedule_files)], collapse = ", "))
+schedule_md5 <- unname(tools::md5sum(schedule_files))
+if (!identical(schedule_md5, unname(SCHEDULES)))
+  stop("these files differ from the run of record: ", paste(basename(schedule_files)[schedule_md5 != SCHEDULES], collapse = ", "))
+stopifnot("the bootstrap draws are drawn anew: their folder starts empty" = length(list.files(BOOT_DIR)) == 0L)
+
+draw_packages <- c("did", "BMisc", "data.table", "DRDID", "Matrix", "Rcpp", "RcppArmadillo")
+print(data.table(package = draw_packages,
+                 version = vapply(draw_packages, function(p) as.character(packageVersion(p)), "")))
+
+# The saved reassignments of one randomization test: B schedules, each giving the 16 regions the
+# observed wave years in a random order (the waves keep their sizes 1, 4, 10 and 1). The saved
+# observed waves must equal those computed from the panel. Returns the B schedules (region -> wave)
+wave_draws <- function(id, waves, B) {
+  stopifnot("a schedule file of record" = id %in% names(SCHEDULES))
+  saved <- readRDS(file.path(schedules_dir, "regional", paste0(id, ".rds")))
+  stopifnot("the schedule's observed waves are the panel's" = identical(saved$observed, waves),
+            "the schedule holds B reassignments" = nrow(saved$assignments) == B,
+            "one column per region" = identical(colnames(saved$assignments), names(waves)))
+  lapply(seq_len(B), function(b) setNames(saved$assignments[b, ], names(waves)))
+}
+
+# Evaluates a did call while saving its bootstrap draws: did's internal run_multiplier_bootstrap is
+# replaced, for the duration of the call, by a function that draws as did does, saves each draw
+# (multipliers by region, deviations, random-number state) to draws/bootstrap/<label>_<call>.rds,
+# and asserts that the saved multipliers reproduce did's deviations (to 1e-10) from the same
+# random-number state; did's function is restored on exit
+with_bootstrap_draws <- function(expr, label, regions) {
+  prefix <- label
+  call_state <- new.env(parent = emptyenv())
+  call_state$n <- 0L
+  namespace <- asNamespace("did")
+  original_sampler <- get("run_multiplier_bootstrap", envir = namespace)
+  sampler <- function(inf.func, biters, pl = FALSE, cores = 1) {
+    call_state$n <- call_state$n + 1L
+    filename <- file.path(BOOT_DIR, sprintf("%s_%02d.rds", prefix, call_state$n))
+    if (file.exists(filename)) stop("The bootstrap draws are drawn anew; a saved file exists: ", filename)
+    before <- .Random.seed
+    deviations <- original_sampler(inf.func, biters, pl, cores)
+    after <- .Random.seed
+    assign(".Random.seed", before, envir = .GlobalEnv)
+    n <- nrow(inf.func)
+    multipliers <- BMisc::multiplier_bootstrap(diag(n), biters) * n
+    stopifnot(identical(.Random.seed, after), n == length(regions),
+              max(abs(deviations - multipliers %*% inf.func / n), na.rm = TRUE) < 1e-10)
+    assign(".Random.seed", after, envir = .GlobalEnv)
+    colnames(multipliers) <- as.character(regions)
+    saveRDS(list(id = prefix, call = call_state$n, regions = regions, biters = biters,
+                 influence = inf.func, multipliers = multipliers, deviations = deviations,
+                 rng_before = before, rng_after = after), filename)
+    deviations
+  }
+  unlockBinding("run_multiplier_bootstrap", namespace)
+  assign("run_multiplier_bootstrap", sampler, envir = namespace)
+  lockBinding("run_multiplier_bootstrap", namespace)
+  on.exit({
+    unlockBinding("run_multiplier_bootstrap", namespace)
+    assign("run_multiplier_bootstrap", original_sampler, envir = namespace)
+    lockBinding("run_multiplier_bootstrap", namespace)
+  }, add = TRUE)
+  eval(substitute(expr), envir = parent.frame())
+}
+```
+
+## Inputs: Section 2's panel and the cell-year panel
+
+Reads Section 2's panel and sums its rows into the cell-year panel every estimate reads: one row per
+school-grade and year with its entrants, their mean prior-year GPA and their low-income share. The
+prior-year GPA of PreKinder, Kinder and 1st-grade cell-years is left blank (the GPA outcome covers
+entrants to grades 2-12). Writes `staggered_did/entrant_composition_panel.rds`.
+
+```{r panel-inputs}
+PANEL_FILE <- in_notebook_dir(params$panel_file)
+if (!file.exists(PANEL_FILE)) stop("Section 2's panel is missing: ", PANEL_FILE)
+PANEL_MD5 <- "3104b4b2b1b6998941311667fa0ab785"
+if (!identical(unname(tools::md5sum(PANEL_FILE)), PANEL_MD5))
+  stop("the panel is not Section 2's panel of record (MD5 ", PANEL_MD5, "): ", PANEL_FILE)
+S2P <- as.data.table(readRDS(PANEL_FILE))
+stopifnot("the panel's columns" = all(c("MRUN", "AGNO", "RBD", "COD_NIVEL", "REGION", "IS_ENTRY", "DOOR", "SLACK_FAIL",
+                                        "DOOR_YEAR_TAG", "PRIO", "PRIOR_GPA_Z") %in% names(S2P)),
+          "one row per child and year" = !anyDuplicated(S2P, by = c("MRUN", "AGNO")))
+OUT <- S2P[, .(n_ent = .N, sh_prio = mean(PRIO), gpa_z = mean(PRIOR_GPA_Z, na.rm = TRUE), n_gpa = sum(!is.na(PRIOR_GPA_Z))),
+           by = .(yr = AGNO, rbd = RBD, cod_nivel = COD_NIVEL, door = DOOR, region = REGION, is_entry = IS_ENTRY)]
+TAGS <- unique(S2P[, .(rbd = RBD, cod_nivel = COD_NIVEL, slack_fail = SLACK_FAIL, door_year_tag = DOOR_YEAR_TAG)])
+stopifnot("one pair of flags per cell" = !anyDuplicated(TAGS, by = c("rbd", "cod_nivel")))
+OUT <- OUT[, .(rbd, cod_nivel, yr, region, is_entry, door, n_ent, n_gpa, gpa_z, sh_prio)]
+OUT[cod_nivel == 1L, `:=`(gpa_z = NA_real_, n_gpa = 0L)]
+OUT[cod_nivel %in% c(-1L, 0L), `:=`(gpa_z = NA_real_, n_gpa = 0L)]
+OUT[TAGS, on = .(rbd, cod_nivel), `:=`(slack_fail = i.slack_fail, door_year_tag = i.door_year_tag)]
+stopifnot("every cell-year found its cell's flags" = !anyNA(OUT$slack_fail) && !anyNA(OUT$door_year_tag))
+setcolorder(OUT, c("rbd", "cod_nivel", "yr", "region", "is_entry", "door",
+                   "n_ent", "n_gpa", "gpa_z", "sh_prio", "slack_fail", "door_year_tag"))
+setattr(OUT, "index", NULL)
+saveRDS(OUT, CELL_PANEL_FILE)
+rm(TAGS)
+N_CELLS <- 8891L                                       # the panel's school-grades
+stopifnot("8,891 school-grades" = uniqueN(OUT[, .(rbd, cod_nivel)]) == N_CELLS)
+say("panel: %s entrant child-years | %s cell-years | %s school-grades", format(nrow(S2P), big.mark = ","),
+    format(nrow(OUT), big.mark = ","), format(N_CELLS, big.mark = ","))
+```
+
+## Estimators and the randomization statistic
+
+Defines the estimators every exhibit uses. Each estimate is did's group-time average effect
+(Callaway and Sant'Anna 2021) with not-yet-treated comparison cells, a universal base period ($g-1$),
+no anticipation and an unbalanced panel, aggregated by did's `aggte`; its standard error comes from
+did's multiplier bootstrap clustered by region. The significance stars come from randomization
+inference: the paired estimate, studentized by its delete-one-region jackknife standard error, is
+recomputed under each saved reassignment of the rollout across regions, and the p-value is the share
+of reassignments whose statistic is at least as large in absolute value. The did fits run in one
+separate R process; its warnings and messages are printed here. Each fit prints two warnings that
+`BMisc::rhs.vars` and `BMisc::getListElement` are deprecated (36 in all): did 2.1.2 calls these two
+renamed BMisc functions, and the run of record made the same calls.
+
+```{r estimation-functions}
+fmt  <- function(x) sub("^-(0\\.000)$", "\\1", sprintf("%.3f", x))
+star <- function(p) ifelse(p < .01, "$^{***}$", ifelse(p < .05, "$^{**}$", ifelse(p < .1,  "$^{*}$", "")))
+stars_text <- function(p) ifelse(p < .01, "***", ifelse(p < .05, "**", ifelse(p < .1, "*", "")))
+row_tex <- function(lbl, vals) paste0("      ", lbl, " & ", paste(vals, collapse = " & "), "\\\\\n")
+
+# did's overall effect of SAE on outcome `yvar` in the cell-year panel D (optionally weighted by
+# column `weightsname`), with `bit` bootstrap draws; returns the estimate, its SE and the counts
+fit_cs <- function(D, yvar, weightsname = NULL, bit = B_BOOT, id) {
+  d <- D[!is.na(get(yvar)), c(.(cell_id = cell_id, yr = yr, G = G, region = region, y = get(yvar)),
+                              if (!is.null(weightsname)) .(w = get(weightsname)))]
+  estimate <- fit_did(d, id, weightsname = if (!is.null(weightsname)) "w", bit = bit)
+  stopifnot("a finite estimate and standard error" = is.finite(estimate$att) && is.finite(estimate$se))
+  list(att = estimate$att, se = estimate$se, n_cellyears = nrow(d), n_cells = uniqueN(d$cell_id))
+}
+# the outcome's mean over every cell-year before the cell's adoption year (the tables' "Mean (pre-treatment)")
+pre_mean <- function(D, yvar) D[yr < G & !is.na(get(yvar)), mean(get(yvar))]
+
+# each region's wave: the DOOR of its entry grades (DOOR - 1 at the other grades); one wave per region
+wave_map <- function(D) {
+  WM <- unique(D[, .(region, door, is_entry)])
+  WM[, wave := door - (1L - is_entry)]
+  stopifnot("one wave per region" = WM[, uniqueN(wave), by = region][, all(V1 == 1L)])
+  W <- unique(WM[, .(region, wave)])[order(region)]
+  setNames(W$wave, as.character(W$region))
+}
+# the outcome as a cell x year matrix, with each cell's region, entry status and (optionally) weight
+prep_ri <- function(D, yvar, wcol = NULL) {
+  d <- D[!is.na(get(yvar))]
+  d <- d[, c("cell", "region", "is_entry", "yr", yvar, wcol), with = FALSE]
+  setnames(d, yvar, "y")
+  Wd <- dcast(d, cell + region + is_entry ~ yr, value.var = "y")
+  yrs <- as.integer(setdiff(names(Wd), c("cell", "region", "is_entry")))
+  w <- NULL
+  if (!is.null(wcol)) {
+    wc <- unique(d[, .(cell, wv = get(wcol))])
+    w <- wc$wv[match(Wd$cell, wc$cell)]
+    stopifnot("one weight per cell, none missing" = !anyDuplicated(wc$cell) && !anyNA(w))
+  }
+  list(M = as.matrix(Wd[, as.character(yrs), with = FALSE]),
+       region = Wd$region, is_entry = Wd$is_entry, yrs = yrs, w = w)
+}
+ES_LEADS <- -6L:-2L
+# The paired leads at g-6 .. g-2 under a rollout: for each adoption group g and lead e, the treated
+# cells' mean change from g-1 to g+e less the not-yet-treated cells' mean change, using the cells
+# observed in both years, averaged over groups by their treated-cell counts (the joint lead test's statistic)
+paired_leads <- function(pp, wv) {
+  G <- wv[as.character(pp$region)] + (1L - pp$is_entry) + 1L
+  yrs <- pp$yrs; M <- pp$M
+  out <- setNames(rep(NA_real_, length(ES_LEADS)), as.character(ES_LEADS))
+  for (e in ES_LEADS) {
+    num <- 0; den <- 0
+    for (g in sort(unique(G))) {
+      bi <- match(g - 1L, yrs); ti <- match(g + e, yrs)
+      if (is.na(bi) || is.na(ti)) next
+      tr <- G == g
+      ok_t <- tr & !is.na(M[, ti]) & !is.na(M[, bi])
+      ok_c <- (G > g - 1L) & !tr & !is.na(M[, ti]) & !is.na(M[, bi])
+      if (!any(ok_t) || !any(ok_c)) next
+      att <- mean(M[ok_t, ti] - M[ok_t, bi]) - mean(M[ok_c, ti] - M[ok_c, bi])
+      num <- num + sum(ok_t) * att; den <- den + sum(ok_t)
+    }
+    out[as.character(e)] <- if (den > 0) num / den else NA_real_
+  }
+  out
+}
+# The joint randomization test of the leads g-6 .. g-2 (Figure 1): the observed paired leads, each
+# divided by its SD across the saved reassignments; the statistic is the largest of the five in
+# absolute value, and p is the share of reassignments whose largest is at least as large. Also counts
+# the reassignments under which a lead could not be computed
+ri_pretrend_y <- function(D, yvar, check = NULL, B = B_RI_ROBUST) {
+  wv <- wave_map(D); pp <- prep_ri(D, yvar)
+  obs <- paired_leads(pp, wv)
+  if (!is.null(check))
+    stopifnot("the paired leads track did's dynamic leads (within LEADS_TRACK_TOL)" =
+                max(abs(obs[names(check)] - check), na.rm = TRUE) < LEADS_TRACK_TOL)
+  WPS <- wave_draws(paste0("pretrends_", yvar), wv, B)
+  P <- do.call(rbind, score_schedules(WPS, pp, paired_leads))
+  sdp <- apply(P, 2, sd, na.rm = TRUE)
+  fmax <- apply(abs(P) / rep(sdp, each = B), 1, max, na.rm = TRUE)
+  list(p = (1 + sum(fmax >= max(abs(obs) / sdp, na.rm = TRUE))) / (1 + length(fmax)),
+       n_missing = sum(rowSums(is.na(P)) > 0L))
+}
+
+# The pieces of the paired estimate that do not depend on the rollout: for each adoption group g and
+# year t >= g, the cells observed in t and g-1 and their change from g-1 to t
+prepare_jackknife <- function(pp, waves) {
+  region_index <- match(as.character(pp$region), names(waves))
+  stopifnot(!anyNA(region_index))
+  groups <- sort(unique(as.vector(outer(unname(waves), 1L - unique(pp$is_entry), `+`)) + 1L))
+  pairs <- unlist(lapply(groups, function(g) {
+    bi <- match(g - 1L, pp$yrs)
+    if (is.na(bi)) return(list())
+    lapply(pp$yrs[pp$yrs >= g], function(t) {
+      ti <- match(t, pp$yrs)
+      valid <- which(!is.na(pp$M[, ti]) & !is.na(pp$M[, bi]))
+      list(g = g, t = t, rows = valid, difference = pp$M[valid, ti] - pp$M[valid, bi],
+           region = pp$region[valid], weight = if (is.null(pp$w)) NULL else pp$w[valid])
+    })
+  }), recursive = FALSE)
+  list(region_index = region_index, is_entry = pp$is_entry, pairs = pairs,
+       regions = sort(unique(pp$region)))
+}
+
+# The randomization statistic under a rollout `waves`: th, the paired estimate (each group-time
+# effect is the treated cells' mean change less the not-yet-treated cells' mean change, weighted by
+# treated-cell counts, or by the cells' weights when given), and t, th divided by its
+# delete-one-region jackknife standard error
+score_jackknife <- function(prepared, waves) {
+  G <- unname(waves)[prepared$region_index] + 2L - prepared$is_entry
+  numerator <- denominator <- numeric(length(prepared$regions) + 1L)
+  for (pair in prepared$pairs) {
+    group <- G[pair$rows]
+    treated <- which(group == pair$g)
+    control <- which(group > pair$t)
+    if (!length(treated) || !length(control)) next
+    for (j in seq_along(numerator)) {
+      it <- treated; ic <- control
+      if (j > 1L) {
+        omit <- prepared$regions[j - 1L]
+        it <- it[pair$region[it] != omit]
+        ic <- ic[pair$region[ic] != omit]
+      }
+      if (!length(it) || !length(ic)) next
+      if (is.null(pair$weight)) {
+        att <- mean(pair$difference[it]) - mean(pair$difference[ic])
+        weight <- length(it)
+      } else {
+        att <- weighted.mean(pair$difference[it], pair$weight[it]) -
+          weighted.mean(pair$difference[ic], pair$weight[ic])
+        weight <- sum(pair$weight[it])
+      }
+      numerator[j] <- numerator[j] + weight * att
+      denominator[j] <- denominator[j] + weight
+    }
+  }
+  estimates <- rep(NA_real_, length(numerator))
+  valid <- denominator != 0
+  estimates[valid] <- numerator[valid] / denominator[valid]
+  loo <- estimates[-1L]
+  ok <- !is.na(loo); Rp <- sum(ok)
+  variance <- if (Rp >= 2L) (Rp - 1) / Rp * sum((loo[ok] - mean(loo[ok]))^2) else NA_real_
+  c(th = estimates[1L], t = estimates[1L] / sqrt(variance))
+}
+
+# scores a list of rollout schedules with `score`, in the worker processes when there are several
+score_schedules <- function(schedules, prepared, score = score_jackknife) {
+  if (is.null(cl)) return(lapply(schedules, function(w) score(prepared, w)))
+  environment(score) <- .GlobalEnv
+  clusterExport(cl, c("prepared", "score"), envir = environment())
+  run <- function(w) score(prepared, w)
+  environment(run) <- .GlobalEnv
+  parLapplyLB(cl, schedules, run,
+    chunk.size = max(1L, ceiling(length(schedules) / (4L * length(cl)))))
+}
+
+# The randomization test of one estimate: the observed statistic against its B saved reassignments
+# `key`; p counts the reassignments whose |t| is at least the observed |t| (reassignments with an
+# undefined statistic are dropped, at most 5%)
+score_stream <- function(pp, wv, B, key) {
+  prepared <- prepare_jackknife(pp, wv)
+  obs <- score_jackknife(prepared, wv)
+  WPS <- wave_draws(key, wv, B)
+  RES <- do.call(rbind, score_schedules(WPS, prepared))
+  TT <- RES[, "t"]
+  p  <- (1 + sum(abs(TT[is.finite(TT)]) >= abs(obs["t"]))) / (1 + sum(is.finite(TT)))
+  stopifnot("non-finite draws must stay under 5%" = mean(!is.finite(TT)) <= 0.05)
+  list(th = unname(obs["th"]), t = unname(obs["t"]), p = p,
+       n_dropped = sum(!is.finite(TT)))
+}
+
+# One did fit, run in the model process: att_gt, then aggte of `job$type`; did's warnings and
+# messages are collected and returned with the result and the random-number state
+bootstrap_model <- function(job) {
+  assign(".Random.seed", job$rng, envir = .GlobalEnv)
+  notes <- new.env(parent = emptyenv())
+  notes$warnings <- character(0); notes$messages <- character(0)
+  value <- withCallingHandlers(
+    with_bootstrap_draws({
+      fit <- do.call(did::att_gt, job$args)
+      aggregate <- did::aggte(fit, type = job$type, na.rm = TRUE)
+      if (job$keep_fit) list(fit = fit, aggregate = aggregate) else
+        list(att = aggregate$overall.att, se = aggregate$overall.se)
+    }, job$id, sort(unique(job$args$data$region))),
+    warning = function(w) { notes$warnings <- c(notes$warnings, conditionMessage(w)); invokeRestart("muffleWarning") },
+    message = function(m) { notes$messages <- c(notes$messages, conditionMessage(m)); invokeRestart("muffleMessage") })
+  list(value = value, rng = .Random.seed, warnings = notes$warnings, messages = notes$messages)
+}
+
+# did on the data d (columns cell_id, yr, G, region, y): not-yet-treated comparisons, universal base
+# period, no anticipation, unbalanced panel, multiplier bootstrap with `bit` draws clustered by region.
+# The fit runs in the model process from this process's random-number state, which it then advances
+fit_did <- function(d, id, type = "simple", weightsname = NULL, bit = B_BOOT, keep_fit = FALSE) {
+  job <- list(id = id, type = type, keep_fit = keep_fit, rng = .Random.seed,
+    args = list(yname = "y", tname = "yr", idname = "cell_id", gname = "G",
+      data = d, control_group = "notyettreated", panel = TRUE,
+      allow_unbalanced_panel = TRUE, base_period = "universal",
+      anticipation = 0L, weightsname = weightsname,
+      bstrap = TRUE, biters = bit, clustervars = "region",
+      print_details = FALSE))
+  result <- tryCatch(clusterCall(model_worker, bootstrap_model, job)[[1L]],
+    error = function(e) {
+      try(stopCluster(model_worker), silent = TRUE)
+      stop(e)
+    })
+  for (w in unique(result$warnings)) warning(sprintf("did (%s): %s", id, w), call. = FALSE)
+  for (m in unique(result$messages)) message(sprintf("did (%s): %s", id, trimws(m)))
+  assign(".Random.seed", result$rng, envir = .GlobalEnv)
+  result$value
+}
+
+# the model process: one separate R process with data.table on one thread, where every did fit runs
+model_worker <- makeCluster(1L)
+initialize_model <- function(paths) {
+  .libPaths(paths)
+  library(data.table)
+  library(did)
+  data.table::setDTthreads(1L)
+  NULL
+}
+environment(initialize_model) <- .GlobalEnv
+tryCatch({
+clusterCall(model_worker, initialize_model, .libPaths())
+model_code <- list(with_bootstrap_draws = with_bootstrap_draws, BOOT_DIR = BOOT_DIR)
+environment(model_code$with_bootstrap_draws) <- .GlobalEnv
+environment(bootstrap_model) <- .GlobalEnv
+clusterExport(model_worker, names(model_code), envir = list2env(model_code))
+}, error = function(e) {
+  try(stopCluster(model_worker), silent = TRUE)
+  stop(e)
+})
+say("did fits: one model process")
+
+main_workers <- worker_limit(rep(512 * 1024^2 + 4 * as.numeric(object.size(OUT)), N_CORES), N_CORES,
+                             "randomization tests of Table 1, Figure 1 and Appendix Tables A1 and A2")
+cl <- if (main_workers > 1L) makeCluster(main_workers) else NULL
+if (!is.null(cl)) {
+  clusterEvalQ(cl, { data.table::setDTthreads(1L); NULL })
+  worker_code <- list(score_jackknife = score_jackknife, paired_leads = paired_leads, ES_LEADS = ES_LEADS)
+  for (name in c("score_jackknife", "paired_leads"))
+    environment(worker_code[[name]]) <- .GlobalEnv
+  clusterExport(cl, names(worker_code), envir = list2env(worker_code))
+}
+```
+
+## Analysis sample
+
+Reads the cell-year panel and adds each cell's ID, its adoption year `G = DOOR + 1` and the weight
+of the entrant-weighted row (`w_ent`, the cell's mean entrants). Checks that every cell has a region
+and a door and that the regions fall in waves of 1, 4, 10 and 1. The cell IDs follow the R session's
+collation order of the labels `rbd|cod_nivel` (the run of record: `English_United States.utf8` on
+Windows); another collation orders the cells differently, which can move the last digits of the
+estimates and standard errors.
+
+```{r analysis-sample}
+CP <- as.data.table(readRDS(CELL_PANEL_FILE))
+CP[, cell := paste(rbd, cod_nivel, sep = "|")]
+CP[, cell_id := as.integer(factor(cell))]
+CP[, G := door + 1L]
+CP[, w_ent := mean(n_ent), by = cell_id]
+stopifnot("every cell must carry a region" = !anyNA(CP$region),
+          "every cell must carry a treatment door" = !anyNA(CP$door))
+wv_real <- wave_map(CP)
+stopifnot("wave multiset must be {1,4,10,1}" =
+            identical(as.integer(sort(as.vector(table(wv_real)))), c(1L, 1L, 4L, 10L)))
+```
+
+## Table 1: effects on the entering class
+
+Estimates SAE's effect on entrants' mean prior-year GPA and on the low-income share (Table 1,
+columns 1 and 2): did's estimate and bootstrap SE, and the randomization test over the 9,999 saved
+reassignments `headline`. Writes `headline.rds` and `headline.csv`; the table itself is written in
+the chunk "Writing Table 1 and Appendix Tables A1 and A2".
+
+```{r composition-effects}
+set.seed(SEED_MAIN)
+g_reg <- fit_cs(CP, "gpa_z", id = "headline_gpa")
+p_reg <- fit_cs(CP, "sh_prio", id = "headline_prio")
+
+pp_g <- prep_ri(CP, "gpa_z")
+pp_p <- prep_ri(CP, "sh_prio")
+headline_prepared <- list(prepare_jackknife(pp_g, wv_real), prepare_jackknife(pp_p, wv_real))
+obs_g <- score_jackknife(headline_prepared[[1L]], wv_real)
+obs_p <- score_jackknife(headline_prepared[[2L]], wv_real)
+stopifnot("the paired GPA estimate tracks did's" = abs(obs_g["th"] - g_reg$att) < TRACK_TOL[["gpa_z"]],
+          "the paired low-income estimate tracks did's" = abs(obs_p["th"] - p_reg$att) < TRACK_TOL[["sh_prio"]])
+WPS <- wave_draws("headline", wv_real, B_RI)
+# both outcomes are scored under each reassignment: columns th and t of GPA, then of the low-income share
+RES <- do.call(rbind, score_schedules(WPS, headline_prepared, function(prepared, w)
+  c(score_jackknife(prepared[[1L]], w), score_jackknife(prepared[[2L]], w))))
+stopifnot("no draw may be non-finite in the main randomization test" = all(is.finite(RES)))
+p_g <- (1 + sum(abs(RES[, 2]) >= abs(obs_g["t"]))) / (1 + B_RI)
+p_p <- (1 + sum(abs(RES[, 4]) >= abs(obs_p["t"]))) / (1 + B_RI)
+cat(sprintf("Randomization test: GPA statistic %+.2f, p %.4f; low-income share statistic %+.2f, p %.4f.\n\n",
+            obs_g["t"], p_g, obs_p["t"], p_p))
+
+headline <- data.table(outcome = c("gpa_z", "sh_prio"), att = c(g_reg$att, p_reg$att),
+                       se = c(g_reg$se, p_reg$se), p_ri = c(p_g, p_p),
+                       pre_mean = c(pre_mean(CP, "gpa_z"), pre_mean(CP, "sh_prio")),
+                       n_cellyears = c(g_reg$n_cellyears, p_reg$n_cellyears))
+saveRDS(list(results = headline, fits = list(g_reg, p_reg),
+             observed = list(obs_g, obs_p), draws = RES, assignments = WPS),
+        file.path(OUT_DIR, "headline.rds"))
+fwrite(headline, file.path(OUT_DIR, "headline.csv"))
+print(headline)
+```
+
+## Appendix Table A1, prior-year GPA column: rows 1-5
+
+Re-estimates the GPA effect with the Metropolitan Region dropped, without the cell-years with fewer
+than five entrants with a prior-year GPA (the row "Thin cells excluded"), without the cells the slack
+check flags, and with cells weighted by their entrants. Rows 2-5 have their own 999 bootstrap draws
+and 2,999 saved reassignments; row 1 reports Table 1's fit and test. Row 1 is also fitted again with
+999 draws and that fit is set aside: the run of record drew it, and rows 2-5 continue its
+random-number stream. Writes `gpa_robustness.csv` with `robustness.rds` (next chunk).
+
+```{r gpa-robustness}
+set.seed(SEED_ROBUST)
+specs <- list(
+  list(lab = "Main estimate",               D = CP,                       w = NULL,    y = "gpa_z"),
+  list(lab = "Metropolitan Region dropped", D = CP[region != 13L],        w = NULL,    y = "gpa_z"),
+  list(lab = "Thin cells excluded",         D = CP[n_gpa >= 5L],          w = NULL,    y = "gpa_z"),
+  list(lab = "Slack cells excluded",        D = CP[slack_fail == FALSE],  w = NULL,    y = "gpa_z"),
+  list(lab = "Entrant-weighted",            D = CP,                       w = "w_ent", y = "gpa_z"))
+fitb <- lapply(seq_along(specs), function(i) {
+  s <- specs[[i]]
+  fit_cs(s$D, s$y, weightsname = s$w, bit = B_BOOT_ROBUST, id = paste0("gpa_robustness_", i))
+})
+fitb[[1]] <- g_reg   # row 1 reports Table 1's fit
+b_att <- vapply(fitb, `[[`, 0, "att"); b_se <- vapply(fitb, `[[`, 0, "se")
+b_nobs <- vapply(fitb, `[[`, 0L, "n_cellyears")
+b_pre  <- vapply(specs, function(s) pre_mean(s$D, s$y), 0)
+b_p <- c(p_g, vapply(2:5, function(i) {
+  s <- specs[[i]]
+  score_stream(prep_ri(s$D, s$y, wcol = s$w), wave_map(s$D), B_RI_ROBUST, key = paste0("gpa_robustness_", i))$p
+}, 0))
+cat(sprintf("Randomization p by row: %s.\n\n", paste(sprintf("%.4f", b_p), collapse = ", ")))
+
+gpa_robustness <- data.table(att = b_att, se = b_se, p_ri = b_p,
+                            pre_mean = b_pre, n_cellyears = b_nobs)
+print(cbind(row = vapply(specs, `[[`, "", "lab"), gpa_robustness))
+```
+
+## Appendix Table A1, low-income column: rows 1-5
+
+The same five specifications for the low-income share; the row "Thin cells excluded" leaves out the
+cell-years with fewer than five entrants. As in the GPA column, rows 2-5 have their own draws and
+reassignments and row 1 reports Table 1's fit and test. Writes `prio_robustness_values.csv` (each
+row's estimate, SE, the paired estimate, its studentized statistic and its randomization p) and
+`robustness.rds`.
+
+```{r prioritario-robustness}
+t_prio <- proc.time()
+set.seed(SEED_ROBUST)   # the low-income fits restart the seed of the GPA column
+specs_p <- list(
+  list(lab = "Main estimate",               D = CP,                       w = NULL,    y = "sh_prio"),
+  list(lab = "Metropolitan Region dropped", D = CP[region != 13L],        w = NULL,    y = "sh_prio"),
+  list(lab = "Thin cells excluded",         D = CP[n_ent >= 5L],          w = NULL,    y = "sh_prio"),
+  list(lab = "Slack cells excluded",        D = CP[slack_fail == FALSE],  w = NULL,    y = "sh_prio"),
+  list(lab = "Entrant-weighted",            D = CP,                       w = "w_ent", y = "sh_prio"))
+fitp <- lapply(seq_along(specs_p), function(i) {
+  s <- specs_p[[i]]
+  fit_cs(s$D, s$y, weightsname = s$w, bit = B_BOOT_ROBUST, id = paste0("prioritario_robustness_", i))
+})
+fitp[[1]] <- p_reg   # row 1 reports Table 1's fit
+q_att <- vapply(fitp, `[[`, 0, "att"); q_se <- vapply(fitp, `[[`, 0, "se")
+q_nobs <- vapply(fitp, `[[`, 0L, "n_cellyears")
+q_pre  <- vapply(specs_p, function(s) pre_mean(s$D, s$y), 0)
+q_tests <- lapply(2:5, function(i) {
+  s <- specs_p[[i]]
+  score_stream(prep_ri(s$D, s$y, wcol = s$w), wave_map(s$D), B_RI_ROBUST, key = paste0("prioritario_robustness_", i))
+})
+q_p <- c(p_p, vapply(q_tests, `[[`, 0, "p"))
+q_T <- c(unname(obs_p["t"]), vapply(q_tests, `[[`, 0, "t"))
+q_drop <- c(0L, vapply(q_tests, `[[`, 0L, "n_dropped"))
+q_paired <- c(unname(obs_p["th"]), vapply(q_tests, `[[`, 0, "th"))
+say("Low-income share, randomization p by row: %s (%.1f min)",
+    paste(sprintf("%.4f", q_p), collapse = ", "), (proc.time() - t_prio)[["elapsed"]] / 60)
+say("Low-income share, paired estimate less did's, by row: %s (Table 1 asserts this within 0.005 at row 1 only)",
+    paste(sprintf("%+.4f", q_paired - q_att), collapse = ", "))
+resP <- data.table(column = vapply(specs_p, `[[`, "", "lab"), att = q_att, se = q_se,
+                   pre_mean = q_pre, n_cellyears = q_nobs, paired_att = q_paired,
+                   paired_minus_did = q_paired - q_att, T_stud = q_T, p_ri = q_p,
+                   n_dropped = q_drop, draws = c(B_RI, rep(B_RI_ROBUST, 4L)))
+print(resP)
+fwrite(resP, file.path(OUT_DIR, "prio_robustness_values.csv"))
+
+saveRDS(list(gpa = gpa_robustness, prioritario = resP,
+             gpa_fits = fitb, prioritario_fits = fitp),
+        file.path(OUT_DIR, "robustness.rds"))
+fwrite(gpa_robustness, file.path(OUT_DIR, "gpa_robustness.csv"))
+```
+
+## Figure 1: event studies and the joint tests of the leads
+
+Estimates the effect at each event time (did's dynamic aggregation) for both outcomes, draws
+Figure 1's two panels from $g-6$ to $g+1$ with pointwise 95% intervals (estimate $\pm$ 1.96 SE), and
+runs the joint randomization test of the five leads $g-6$ to $g-2$ over 2,999 saved reassignments.
+Writes `figures/alloc_event_study.pdf`, `figures/alloc_event_study_prio.pdf`, `event_studies.rds` and
+`gpa_leads_check.csv` (the five GPA leads and whether the largest is under 0.03 SD).
+
+```{r event-studies}
+# did's dynamic aggregation of one outcome, its plot (g-6 to g+1, the reference g-1 drawn at zero)
+# and its leads g-6 .. g-2
+es_one <- function(D, yvar, ylab, fname, seed) {
+  set.seed(seed)
+  d <- D[!is.na(get(yvar)), .(cell_id, yr, G, region, y = get(yvar))]
+  estimate <- fit_did(d, paste0("event_study_", yvar), type = "dynamic", keep_fit = TRUE)
+  at <- estimate$fit
+  ed <- estimate$aggregate
+  es <- data.table(e = ed$egt, att = ed$att.egt, se = ed$se.egt)
+  print(es[is.finite(att), .(e, att = round(att, 4), se = round(se, 4))])
+  leads_did <- es[e %in% -6:-2, setNames(att, as.character(e))]
+  es <- es[e >= -6 & e <= 1 & is.finite(att) & is.finite(se)]
+  stopifnot("every event time from g-6 to g+1 but the reference g-1 is estimated" =
+              identical(as.integer(es$e), c(-6:-2, 0:1)))
+  lo <- es$att - 1.96 * es$se; hi <- es$att + 1.96 * es$se
+  pdf(fname, width = 7.2, height = 4.8, family = "serif")
+  par(mar = c(4.6, 5.0, 1.2, 1.2), las = 1, mgp = c(3.1, 0.8, 0),
+      cex.axis = 1.05, cex.lab = 1.2)
+  plot(es$e, es$att, type = "n",
+       ylim = range(pretty(c(lo, hi))), xlim = c(min(es$e) - 0.4, max(es$e) + 0.4),
+       xlab = "Event time (years relative to SAE adoption)", ylab = ylab, xaxt = "n")
+  axis(1, at = min(es$e):max(es$e))
+  abline(h = 0, col = "black", lwd = 1)
+  abline(v = -0.5, col = "black", lty = 2)
+  arrows(es$e, lo, es$e, hi, length = 0.045, angle = 90, code = 3, col = "black", lwd = 1.3)
+  points(es$e, es$att, pch = 21, bg = "white", col = "black", cex = 1.25, lwd = 1.4)
+  points(-1, 0, pch = 21, bg = "white", col = "black", cex = 1.25, lwd = 1.4)
+  invisible(dev.off())
+  list(leads = leads_did, fit = at, dynamic = ed)
+}
+j_g <- es_one(CP, "gpa_z", "Effect on entrant prior-GPA (z)",
+              file.path(FIG_DIR, "alloc_event_study.pdf"), SEED_MAIN)
+rp_g <- ri_pretrend_y(CP, "gpa_z", check = j_g$leads)
+cat(sprintf("Figure 1, GPA panel: joint randomization test of the leads g-6 to g-2, p = %.2f (reassignments with a lead not computed: %d).\n\n",
+            rp_g$p, rp_g$n_missing))
+j_p <- es_one(CP, "sh_prio", "Effect on low-income share",
+              file.path(FIG_DIR, "alloc_event_study_prio.pdf"), SEED_PRIO_ES)
+rp_p <- ri_pretrend_y(CP, "sh_prio", check = j_p$leads)
+cat(sprintf("Figure 1, low-income panel: joint randomization test of the leads g-6 to g-2, p = %.2f (reassignments with a lead not computed: %d).\n\n",
+            rp_p$p, rp_p$n_missing))
+# the GPA leads, recorded: each lead, the largest in absolute value, and whether it is under 0.03 SD
+lead_max <- max(abs(j_g$leads), na.rm = TRUE)
+fwrite(data.table(lead = names(j_g$leads), estimate = unname(j_g$leads), largest_abs_lead = lead_max,
+                  under_0_03_sd = lead_max < LEAD_LIMIT_SD),
+       file.path(OUT_DIR, "gpa_leads_check.csv"))
+say("GPA leads: %s; largest in absolute value %.4f SD; under 0.03 SD: %s",
+    paste(sprintf("%s %+.4f", names(j_g$leads), j_g$leads), collapse = ", "), lead_max, lead_max < LEAD_LIMIT_SD)
+saveRDS(list(gpa = j_g, prioritario = j_p, joint_p = c(rp_g$p, rp_p$p),
+             joint_p_reassignments_with_lead_not_computed = c(rp_g$n_missing, rp_p$n_missing)),
+        file.path(OUT_DIR, "event_studies.rds"))
+```
+
+## Appendix Table A2: intake and GPA coverage
+
+Estimates SAE's effect on the number of entrants per cell and on the share of entrants with a
+prior-year GPA (grades 2-12), each with 2,999 saved reassignments. Writes `intake_checks.rds` and
+`intake_checks.csv`.
+
+```{r intake-coverage}
+CP[, sh_gpa := fifelse(n_ent > 0L, n_gpa / n_ent, NA_real_)]
+CPg <- CP[cod_nivel >= 2L]
+set.seed(SEED_MAIN)
+g_ent <- fit_cs(CP, "n_ent", id = "intake_n_ent")
+g_cov <- fit_cs(CPg, "sh_gpa", id = "intake_sh_gpa")
+z_ent <- score_stream(prep_ri(CP,  "n_ent"),  wave_map(CP),  B_RI_ROBUST, key = "intake_count")
+z_cov <- score_stream(prep_ri(CPg, "sh_gpa"), wave_map(CPg), B_RI_ROBUST, key = "intake_gpa_coverage")
+
+intake_checks <- data.table(outcome = c("n_ent", "sh_gpa"), att = c(g_ent$att, g_cov$att),
+                            se = c(g_ent$se, g_cov$se), p_ri = c(z_ent$p, z_cov$p),
+                            pre_mean = c(pre_mean(CP, "n_ent"), pre_mean(CPg, "sh_gpa")),
+                            n_cellyears = c(g_ent$n_cellyears, g_cov$n_cellyears))
+saveRDS(list(results = intake_checks, fits = list(g_ent, g_cov),
+             tests = list(z_ent, z_cov)), file.path(OUT_DIR, "intake_checks.rds"))
+fwrite(intake_checks, file.path(OUT_DIR, "intake_checks.csv"))
+if (!is.null(cl)) stopCluster(cl)
+print(intake_checks)
+```
+
+## Appendix Table A1, last row: the sample of prior grades earned before SAE coverage
+
+Builds the restricted cell-year panel of Table A1's last row: the entrants to grades 2-12 with a
+prior-year GPA whose prior-year grades were all earned before SAE reached the region and grade of
+her prior-year records (`ELIGIBLE_HISTORY`). Checks first that summing every entrant reproduces the cell-year panel. Also
+writes the pieces the randomization test needs to recompute the restricted outcomes under each
+reassigned rollout (`exposure_components.rds`: each cell-year's entrants grouped by the regions and
+entry-grade status of their prior records), the restricted panel (`restricted_panel.rds`), the
+sample's flow by reason and year (`sample_flow.csv`), its counts by year, grade, door and region,
+and one audit file of entrants per year (`child_audit/`).
+
+```{r prior-gpa-sample}
+years <- 2012L:2023L
+started <- proc.time()[["elapsed"]]
+save_output <- function(object, filename) saveRDS(object, file.path(PRIOR_DIR, filename))
+assert_columns <- function(d, required, label) {
+  absent <- setdiff(required, names(d))
+  if (length(absent)) stop(label, " missing fields: ", paste(absent, collapse = ", "))
+}
+
+# the inputs: Section 2's panel and the cell-year panel summed from it above
+all_inputs <- c(section2_panel = PANEL_FILE, entrant_composition_panel.rds = CELL_PANEL_FILE)
+input_hashes <- data.table(
+  filename = names(all_inputs),
+  path = unname(all_inputs),
+  bytes = as.numeric(file.info(all_inputs)$size),
+  md5 = unname(tools::md5sum(all_inputs))
+)
+save_output(input_hashes, "input_hashes.rds")
+fwrite(input_hashes, file.path(PRIOR_DIR, "input_hashes.csv"))
+cell_year_panel <- as.data.table(readRDS(CELL_PANEL_FILE))
+panel_keys <- c("rbd", "cod_nivel", "yr")
+cell_columns <- c("rbd", "cod_nivel", "region", "is_entry", "door",
+                  "slack_fail", "door_year_tag")
+assert_columns(cell_year_panel, c(cell_columns, "yr", "n_ent", "n_gpa", "gpa_z", "sh_prio"),
+               "the cell-year panel")
+if (anyDuplicated(cell_year_panel, by = panel_keys)) stop("the cell-year panel has duplicate cell-years")
+cells_all <- unique(cell_year_panel[, ..cell_columns])
+if (anyDuplicated(cells_all, by = c("rbd", "cod_nivel"))) {
+  stop("a cell's fields vary across years")
+}
+if (nrow(cells_all) != N_CELLS) stop("the panel does not hold 8,891 school-grades")
+child_fields <- c("PRIOR_GPA_Z", "N_PRIOR_RECORDS", "UNKNOWN_SCHOOL", "UNKNOWN_REGION", "UNKNOWN_GRADE",
+                  "UNKNOWN_CALENDAR", "EXPOSURE_KNOWN", "EXPOSED", "SIGNATURE", "ELIGIBLE_HISTORY")
+assert_columns(S2P, c("MRUN", "AGNO", "RBD", "COD_NIVEL", "PRIO", child_fields), "Section 2's panel")
+
+# each region's wave: the door of its entry grades, one year earlier than the door of its other grades
+wave_rows <- unique(cells_all[, .(region, wave = door - (1L - is_entry))])[order(region)]
+if (anyDuplicated(wave_rows$region)) stop("a region has more than one wave")
+if (nrow(wave_rows) != 16L) stop("the rollout must cover the 16 regions")
+region_waves <- setNames(as.integer(wave_rows$wave), as.character(wave_rows$region))
+
+cells <- copy(cells_all[cod_nivel >= 2L & cod_nivel <= 12L])
+setorder(cells, rbd, cod_nivel)
+cells[, cell_id := .I]
+cell_years <- merge(cell_year_panel[, .(rbd, cod_nivel, yr)],
+                    cells[, .(rbd, cod_nivel, cell_id)], by = c("rbd", "cod_nivel"))
+setorder(cell_years, cell_id, yr)
+cell_years[, cell_year_id := .I]
+cell_years <- cell_years[, .(cell_year_id, cell_id, yr)]
+
+say("Entrants and their prior-year record fields, from Section 2's panel")
+per_year <- function() setNames(vector("list", length(years)), as.character(years))
+rebuilt_years <- per_year(); restricted_years <- per_year(); component_years <- per_year()
+flow_years <- per_year(); group_years <- per_year()
+
+for (yr_value in years) {
+  key <- as.character(yr_value)
+  census_data <- S2P[AGNO == yr_value, .(mrun = as.character(MRUN), rbd = RBD, cod_nivel = COD_NIVEL)]
+  prio_set <- S2P[AGNO == yr_value & PRIO == 1L, as.character(MRUN)]
+  children <- S2P[AGNO == yr_value & !is.na(N_PRIOR_RECORDS), .(
+    mrun = as.character(MRUN), z = PRIOR_GPA_Z, n_prior_records = N_PRIOR_RECORDS, unknown_school = UNKNOWN_SCHOOL,
+    unknown_region = UNKNOWN_REGION, unknown_grade = UNKNOWN_GRADE, unknown_calendar = UNKNOWN_CALENDAR,
+    exposure_known = EXPOSURE_KNOWN, exposed = EXPOSED, signature = SIGNATURE, eligible_history = ELIGIBLE_HISTORY)]
+  entrants <- merge(census_data, cells_all, by = c("rbd", "cod_nivel"))
+  if (nrow(entrants) != nrow(census_data)) stop("every entrant's cell must be one of the panel's cells")
+  entrants[, `:=`(yr = yr_value, prio = as.integer(mrun %chin% prio_set))]
+  n_entrants <- nrow(entrants)
+  entrants <- merge(entrants, children, by = "mrun", all.x = TRUE)
+  if (nrow(entrants) != n_entrants) stop("the prior-record join must keep one row per entrant")
+  if (anyDuplicated(entrants, by = c("mrun", "rbd", "cod_nivel"))) {
+    stop("an entrant appears twice in one cell and year")
+  }
+  entrants[, `:=`(
+    valid_prior_gpa = !is.na(z),
+    receiving_grade_eligible = cod_nivel >= 2L & cod_nivel <= 12L
+  )]
+  entrants[, eligible := receiving_grade_eligible & valid_prior_gpa &
+                           !is.na(eligible_history) & eligible_history]
+  entrants[, exclusion_reason := fcase(
+    !receiving_grade_eligible, "receiving grade outside 2-12",
+    !valid_prior_gpa, "no valid previous-year GPA",
+    !exposure_known, "unknown sending exposure",
+    exposed, "previous GPA includes SAE-covered schooling",
+    default = "retained"
+  )]
+  rebuilt_years[[key]] <- entrants[, .(
+    n_ent = .N, n_gpa = sum(!is.na(z)),
+    gpa_z = mean(z, na.rm = TRUE), sh_prio = mean(prio)
+  ), by = c(cell_columns, "yr")]
+  restricted_years[[key]] <- entrants[eligible == TRUE, .(
+    n_ent = .N, n_gpa = .N, gpa_z = mean(z), sh_prio = mean(prio)
+  ), by = c(cell_columns, "yr")]
+  comp <- entrants[receiving_grade_eligible & valid_prior_gpa & exposure_known, .(
+    n = .N, sum_z = sum(z), sum_prio = sum(prio)
+  ), by = .(rbd, cod_nivel, yr, signature)]
+  comp <- merge(comp, cells[, .(rbd, cod_nivel, cell_id)], by = c("rbd", "cod_nivel"))
+  comp <- merge(comp, cell_years, by = c("cell_id", "yr"))
+  component_years[[key]] <- comp[, .(
+    cell_year_id, signature, n, sum_z, sum_prio
+  )]
+  flow_years[[key]] <- entrants[, .(
+    n = .N, distinct_pupils = uniqueN(mrun)
+  ), by = .(yr, exclusion_reason)]
+  group_years[[key]] <- entrants[, .(
+    all_entrants = .N, valid_prior_gpa = sum(valid_prior_gpa),
+    known_exposure = sum(exposure_known %in% TRUE), retained = sum(eligible),
+    multiple_gpa_records = sum(n_prior_records > 1L, na.rm = TRUE),
+    unknown_school = sum(unknown_school %in% TRUE),
+    unknown_region = sum(unknown_region %in% TRUE),
+    unknown_grade = sum(unknown_grade %in% TRUE),
+    unknown_calendar = sum(unknown_calendar %in% TRUE)
+  ), by = .(yr, cod_nivel, door, region)]
+  saveRDS(entrants, file.path(AUDIT_DIR, sprintf("entrants_%d.rds", yr_value)))
+  say("Year %d | entrants %s | retained %s | %.1f min", yr_value, format(nrow(entrants), big.mark = ","),
+      format(entrants[eligible == TRUE, .N], big.mark = ","), (proc.time()[["elapsed"]] - started) / 60)
+  rm(census_data, prio_set, children, entrants, comp)
+  invisible(gc())
+}
+
+# every entrant summed by cell-year reproduces the cell-year panel
+rebuilt <- rbindlist(rebuilt_years)
+rebuilt[cod_nivel == 1L, `:=`(gpa_z = NA_real_, n_gpa = 0L)]
+rebuilt[cod_nivel %in% c(-1L, 0L), `:=`(gpa_z = NA_real_, n_gpa = 0L)]   # as the chunk panel-inputs blanks them
+setcolorder(rebuilt, names(cell_year_panel))
+setorderv(rebuilt, panel_keys)
+setorderv(cell_year_panel, panel_keys)
+save_output(rebuilt, "unrestricted_rebuilt.rds")
+same_keys <- identical(as.data.frame(rebuilt[, ..panel_keys]),
+                       as.data.frame(cell_year_panel[, ..panel_keys]))
+value_checks <- if (!same_keys) list() else lapply(setdiff(names(cell_year_panel), panel_keys), function(v) {
+  x <- rebuilt[[v]]
+  y <- cell_year_panel[[v]]
+  same_missing <- identical(is.na(x), is.na(y))
+  finite_both <- !is.na(x) & !is.na(y)
+  max_difference <- if (any(finite_both)) max(abs(x[finite_both] - y[finite_both])) else 0
+  tolerance <- if (v %in% c("gpa_z", "sh_prio")) 1e-10 else 0
+  data.table(check = paste0("same_", v),
+             passed = same_missing && is.finite(max_difference) && max_difference <= tolerance,
+             max_difference = max_difference)
+})
+reconciliation <- rbindlist(c(list(data.table(check = "same_cell_year_keys", passed = same_keys, max_difference = NA_real_)),
+                              value_checks))
+save_output(reconciliation, "unrestricted_reconciliation.rds")
+fwrite(reconciliation, file.path(PRIOR_DIR, "unrestricted_reconciliation.csv"))
+if (!all(reconciliation$passed)) stop("the entrants summed by cell-year differ from the cell-year panel; see unrestricted_reconciliation.csv")
+
+restricted <- rbindlist(restricted_years)
+setcolorder(restricted, names(cell_year_panel))
+setorderv(restricted, panel_keys)
+components <- rbindlist(component_years)
+signature_keys <- data.table(signature = sort(unique(components$signature), method = "radix"))
+signature_keys[, signature_id := .I]
+components <- merge(components, signature_keys, by = "signature")
+components <- components[, .(cell_year_id, signature_id, n, sum_z, sum_prio)]
+setorder(components, cell_year_id, signature_id)
+signatures <- rbindlist(lapply(seq_len(nrow(signature_keys)), function(i) {
+  parts <- strsplit(signature_keys$signature[[i]], "|", fixed = TRUE)[[1L]]
+  parsed <- tstrsplit(parts, ":", fixed = TRUE)
+  data.table(signature_id = i, sending_region = as.integer(parsed[[1L]]),
+             is_entry = as.integer(parsed[[2L]]))
+}))
+exposure_components <- list(
+  cells = cells, cell_years = cell_years, signatures = signatures,
+  components = components, waves = region_waves
+)
+save_output(exposure_components, "exposure_components.rds")
+save_output(signature_keys, "signature_dictionary.rds")
+save_output(restricted, "restricted_panel.rds")
+sample_flow <- rbindlist(flow_years)
+group_counts <- rbindlist(group_years)
+stopifnot("the restricted sample keeps some entrants and leaves some out" =
+            sum(group_counts$retained) > 0L && sum(group_counts$retained) < sum(group_counts$all_entrants))
+save_output(sample_flow, "sample_flow.rds")
+save_output(group_counts, "sample_counts_by_year_grade_door_region.rds")
+fwrite(sample_flow, file.path(PRIOR_DIR, "sample_flow.csv"))
+fwrite(group_counts, file.path(PRIOR_DIR, "sample_counts_by_year_grade_door_region.csv"))
+save_output(list(
+  completed_at = format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z"),
+  elapsed_seconds = proc.time()[["elapsed"]] - started,
+  cell_years = nrow(cell_year_panel), restricted_cell_years = nrow(restricted),
+  entrant_cell_years = sum(cell_year_panel$n_ent),
+  retained_entrant_cell_years = sum(restricted$n_ent),
+  n_signatures = nrow(signature_keys), n_components = nrow(components),
+  source_hashes = input_hashes, reconciliation = reconciliation, session_info = sessionInfo()
+), "build_checks.rds")
+say("Restricted sample: %s entrant child-years in %s cell-years; the entrants summed reproduce the cell-year panel",
+    format(sum(restricted$n_ent), big.mark = ","), format(nrow(restricted), big.mark = ","))
+rm(S2P)
+invisible(gc())
+```
+
+## Appendix Table A1, last row: the estimators of the restricted sample
+
+Defines did's estimate on the restricted panel and the randomization statistic, which rebuilds the
+restricted outcomes under each reassigned rollout (an entrant's prior-year grades count as earned
+before SAE coverage when, under that rollout, SAE reached every region and grade group of her
+prior-year records after the year she earned them).
+
+```{r prior-gpa-functions}
+# did's overall effect on the restricted panel, with n_boot bootstrap draws; returns the estimate, SE,
+# counts, the pre-adoption mean, the data, the fit and its aggregation
+estimate_cs <- function(data, outcome, n_boot) {
+  stopifnot(is.data.table(data), outcome %in% c("gpa_z", "sh_prio"),
+            is.integer(n_boot), n_boot > 0L)
+  d <- data[!is.na(get(outcome)), .(cell_id, yr, G, region, y = get(outcome))]
+  stopifnot(nrow(d) > 0L, !anyDuplicated(d[, .(cell_id, yr)]),
+            all(is.finite(d$y)), !anyNA(d))
+  estimate <- fit_did(d, paste0("prior_gpa_", outcome), bit = n_boot, keep_fit = TRUE)
+  fit <- estimate$fit
+  aggregate <- estimate$aggregate
+  stopifnot(is.finite(aggregate$overall.att), is.finite(aggregate$overall.se))
+  list(estimate = aggregate$overall.att, se = aggregate$overall.se,
+       n_obs = nrow(d), n_cells = uniqueN(d$cell_id), n_regions = uniqueN(d$region),
+       pre_mean = d[yr < G, mean(y)], input = d, fit = fit, aggregate = aggregate)
+}
+
+# the pieces the rebuild under a rollout needs, checked: cells, cell-years, the signatures (regions
+# and entry-grade status of the prior records) and each cell-year's entrants grouped by signature
+prepare_exposure_context <- function(data) {
+  required <- c("cells", "cell_years", "signatures", "components")
+  stopifnot(all(required %in% names(data)))
+  cells <- as.data.table(copy(data$cells))[order(cell_id)]
+  years <- as.data.table(copy(data$cell_years))[order(cell_year_id)]
+  signatures <- as.data.table(copy(data$signatures))
+  components <- as.data.table(copy(data$components))
+  stopifnot(identical(cells$cell_id, seq_len(nrow(cells))),
+            identical(years$cell_year_id, seq_len(nrow(years))),
+            !anyDuplicated(years[, .(cell_id, yr)]),
+            !anyNA(signatures[, .(signature_id, sending_region, is_entry)]),
+            all(components$n > 0L),
+            all(is.finite(components$sum_z)), all(is.finite(components$sum_prio)))
+  regions <- sort(unique(cells$region))
+  stopifnot(length(regions) == 16L,
+            all(signatures$sending_region %in% regions),
+            all(signatures$is_entry %in% c(0L, 1L)))
+  waves_dt <- unique(cells[, .(region, wave = door - (1L - is_entry))])
+  stopifnot(!anyDuplicated(waves_dt$region))
+  stopifnot(all(waves_dt$wave %in% 2016L:2019L))
+  waves <- setNames(as.integer(waves_dt$wave[match(regions, waves_dt$region)]), as.character(regions))
+  stopifnot(identical(as.integer(sort(as.vector(table(waves)))), c(1L, 1L, 4L, 10L)))
+  n_signatures <- max(signatures$signature_id)
+  stopifnot(identical(sort(unique(signatures$signature_id)), seq_len(n_signatures)),
+            all(components$signature_id %in% signatures$signature_id),
+            all(components$cell_year_id %in% years$cell_year_id))
+  yr_values <- sort(unique(years$yr))
+  matrix_index <- years$cell_id + (match(years$yr, yr_values) - 1L) * nrow(cells)
+  sig_members <- split(seq_len(nrow(signatures)), signatures$signature_id)
+  signature_columns <- lapply(seq_len(max(lengths(sig_members))), function(j)
+    vapply(sig_members, function(ix) ix[min(j, length(ix))], integer(1L)))
+  list(cells = cells, cell_years = years, components = components,
+       signature_region_index = match(signatures$sending_region, regions),
+       signature_offset = as.integer(2L - signatures$is_entry),
+       signature_columns = signature_columns,
+       component_year = years$yr[components$cell_year_id],
+       component_values = as.matrix(components[, .(n, sum_z, sum_prio)]),
+       n_signatures = n_signatures, waves = waves, regions = regions,
+       region_index = match(cells$region, regions), years = yr_values,
+       matrix_index = matrix_index)
+}
+
+# the restricted outcomes under a rollout `waves`: a group of entrants counts when its cell-year comes
+# no later than the first academic year SAE covered any of its sending regions and grades; returns the
+# GPA and low-income matrices (cell x year) and each cell-year's count
+rebuild_exposure_outcomes <- function(context, waves) {
+  stopifnot(identical(names(waves), as.character(context$regions)), !anyNA(waves))
+  member_first <- unname(waves)[context$signature_region_index] + context$signature_offset
+  first_academic <- do.call(pmin, lapply(context$signature_columns, function(ix) member_first[ix]))
+  eligible <- context$component_year <= first_academic[context$components$signature_id]
+  totals <- matrix(0, nrow = nrow(context$cell_years), ncol = 3L)
+  if (any(eligible)) {
+    sums <- rowsum(context$component_values[eligible, , drop = FALSE],
+                   context$components$cell_year_id[eligible], reorder = FALSE)
+    totals[as.integer(rownames(sums)), ] <- sums
+  }
+  n <- totals[, 1L]
+  gpa <- prio <- rep(NA_real_, length(n))
+  observed <- n > 0L
+  gpa[observed] <- totals[observed, 2L] / n[observed]
+  prio[observed] <- totals[observed, 3L] / n[observed]
+  M_gpa <- M_prio <- matrix(NA_real_, nrow = nrow(context$cells), ncol = length(context$years))
+  M_gpa[context$matrix_index] <- gpa
+  M_prio[context$matrix_index] <- prio
+  list(gpa_z = M_gpa, sh_prio = M_prio, n_eligible = n)
+}
+
+# the paired estimate written out group by group (the reference the fast version is checked against)
+simple_att_literal <- function(data, adoption, years) {
+  stopifnot(is.matrix(data), nrow(data) == length(adoption))
+  numerator <- 0
+  denominator <- 0
+  for (g in sort(unique(adoption))) {
+    baseline <- match(g - 1L, years)
+    if (is.na(baseline)) next
+    treated <- adoption == g
+    for (t in years[years >= g]) {
+      current <- match(t, years)
+      ok_t <- treated & !is.na(data[, current]) & !is.na(data[, baseline])
+      ok_c <- adoption > t & !is.na(data[, current]) & !is.na(data[, baseline])
+      if (!any(ok_t) || !any(ok_c)) next
+      att <- mean(data[ok_t, current] - data[ok_t, baseline]) -
+        mean(data[ok_c, current] - data[ok_c, baseline])
+      weight <- sum(ok_t)
+      numerator <- numerator + weight * att
+      denominator <- denominator + weight
+    }
+  }
+  if (denominator <= 0) return(NA_real_)
+  numerator / denominator
+}
+
+# the paired estimate, its studentized statistic and the delete-one-region estimates, written out
+jackknife_literal <- function(data, adoption, years, region, regions) {
+  att <- simple_att_literal(data, adoption, years)
+  loo <- vapply(regions, function(r) {
+    keep <- region != r
+    simple_att_literal(data[keep, , drop = FALSE], adoption[keep], years)
+  }, numeric(1L))
+  ok <- !is.na(loo)
+  n_valid <- sum(ok)
+  variance <- if (n_valid >= 2L) {
+    (n_valid - 1L) / n_valid * sum((loo[ok] - mean(loo[ok]))^2)
+  } else NA_real_
+  c(att = att, statistic = att / sqrt(variance), jk_se = sqrt(variance),
+    n_valid_loo = n_valid, setNames(loo, paste0("loo_", regions)))
+}
+
+# the same as jackknife_literal, computed with region sums (every delete-one-region estimate in one pass)
+jackknife_fast <- function(data, adoption, years, region_index, regions) {
+  n_regions <- length(regions)
+  numerator <- denominator <- numeric(n_regions + 1L)
+  for (g in sort(unique(adoption))) {
+    baseline <- match(g - 1L, years)
+    if (is.na(baseline)) next
+    for (t in years[years >= g]) {
+      current <- match(t, years)
+      difference <- data[, current] - data[, baseline]
+      ok <- !is.na(difference)
+      treated <- ok & adoption == g
+      control <- ok & adoption > t
+      if (!any(treated) || !any(control)) next
+      counts_t <- tabulate(region_index[treated], nbins = n_regions)
+      counts_c <- tabulate(region_index[control], nbins = n_regions)
+      sums <- matrix(0, nrow = n_regions, ncol = 2L)
+      st <- rowsum(difference[treated], region_index[treated], reorder = FALSE)
+      sc <- rowsum(difference[control], region_index[control], reorder = FALSE)
+      sums[as.integer(rownames(st)), 1L] <- st[, 1L]
+      sums[as.integer(rownames(sc)), 2L] <- sc[, 1L]
+      nt <- sum(counts_t) - c(0L, counts_t)
+      nc <- sum(counts_c) - c(0L, counts_c)
+      sum_t <- sum(sums[, 1L]) - c(0, sums[, 1L])
+      sum_c <- sum(sums[, 2L]) - c(0, sums[, 2L])
+      valid <- nt > 0L & nc > 0L
+      numerator[valid] <- numerator[valid] + sum_t[valid] - nt[valid] * sum_c[valid] / nc[valid]
+      denominator[valid] <- denominator[valid] + nt[valid]
+    }
+  }
+  estimates <- rep(NA_real_, n_regions + 1L)
+  estimates[denominator > 0] <- numerator[denominator > 0] / denominator[denominator > 0]
+  att <- estimates[1L]
+  loo <- estimates[-1L]
+  ok <- !is.na(loo)
+  n_valid <- sum(ok)
+  variance <- if (n_valid >= 2L) {
+    (n_valid - 1L) / n_valid * sum((loo[ok] - mean(loo[ok]))^2)
+  } else NA_real_
+  c(att = att, statistic = att / sqrt(variance), jk_se = sqrt(variance),
+    n_valid_loo = n_valid, setNames(loo, paste0("loo_", regions)))
+}
+
+# both restricted outcomes' statistics under one rollout
+score_exposure_map <- function(waves, context) {
+  outcomes <- rebuild_exposure_outcomes(context, waves)
+  adoption <- unname(waves)[context$region_index] + 2L - context$cells$is_entry
+  result <- lapply(c("gpa_z", "sh_prio"), function(outcome) {
+    value <- jackknife_fast(outcomes[[outcome]], adoption, context$years,
+                            context$region_index, context$regions)
+    setNames(value, paste0(outcome, "__", names(value)))
+  })
+  unlist(result, use.names = TRUE)
+}
+```
+
+## Appendix Table A1, last row: did estimates
+
+Fits did on the restricted panel for both outcomes, with 10,000 bootstrap draws each. Writes
+`analysis_panel.rds` and `bootstrap_fits.rds`.
+
+```{r prior-gpa-effects}
+# The result files of this row carry SPEC_ID in their first column: the project's identifier of this
+# restricted-sample analysis, written on 2026-09-15 before the analysis first ran
+SPEC_ID <- "ALLOC-PRIOR-UNEXPOSED-2026-09-15"
+OUTCOMES <- c("gpa_z", "sh_prio")
+set.seed(SEED_PRIOR)
+restricted_data <- as.data.table(readRDS(file.path(PRIOR_DIR, "restricted_panel.rds")))
+restricted_data[, cell := paste(rbd, cod_nivel, sep = "|")]
+restricted_data[, cell_id := as.integer(factor(cell))]
+restricted_data[, G := as.integer(door + 1L)]
+stopifnot("every restricted cell-year with a GPA mean counts all its entrants" =
+            all(restricted_data[!is.na(gpa_z), n_ent] == restricted_data[!is.na(gpa_z), n_gpa]),
+          "both outcomes are present in the same cell-years" =
+            identical(is.na(restricted_data$gpa_z), is.na(restricted_data$sh_prio)))
+saveRDS(restricted_data, file.path(PRIOR_DIR, "analysis_panel.rds"))
+fits <- setNames(vector("list", length(OUTCOMES)), OUTCOMES)
+for (outcome in OUTCOMES) {
+  say("Fitting %s with %d bootstrap draws", outcome, as.integer(B_BOOT))
+  fits[[outcome]] <- estimate_cs(restricted_data, outcome, as.integer(B_BOOT))   # did receives an integer count here
+}
+saveRDS(list(spec_id = SPEC_ID, seed = SEED_PRIOR, n_boot = as.integer(B_BOOT), fits = fits,
+             session = sessionInfo()), file.path(PRIOR_DIR, "bootstrap_fits.rds"))
+stopCluster(model_worker)
+```
+
+## Appendix Table A1, last row: randomization test
+
+Checks that the restricted outcomes rebuilt under the observed rollout equal the restricted panel, and
+that the fast statistic equals the literal one under five rollouts; then scores the 9,999 saved
+reassignments `prior_gpa`. Writes `permutation_assignments.rds`, `statistic_equivalence_checks.csv`,
+`randomization_results.rds` and `undefined_permutation_draws.csv`.
+
+```{r prior-gpa-permutations}
+data.table::setDTthreads(1L)
+context <- prepare_exposure_context(readRDS(file.path(PRIOR_DIR, "exposure_components.rds")))
+observed_outcomes <- rebuild_exposure_outcomes(context, context$waves)
+restricted_check <- as.data.table(readRDS(file.path(PRIOR_DIR, "restricted_panel.rds")))
+restricted_check <- merge(restricted_check, context$cells[, .(cell_id, rbd, cod_nivel)],
+                          by = c("rbd", "cod_nivel"), all.x = TRUE, sort = FALSE)
+stopifnot(!anyNA(restricted_check$cell_id), !anyDuplicated(restricted_check[, .(cell_id, yr)]))
+index <- restricted_check$cell_id + (match(restricted_check$yr, context$years) - 1L) * nrow(context$cells)
+year_keys <- paste(context$cell_years$cell_id, context$cell_years$yr, sep = "|")
+panel_year_keys <- paste(restricted_check$cell_id, restricted_check$yr, sep = "|")
+year_match <- match(panel_year_keys, year_keys)
+stopifnot(!anyNA(year_match),
+          identical(is.na(restricted_check$gpa_z), is.na(restricted_check$sh_prio)),
+          "the entrant counts rebuilt under the observed rollout equal the restricted panel's" =
+            isTRUE(all.equal(as.numeric(restricted_check$n_ent), observed_outcomes$n_eligible[year_match],
+                             tolerance = 1e-12, check.attributes = FALSE)),
+          "no eligible cell-year lies outside the restricted panel" =
+            !any(observed_outcomes$n_eligible[!year_keys %in% panel_year_keys] > 0L))
+for (outcome in OUTCOMES) {
+  stopifnot("the outcomes rebuilt under the observed rollout equal the restricted panel's" =
+              isTRUE(all.equal(restricted_check[[outcome]], observed_outcomes[[outcome]][index],
+                               tolerance = 1e-10, check.attributes = FALSE)),
+            "the same number of cell-years with the outcome" =
+              sum(!is.na(observed_outcomes[[outcome]])) == sum(!is.na(restricted_check[[outcome]])))
+}
+waves_matrix <- matrix(NA_integer_, nrow = B_RI, ncol = length(context$regions),
+                       dimnames = list(NULL, as.character(context$regions)))
+saved_waves <- wave_draws("prior_gpa", context$waves, B_RI)
+for (draw in seq_len(B_RI)) waves_matrix[draw, ] <- saved_waves[[draw]]
+saveRDS(list(spec_id = SPEC_ID, seed = SEED_PRIOR, regions = context$regions,
+             observed = context$waves, assignments = waves_matrix),
+        file.path(PRIOR_DIR, "permutation_assignments.rds"))
+check_maps <- c(list(context$waves), lapply(c(1L, 2L, 17L, 100L),
+                  function(i) setNames(waves_matrix[i, ], colnames(waves_matrix))))
+equivalence_checks <- rbindlist(lapply(seq_along(check_maps), function(map_id) {
+  check_waves <- check_maps[[map_id]]
+  check_rebuilt <- rebuild_exposure_outcomes(context, check_waves)
+  adoption <- unname(check_waves)[context$region_index] + 2L - context$cells$is_entry
+  rbindlist(lapply(OUTCOMES, function(outcome) {
+    fast <- jackknife_fast(check_rebuilt[[outcome]], adoption, context$years,
+                           context$region_index, context$regions)
+    literal <- jackknife_literal(check_rebuilt[[outcome]], adoption, context$years,
+                                 context$cells$region, context$regions)
+    stopifnot("the fast statistic equals the literal one" =
+                isTRUE(all.equal(fast, literal, tolerance = 1e-9)))
+    data.table(map_id = map_id, outcome = outcome,
+               max_abs_difference = max(abs(fast - literal), na.rm = TRUE),
+               n_valid_loo = fast[["n_valid_loo"]])
+  }))
+}))
+fwrite(equivalence_checks, file.path(PRIOR_DIR, "statistic_equivalence_checks.csv"))
+observed <- score_exposure_map(context$waves, context)
+stopifnot("the observed randomization statistics are defined" = all(is.finite(observed)))
+say("The restricted outcomes rebuilt under the observed rollout equal the restricted panel; the fast and literal statistics agree under five rollouts.")
+
+results <- matrix(NA_real_, nrow = B_RI, ncol = length(observed),
+                  dimnames = list(NULL, names(observed)))
+N_WORKERS <- worker_limit(rep(512 * 1024^2 + 4 * as.numeric(object.size(context)), N_CORES), N_CORES,
+                          "randomization test of Table A1's last row")
+cluster <- if (N_WORKERS > 1L) parallel::makeCluster(N_WORKERS) else NULL
+worker_code <- list(context = context, rebuild_exposure_outcomes = rebuild_exposure_outcomes,
+                    jackknife_fast = jackknife_fast, score_exposure_map = score_exposure_map)
+for (name in c("rebuild_exposure_outcomes", "jackknife_fast", "score_exposure_map"))
+  environment(worker_code[[name]]) <- .GlobalEnv
+if (!is.null(cluster))
+  parallel::clusterExport(cluster, names(worker_code), envir = list2env(worker_code))
+score_map <- function(waves) score_exposure_map(waves, context)
+environment(score_map) <- .GlobalEnv
+tryCatch({
+  if (!is.null(cluster))
+    parallel::clusterEvalQ(cluster, { data.table::setDTthreads(1L); NULL })
+  batch_size <- max(256L, 16L * N_WORKERS)
+  for (start in seq.int(1L, B_RI, by = batch_size)) {
+    ids <- seq.int(start, min(B_RI, start + batch_size - 1L))
+    maps <- lapply(ids, function(i) setNames(waves_matrix[i, ], colnames(waves_matrix)))
+    scored <- if (is.null(cluster)) lapply(maps, function(w) score_exposure_map(w, context)) else
+      parallel::parLapplyLB(cluster, maps, score_map,
+        chunk.size = max(1L, ceiling(length(maps) / (4L * N_WORKERS))))
+    results[ids, ] <- do.call(rbind, scored)
+    say("Scored %d / %d reassignments.", max(ids), B_RI)
+  }
+}, finally = if (!is.null(cluster)) parallel::stopCluster(cluster))
+saveRDS(list(spec_id = SPEC_ID, seed = SEED_PRIOR, n_perm = B_RI,
+             completed = B_RI, observed = observed, results = results,
+             assignments = waves_matrix, checks = equivalence_checks, session = sessionInfo()),
+        file.path(PRIOR_DIR, "randomization_results.rds"))
+invalid <- which(!apply(is.finite(results), 1L, all))
+fwrite(data.table(draw = invalid), file.path(PRIOR_DIR, "undefined_permutation_draws.csv"))
+stopifnot("every reassignment's statistic is defined (stars need all 9,999)" = length(invalid) == 0L)
+```
+
+## Appendix Table A1, last row: results
+
+Combines the did fits and the randomization test into the row's estimate, SE and randomization p.
+Writes `restricted_results.csv` and `restricted_results.rds`.
+
+```{r prior-gpa-results}
+fit_bundle <- readRDS(file.path(PRIOR_DIR, "bootstrap_fits.rds"))
+randomization <- readRDS(file.path(PRIOR_DIR, "randomization_results.rds"))
+analysis_panel <- as.data.table(readRDS(file.path(PRIOR_DIR, "analysis_panel.rds")))
+stopifnot(identical(fit_bundle$spec_id, SPEC_ID), identical(randomization$spec_id, SPEC_ID),
+          identical(randomization$completed, B_RI), nrow(randomization$results) == B_RI,
+          all(is.finite(randomization$results)), all(is.finite(randomization$observed)),
+          !any(vapply(fit_bundle$fits, is.null, logical(1L))))
+rows <- lapply(OUTCOMES, function(outcome) {
+  fit <- fit_bundle$fits[[outcome]]
+  test_name <- paste0(outcome, "__statistic")
+  paired_name <- paste0(outcome, "__att")
+  ri_p <- (1L + sum(abs(randomization$results[, test_name]) >=
+                      abs(randomization$observed[[test_name]]))) / (1L + B_RI)
+  stars <- if (ri_p < .01) "***" else if (ri_p < .05) "**" else if (ri_p < .10) "*" else ""
+  d <- analysis_panel[!is.na(get(outcome))]
+  stopifnot(nrow(d) == fit$n_obs,
+            isTRUE(all.equal(d[yr < G, mean(get(outcome))], fit$pre_mean, tolerance = 1e-12)))
+  data.table(spec_id = SPEC_ID, outcome = outcome, att = fit$estimate, se = fit$se,
+             ri_p = ri_p, stars = stars, pre_mean = fit$pre_mean, n_obs = fit$n_obs,
+             n_cells = fit$n_cells, n_regions = fit$n_regions,
+             eligible_entrant_records = sum(d$n_ent),
+             observed_paired_att = randomization$observed[[paired_name]],
+             paired_minus_did = randomization$observed[[paired_name]] - fit$estimate,
+             ri_statistic = randomization$observed[[test_name]],
+             n_boot = as.integer(B_BOOT), n_perm = B_RI, n_undefined = 0L)
+})
+restricted_summary <- rbindlist(rows)
+fwrite(restricted_summary, file.path(PRIOR_DIR, "restricted_results.csv"))
+saveRDS(restricted_summary, file.path(PRIOR_DIR, "restricted_results.rds"))
+print(restricted_summary[, .(outcome, att, se, ri_p, stars, pre_mean, n_obs, n_cells)])
+```
+
+## Writing Table 1 and Appendix Tables A1 and A2
+
+Writes the three table files the paper inputs (`tables/alloc_headline.tex`,
+`tables/appendix14_a1_allocation.tex`, `tables/appendix14_a2_intake.tex`) and prints each table's
+numbers. The Observations rows count the cell-years of 2012-2020: did keeps no cell-year of the last
+adoption group's year or later, when every school-grade has adopted. Each count is checked against
+the cell-years of a fit. Also writes `observations_estimate_years.csv` (each count, with the count
+over every year) and `results.rds`.
+
+```{r paper-tables}
+last_g <- max(CP$G)
+est_years <- CP[yr < last_g]
+restricted_all <- as.data.table(readRDS(file.path(PRIOR_DIR, "restricted_panel.rds")))
+obs_headline <- c(est_years[!is.na(gpa_z), .N], est_years[!is.na(sh_prio), .N])
+obs_intake <- c(est_years[n_ent > 0L, .N], est_years[cod_nivel >= 2L & n_ent > 0L, .N])
+obs_restricted <- restricted_all[yr < last_g, .N]
+# each count against the cell-years of a saved fit: Table 1's against the event-study fits, which use
+# the main estimates' cell-years (the main fits keep no fit object); Table A1's against the two
+# restricted fits
+stopifnot("Table 1, prior-year GPA: the cell-years of its fit" = obs_headline[1L] == nrow(j_g$fit$DIDparams$data),
+          "Table 1, low-income share: the cell-years of its fit" = obs_headline[2L] == nrow(j_p$fit$DIDparams$data),
+          "Table A1: the cell-years of the two restricted fits" =
+            obs_restricted == nrow(fit_bundle$fits$gpa_z$fit$DIDparams$data) &&
+            obs_restricted == nrow(fit_bundle$fits$sh_prio$fit$DIDparams$data),
+          "Table A2: every cell-year carries both outcomes, and the last adoption group is in both samples" =
+            obs_intake[1L] == est_years[!is.na(n_ent), .N] && obs_intake[2L] == CPg[yr < last_g & !is.na(sh_gpa), .N] &&
+            max(CPg$G) == last_g,
+          "Table A2's entrant count is Table 1's low-income count (every cell-year has an entrant and a low-income share)" =
+            obs_intake[1L] == obs_headline[2L])
+obs_note <- sprintf(" Observations count the cell-years of %d--%d, the years the estimates use.", min(est_years$yr), max(est_years$yr))
+fwrite(data.table(table = c("Table 1", "Table 1", "Table A2", "Table A2", "Table A1"),
+                  column = c("Prior-year GPA (z)", "Low-income share", "Entrants per cell", "Share with prior-year GPA",
+                             "Prior grades earned before SAE coverage"),
+                  years = sprintf("%d-%d", min(est_years$yr), max(est_years$yr)),
+                  cell_years = c(obs_headline, obs_intake, obs_restricted),
+                  every_year = c(headline$n_cellyears, intake_checks$n_cellyears, restricted_all[!is.na(gpa_z), .N])),
+       file.path(OUT_DIR, "observations_estimate_years.csv"))
+rm(est_years, restricted_all)
+tab <- paste0(
+  "\\begin{table}[htbp]\n   \\caption{Effect of Centralized Assignment (SAE) on Entering-Class Composition}",
+  "\\label{tab: alloc headline}\n",
+  "   \\centerline{\\scalebox{0.85}{\\begin{tabular}{lcc}\n      \\toprule\n",
+  "                   & Prior-year GPA (z) & Low-income share\\\\\n",
+  "                   & (1) & (2)\\\\\n      \\midrule\n",
+  row_tex("Effect of SAE", paste0(fmt(headline$att), star(headline$p_ri))),
+  row_tex("", paste0("(", fmt(headline$se), ")")),
+  "      \\midrule\n",
+  row_tex("Mean (pre-treatment)", fmt(headline$pre_mean)),
+  row_tex("Observations", format(obs_headline, big.mark = ",")),
+  "      \\bottomrule\n   \\end{tabular}}}\n",
+  "   \\par\\smallskip{\\footnotesize Notes: Region-clustered bootstrap SE in parentheses. ",
+  "Stars from the randomization test of Section~\\ref{sec:allocation-inference}: $^{***}$p$<$0.01, $^{**}$p$<$0.05, ",
+  "$^{*}$p$<$0.1. Mean (pre-treatment) averages the outcome over every cell-year ",
+  "before the cell's adoption year.", obs_note, "}\n\\end{table}\n")
+writeLines(tab, file.path(TAB_DIR, "alloc_headline.tex"))
+cat("Table 1\n")
+print(data.table(row = c("Effect of SAE", "", "Mean (pre-treatment)", "Observations"),
+                 `Prior-year GPA (SD)` = c(paste0(fmt(headline$att[1L]), stars_text(headline$p_ri[1L])), paste0("(", fmt(headline$se[1L]), ")"),
+                                           fmt(headline$pre_mean[1L]), format(obs_headline[1L], big.mark = ",")),
+                 `Low-income share` = c(paste0(fmt(headline$att[2L]), stars_text(headline$p_ri[2L])), paste0("(", fmt(headline$se[2L]), ")"),
+                                        fmt(headline$pre_mean[2L]), format(obs_headline[2L], big.mark = ","))))
+
+labels <- c(vapply(specs, `[[`, "", "lab"), "Prior grades earned before SAE coverage")
+a1_gpa <- rbind(gpa_robustness[, .(att, se, p_ri)],
+                restricted_summary[outcome == "gpa_z", .(att, se, p_ri = ri_p)])
+a1_prio <- rbind(resP[, .(att, se, p_ri)],
+                 restricted_summary[outcome == "sh_prio", .(att, se, p_ri = ri_p)])
+stopifnot("one row of estimates per label" = nrow(a1_gpa) == length(labels) && nrow(a1_prio) == length(labels),
+          "every row's estimate, SE and p are finite" = all(is.finite(as.matrix(a1_gpa))) && all(is.finite(as.matrix(a1_prio))))
+body <- vapply(seq_along(labels), function(i) paste0(
+  labels[i], " & ", fmt(a1_gpa$att[i]), star(a1_gpa$p_ri[i]), " & ",
+  fmt(a1_prio$att[i]), star(a1_prio$p_ri[i]), " \\\\\n",
+  " & (", fmt(a1_gpa$se[i]), ") & (", fmt(a1_prio$se[i]), ") \\\\[5pt]\n"), "")
+tab <- paste0(
+  "\\begin{tabular*}{\\textwidth}{@{\\extracolsep{\\fill}}p{0.47\\textwidth}cc@{}}\n",
+  "\\toprule\nSpecification & \\shortstack{Prior-year GPA\\\\(SD)} & ",
+  "\\shortstack{Low-income\\\\share} \\\\\n\\midrule\n",
+  paste(body, collapse = ""), "\\bottomrule\n\\end{tabular*}\n")
+cat(tab, file = file.path(TAB_DIR, "appendix14_a1_allocation.tex"))
+cat("Appendix Table A1\n")
+print(data.table(Specification = labels,
+                 `Prior-year GPA (SD)` = paste0(fmt(a1_gpa$att), stars_text(a1_gpa$p_ri)), `GPA SE` = paste0("(", fmt(a1_gpa$se), ")"),
+                 `Low-income share` = paste0(fmt(a1_prio$att), stars_text(a1_prio$p_ri)), `Low-income SE` = paste0("(", fmt(a1_prio$se), ")")))
+
+tab <- paste0(
+  "\\begin{tabular*}{\\textwidth}{@{\\extracolsep{\\fill}}p{0.40\\textwidth}cc@{}}\n",
+  "\\toprule\n & \\shortstack{Entrants\\\\per cell} & ",
+  "\\shortstack{Share with\\\\prior-year GPA} \\\\\n\\midrule\n",
+  "Effect of SAE & ", paste(paste0(fmt(intake_checks$att), star(intake_checks$p_ri)), collapse = " & "), " \\\\\n",
+  " & ", paste(paste0("(", fmt(intake_checks$se), ")"), collapse = " & "), " \\\\[5pt]\n",
+  "\\midrule\nMean (pre-treatment) & ", paste(fmt(intake_checks$pre_mean), collapse = " & "), " \\\\\n",
+  "Observations & ", paste(format(obs_intake, big.mark = ","), collapse = " & "), " \\\\\n",
+  "\\bottomrule\n\\end{tabular*}\n")
+cat(tab, file = file.path(TAB_DIR, "appendix14_a2_intake.tex"))
+cat("Appendix Table A2\n")
+print(data.table(row = c("Effect of SAE", "", "Mean (pre-treatment)", "Observations"),
+                 `Entrants per cell` = c(paste0(fmt(intake_checks$att[1L]), stars_text(intake_checks$p_ri[1L])),
+                                         paste0("(", fmt(intake_checks$se[1L]), ")"), fmt(intake_checks$pre_mean[1L]),
+                                         format(obs_intake[1L], big.mark = ",")),
+                 `Share with prior-year GPA` = c(paste0(fmt(intake_checks$att[2L]), stars_text(intake_checks$p_ri[2L])),
+                                                 paste0("(", fmt(intake_checks$se[2L]), ")"), fmt(intake_checks$pre_mean[2L]),
+                                                 format(obs_intake[2L], big.mark = ","))))
+saveRDS(list(headline = headline, gpa_robustness = gpa_robustness,
+             prioritario_robustness = resP, prior_gpa = restricted_summary,
+             intake_checks = intake_checks, session = sessionInfo()),
+        file.path(OUT_DIR, "results.rds"))
+```
+
+## Numbers Section 2's text quotes
+
+Prints the panel's counts, every event-time estimate of Figure 1 with its 95% interval, the joint
+randomization tests of the leads, the GPA leads check, the paired estimates less did's, and the
+Observations counts. Writes `event_time_estimates.csv`.
+
+```{r text-numbers}
+cells_region <- unique(CP[, .(cell, region)])
+print(data.table(
+  count = c("entrant child-years", "cell-years", "school-grades", "Metropolitan Region's share of the school-grades (%)"),
+  value = c(format(c(sum(CP$n_ent), nrow(CP), nrow(cells_region)), big.mark = ",", trim = TRUE),
+            sprintf("%.1f", 100 * cells_region[, mean(region == 13L)]))))
+# Figure 1: every event time the dynamic aggregation reports, with its pointwise 95% interval (the
+# estimate plus or minus 1.96 SE, the figure's bars); the leads g-8 to g-2 are e = -8 to -2
+event_times <- rbind(
+  data.table(outcome = "Prior-year GPA (SD)", e = j_g$dynamic$egt, att = j_g$dynamic$att.egt, se = j_g$dynamic$se.egt),
+  data.table(outcome = "Low-income share", e = j_p$dynamic$egt, att = j_p$dynamic$att.egt, se = j_p$dynamic$se.egt))[is.finite(att)]
+event_times[, `:=`(lo = att - 1.96 * se, hi = att + 1.96 * se)]
+event_times[, interval_excludes_zero := lo > 0 | hi < 0]
+print(event_times)
+fwrite(event_times, file.path(OUT_DIR, "event_time_estimates.csv"))
+cat(sprintf("Joint randomization test of the leads g-6 to g-2 (%d reassignments): p = %.2f for the prior-year GPA, p = %.2f for the low-income share.\n\n",
+            B_RI_ROBUST, rp_g$p, rp_p$p))
+print(fread(file.path(OUT_DIR, "gpa_leads_check.csv")))
+# the paired estimate (cells observed in both years of a comparison) less did's: Table 1 and Table A1's last row
+print(data.table(estimate = c("Main estimate", "Prior grades earned before SAE coverage"),
+                 gpa_sd = c(unname(obs_g["th"]) - g_reg$att, restricted_summary[outcome == "gpa_z", paired_minus_did]),
+                 low_income_share = c(unname(obs_p["th"]) - p_reg$att, restricted_summary[outcome == "sh_prio", paired_minus_did])))
+print(fread(file.path(OUT_DIR, "observations_estimate_years.csv")))
+```
+
+## Session
+
+```{r session}
+sessionInfo()
+```
