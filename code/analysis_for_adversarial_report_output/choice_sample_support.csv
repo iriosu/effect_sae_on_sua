@@ -1,0 +1,4 @@
+"sample","description","n","share_main_pct","offered","not_offered","chance_groups","groups_with_both_arms","offered_outside_single_target","mean_prior_gpa","low_income_pct"
+"main","Main sample",175869,100,63073,112796,101,101,NA,0.0896320787443585,57.0180077216565
+"single_od","One OD school listed; non-OD origin",39187,22.2819257515537,11276,27911,101,98,1,-0.0699272667421714,67.3922474289943
+"two_choices","Two choices: OD first, non-OD second; non-OD origin",10319,5.86743542068244,4312,6007,101,96,0,-0.0753451443108198,67.6422133927706

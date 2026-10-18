@@ -1,0 +1,854 @@
+---
+title: "Analyses for the adversarial report"
+subtitle: "F20: offer effects, school destinations, and simpler choice lists"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    code_folding: hide
+    self_contained: true
+    keep_md: true
+---
+
+## Scope and reproduction
+
+This notebook estimates the reduced-form effects of admission offers using the
+finalized Section 3 data and specification documented in `../HANDOFF.md` and
+`finalized_design_v1/section3/Section3_IV.Rmd`. It reestimates the corresponding
+first stages and 2SLS coefficients on exactly the same outcome-specific samples.
+All analysis code is in this file. It does not edit or export files to the paper.
+
+From the repository's `code/` directory, run:
+
+```bash
+Rscript -e 'rmarkdown::render("analysis_for_adversarial_report.Rmd", output_dir = "analysis_for_adversarial_report_output", envir = new.env())'
+```
+
+The notebook first looks for `SAE_ADVERSARIAL_PANEL`, if set, then the shared
+Dropbox panel, then a downloaded copy at
+`analysis_for_adversarial_report_output/input/section3_panel.rds`.
+It verifies the selected file against the tracked data manifest before using it.
+The local Dropbox placeholder was empty when this analysis was prepared; the
+cached copy was downloaded from the connected Dropbox account. No raw records
+are printed or exported by this notebook. Output CSVs contain aggregate results.
+
+```{r setup, message=FALSE}
+knitr::opts_chunk$set(error = FALSE, warning = TRUE, message = FALSE,
+                     echo = TRUE, cache = FALSE)
+required <- c("fixest", "knitr")
+missing_packages <- required[!vapply(required, requireNamespace, logical(1),
+                                    quietly = TRUE)]
+if (length(missing_packages)) stop("Missing packages: ", paste(missing_packages, collapse = ", "))
+if (packageVersion("fixest") < "0.13.0") stop("fixest >= 0.13.0 is required.")
+library(fixest)
+setFixest_vcov(all = "hetero")
+setFixest_estimation(fixef.rm = "none")
+setFixest_nthreads(1)
+
+# Knitr evaluates chunks relative to the Rmd, which resides in code/.
+stopifnot(file.exists("../HANDOFF.md"),
+          file.exists("finalized_design_v1/section3/Section3_IV.Rmd"))
+output_dir <- "analysis_for_adversarial_report_output"
+dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+task_home <- if (nzchar(Sys.getenv("USERPROFILE"))) Sys.getenv("USERPROFILE") else path.expand("~")
+manifest <- read.csv("finalized_design_v1/data_manifest.csv", stringsAsFactors = FALSE)
+manifest_row <- manifest[endsWith(manifest$path_in_dropbox, "/section3/section3_panel.rds"), ]
+stopifnot(nrow(manifest_row) == 1L)
+override <- Sys.getenv("SAE_ADVERSARIAL_PANEL")
+candidates <- if (nzchar(override)) path.expand(override) else c(
+  file.path(task_home, "Dropbox", manifest_row$path_in_dropbox),
+  file.path(output_dir, "input", "section3_panel.rds")
+)
+available <- candidates[file.exists(candidates) & !is.na(file.info(candidates)$size) &
+                          file.info(candidates)$size > 0]
+if (!length(available)) stop("No readable panel. Download the shared panel or set SAE_ADVERSARIAL_PANEL.")
+panel_file <- normalizePath(available[1], mustWork = TRUE)
+actual_md5 <- unname(tools::md5sum(panel_file))
+stopifnot(identical(actual_md5, manifest_row$md5),
+          file.info(panel_file)$size == manifest_row$bytes)
+panel <- readRDS(panel_file)
+source_file <- "finalized_design_v1/section3/Section3_IV.Rmd"
+provenance <- data.frame(
+  item = c("Panel", "Panel MD5", "Panel bytes", "Reference notebook MD5", "Run time"),
+  value = c(panel_file, actual_md5, file.info(panel_file)$size,
+            unname(tools::md5sum(source_file)), format(Sys.time(), tz = "America/Indiana/Indianapolis", usetz = TRUE))
+)
+write.csv(provenance, file.path(output_dir, "provenance.csv"), row.names = FALSE)
+knitr::kable(provenance)
+```
+
+## Sample, specification, and inference
+
+The sample, outcome definitions, and controls are unchanged from the finalized
+design. We retain `LOTTERY_SAMPLE` and require observed eighth-grade GPA, gender,
+low-income status, top-20-percent status, and origin-school classification.
+Admission-score regressions additionally require that particular score.
+
+For each outcome, the reduced form regresses the outcome on `OFFER`, the five
+controls, application-year indicators, and hundredth propensity-score-group fixed
+effects. The first stage replaces the outcome with `D_OD`. The 2SLS regression
+instruments `D_OD` with `OFFER`, holding the same controls and fixed effects fixed.
+
+We preserve the handoff's inference conventions: heteroskedasticity-robust OLS
+standard errors with the N/(N-K) correction and t(N-K) inference; 2SLS robust
+standard errors without that correction and normal inference. All intervals are
+two-sided 95% intervals. They are pointwise, without multiplicity adjustment.
+Offer-effect standard errors are estimated directly, not obtained by multiplying
+the IV standard error by the first-stage coefficient.
+
+```{r sample}
+controls <- c("GPA8_Z", "ES_MUJER", "PRIORITARIO", "ALTO", "ORIGIN_OD")
+college_labels <- c(
+  GRAD = "Regular-secondary graduation",
+  APPLIED = "Applied through SUA",
+  ASSIGNED = "Assigned a seat through SUA",
+  INSUA = "First enrollment through SUA",
+  OUTSIDE = "First enrollment outside SUA"
+)
+score_labels <- c(LM_Z_MAX = "Reading-mathematics mean",
+                  NEM_Z_LATEST = "NEM score", RANK_Z_LATEST = "Ranking score")
+binary_vars <- c(paste0(names(college_labels), "_OT"), paste0(names(college_labels), "_EVER"))
+all_vars <- c(binary_vars, names(score_labels))
+needed <- c("MRUN", "LOTTERY_SAMPLE", "YEAR", "CHANCE_GROUP", "OFFER", "D_OD", controls, all_vars)
+stopifnot(all(needed %in% names(panel)), !anyNA(panel$LOTTERY_SAMPLE),
+          !anyDuplicated(panel$MRUN))
+lottery <- panel[panel$LOTTERY_SAMPLE, , drop = FALSE]
+sample_main <- lottery[complete.cases(lottery[, controls]), , drop = FALSE]
+stopifnot(all(sample_main$OFFER %in% 0:1), all(sample_main$D_OD %in% 0:1),
+          !anyNA(sample_main[, c("OFFER", "D_OD", "CHANCE_GROUP", "YEAR", binary_vars)]),
+          all(unlist(sample_main[, binary_vars]) %in% 0:1))
+sample_counts <- data.frame(
+  Sample = c("Finalized panel", "Lottery sample", "Complete controls", "With an offer (complete controls)",
+             "Without an offer (complete controls)"),
+  N = c(nrow(panel), nrow(lottery), nrow(sample_main),
+        sum(sample_main$OFFER == 1), sum(sample_main$OFFER == 0))
+)
+write.csv(sample_counts, file.path(output_dir, "sample_counts.csv"), row.names = FALSE)
+knitr::kable(sample_counts, format.args = list(big.mark = ","))
+```
+
+On-time graduation means completion by the scheduled graduation year. On-time
+college outcomes use the admission process five years after application. The
+longer window uses school records through 2025 and college records through 2026;
+follow-up differs across application cohorts. Graduation excludes adult-education
+completion. Enrollment outcomes are mutually exclusive first-observed routes,
+with same-year ties assigned to SUA; they are not independent measures of ever
+attending each sector.
+
+```{r models}
+rhs <- paste(c(controls, "i(YEAR, ref = 2016)"), collapse = " + ")
+ols_formula <- function(y) as.formula(paste(y, "~ OFFER +", rhs, "| CHANCE_GROUP"))
+iv_formula <- function(y) as.formula(paste(y, "~", rhs, "| CHANCE_GROUP | D_OD ~ OFFER"))
+ols_ssc <- ssc(K.adj = TRUE)
+iv_ssc <- ssc(K.adj = FALSE)
+
+extract_effect <- function(model, term, iv = FALSE) {
+  estimate <- unname(coef(model)[term])
+  std_error <- unname(se(model)[term])
+  df <- if (iv) Inf else degrees_freedom(model, type = "t")
+  statistic <- estimate / std_error
+  p <- if (iv) 2 * pnorm(-abs(statistic)) else 2 * pt(-abs(statistic), df)
+  critical <- if (iv) qnorm(.975) else qt(.975, df)
+  c(estimate = estimate, se = std_error, p = p,
+    lower = estimate - critical * std_error, upper = estimate + critical * std_error,
+    df = df, n = nobs(model))
+}
+
+fits <- setNames(vector("list", length(all_vars)), all_vars)
+result_list <- check_list <- vector("list", length(all_vars))
+for (j in seq_along(all_vars)) {
+  y <- all_vars[j]
+  d <- sample_main[!is.na(sample_main[[y]]), , drop = FALSE]
+  fs <- feols(ols_formula("D_OD"), d, vcov = "hetero", ssc = ols_ssc, fixef.rm = "none")
+  rf <- feols(ols_formula(y), d, vcov = "hetero", ssc = ols_ssc, fixef.rm = "none")
+  iv <- feols(iv_formula(y), d, vcov = "hetero", ssc = iv_ssc, fixef.rm = "none")
+  stopifnot(nobs(fs) == nrow(d), nobs(rf) == nrow(d), nobs(iv) == nrow(d))
+  fs_e <- extract_effect(fs, "OFFER")
+  rf_e <- extract_effect(rf, "OFFER")
+  iv_e <- extract_effect(iv, "fit_D_OD", iv = TRUE)
+  # Independent FWL calculation checks both point estimates and OLS HC1 SEs.
+  z_model <- feols(as.formula(paste("OFFER ~", rhs, "| CHANCE_GROUP")), d,
+                   fixef.rm = "none")
+  z_resid <- resid(z_model)
+  fwl_rf <- sum(z_resid * d[[y]]) / sum(z_resid^2)
+  fwl_fs <- sum(z_resid * d$D_OD) / sum(z_resid^2)
+  fwl_hc1 <- sqrt(sum(z_resid^2 * resid(rf)^2) / sum(z_resid^2)^2 *
+                   nrow(d) / (nrow(d) - rf$nparams))
+  check_list[[j]] <- data.frame(
+    variable = y, ratio_error = unname(rf_e["estimate"] / fs_e["estimate"] - iv_e["estimate"]),
+    rf_fwl_error = unname(rf_e["estimate"] - fwl_rf),
+    fs_fwl_error = unname(fs_e["estimate"] - fwl_fs),
+    rf_se_hc1_error = unname(rf_e["se"] - fwl_hc1)
+  )
+  is_score <- y %in% names(score_labels)
+  base_name <- sub("_(OT|EVER)$", "", y)
+  result_list[[j]] <- data.frame(
+    variable = y,
+    outcome = if (is_score) unname(score_labels[y]) else unname(college_labels[base_name]),
+    horizon = if (is_score) "Observed score" else if (endsWith(y, "_OT")) "On time" else "Through latest records",
+    unit = if (is_score) "SD" else "pp", scale = if (is_score) 1 else 100,
+    mean_without_offer = mean(d[[y]][d$OFFER == 0]),
+    n_without_offer = sum(d$OFFER == 0), n_with_offer = sum(d$OFFER == 1),
+    as.list(setNames(rf_e, paste0("rf_", names(rf_e)))),
+    as.list(setNames(fs_e, paste0("fs_", names(fs_e)))),
+    as.list(setNames(iv_e, paste0("iv_", names(iv_e))))
+  )
+  fits[[y]] <- list(first_stage = fs, reduced_form = rf, iv = iv)
+}
+results <- do.call(rbind, result_list)
+checks <- do.call(rbind, check_list)
+stopifnot(all(abs(as.matrix(checks[, -1])) < 1e-7))
+write.csv(results, file.path(output_dir, "offer_and_attendance_effects.csv"), row.names = FALSE)
+write.csv(checks, file.path(output_dir, "estimator_identity_checks.csv"), row.names = FALSE)
+```
+
+## Offer effects on graduation and college outcomes
+
+Entries below are percentage points. The comparison uses
+`r format(nrow(sample_main), big.mark = ',')` applicants with complete controls.
+An offer increases entry-year attendance at an over-demanded school by
+`r sprintf('%.2f', 100 * results$fs_estimate[1])` percentage points
+(SE `r sprintf('%.2f', 100 * results$fs_se[1])`).
+
+```{r results-tables, results='asis'}
+fmt <- function(x, digits = 2) sprintf(paste0("%.", digits, "f"), x)
+fmt_p <- function(x) ifelse(x < .001, "<0.001", sprintf("%.3f", x))
+display_table <- function(r, digits = 2) {
+  data.frame(
+    Outcome = r$outcome,
+    `No-offer mean` = fmt(r$scale * r$mean_without_offer, digits),
+    `Offer effect` = fmt(r$scale * r$rf_estimate, digits),
+    `Robust SE` = fmt(r$scale * r$rf_se, digits),
+    `95% CI` = paste0("[", fmt(r$scale * r$rf_lower, digits), ", ", fmt(r$scale * r$rf_upper, digits), "]"),
+    `p-value` = fmt_p(r$rf_p),
+    `Attendance effect (2SLS)` = fmt(r$scale * r$iv_estimate, digits),
+    check.names = FALSE
+  )
+}
+for (h in c("On time", "Through latest records")) {
+  cat("\n### ", h, "\n\n", sep = "")
+  print(knitr::kable(display_table(results[results$horizon == h, ]), align = c("l", rep("r", 6))))
+  cat("\n\n")
+}
+```
+
+The full-precision CSV retains confidence intervals, standard errors and p-values
+for all three regressions, sample counts, and unscaled coefficients. Multiply
+binary-outcome coefficients by 100 to obtain percentage points; the display tables
+perform that conversion. For example, the on-time SUA enrollment estimate is
+`r sprintf('%.3f', 100 * results$rf_estimate[results$variable == 'INSUA_OT'])`
+percentage points per offer, compared with
+`r sprintf('%.3f', 100 * results$iv_estimate[results$variable == 'INSUA_OT'])`
+percentage points per offer-induced attendance change under the IV assumptions.
+
+Offers reduce on-time regular-secondary graduation, application, assignment and
+enrollment through SUA. Through the latest available records, the negative
+graduation, assignment and SUA enrollment estimates remain statistically
+significant at 5%; the application estimate does not. The outside-SUA enrollment
+estimates are not statistically significant at either horizon. Their confidence
+intervals do not rule out some substitution toward outside-SUA institutions.
+The smaller estimates in the longer window are consistent with partial catch-up,
+but this notebook does not test differences between the two horizons, and the
+longer window does not measure lifetime attainment.
+
+## Admission scores among students with observed scores
+
+These regressions use each score's original observed-score sample. The first
+stage is reestimated on that same sample, rather than borrowed from the main
+binary-outcome sample. Score availability can itself respond to the offer, so
+these conditional estimates do not have the same unconditional causal
+interpretation as the complete-sample binary-outcome reduced forms.
+
+```{r score-results}
+score_results <- results[results$unit == "SD", ]
+knitr::kable(display_table(score_results, digits = 3))
+knitr::kable(data.frame(
+  Outcome = score_results$outcome,
+  N = score_results$rf_n,
+  `First stage (pp)` = 100 * score_results$fs_estimate,
+  `First-stage SE (pp)` = 100 * score_results$fs_se,
+  check.names = FALSE
+), digits = 3)
+```
+
+## Verification against the paper's existing tables
+
+The following optional check reads, but never writes, the paper's existing table
+files. It compares every reproduced 2SLS coefficient, SE, non-offered mean, and
+sample size with the published precision of those files. Set `SAE_PAPER_ROOT` if
+the manuscript is stored elsewhere. These reference values are validation targets
+only; they are never used to construct an estimate or standard error.
+
+```{r reference-check}
+paper_root <- Sys.getenv("SAE_PAPER_ROOT", unset = file.path(
+  task_home, "Projects", "Effect of Centralized School Choice on College Admissions Outcomes"))
+college_table <- file.path(paper_root, "Initial submission/tables/results/lottery_college.tex")
+score_table <- file.path(paper_root, "Initial submission/tables/results/lottery_scores.tex")
+reference_checks <- list()
+add_check <- function(name, actual, expected, digits) {
+  reference_checks[[length(reference_checks) + 1L]] <<- data.frame(
+    check = name, actual = actual, reference = expected, digits = digits,
+    matches = abs(round(actual, digits) - expected) < 1e-9)
+}
+cells_numeric <- function(line) {
+  cells <- strsplit(line, "&", fixed = TRUE)[[1]][-1]
+  vapply(cells, function(cell) {
+    cell <- gsub(",", "", cell, fixed = TRUE)
+    matched <- regmatches(cell, regexpr("-?[0-9]+(?:\\.[0-9]+)?", cell, perl = TRUE))
+    if (!length(matched)) NA_real_ else as.numeric(matched)
+  }, numeric(1))
+}
+if (file.exists(college_table) && file.exists(score_table)) {
+  lines <- readLines(college_table)
+  ref_labels <- c("Graduated from high school", "Applied to a college program", "Assigned a college seat",
+                  "Enrolled (In SUA)", "Enrolled (Outside SUA)")
+  for (k in seq_along(ref_labels)) {
+    idx <- which(startsWith(trimws(lines), paste0(ref_labels[k], " &")))
+    stopifnot(length(idx) == 1L)
+    vals <- cells_numeric(lines[idx])
+    ses <- cells_numeric(lines[idx + 1L])
+    for (h in seq_along(c("OT", "EVER"))) {
+      v <- paste0(names(college_labels)[k], "_", c("OT", "EVER")[h])
+      r <- results[results$variable == v, ]
+      add_check(paste(v, "IV"), 100 * r$iv_estimate, vals[2 * h], 2)
+      add_check(paste(v, "IV SE"), 100 * r$iv_se, ses[2 * h], 2)
+      add_check(paste(v, "No-offer mean"), 100 * r$mean_without_offer, vals[2 * h - 1], 2)
+    }
+  }
+  n_line <- lines[grepl("$N$ &", lines, fixed = TRUE)]
+  n_values <- cells_numeric(n_line)
+  add_check("Main N", nrow(sample_main), n_values[2], 0)
+  add_check("Main no-offer N", sum(sample_main$OFFER == 0), n_values[1], 0)
+  sl <- readLines(score_table)
+  idx <- which(startsWith(trimws(sl), "Effect of attendance &"))
+  stopifnot(length(idx) == 1L)
+  val <- cells_numeric(sl[idx]); serr <- cells_numeric(sl[idx + 1L])
+  means <- cells_numeric(sl[startsWith(trimws(sl), "Mean (without an offer) &")])
+  ns <- cells_numeric(sl[startsWith(trimws(sl), "Observations &")])
+  for (k in seq_along(score_labels)) {
+    r <- score_results[k, ]
+    add_check(paste(r$variable, "IV"), r$iv_estimate, val[k], 3)
+    add_check(paste(r$variable, "IV SE"), r$iv_se, serr[k], 3)
+    add_check(paste(r$variable, "No-offer mean"), r$mean_without_offer, means[k], 3)
+    add_check(paste(r$variable, "N"), r$iv_n, ns[k], 0)
+  }
+  reference_checks <- do.call(rbind, reference_checks)
+  write.csv(reference_checks, file.path(output_dir, "paper_reproduction_checks.csv"), row.names = FALSE)
+  knitr::kable(reference_checks, digits = 6)
+  stopifnot(all(reference_checks$matches))
+} else {
+  cat("Paper table comparison not run: set SAE_PAPER_ROOT to an available manuscript checkout.\n")
+}
+knitr::kable(checks, digits = 12,
+             caption = "Numerical differences in the ratio, FWL point estimates, and OLS HC1 SE check")
+```
+
+## F20: school identity and predetermined choice-list restrictions
+
+The reduced forms above do not establish exclusion for the pooled attendance
+indicator. This section asks whether the findings persist where the submitted
+choice list offers less scope for changes between over-demanded schools. The
+restrictions use information recorded before the lottery; none selects students
+according to their offer, realized attendance, or subsequent outcome.
+
+The diagnostic samples, chosen before examining their outcome estimates, are (i) the main sample,
+(ii) applicants listing exactly one distinct over-demanded school who did not
+attend an over-demanded school in eighth grade, and (iii) the subset of (ii) listing
+exactly two choices at two distinct schools, with the over-demanded school first.
+The last group has one listed over-demanded school and one listed alternative
+outside the set. All priorities and application years are retained. These are
+exploratory sensitivity analyses of different populations, not estimates of the
+same complier effect or tests that exclusion holds.
+All reported intervals and significance levels are pointwise; the analysis does
+not adjust for testing multiple outcomes and samples.
+
+### Upstream records and reconciliation
+
+`sae_admissions.rds` contains main-stage application lists (`c1`), recorded
+assignments (`d1`), seats (`a1`), and applicant characteristics (`b1`). The processed
+file was retrieved from `/Effect SAE on SUA/data/sae_admissions.rds`; its content
+hash is pinned below. It contains actual records, not school-specific simulation
+draws. We recover school identities from these records and use the finalized
+catalogue to keep the original over-demanded set. All joins use application year
+and student ID. Input files remain in the local, git-ignored cache.
+The submitted list excludes options automatically added for continuity
+(`agregada_por_continuidad == 1`). With that distinction, the number of ranked
+choices, distinct over-demanded schools, first-choice status, offer indicator,
+and attendance indicator must reproduce the finalized panel exactly.
+
+```{r upstream-reconciliation}
+if (!requireNamespace("data.table", quietly = TRUE)) stop("data.table is required for upstream records.")
+data.table::setDTthreads(1)
+upstream_paths <- file.path(output_dir, "input", c("sae_admissions.rds", "table_a3_panel.rds"))
+if (!all(file.exists(upstream_paths))) stop("The upstream SAE records and finalized school catalogue are required in the input cache.")
+expected_upstream_md5 <- c("5a55dd9eebe439b6173ac487c0398f0f", "572f4faba00263d249abc267b41146e2")
+stopifnot(identical(unname(tools::md5sum(upstream_paths)), expected_upstream_md5))
+upstream_provenance <- data.frame(
+  file = basename(upstream_paths), bytes = file.info(upstream_paths)$size,
+  md5 = unname(tools::md5sum(upstream_paths)),
+  dropbox_path = c("/Effect SAE on SUA/data/sae_admissions.rds",
+                   "/Effect SAE on SUA/data/finalized_design_v1/section3/table_a3_panel.rds")
+)
+write.csv(upstream_provenance, file.path(output_dir, "upstream_provenance.csv"), row.names = FALSE)
+knitr::kable(upstream_provenance)
+
+school_catalogue <- readRDS(upstream_paths[2])
+od_schools <- school_catalogue$RBD[school_catalogue$IS_OD]
+stopifnot(!anyDuplicated(od_schools))
+admissions <- readRDS(upstream_paths[1])
+keys <- data.table::data.table(proc = panel$YEAR, mrun = panel$MRUN)
+choices <- admissions$c1[keys, on = c("proc", "mrun"), nomatch = 0]
+placements <- admissions$d1[keys, on = c("proc", "mrun"), nomatch = 0]
+rm(admissions)
+stopifnot(nrow(placements) == nrow(panel), !anyDuplicated(placements[, c("proc", "mrun")]),
+          all(choices$cod_nivel == 9), !anyNA(choices$preferencia_postulante),
+          all(placements$cod_nivel == 9))
+stopifnot(all(choices$agregada_por_continuidad %in% 0:1))
+choices <- choices[agregada_por_continuidad == 0]
+choices[, LISTED_OD := rbd %in% od_schools]
+list_summary <- choices[, list(
+  RAW_N_CLASS = .N,
+  N_DISTINCT_SCHOOLS = data.table::uniqueN(rbd),
+  RAW_N_OD = data.table::uniqueN(rbd[LISTED_OD]),
+  RAW_FC_OD = as.integer(any(LISTED_OD[preferencia_postulante == 1])),
+  TARGET_RBD = if (data.table::uniqueN(rbd[LISTED_OD]) == 1) unique(rbd[LISTED_OD]) else NA_integer_,
+  FALLBACK_RBD = if (data.table::uniqueN(rbd[!LISTED_OD]) == 1) unique(rbd[!LISTED_OD]) else NA_integer_
+), by = c("proc", "mrun")]
+diagnostic_panel <- merge(data.table::as.data.table(panel), list_summary,
+                          by.x = c("YEAR", "MRUN"), by.y = c("proc", "mrun"), all.x = TRUE, sort = FALSE)
+diagnostic_panel <- merge(diagnostic_panel,
+                          placements[, list(proc, mrun, OFFERED_RBD = rbd_admitido)],
+                          by.x = c("YEAR", "MRUN"), by.y = c("proc", "mrun"), all.x = TRUE, sort = FALSE)
+stopifnot(nrow(diagnostic_panel) == nrow(panel), !anyDuplicated(diagnostic_panel$MRUN))
+reconciliation <- diagnostic_panel[LOTTERY_SAMPLE == TRUE, list(
+  N = .N, missing_lists = sum(is.na(RAW_N_CLASS)),
+  choice_count_disagreements = sum(N_CLASS != RAW_N_CLASS, na.rm = TRUE),
+  od_count_disagreements = sum(N_OD != RAW_N_OD, na.rm = TRUE),
+  first_choice_disagreements = sum(FC_OD != RAW_FC_OD, na.rm = TRUE),
+  offer_disagreements = sum(OFFER != as.integer(OFFERED_RBD %in% od_schools)),
+  attendance_disagreements = sum(D_OD != as.integer(ENTRY_RBD %in% od_schools))
+), by = YEAR]
+write.csv(reconciliation, file.path(output_dir, "upstream_reconciliation.csv"), row.names = FALSE)
+knitr::kable(reconciliation)
+stopifnot(all(as.matrix(reconciliation[, -c("YEAR", "N")]) == 0))
+
+diagnostic_sample <- as.data.frame(diagnostic_panel[match(sample_main$MRUN, MRUN)])
+stopifnot(identical(diagnostic_sample$MRUN, sample_main$MRUN),
+          identical(diagnostic_sample$YEAR, sample_main$YEAR))
+choice_keys <- unique(choices[, list(YEAR = proc, MRUN = mrun, ENTRY_RBD = rbd)])
+choice_keys[, ENTRY_LISTED := TRUE]
+diagnostic_sample <- as.data.frame(merge(data.table::as.data.table(diagnostic_sample), choice_keys,
+                         by = c("YEAR", "MRUN", "ENTRY_RBD"), all.x = TRUE, sort = FALSE))
+diagnostic_sample$ENTRY_LISTED[is.na(diagnostic_sample$ENTRY_LISTED)] <- FALSE
+stopifnot(nrow(diagnostic_sample) == nrow(sample_main))
+subset_flags <- list(
+  main = rep(TRUE, nrow(diagnostic_sample)),
+  single_od = with(diagnostic_sample, N_OD == 1 & ORIGIN_OD == 0),
+  two_choices = with(diagnostic_sample, N_OD == 1 & ORIGIN_OD == 0 &
+                      N_CLASS == 2 & N_DISTINCT_SCHOOLS == 2 & FC_OD == 1)
+)
+subset_labels <- c(main = "Main sample", single_od = "One OD school listed; non-OD origin",
+                    two_choices = "Two choices: OD first, non-OD second; non-OD origin")
+stopifnot(!anyNA(unlist(subset_flags)), all(!subset_flags$two_choices | subset_flags$single_od))
+rm(diagnostic_panel, placements, choices, choice_keys)
+invisible(gc())
+```
+
+### Sample support and observed school destinations
+
+The following counts and destination shares describe observed behavior. They do
+not identify always-takers, never-takers, or individual counterfactual switches.
+In particular, comparisons conditional on realized attendance are not causal
+effects for a principal stratum. We instead show unconditional destination shares
+within offer arms and keep actual destinations out of all sample restrictions.
+
+```{r choice-diagnostics}
+sample_support <- destination_list <- list()
+for (s in names(subset_flags)) {
+  d <- diagnostic_sample[subset_flags[[s]], , drop = FALSE]
+  arm_counts <- table(d$CHANCE_GROUP, factor(d$OFFER, levels = 0:1))
+  sample_support[[s]] <- data.frame(
+    sample = s, description = unname(subset_labels[s]), n = nrow(d),
+    share_main_pct = 100 * nrow(d) / nrow(diagnostic_sample),
+    offered = sum(d$OFFER == 1), not_offered = sum(d$OFFER == 0),
+    chance_groups = nrow(arm_counts), groups_with_both_arms = sum(rowSums(arm_counts > 0) == 2),
+    offered_outside_single_target = if (s == "main") NA_integer_ else
+      sum(d$OFFER == 1 & d$OFFERED_RBD != d$TARGET_RBD),
+    mean_prior_gpa = mean(d$GPA8_Z), low_income_pct = 100 * mean(d$PRIORITARIO)
+  )
+  for (z in 0:1) {
+    dz <- d[d$OFFER == z, , drop = FALSE]
+    destination_list[[paste(s, z)]] <- data.frame(
+      sample = s, offer = z, n = nrow(dz),
+      attend_od_pct = 100 * mean(dz$D_OD),
+      attend_offered_school_pct = if (z == 1) 100 * mean(!is.na(dz$ENTRY_RBD) & dz$ENTRY_RBD == dz$OFFERED_RBD) else NA_real_,
+      attend_different_od_pct = if (z == 1) 100 * mean(dz$D_OD == 1 & dz$ENTRY_RBD != dz$OFFERED_RBD, na.rm = TRUE) else NA_real_,
+      attend_listed_od_pct = 100 * mean(dz$D_OD == 1 & dz$ENTRY_LISTED),
+      attend_unlisted_od_pct = 100 * mean(dz$D_OD == 1 & !dz$ENTRY_LISTED),
+      attend_listed_nonod_pct = 100 * mean(dz$D_OD == 0 & dz$ENTRY_LISTED),
+      attend_unlisted_nonod_pct = 100 * mean(dz$D_OD == 0 & !dz$ENTRY_LISTED & !is.na(dz$ENTRY_RBD)),
+      no_record_pct = 100 * mean(is.na(dz$ENTRY_RBD))
+    )
+  }
+}
+sample_support <- do.call(rbind, sample_support)
+destinations <- do.call(rbind, destination_list)
+destination_columns <- c("attend_listed_od_pct", "attend_unlisted_od_pct", "attend_listed_nonod_pct",
+                         "attend_unlisted_nonod_pct", "no_record_pct")
+stopifnot(all(abs(rowSums(destinations[, destination_columns]) - 100) < 1e-9))
+write.csv(sample_support, file.path(output_dir, "choice_sample_support.csv"), row.names = FALSE)
+write.csv(destinations, file.path(output_dir, "observed_school_destinations.csv"), row.names = FALSE)
+knitr::kable(sample_support, digits = 3)
+knitr::kable(destinations, digits = 3)
+```
+
+An unlisted destination means a school absent from the family's submitted list,
+not necessarily a school unavailable to the student. It can include a continuity
+option added automatically. The support table counts offers within the
+over-demanded set that are not at the student's single listed over-demanded
+school. We retain any such observations, since removing students based on their
+realized offers would change the predetermined sample definition.
+
+```{r restricted-balance}
+# Recheck observed balance because rounded-score conditioning is approximate,
+# and balance in the full sample need not imply balance within each subset.
+balance_vars <- c("N_CLASS", "N_OD", "FC_OD", controls)
+balance_list <- balance_joint_list <- list()
+for (s in setdiff(names(subset_flags), "main")) {
+  d <- diagnostic_sample[subset_flags[[s]], , drop = FALSE]
+  varying <- balance_vars[vapply(d[, balance_vars], function(v) length(unique(v)) > 1L, logical(1))]
+  for (v in varying) {
+    m <- feols(as.formula(paste(v, "~ OFFER + i(YEAR, ref = 2016) | CHANCE_GROUP")), d,
+               vcov = "hetero", ssc = ols_ssc, fixef.rm = "none")
+    e <- extract_effect(m, "OFFER")
+    balance_list[[paste(s,v)]] <- data.frame(sample = s, characteristic = v, n = nobs(m),
+      difference = e["estimate"], se = e["se"], p = e["p"],
+      lower = e["lower"], upper = e["upper"])
+  }
+  joint_model <- feols(as.formula(paste("OFFER ~", paste(varying, collapse = " + "),
+                                        "+ i(YEAR, ref = 2016) | CHANCE_GROUP")), d,
+                        vcov = "hetero", ssc = ols_ssc, fixef.rm = "none")
+  joint <- wald(joint_model, keep = paste0("^(", paste(varying, collapse = "|"), ")$"), print = FALSE)
+  balance_joint_list[[s]] <- data.frame(sample = s, F = joint$stat, p = joint$p,
+    df1 = joint$df1, df2 = joint$df2, characteristics = paste(varying, collapse = ", "))
+}
+choice_balance <- do.call(rbind, balance_list)
+choice_balance_joint <- do.call(rbind, balance_joint_list)
+write.csv(choice_balance, file.path(output_dir, "choice_sample_balance.csv"), row.names = FALSE)
+write.csv(choice_balance_joint, file.path(output_dir, "choice_sample_balance_joint.csv"), row.names = FALSE)
+knitr::kable(choice_balance, digits = 4)
+knitr::kable(choice_balance_joint, digits = 4)
+```
+
+### Outcomes within the predetermined samples
+
+We retain the original hundredth-score fixed effects, year indicators, and
+controls. Covariates that are constant within a restricted sample are omitted
+because they are absorbed by the intercept; this does not alter fitted values.
+No additional support trimming is based on observed outcomes or offer arms.
+The original approximation to exact propensity-score conditioning remains an
+assumption in these restricted samples. Every specification uses both offer arms
+and includes students regardless of their realized school.
+
+```{r choice-outcome-estimates}
+choice_result_list <- choice_first_stages <- list()
+for (s in names(subset_flags)) {
+  d <- diagnostic_sample[subset_flags[[s]], , drop = FALSE]
+  varying_controls <- controls[vapply(d[, controls, drop = FALSE], function(v) length(unique(v)) > 1L, logical(1))]
+  choice_rhs <- paste(c(varying_controls, "i(YEAR, ref = 2016)"), collapse = " + ")
+  fs <- feols(as.formula(paste("D_OD ~ OFFER +", choice_rhs, "| CHANCE_GROUP")), d,
+              vcov = "hetero", ssc = ols_ssc, fixef.rm = "none")
+  f <- extract_effect(fs, "OFFER")
+  choice_first_stages[[s]] <- data.frame(sample = s, n = nobs(fs),
+    first_stage_pp = 100 * f["estimate"], se_pp = 100 * f["se"],
+    lower_pp = 100 * f["lower"], upper_pp = 100 * f["upper"],
+    omitted_constant_controls = paste(setdiff(controls, varying_controls), collapse = ", "))
+  for (y in binary_vars) {
+    rf <- feols(as.formula(paste(y, "~ OFFER +", choice_rhs, "| CHANCE_GROUP")), d,
+                vcov = "hetero", ssc = ols_ssc, fixef.rm = "none")
+    iv <- feols(as.formula(paste(y, "~", choice_rhs, "| CHANCE_GROUP | D_OD ~ OFFER")), d,
+                vcov = "hetero", ssc = iv_ssc, fixef.rm = "none")
+    re <- extract_effect(rf, "OFFER"); ie <- extract_effect(iv, "fit_D_OD", iv = TRUE)
+    stopifnot(nobs(rf) == nrow(d), nobs(iv) == nrow(d),
+              abs(re["estimate"] / f["estimate"] - ie["estimate"]) < 1e-7)
+    choice_result_list[[paste(s, y)]] <- data.frame(
+      sample = s, variable = y, n = nrow(d),
+      no_offer_mean_pct = 100 * mean(d[[y]][d$OFFER == 0]),
+      rf_pp = 100 * re["estimate"], rf_se_pp = 100 * re["se"], rf_p = re["p"],
+      rf_lower_pp = 100 * re["lower"], rf_upper_pp = 100 * re["upper"],
+      iv_pp = 100 * ie["estimate"], iv_se_pp = 100 * ie["se"], iv_p = ie["p"],
+      iv_lower_pp = 100 * ie["lower"], iv_upper_pp = 100 * ie["upper"]
+    )
+  }
+}
+choice_results <- do.call(rbind, choice_result_list)
+choice_first_stages <- do.call(rbind, choice_first_stages)
+main_check <- choice_results[choice_results$sample == "main", ]
+stopifnot(all(abs(main_check$rf_pp - 100 * results$rf_estimate[match(main_check$variable, results$variable)]) < 1e-7),
+          all(abs(main_check$iv_pp - 100 * results$iv_estimate[match(main_check$variable, results$variable)]) < 1e-7))
+write.csv(choice_results, file.path(output_dir, "choice_sample_outcomes.csv"), row.names = FALSE)
+write.csv(choice_first_stages, file.path(output_dir, "choice_sample_first_stages.csv"), row.names = FALSE)
+knitr::kable(choice_first_stages, digits = 3)
+```
+
+```{r choice-outcome-tables, results='asis'}
+for (s in names(subset_flags)) {
+  cat("\n#### ", subset_labels[s], "\n\n", sep = "")
+  r <- choice_results[choice_results$sample == s, ]
+  display <- data.frame(
+    Outcome = paste(unname(college_labels[sub("_(OT|EVER)$", "", r$variable)]),
+                    ifelse(grepl("_OT$", r$variable), "(on time)", "(ever)")),
+    `Offer effect (pp)` = fmt(r$rf_pp),
+    `95% CI` = paste0("[", fmt(r$rf_lower_pp), ", ", fmt(r$rf_upper_pp), "]"),
+    `Offer p-value` = fmt_p(r$rf_p),
+    `Attendance effect (pp)` = fmt(r$iv_pp),
+    `Attendance 95% CI` = paste0("[", fmt(r$iv_lower_pp), ", ", fmt(r$iv_upper_pp), "]"),
+    check.names = FALSE
+  )
+  print(knitr::kable(display)); cat("\n\n")
+}
+```
+
+### Target-school attendance and departures from the listed alternatives
+
+For the restricted samples, the single listed over-demanded school defines a
+student-specific target before the lottery. We estimate offer effects on
+attendance at that target, at another over-demanded school, and at destinations
+outside the submitted list. This decomposes the observed first stage without
+conditioning on post-offer attendance. It is not a decomposition by compliance
+type and does not identify school-switching effects holding the pooled indicator
+fixed. In particular, an offer-induced reduction in unlisted-school enrollment
+can be an ordinary part of the effect for compliers.
+
+```{r target-and-alternative-estimates}
+destination_effect_list <- target_iv_list <- list()
+for (s in setdiff(names(subset_flags), "main")) {
+  d <- diagnostic_sample[subset_flags[[s]], , drop = FALSE]
+  stopifnot(!anyNA(d$TARGET_RBD))
+  d$D_TARGET <- as.integer(!is.na(d$ENTRY_RBD) & d$ENTRY_RBD == d$TARGET_RBD)
+  d$D_OTHER_OD <- d$D_OD - d$D_TARGET
+  d$D_UNLISTED_NONOD <- as.integer(d$D_OD == 0 & !d$ENTRY_LISTED & !is.na(d$ENTRY_RBD))
+  d$D_NO_RECORD <- as.integer(is.na(d$ENTRY_RBD))
+  d$D_LISTED_NONOD <- as.integer(d$D_OD == 0 & d$ENTRY_LISTED)
+  stopifnot(all(d$D_OTHER_OD %in% 0:1),
+            all(d$D_OD == d$D_TARGET + d$D_OTHER_OD),
+            all(rowSums(d[, c("D_TARGET", "D_OTHER_OD", "D_UNLISTED_NONOD", "D_NO_RECORD", "D_LISTED_NONOD")]) == 1))
+  varying_controls <- controls[vapply(d[, controls, drop = FALSE], function(v) length(unique(v)) > 1L, logical(1))]
+  choice_rhs <- paste(c(varying_controls, "i(YEAR, ref = 2016)"), collapse = " + ")
+  for (v in c("D_TARGET", "D_OTHER_OD", "D_LISTED_NONOD", "D_UNLISTED_NONOD", "D_NO_RECORD")) {
+    m <- feols(as.formula(paste(v, "~ OFFER +", choice_rhs, "| CHANCE_GROUP")), d,
+               vcov = "hetero", ssc = ols_ssc, fixef.rm = "none")
+    e <- extract_effect(m, "OFFER")
+    destination_effect_list[[paste(s,v)]] <- data.frame(sample = s, destination = v, n = nobs(m),
+      mean_without_offer_pct = 100 * mean(d[[v]][d$OFFER == 0]),
+      effect_pp = 100 * e["estimate"], se_pp = 100 * e["se"], p = e["p"],
+      lower_pp = 100 * e["lower"], upper_pp = 100 * e["upper"])
+  }
+  # A school-specific treatment removes variation among treated school identities
+  # for each applicant, but still requires exclusion concerning untreated options.
+  for (y in binary_vars) {
+    m <- feols(as.formula(paste(y, "~", choice_rhs, "| CHANCE_GROUP | D_TARGET ~ OFFER")), d,
+               vcov = "hetero", ssc = iv_ssc, fixef.rm = "none")
+    e <- extract_effect(m, "fit_D_TARGET", iv = TRUE)
+    target_iv_list[[paste(s,y)]] <- data.frame(sample = s, variable = y, n = nobs(m),
+      estimate_pp = 100 * e["estimate"], se_pp = 100 * e["se"], p = e["p"],
+      lower_pp = 100 * e["lower"], upper_pp = 100 * e["upper"])
+  }
+}
+destination_effects <- do.call(rbind, destination_effect_list)
+target_iv <- do.call(rbind, target_iv_list)
+for (s in unique(destination_effects$sample)) {
+  r <- destination_effects[destination_effects$sample == s, ]
+  expected_fs <- choice_first_stages$first_stage_pp[choice_first_stages$sample == s]
+  stopifnot(abs(sum(r$effect_pp)) < 1e-7,
+            abs(sum(r$effect_pp[r$destination %in% c("D_TARGET", "D_OTHER_OD")]) - expected_fs) < 1e-7)
+  ti <- target_iv[target_iv$sample == s, ]
+  rf <- choice_results[choice_results$sample == s, ]
+  target_fs <- r$effect_pp[r$destination == "D_TARGET"] / 100
+  stopifnot(all(abs(ti$estimate_pp - rf$rf_pp / target_fs) < 1e-7))
+}
+write.csv(destination_effects, file.path(output_dir, "target_and_alternative_offer_effects.csv"), row.names = FALSE)
+write.csv(target_iv, file.path(output_dir, "target_school_attendance_effects.csv"), row.names = FALSE)
+knitr::kable(destination_effects, digits = 3)
+knitr::kable(target_iv, digits = 3)
+```
+
+### Reading the diagnostic results
+
+```{r diagnostic-summary-values, include=FALSE}
+diag_value <- function(sample, variable, column) {
+  x <- choice_results[choice_results$sample == sample & choice_results$variable == variable, column]
+  stopifnot(length(x) == 1L)
+  sprintf("%.2f", x)
+}
+target_difference <- max(abs(target_iv$estimate_pp - choice_results$iv_pp[
+  match(paste(target_iv$sample, target_iv$variable),
+        paste(choice_results$sample, choice_results$variable))]))
+```
+
+The offer effects on on-time graduation are
+`r diag_value("single_od", "GRAD_OT", "rf_pp")` pp in the single-over-demanded-school
+sample and `r diag_value("two_choices", "GRAD_OT", "rf_pp")` pp in the two-choice
+sample. The corresponding effects on on-time enrollment through SUA are
+`r diag_value("single_od", "INSUA_OT", "rf_pp")` and
+`r diag_value("two_choices", "INSUA_OT", "rf_pp")` pp. Each is negative and
+statistically significant at the pointwise 5% level. The corresponding attendance
+estimates and their intervals are shown above, alongside every other binary
+outcome at both horizons.
+
+Eventual outcomes give more qualified evidence. Eventual SUA enrollment remains
+negative and significant in the single-over-demanded-school sample, but its
+interval includes zero in the two-choice sample. Eventual assignment is not
+statistically significant in either restricted sample. The restricted samples
+contain more low-income applicants and have lower prior GPA than the main sample;
+their effects need not represent the same complier populations. Joint tests of
+observed baseline balance yield p-values of
+`r sprintf("%.3f", choice_balance_joint$p[choice_balance_joint$sample == "single_od"])`
+and `r sprintf("%.3f", choice_balance_joint$p[choice_balance_joint$sample == "two_choices"])`,
+respectively. These tests do not establish exact randomization or exclusion.
+
+Replacing pooled attendance with attendance at each applicant's single listed
+over-demanded school changes the point estimates by at most
+`r sprintf("%.3f", target_difference)` pp. The instrument remains the original
+offer indicator. In the single-over-demanded-school sample,
+`r sample_support$offered_outside_single_target[sample_support$sample == "single_od"]`
+observed offer is at a different over-demanded school; there are
+`r sample_support$offered_outside_single_target[sample_support$sample == "two_choices"]`
+such offers in the two-choice sample. The target-attendance estimates therefore
+remain sensitivity estimates under their own exclusion and monotonicity
+assumptions, rather than an independent school-specific lottery design.
+
+These analyses can establish whether the findings depend on applications to
+multiple over-demanded schools and how much actual enrollment departs from the
+listed alternatives. They cannot recover the school an always-taker or
+never-taker would attend under the other offer state. School-specific simulated
+assignments, were they available, would characterize assignment possibilities but
+would still not reveal counterfactual enrollment behavior. A claim that exclusion
+has been established would therefore go beyond these diagnostics. Any comparison
+of restricted-sample and main effects must allow for different applicants and
+complier populations. No paper edits are made by this analysis.
+
+## LaTeX table for the outcomes appendix
+
+The table below follows the main college-outcomes table: non-offered means and
+estimated effects at both horizons, robust SEs in parentheses, significance stars,
+and sample sizes. It is generated directly from the fitted reduced forms. This
+notebook writes the standalone table to its own output folder; inclusion in the
+manuscript is managed separately.
+
+```{r offer-table-tex}
+tex_num <- function(x, digits = 2) {
+  sub("^-(0\\.0+)$", "\\1", sprintf(paste0("%.", digits, "f"), x))
+}
+tex_stars <- function(p) {
+  ifelse(p < .01, "$^{***}$", ifelse(p < .05, "$^{**}$", ifelse(p < .1, "$^{*}$", "")))
+}
+tex_comma <- function(x) format(x, big.mark = ",", scientific = FALSE, trim = TRUE)
+tex_row <- function(label, cells) paste0("      ", label, " & ", paste(cells, collapse = " & "), "\\\\\n")
+table_labels <- c("Graduated from high school", "Applied to a college program", "Assigned a college seat",
+                  "Enrolled (In SUA)", "Enrolled (Outside SUA)")
+table_body <- vapply(seq_along(college_labels), function(k) {
+  ot <- results[results$variable == paste0(names(college_labels)[k], "_OT"), ]
+  ever <- results[results$variable == paste0(names(college_labels)[k], "_EVER"), ]
+  paste0(
+    tex_row(table_labels[k], c(tex_num(100 * ot$mean_without_offer),
+      paste0(tex_num(100 * ot$rf_estimate), tex_stars(ot$rf_p)),
+      tex_num(100 * ever$mean_without_offer),
+      paste0(tex_num(100 * ever$rf_estimate), tex_stars(ever$rf_p)))),
+    tex_row("", c("", paste0("(", tex_num(100 * ot$rf_se), ")"),
+                  "", paste0("(", tex_num(100 * ever$rf_se), ")")))
+  )
+}, character(1))
+table_note <- paste0(
+  "Notes: The sample is the ", tex_comma(nrow(sample_main)),
+  " students of the lottery sample with every characteristic of Section~\\ref{sec:lottery-data}. ",
+  "Columns (2) and (4) report OLS estimates of the effect of receiving a main-stage offer at an ",
+  "over-demanded school, with the same sample, chance-group and application-year fixed effects, ",
+  "and characteristics as Table~\\ref{tab: lottery college}. ",
+  "Columns (1) and (3) are means among students without an offer, in \\%; effects are in pp. ",
+  "Heteroskedasticity-robust standard errors, with the $N/(N-K)$ correction, are in parentheses; ",
+  "$p$-values use the $t(N-K)$ distribution, where $K$ counts the estimated parameters. ",
+  "On time and ever are defined in Section~\\ref{sec:lottery-data}; ever uses records through ",
+  "2025 for graduation and 2026 for college outcomes, with longer follow-up for earlier cohorts. ",
+  "Graduation records completion of regular secondary education and excludes adult education. ",
+  "Enrollment rows record the first observed route; same-year enrollment through and outside SUA ",
+  "counts in the In SUA row. $^{***}p<0.01$, $^{**}p<0.05$, $^{*}p<0.1$."
+)
+offer_tex <- paste0(
+  "% Generated by code/analysis_for_adversarial_report.Rmd; do not edit numerical entries by hand.\n",
+  "\\begin{table}[htbp]\\singlespacing\\renewcommand{\\arraystretch}{1.2}\n",
+  "   \\caption{Effect of an Offer at an Over-Demanded School on Graduation and College Outcomes}",
+  "\\label{tab: lottery college offer}\n",
+  "   \\centerline{\\scalebox{0.85}{\\begin{tabular}{lcccc}\n",
+  "      \\toprule\n",
+  "                   & \\multicolumn{2}{c}{On time} & \\multicolumn{2}{c}{Ever}\\\\\n",
+  "      \\cmidrule(lr){2-3}\\cmidrule(lr){4-5}\n",
+  "                   & \\shortstack{Without an\\\\offer} & \\shortstack{Offer\\\\effect} & ",
+  "\\shortstack{Without an\\\\offer} & \\shortstack{Offer\\\\effect}\\\\\n",
+  "                   & mean & & mean & \\\\\n",
+  "                   & (1) & (2) & (3) & (4)\\\\\n",
+  "      \\midrule\n",
+  paste(table_body, collapse = ""),
+  "      \\midrule\n",
+  tex_row("$N$", tex_comma(rep(c(sum(sample_main$OFFER == 0), nrow(sample_main)), 2))),
+  "      \\bottomrule\n",
+  "   \\end{tabular}}}\n",
+  "   \\par\\smallskip{\\footnotesize ", table_note, "}\n",
+  "\\end{table}\n"
+)
+table_file <- file.path(output_dir, "lottery_college_offer.tex")
+writeLines(offer_tex, table_file, useBytes = TRUE)
+cat(offer_tex)
+```
+
+## Interpretation and decisions for discussion
+
+With the same sample, covariates and fixed effects, the reduced-form coefficient
+equals the 2SLS coefficient times the first-stage coefficient, up to numerical
+precision. The offer effects therefore reveal the same underlying variation;
+they are not an independent robustness check of the attendance estimates.
+
+The offer effect describes the consequences of receiving a main-stage offer at
+any school in the fixed over-demanded set. Its causal interpretation relies on
+the validity of the conditional lottery comparison, including the approximation
+to exact offer probabilities, the control timing, and the relevant interference
+assumptions. It does not require exclusion or monotonicity for the pooled binary
+attendance treatment. The present exercise preserves, rather than independently
+validates, the handoff's inference and covariate choices.
+
+Interpreting the ratio as an attendance LATE additionally requires the IV
+assumptions. School changes within the over-demanded set, or outside it, may affect
+outcomes without changing the pooled attendance indicator. Reporting the reduced
+form does not resolve that concern. Conditioning on realized attendance would not
+identify always-takers or isolate a causal within-set switching effect.
+
+The finalized panel does not contain offered-school identities, ranked school
+lists, or school-specific assignment draws. The upstream records recovered here
+supply observed offers and lists, but not simulation draws or counterfactual
+enrollment. This notebook does not infer individual counterfactual switches from
+cross-sectional differences in realized destinations.
+
+The generated appendix table reports the reduced forms with SEs and significance
+stars, matching the existing paper tables; confidence intervals remain available
+in this report and the CSV. A short reference in Section V could explain the
+findings and the distinct assumptions for offer and attendance effects. That
+discussion remains subject to author review. The conditional score results are
+kept separate. This notebook does not edit manuscript prose or appendix inputs.
+
+## Environment
+
+The local package versions need not match the handoff's Windows environment.
+The numerical reproduction checks above establish whether the existing results
+match at the precision reported in the current tables.
+
+```{r environment}
+recorded <- read.csv("finalized_design_v1/environment/package_versions.csv", stringsAsFactors = FALSE)
+runtime_versions <- data.frame(package = c("R", "fixest", "knitr", "rmarkdown", "data.table"),
+                              version = c(as.character(getRversion()),
+                                          vapply(c("fixest", "knitr", "rmarkdown", "data.table"),
+                                                 function(p) as.character(packageVersion(p)), character(1))))
+runtime_versions$handoff_version <- recorded$Version[match(runtime_versions$package, recorded$Package)]
+write.csv(runtime_versions, file.path(output_dir, "runtime_versions.csv"), row.names = FALSE)
+knitr::kable(runtime_versions)
+sessionInfo()
+```

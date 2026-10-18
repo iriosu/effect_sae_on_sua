@@ -1,0 +1,6 @@
+"package","version","handoff_version"
+"R","4.5.1",NA
+"fixest","0.13.2","0.14.2"
+"knitr","1.50","1.51"
+"rmarkdown","2.30",NA
+"data.table","1.18.2.1","1.18.4"
