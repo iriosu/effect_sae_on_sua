@@ -4,12 +4,17 @@ This repository contains the code and documents for a research project studying 
 
 ---
 
+## Revision checklist
+
+The [adversarial-report action checklist](Reviews/adversarial_report_action_checklist_2026-10-17.md) tracks findings F01–F32, completed work, remaining analyses, evidence, and instructions for coauthors. It distinguishes the current manuscript project from the older draft in this repository.
+
 ## Repository Structure
 
 ```
 .
 ├── code/               # R Markdown analysis scripts and outputs
 ├── documents/          # Paper drafts, notes, and reviewer feedback
+├── Reviews/            # Adversarial-report checklist and revision tracking
 ├── literature/         # Reference PDFs
 └── LICENSE
 ```
