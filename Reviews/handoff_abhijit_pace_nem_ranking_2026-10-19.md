@@ -4,7 +4,7 @@ Updated October 19, 2026, after executing the author-approved expanded-score ana
 
 ## Completed analysis — latest results
 
-Read the [expanded-score and PACE report](../code/analysis_for_adversarial_report_output/f30/expanded_scores_2026-10-19/expanded_scores_and_pace_report_2026-10-19.md). Run `Rscript code/run_adopted_score_analysis.R` from the repository root; it executes seven named chunks in the central Rmd without rerunning earlier reconstruction. Baseline v1 and manuscript estimates are unchanged.
+Read the [expanded-score and PACE report](../code/analysis_for_adversarial_report_output/f30/expanded_scores_2026-10-19/expanded_scores_and_pace_report_2026-10-19.md). Run `Rscript code/run_adopted_score_analysis.R` from the repository root; it executes eight named chunks in the central Rmd without rerunning earlier reconstruction. Baseline v1 is unchanged. The main draft now uses the separately saved expanded table; its original recorded-score table is preserved.
 
 | Outcome | Original Table 4 | New definition, common observed sample | Expanded sample | Expanded 95% CI | Expanded N |
 |---|---:|---:|---:|---|---:|
@@ -22,6 +22,10 @@ The [PACE output folder](../code/analysis_for_adversarial_report_output/f08/elig
 **Shared private delivery:** `Dropbox/Effect SAE on SUA/data/finalized_design_v1/section3/expanded_score_analysis_2026-10-19/` contains the graduate audit input, compact model summaries and new classification records, with hashes in the report directory. Baseline files remain in the separate `score_baseline_v1_2026-10-19/` folder. No student-level records enter Git.
 
 **Next:** address remaining outcome selection and operational PACE histories/rosters/ties, then update manuscript exhibits and interpretation. Perfect one-point matching is not a gate. F30.9 and the source-gap/availability audit in F30.10 are complete; F08.3 and broader selection/mediation questions remain open. The execution contract below is preserved for reproduction, rather than a list of unrun analyses.
+
+### Manuscript table integration
+
+The draft now inputs `tables/results/lottery_scores_expanded_2026-10-19.tex` from Section VI, retaining the original `lottery_scores.tex` unchanged. The new file preserves the table label and column layout, updates coefficients/SE/means/N and explains reconstruction and normalization. Nearby text uses 0.165/0.210 SD and updated availability effects. The appendix's original trimming/balance checks are explicitly labeled as pre-reconstruction comparisons. Regenerate only the table with `Rscript code/run_adopted_score_analysis.R --table-only`; set `SAE_PAPER_ROOT` to `Initial submission` for manuscript export. F30.11 records completion, and F30.12 retains the expanded-sample diagnostic follow-up.
 
 ## Adopted decision — start here
 
@@ -74,7 +78,7 @@ These tasks have now been implemented in `f30-expanded-*`; the results and remai
 2. Estimate NEM and Ranking RF/FS/2SLS with `NEM_ANALYSIS_Z` and `RANKING_ANALYSIS_Z`; report raw-score checks by compatible admission process, sample counts by application cohort and offer, non-offered means, SEs, confidence intervals and first stages. Keep the national admission-test outcome unchanged; its missing values are not reconstructed here.
 3. Estimate offer effects on `HAS_NEM_ANALYSIS` and `HAS_RANKING_ANALYSIS` in the **entire fixed design population**, alongside the original availability indicators. Report new/old-only/unresolved cases by offer and cohort, and examine remaining selection rather than treating score missingness as random.
 4. Compare the combined baseline with uniform independent reconstruction where available, the graduation-cohort vintage, and fixed follow-up cohorts. Keep peer-based calibration and cutoff perturbations as sensitivities. Do not condition the main effect on post-offer PACE eligibility or graduating from a particular school.
-5. The continuous-score estimates have now been run and checked. Updating manuscript exhibits and interpretation remains a separate step; original manuscript tables are preserved.
+5. The continuous-score estimates have now been run and checked. The main admission-score exhibit and its accompanying paragraph/availability note now use the expanded estimates; original table files are preserved. Other mechanism exhibits have not been replaced.
 
 Baseline checks completed: all **84 R chunks parse**; the four adoption/export chunks run; saved files preserve original panel columns/row counts and recorded positive scores; national and design-sample coverage counts reproduce; all expanded raw outcomes respect their process-specific scales; standardized/raw availability agrees; and private student-level files remain Git-ignored. `artifact_manifest.csv` records input and output fingerprints.
 
@@ -385,7 +389,7 @@ Checks already run include parsing all 49 R chunks, published 2022/2023 worked e
 2. **Address remaining outcome selection.** Expanded estimates and availability effects are complete, but 21,249/21,699 scores remain unavailable. Any always-observed or unconditional interpretation needs additional assumptions and a justified selection sensitivity. Source gaps alone cannot explain the negative estimates.
 3. **Resolve PACE operational classification.** Own-score threshold/OR validation, by-year/offer checks and +/-1/5/10-point sensitivity are complete. Recover operational school-history/percentile rosters and tie/quota rules, especially nonconsecutive histories and admissions 2021-2023. Keep uncertain events explicit; the report decomposes their causes.
 4. **Complete habilitation and selection channels where data permit.** Joint school/academic event completion ranges use the full design population. They are not full eligibility or inference intervals. Add exam sitting, carryover/prior use and sampling uncertainty separately; do not condition causal mechanism claims on realized PACE destination or graduation. Keep 2026 route outcomes unavailable until recovered.
-5. **Update manuscript exhibits and interpretation.** No new expanded-score or imputed-eligibility estimate has been inserted. F30.9 and the documented source-gap/availability audit are complete; F08.3 and broader mechanism/selection tasks remain open.
+5. **Complete remaining manuscript diagnostics.** The expanded admission-score table and accompanying text are integrated (F30.11), and the original table is preserved. Reestimate expanded-sample balance/probability-group exclusions (F30.12); old appendix checks are now labeled as original-sample comparisons. No imputed PACE-eligibility exhibit has been inserted. F08.3 and broader mechanism/selection tasks remain open.
 6. **Optional further score refinement.** Investigate historical means/rosters, grade versions, remaining NEM discrepancies and the operational arithmetic conflict if classification or effect estimates are sensitive. Keep improvements independently validated and versioned; do not tune rules using individual observed Ranking or desired treatment estimates. These unresolved exact-score issues no longer block proceeding with the author-approved baseline.
 
 ## 7. Draft status and author decisions to preserve

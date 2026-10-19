@@ -7,7 +7,8 @@ lines <- readLines('analysis_for_adversarial_report.Rmd')
 chunks <- c('f30-expanded-setup', 'f30-expanded-estimates',
             'f30-expanded-coverage-and-gaps', 'f08-adopted-eligibility-setup',
             'f08-adopted-eligibility-validation', 'f08-adopted-eligibility-effects',
-            'f30-expanded-report')
+            'f30-expanded-report', 'f30-expanded-manuscript-table')
+if ('--table-only' %in% commandArgs(TRUE)) chunks <- 'f30-expanded-manuscript-table'
 env <- new.env(parent = globalenv())
 for (chunk in chunks) {
   start <- which(startsWith(lines, paste0('```{r ', chunk, '}')))

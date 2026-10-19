@@ -6441,7 +6441,7 @@ pv_table<-c('| Validation subset | Comparable | Determinate for both | Agreement
 pu_summary<-pu[error_radius==0&uncertainty_reason!='Determinate',.(n=sum(n)),by=uncertainty_reason]
 pu_lines<-sprintf('- %s: %s students.',pu_summary$uncertainty_reason,format(pu_summary$n,big.mark=','))
 writeLines(c('# Expanded NEM/Ranking effects and PACE academic classification',
- '', 'October 19, 2026. Baseline v1 is unchanged. These results use the adopted expanded outcomes and the finalized Section 3 lottery design. They have not replaced manuscript estimates.',
+ '', 'October 19, 2026. Baseline v1 is unchanged. These results use the adopted expanded outcomes and the finalized Section 3 lottery design. A separately named expanded table is exported for the manuscript; the original recorded-score table is retained for comparison.',
  '', '## Continuous score results',
  '', 'Including students without originally observed admission scores modestly reduces the magnitude of both negative estimates. The original Table 4 estimates reproduce to numerical precision. Score units and score vintage also change; the common-sample comparison separates those changes from adding students. Differences between reported coefficients are descriptive, not formal difference tests.',
  '',report_table,
@@ -6466,7 +6466,7 @@ writeLines(c('# Expanded NEM/Ranking effects and PACE academic classification',
  '', sprintf('The fitted joint-event IV coefficient ranges from %.2f to %.2f percentage points over all individual completions of those interval outcomes. Allowing every reconstructed score to differ by up to ten points changes this to [%.2f, %.2f] pp. These are conservative coefficient ranges without sampling uncertainty, not confidence intervals or proof of a statistically negative effect. Regressions of the lower/upper event indicators are also exported but must not be mistaken for effect bounds: residualized-instrument weights have both signs.',100*pb[error_radius==0&estimator=='IV',coefficient_min],100*pb[error_radius==0&estimator=='IV',coefficient_max],100*pb[error_radius==10&estimator=='IV',coefficient_min],100*pb[error_radius==10&estimator=='IV',coefficient_max]),
  '', 'This joint event is a prehabilitation diagnostic. Regular exam sitting, full habilitation, carryover, prior use, application, selection and enrollment are separate. No full eligibility indicator, causal mediation share or 2026 PACE selection route is asserted. The score reconstruction is adequate to proceed with continuous-score analysis and classification sensitivity; the next PACE gains come chiefly from resolving histories and the operational roster/tie rule, rather than chasing exact one-point matches.',
  '', '## Reproduction and deliverables',
- '', 'Run `Rscript code/run_adopted_score_analysis.R` from the repository root. It executes only the seven named analysis/report chunks in the central Rmd (no full reconstruction or earlier notebook sections). Dependencies are data.table, fixest >= 0.13.0 and knitr for the wider notebook; ggplot2 is optional for the comparison figure. The baseline inputs are fingerprinted and unchanged. Coauthors need the private baseline folder and `graduates_pace_audit.rds`, delivered in the adjacent shared analysis folder.',
+ '', 'Run `Rscript code/run_adopted_score_analysis.R` from the repository root. It executes only the eight named analysis/report/table chunks in the central Rmd (no full reconstruction or earlier notebook sections). Dependencies are data.table, fixest >= 0.13.0 and knitr for the wider notebook; ggplot2 is optional for the comparison figure. The baseline inputs are fingerprinted and unchanged. Coauthors need the private baseline folder and `graduates_pace_audit.rds`, delivered in the adjacent shared analysis folder.',
  '', 'The specification instruments D_OD with OFFER, holds CHANCE_GROUP fixed effects, application-year indicators and the five original controls fixed, and reestimates RF and first stage on each outcome-specific sample. OLS uses HC1/t inference; IV uses HC0/normal inference. No clusters or outcome-specific restandardizations are introduced. The small process-specific cohort checks change the year reference as needed without changing the span of controls.',
  '', 'Main estimates, all coefficient covariance matrices, estimator identities, coverage by year/offer, source-gap ranges and the comparison figure are in this directory. PACE validation, by-year/offer diagnostics, roster sources, uncertainty decomposition and coefficient completion ranges are under `../../f08/eligibility_baseline_v1_2026-10-19/`. Student-level records remain Git-ignored and in the shared private data workspace. The existing full HTML/Markdown notebook is an earlier snapshot; this report and the new CSVs are the current results.',
  '', 'Checks: exact original-score reproduction; identical RF/FS/IV samples; Wald and FWL coefficient identities; independently calculated OLS HC1 SEs; original input hashes; percentile tie/missing-peer/own-score replacement boundary tests; monotonic widening of classification intervals with larger error bands; complete 175,869-student event/availability denominators; and no individual records in public output.'),
@@ -6511,4 +6511,60 @@ fwrite(data.table(package=c('R','data.table','fixest'),version=c(as.character(ge
  as.character(packageVersion('data.table')),as.character(packageVersion('fixest')))),
  file.path(sx_out,'software_versions.csv'))
 cat('Expanded-score and PACE report, checks and shared private delivery complete.\n')
+```
+
+```{r f30-expanded-manuscript-table}
+# Render saved estimates without refitting or overwriting the original table.
+mt_dir<-'analysis_for_adversarial_report_output/f30/expanded_scores_2026-10-19'
+mt_results<-read.csv(file.path(mt_dir,'score_effects.csv'),stringsAsFactors=FALSE)
+mt_ids<-c('LM_original','NEM_expanded','RANKING_expanded')
+stopifnot(all(mt_ids%in%mt_results$model),!anyDuplicated(mt_results$model))
+mt<-mt_results[match(mt_ids,mt_results$model),]
+stopifnot(identical(as.integer(mt$n),c(117668L,154620L,154170L)))
+mt_num<-function(x)sprintf('%.3f',x)
+mt_stars<-function(p)ifelse(p<.01,'$^{***}$',ifelse(p<.05,'$^{**}$',ifelse(p<.1,'$^{*}$','')))
+mt_row<-function(label,values)paste0('      ',label,' & ',paste(values,collapse=' & '),'\\\\')
+mt_notes<-paste0(
+ 'Notes: Each column uses students in the lottery sample with the outcome and all baseline controls. ',
+ 'Attendance is instrumented by an offer at an over-demanded school, with hundredth offer-probability-group ',
+ 'and application-year fixed effects and the five controls in Section~\\ref{sec:lottery-data}. ',
+ 'The reading--mathematics outcome retains the highest recorded mean across admission processes. ',
+ 'NEM and Ranking retain the latest positive official score through admission 2026; when unavailable, ',
+ 'they use independent reconstruction from school records for graduates in 2020--2025, on the scale of ',
+ 'the following admission process. These samples include non-exam takers with reconstructible scores. ',
+ 'All outcomes are in SD units. NEM and Ranking use fixed national graduation-cohort moments from ',
+ 'recorded and reconstructed scores for admissions 2021--2026; earlier scores use observed-score process moments. ',
+ 'The reading--mathematics normalization is unchanged. Means refer to students without an offer in each ',
+ 'outcome sample. Remaining unavailable scores are excluded; these are available-outcome estimates. ',
+ 'Heteroskedasticity-robust SE are in parentheses; 2SLS inference uses the normal reference distribution. ',
+ '$^{***}$p$<$0.01, $^{**}$p$<$0.05, $^{*}$p$<$0.1.')
+mt_tex<-c(
+ '% Generated from saved baseline-v1 estimates by f30-expanded-manuscript-table.',
+ '% Original comparison table: tables/results/lottery_scores.tex (preserved).',
+ '\\begin{table}[htbp]\\singlespacing\\renewcommand{\\arraystretch}{1.2}',
+ '   \\caption{Effect of Attending an Over-Demanded School on Admission Scores}\\label{tab: lottery scores}',
+ '   \\centerline{\\scalebox{0.85}{\\begin{tabular}{lccc}',
+ '      \\toprule',
+ '                   & Math-Verbal & NEM & Ranking \\\\',
+ '                   & (1) & (2) & (3)\\\\',
+ '      \\midrule',
+ mt_row('Effect of attendance',paste0(mt_num(mt$iv_estimate),mt_stars(mt$iv_p))),
+ mt_row('',paste0('(',mt_num(mt$iv_se),')')),
+ '      \\midrule',
+ mt_row('Mean (without an offer)',mt_num(mt$mean_without_offer)),
+ mt_row('Observations',format(mt$n,big.mark=',',scientific=FALSE,trim=TRUE)),
+ '      \\bottomrule',
+ '   \\end{tabular}}}',
+ paste0('   \\par\\smallskip{\\footnotesize ',mt_notes,'}'),
+ '\\end{table}')
+mt_filename<-'lottery_scores_expanded_2026-10-19.tex'
+writeLines(mt_tex,file.path(mt_dir,mt_filename))
+mt_paper_root<-Sys.getenv('SAE_PAPER_ROOT')
+if(nzchar(mt_paper_root)){
+ stopifnot(file.exists(file.path(mt_paper_root,'main.tex')))
+ mt_dest<-file.path(mt_paper_root,'tables/results',mt_filename)
+ stopifnot(file.copy(file.path(mt_dir,mt_filename),mt_dest,overwrite=TRUE),
+  unname(tools::md5sum(mt_dest))==unname(tools::md5sum(file.path(mt_dir,mt_filename))))
+}
+cat('Saved expanded manuscript table:',mt_filename,'\n')
 ```

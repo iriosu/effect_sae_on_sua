@@ -1,6 +1,6 @@
 # Expanded NEM/Ranking effects and PACE academic classification
 
-October 19, 2026. Baseline v1 is unchanged. These results use the adopted expanded outcomes and the finalized Section 3 lottery design. They have not replaced manuscript estimates.
+October 19, 2026. Baseline v1 is unchanged. These results use the adopted expanded outcomes and the finalized Section 3 lottery design. A separately named expanded table is exported for the manuscript; the original recorded-score table is retained for comparison.
 
 ## Continuous score results
 
@@ -68,7 +68,7 @@ This joint event is a prehabilitation diagnostic. Regular exam sitting, full hab
 
 ## Reproduction and deliverables
 
-Run `Rscript code/run_adopted_score_analysis.R` from the repository root. It executes only the seven named analysis/report chunks in the central Rmd (no full reconstruction or earlier notebook sections). Dependencies are data.table, fixest >= 0.13.0 and knitr for the wider notebook; ggplot2 is optional for the comparison figure. The baseline inputs are fingerprinted and unchanged. Coauthors need the private baseline folder and `graduates_pace_audit.rds`, delivered in the adjacent shared analysis folder.
+Run `Rscript code/run_adopted_score_analysis.R` from the repository root. It executes only the eight named analysis/report/table chunks in the central Rmd (no full reconstruction or earlier notebook sections). Dependencies are data.table, fixest >= 0.13.0 and knitr for the wider notebook; ggplot2 is optional for the comparison figure. The baseline inputs are fingerprinted and unchanged. Coauthors need the private baseline folder and `graduates_pace_audit.rds`, delivered in the adjacent shared analysis folder.
 
 The specification instruments D_OD with OFFER, holds CHANCE_GROUP fixed effects, application-year indicators and the five original controls fixed, and reestimates RF and first stage on each outcome-specific sample. OLS uses HC1/t inference; IV uses HC0/normal inference. No clusters or outcome-specific restandardizations are introduced. The small process-specific cohort checks change the year reference as needed without changing the span of controls.
 
