@@ -1,0 +1,8 @@
+variant,population,historical_mean,maximum,formula,annual_round
+annual_only_old_benchmarks,modality,equal,mean,linear_grade,TRUE
+annual_pooled_modality_linear,modality,pooled,pooled,linear_score,FALSE
+annual_pooled_school_linear,school,pooled,pooled,linear_score,FALSE
+annual_pooled_modality_bonus,modality,pooled,pooled,bonus_score,FALSE
+annual_pooled_school_bonus,school,pooled,pooled,bonus_score,FALSE
+annual_meanmax_modality_linear,modality,pooled,mean,linear_score,FALSE
+annual_pooled_modality_linear_round_each,modality,pooled,pooled,linear_score,TRUE

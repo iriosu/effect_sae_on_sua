@@ -2,6 +2,14 @@
 
 Prepared October 19, 2026, for continuing the F08 work with Ignacio. The main unresolved task is to establish whether SAE reduced PACE admission through lower attendance at participating schools, lower academic qualification, or both. We now have official school rosters, an audit of the recorded PACE variables, and reconstructed scores for many graduates without recorded NEM/Ranking. **The Ranking reconstruction remains provisional; full academic eligibility and the corresponding mechanism estimates are not finished.**
 
+## Latest requested test: four annual scores, October 19
+
+The [annual-score test](../code/analysis_for_adversarial_report_output/f08/ranking/annual_test_2026-10-19/annual_ranking_test_2026-10-19.md) implements the author's suggested four annual Ranking calculations followed by averaging. **It does not improve replication.** For the same 21,139 TP-to-HC switchers, the latest context candidate matches 88.45% exactly (MAE 0.502); annual averaging with otherwise unchanged benchmark/formula conventions matches 28.38% (MAE 3.833). It worsens every admission year, 2021–2026. Additional pooled-reference/formula variants also worsen replication. The annual-only code exactly reproduces the context implementation for all 2,988 available histories with four one-year contexts.
+
+The linked current DEMRE webpage describes annual averaging; dated guides describe context averaging. Its embedded interior equation could not be visually retrieved, so the two converted-score equations tested are explicitly sensitivities, not a verified transcription. Resolve this source/operational discrepancy before calling any reconstruction official. Retain the previous narrow HHTT candidate provisionally. All annual diagnostics are separate; existing score deliveries, NEM calculation and manuscript estimates are unchanged.
+
+New notebook chunks: `f08-ranking-annual-setup`, `f08-ranking-annual-candidates`, `f08-ranking-annual-report`, preceded by `f08-score-reconstruction-functions`. Aggregate tables/report are in `f08/ranking/annual_test_2026-10-19/`; private candidates are in `input/f08/ranking_annual_candidates_2026-10-19.rds`. The report supplies definitions, limitations, checks and reproduction instructions. F08.3 remains open.
+
 ## Follow-up later on October 19: year patterns and a better context candidate
 
 Read the [score-mismatch follow-up](../code/analysis_for_adversarial_report_output/f08/ranking/followup_2026-10-19/score_mismatch_followup_2026-10-19.md) for the newest diagnostic results. The tables below describing 84.57% Ranking accuracy refer to the **morning delivery**, which is preserved.

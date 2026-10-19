@@ -3856,3 +3856,236 @@ stopifnot(identical(unname(tools::md5sum(file.path(fu_input,provenance$input))),
  !anyDuplicated(v,by=c('admission_year','variant','group')))
 cat('Follow-up report written; original input hashes unchanged.\n')
 ```
+
+## Requested test: four annual Ranking scores instead of context blocks
+
+The linked DEMRE page describes one Ranking calculation per high-school grade,
+followed by an equal average. The existing reconstruction instead averages grades
+inside consecutive school/modality contexts before scoring. These operations are
+not interchangeable. The tests below preserve existing deliveries, examine both
+TP-to-HC and HC-to-TP transitions, and use the admission-year score table/maximum.
+
+```{r f08-ranking-annual-setup}
+library(data.table)
+setDTthreads(4)
+ay_input<-'analysis_for_adversarial_report_output/input/f08'
+ay_out<-'analysis_for_adversarial_report_output/f08/ranking/annual_test_2026-10-19'
+dir.create(ay_out,recursive=TRUE,showWarnings=FALSE)
+ay_tables<-fread('analysis_for_adversarial_report_output/f08/ranking/nem_tables_used.csv')
+ay_t<-nem_from_history(as.data.table(readRDS(file.path(ay_input,'ranking_targets.rds'))),ay_tables)
+ay_prev<-as.data.table(readRDS(file.path(ay_input,'ranking_context_hypothesis_2026-10-19.rds')))
+ay_t<-merge(ay_t,ay_prev[,.(MRUN,grad_year,context_before=ranking_proxy_refined,
+ context_latest=targeted_candidate)],by=c('MRUN','grad_year'),all.x=TRUE)
+ay_t[,`:=`(has_th=FALSE,has_ht=FALSE)]
+for(j in 1:3){
+ ay_t[,has_th:=has_th | (get(paste0('teaching_',j))!=310L & get(paste0('teaching_',j+1L))==310L)]
+ ay_t[,has_ht:=has_ht | (get(paste0('teaching_',j))==310L & get(paste0('teaching_',j+1L))!=310L)]
+}
+ay_t[,transition:=fcase(!complete_history,'Incomplete history',
+ has_th & has_ht,'Both directions',has_th,'TP to HC',has_ht,'HC to TP',
+ teaching_4==310L,'Stable HC',default='Stable TP')]
+ay_t[,pattern:=paste(ifelse(teaching_1==310L,'H','T'),ifelse(teaching_2==310L,'H','T'),
+ ifelse(teaching_3==310L,'H','T'),ifelse(teaching_4==310L,'H','T'),sep='')]
+ay_long<-rbindlist(lapply(1:4,function(j){
+ ay_t[complete_history==TRUE,.(MRUN,grad_year,grade=j,rbd=get(paste0('rbd_',j)),
+ teaching=ifelse(get(paste0('teaching_',j))==310L,310L,410L),
+ exit_year=get(paste0('year_',j)),g=get(paste0('gpa_',j)),
+ nem_group,context_group=ifelse(get(paste0('teaching_',j))==310L,'A','C'))]
+}),use.names=TRUE)
+stopifnot(!anyDuplicated(ay_long,by=c('MRUN','grad_year','grade')),
+ all(ay_long[, .N,by=.(MRUN,grad_year)]$N==4L))
+ay_ref<-as.data.table(readRDS(file.path(ay_input,'ranking_reference_modality_v2.rds')))[
+ population=='exit_context' & first==last,
+ .(rbd,teaching=ifelse(teaching==310L,310L,410L),exit_year,grade=first,n,
+ sum_gpa=sum_full,max_gpa=max_full)]
+# Input has exactly one passed-grade history per student/grade after upstream
+# duplicate/conflict checks; reference includes nonregistrants.
+ay_benchmarks<-function(population){
+ r<-copy(ay_ref);q<-copy(ay_long)
+ if(population=='school'){r[,teaching:=0L];q[,teaching:=0L]}
+ r<-r[,.(n=sum(n),sum_gpa=sum(sum_gpa),max_gpa=max(max_gpa)),by=.(rbd,teaching,exit_year,grade)]
+ lagged<-rbindlist(lapply(1:3,function(lag){z<-copy(r);z[,`:=`(reference_year=exit_year,exit_year=exit_year+lag)];z}))
+ keys<-unique(q[,.(rbd,teaching,exit_year,grade)])
+ b<-lagged[keys,on=.(rbd,teaching,exit_year,grade),nomatch=0,allow.cartesian=TRUE][,
+ .(reference_n=sum(n),reference_cohorts=.N,latest_reference=max(reference_year),
+ h_pooled=sum(sum_gpa)/sum(n),h_equal_rounded=mean(score_round(sum_gpa/n,2L)),
+ m_pooled=max(max_gpa),m_mean=mean(max_gpa)),by=.(rbd,teaching,exit_year,grade)]
+ stopifnot(b[,all(latest_reference<exit_year)],!anyDuplicated(b,by=c('rbd','teaching','exit_year','grade')))
+ ans<-merge(q,b,by=c('rbd','teaching','exit_year','grade'),all.x=TRUE)
+ stopifnot(nrow(ans)==nrow(q),!anyDuplicated(ans,by=c('MRUN','grad_year','grade')))
+ ans
+}
+ay_bench<-list(modality=ay_benchmarks('modality'),school=ay_benchmarks('school'))
+fwrite(ay_t[,.(n=.N,observed=sum(is.finite(reported_ranking)),
+ existing_candidate=sum(is.finite(context_latest))),by=.(admission_year=grad_year+1L,transition,one_school)],
+ file.path(ay_out,'transition_sample_counts.csv'))
+# The page embeds the interior equation as an image that could not be retrieved.
+# Both candidate equations are sensitivities, not verified transcriptions.
+ay_score<-function(g,h,m,cap,formula){
+ interior<-switch(formula,linear_score=h+(cap-h)*(g-h)/(m-h),
+ bonus_score=g+(cap-g)*(g-h)/(m-h),stop('Unknown formula'))
+ ans<-ifelse(g<=h,g,ifelse(g>=m,cap,interior))
+ ans[!is.finite(ans)|m<=h]<-NA_real_
+ ans
+}
+# Boundary, missingness and formula tests, independent of recorded outcomes.
+stopifnot(identical(ay_score(c(400,500,650,800),500,800,1000,'linear_score'),
+ c(400,500,750,1000)),
+ identical(ay_score(c(400,500,650,800),500,800,1000,'bonus_score'),c(400,500,825,1000)),
+ is.na(ay_score(600,500,500,1000,'linear_score')))
+```
+
+```{r f08-ranking-annual-candidates}
+# Primary comparisons isolate per-grade averaging, then use the webpage's
+# pooled historical mean/maximum and converted-score interpolation. All
+# specifications are uniform; no score is selected by its observed error.
+ay_specs<-data.table(
+ variant=c('annual_only_old_benchmarks','annual_pooled_modality_linear',
+ 'annual_pooled_school_linear','annual_pooled_modality_bonus','annual_pooled_school_bonus',
+ 'annual_meanmax_modality_linear','annual_pooled_modality_linear_round_each'),
+ population=c('modality','modality','school','modality','school','modality','modality'),
+ historical_mean=c('equal',rep('pooled',6)),maximum=c('mean',rep('pooled',4),'mean','pooled'),
+ formula=c('linear_grade','linear_score','linear_score','bonus_score','bonus_score','linear_score','linear_score'),
+ annual_round=c(TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,TRUE))
+fwrite(ay_specs,file.path(ay_out,'candidate_specifications.csv'))
+ay_results<-list();ay_outputs<-list();ay_coverage<-list()
+for(k in seq_len(nrow(ay_specs))){
+ spec<-ay_specs[k];cat('Annual candidate:',spec$variant,'\n')
+ z<-copy(ay_bench[[spec$population]])
+ h<-score_round(if(spec$historical_mean=='pooled')z$h_pooled else z$h_equal_rounded,2L)
+ m<-score_round(if(spec$maximum=='pooled')z$m_pooled else z$m_mean,2L)
+ g<-z$g;cap<-ifelse(z$grad_year<=2021L,850,1000)
+ ng<-nem_from_gpa(g,z$grad_year+1L,z$context_group,ay_tables)
+ nh<-nem_from_gpa(h,z$grad_year+1L,z$context_group,ay_tables)
+ nm<-nem_from_gpa(m,z$grad_year+1L,z$context_group,ay_tables)
+ if(spec$formula=='linear_grade'){
+  annual<-ifelse(g<=h,ng,ifelse(g>=m,cap,nh+(cap-nh)*(g-h)/(m-h)))
+  annual[!is.finite(annual)|m<=h]<-NA_real_
+ } else annual<-ay_score(ng,nh,nm,cap,spec$formula)
+ annual[is.na(z$reference_n)|z$reference_n<30L]<-NA_real_
+ if(spec$annual_round)annual<-score_round(annual)
+ z[,annual_score:=annual]
+ a<-z[,.(n_grades=.N,valid_grades=sum(is.finite(annual_score)),
+ annual_average=mean(annual_score),min_reference=min(reference_n),
+ min_cohorts=min(reference_cohorts)),by=.(MRUN,grad_year)]
+ stopifnot(all(a$n_grades==4L),a[valid_grades<4L,all(is.na(annual_average))])
+ a[,annual_raw:=score_round(annual_average)]
+ a<-merge(ay_t[,.(MRUN,grad_year,reported_ranking,nem_history_proxy,nem_recorded,
+ pace12,transition,pattern,one_school,context_before,context_latest)],a,
+ by=c('MRUN','grad_year'),all.x=TRUE)
+ # The webpage's plain average is saved without imposing the old overall NEM
+ # floor; flooring after aggregation is a separately labeled sensitivity.
+ a[,annual_floored:=pmax(annual_raw,nem_history_proxy)]
+ a[,variant:=spec$variant]
+ ay_outputs[[k]]<-a[,.(MRUN,grad_year,variant,annual_raw,annual_floored,valid_grades)]
+ ay_coverage[[k]]<-a[,.(n=.N,recorded=sum(is.finite(reported_ranking)),
+ previous_available=sum(is.finite(context_latest)),annual_available=sum(is.finite(annual_raw)),
+ gained=sum(is.finite(annual_raw)&!is.finite(context_latest)),
+ lost=sum(!is.finite(annual_raw)&is.finite(context_latest))),
+ by=.(variant,admission_year=grad_year+1L,transition)]
+ for(floor_rule in c('raw','floored')){
+  value<-paste0('annual_',floor_rule)
+  q<-a[is.finite(get(value))&is.finite(context_latest)&is.finite(reported_ranking)]
+  q[,`:=`(new_error=get(value)-reported_ranking,old_error=context_latest-reported_ranking)]
+  metrics<-rbindlist(list(
+   q[,c(list(method='Previous context candidate'),score_metrics(old_error)),
+    by=.(variant,admission_year=grad_year+1L,transition,pace12,one_school)],
+   q[,c(list(method='Four annual scores'),score_metrics(new_error)),
+    by=.(variant,admission_year=grad_year+1L,transition,pace12,one_school)]),use.names=TRUE)
+  metrics[,floor_rule:=floor_rule]
+  ay_results[[paste(k,floor_rule)]]<-metrics
+ }
+}
+ay_results<-rbindlist(ay_results,use.names=TRUE)
+ay_outputs<-rbindlist(ay_outputs,use.names=TRUE)
+fwrite(ay_results,file.path(ay_out,'annual_same_sample_validation.csv'))
+fwrite(rbindlist(ay_coverage,use.names=TRUE),file.path(ay_out,'annual_coverage.csv'))
+saveRDS(ay_outputs,file.path(ay_input,'ranking_annual_candidates_2026-10-19.rds'))
+ay_summary<-ay_results[n>0,.(n=sum(n),exact=weighted.mean(exact,n),
+ within_1=weighted.mean(within_1,n),within_5=weighted.mean(within_5,n),
+ mae=weighted.mean(mae,n),bias=weighted.mean(bias,n)),by=.(variant,floor_rule,method,transition)]
+fwrite(ay_summary,file.path(ay_out,'annual_transition_summary.csv'))
+print(ay_summary[transition=='TP to HC'])
+# Ensure the prior candidate files have not been altered.
+ay_inputs<-c('ranking_targets.rds','ranking_reference_modality_v2.rds',
+ 'ranking_context_hypothesis_2026-10-19.rds','score_reconstruction_records.rds')
+fwrite(data.table(input=ay_inputs,md5=unname(tools::md5sum(file.path(ay_input,ay_inputs)))),
+ file.path(ay_out,'input_provenance.csv'))
+```
+
+
+```{r f08-ranking-annual-report}
+library(data.table)
+ay_input<-'analysis_for_adversarial_report_output/input/f08'
+ay_out<-'analysis_for_adversarial_report_output/f08/ranking/annual_test_2026-10-19'
+r<-fread(file.path(ay_out,'annual_same_sample_validation.csv'))
+s<-fread(file.path(ay_out,'annual_transition_summary.csv'))
+a<-as.data.table(readRDS(file.path(ay_input,'ranking_annual_candidates_2026-10-19.rds')))
+b<-as.data.table(readRDS(file.path(ay_input,'score_reconstruction_records.rds')))
+stopifnot(!anyDuplicated(a,by=c('MRUN','grad_year','variant')),
+ a[is.finite(annual_raw),all(valid_grades==4L)],
+ a[is.finite(annual_floored),all(annual_floored>=annual_raw &
+ annual_floored<=ifelse(grad_year<=2021L,850,1000))])
+# With four one-year contexts, the old and annual-only algorithms must coincide.
+q<-merge(a[variant=='annual_only_old_benchmarks'],
+ b[,.(MRUN,grad_year,n_contexts,ranking_proxy_refined)],by=c('MRUN','grad_year'))
+check<-q[n_contexts==4L & is.finite(annual_floored)&is.finite(ranking_proxy_refined),
+ .(n=.N,exact=mean(annual_floored==ranking_proxy_refined),
+ max_difference=max(abs(annual_floored-ranking_proxy_refined)))]
+stopifnot(check$n>0L,check$exact==1,check$max_difference==0)
+fwrite(check,file.path(ay_out,'four_context_equivalence_check.csv'))
+# Earlier provenance predates this test; assert preservation of shared inputs.
+p<-fread('analysis_for_adversarial_report_output/f08/ranking/followup_2026-10-19/input_provenance.csv')
+stopifnot(identical(unname(tools::md5sum(file.path(ay_input,p$input))),p$md5))
+y<-r[transition=='TP to HC' & floor_rule=='floored' & variant=='annual_only_old_benchmarks',
+ .(n=sum(n),exact=weighted.mean(exact,n),mae=weighted.mean(mae,n)),by=.(admission_year,method)]
+fwrite(y,file.path(ay_out,'tp_to_hc_by_year.csv'))
+ys<-dcast(y,admission_year+n~method,value.var=c('exact','mae'))
+stopifnot(all(ys[['exact_Four annual scores']]<ys[['exact_Previous context candidate']]),
+ all(ys[['mae_Four annual scores']]>ys[['mae_Previous context candidate']]))
+fmt<-function(x)format(x,big.mark=',',scientific=FALSE,trim=TRUE)
+main<-s[transition=='TP to HC' & floor_rule=='floored' & variant=='annual_only_old_benchmarks']
+old<-main[method=='Previous context candidate'];new<-main[method=='Four annual scores']
+rows<-vapply(seq_len(nrow(ys)),function(i)sprintf('| %d | %s | %.2f%% | %.2f%% | %.3f | %.3f |',
+ ys$admission_year[i],fmt(ys$n[i]),100*ys[['exact_Previous context candidate']][i],
+ 100*ys[['exact_Four annual scores']][i],ys[['mae_Previous context candidate']][i],
+ ys[['mae_Four annual scores']][i]),character(1))
+sens<-s[transition=='TP to HC' & floor_rule=='floored' & method=='Four annual scores']
+srows<-vapply(seq_len(nrow(sens)),function(i)sprintf('| `%s` | %s | %.2f%% | %.3f |',
+ sens$variant[i],fmt(sens$n[i]),100*sens$exact[i],sens$mae[i]),character(1))
+report<-c('# Annual Ranking calculation test — October 19, 2026',
+ '', sprintf('**Conclusion:** the existing code scores consecutive school/modality contexts and weights by their lengths; it does not compute four annual scores. Implementing annual scores does not reduce observed discrepancies. Among the same %s technical-to-scientific (TP-to-HC) switchers, exact agreement falls from %.2f%% to %.2f%% and mean absolute error rises from %.3f to %.3f points when only the annual aggregation procedure changes.',fmt(old$n),100*old$exact,100*new$exact,old$mae,new$mae),
+ '', '## Source and scope',
+ '', '[DEMRE’s linked page](https://demre.cl/paes/factores-seleccion/puntaje-ranking), checked October 19, describes four grade-specific rankings and their average, using the same grade and school in the three preceding calendar years. Its text specifies a pooled historical mean and pooled maximum, converted to the NEM scale. The displayed example refers to 2026 attendance, and the site navigation to admission 2027. The equation between the boundary cases is embedded in an image that could not be retrieved for inspection. The converted-score equations below are therefore alternative implementations, not a certified transcription of that image.',
+ '', 'The dated admission-2021–2026 guides already archived in `f08/sources/ranking/instruments_YYYY.txt` describe consecutive educational contexts and averages of historical cohort maxima. This conflict remains unresolved. Do not infer from this test that DEMRE’s current description is wrong, that the webpage reflects a newly introduced rule, or that our better-fitting context implementation is definitively official.',
+ '', '## Implementation',
+ '', '- Score each of the four passed grades separately against the preceding three years at the same school, grade and broad modality (HC/TP); average exactly four scores with equal weights. No reference year is contemporaneous or future.',
+ '- Use admission-year NEM tables and caps: 850 in admission 2021–2022 and 1,000 in 2023–2026. Use the annual context’s conversion type. School-only reference pooling is a separately reported sensitivity.',
+ '- The main isolation test keeps the previous mean-of-cohort-means, mean-of-cohort-maxima, grade-linear formula and rounding conventions. It changes the temporal aggregation unit. This is different from simply splitting an existing multi-year context score into repeated annual copies.',
+ '- Preserve the independently reconstructed overall NEM floor in the main comparison; also save the literal annual average without that floor. Neither uses recorded Ranking to construct predictions.',
+ '- All before/after comparisons use the identical observed-score students for that candidate. The main TP-to-HC category has at least one TP-to-HC transition and no HC-to-TP transition; histories with both directions have a separate category. These are raw-code transitions and may include administrative recoding.',
+ '- Missing annual inputs or fewer than 30 historical records leave the score unknown. Official small-school pooling, foreign-school and free-exam substitutions remain unimplemented. Coverage differences are reported separately; the test does not extrapolate accuracy to students without observed scores.',
+ '', '## Admission-year results: isolate annual averaging',
+ '', '| Admission year | Same students | Context exact | Annual exact | Context MAE | Annual MAE |',
+ '|---|---:|---:|---:|---:|---:|',rows,
+ '', 'Exact agreement deteriorates and absolute error increases in every admission year. Point errors are in each year’s native scale; the within-year results avoid conflating the scale change with performance.',
+ '', '## Additional specifications: TP-to-HC',
+ '', '| Annual candidate (with NEM floor) | Same-sample N | Exact | MAE |',
+ '|---|---:|---:|---:|',srows,
+ '', 'Candidate definitions are in `candidate_specifications.csv`. `linear_score` interpolates from converted historical mean h to the cap c: h+(c-h)(g-h)/(m-h); `bonus_score` uses g+(c-g)(g-h)/(m-h). Both have the same lower/upper boundary rules. Neither is represented as the verified image formula. All seven candidates worsen replication for TP-to-HC students. Removing the overall NEM floor also worsens replication; the isolated annual variant then matches only 17.34%, with MAE 4.168.',
+ '', '## Verification, outputs and decision',
+ '', sprintf('- A direct equivalence test passes for all %s available graduates with four one-year contexts: the annual-only implementation exactly reproduces the previous context calculation, maximum difference zero. This checks the temporal aggregation implementation independently of recorded scores.',fmt(check$n)),
+ '- Assertions cover formula boundaries, nondegenerate benchmarks, four annual contributions, unique student/year/variant keys, score caps, reference timing and preservation of the earlier delivered input hashes. The named chunks were executed successfully; the full notebook was not reknit.',
+ '- `annual_same_sample_validation.csv` contains year, transition direction, PACE-school and same-school strata for all seven variants, with/without the floor. `annual_transition_summary.csv` aggregates those strata; `annual_coverage.csv` distinguishes changes in reconstructibility. Other outputs record input hashes, specifications, cohort sizes and the equivalence check.',
+ '- Private `input/f08/ranking_annual_candidates_2026-10-19.rds` saves the diagnostic annual candidates. Existing score deliveries and the prior narrow HHTT candidate remain unchanged. This test concerns Ranking, not a revision of NEM or a completed reconstruction of PACE qualification.',
+ '- **Decision:** retain annual scoring as a rejected empirical refinement for these extracts. Keep official context/reference reconciliation open. Before adopting a different rule, obtain the operational benchmarks/rosters and resolve the dated-guide versus current-page discrepancy. F08.3 remains open; no manuscript estimates change.',
+ '', '## Reproduce',
+ '', 'Run from `repository/code`, with the existing private caches named in the setup chunk. Read `analysis_for_adversarial_report.Rmd` and execute these named chunks in order:',
+ '', '1. `f08-score-reconstruction-functions`',
+ '2. `f08-ranking-annual-setup`',
+ '3. `f08-ranking-annual-candidates`',
+ '4. `f08-ranking-annual-report`',
+ '', 'The report chunk can also run alone against saved candidate outputs. The preceding follow-up report contains a minimal named-chunk runner. Student-level caches are intentionally excluded from Git.')
+writeLines(report,file.path(ay_out,'annual_ranking_test_2026-10-19.md'))
+cat('Annual report and assertions completed successfully.\n')
+```

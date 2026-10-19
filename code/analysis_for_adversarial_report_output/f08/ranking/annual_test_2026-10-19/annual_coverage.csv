@@ -1,0 +1,253 @@
+variant,admission_year,transition,n,recorded,previous_available,annual_available,gained,lost
+annual_only_old_benchmarks,2021,Stable HC,124001,110712,121333,120604,35,764
+annual_only_old_benchmarks,2024,HC to TP,41147,32719,40558,39400,27,1185
+annual_only_old_benchmarks,2023,Stable HC,129220,121153,127301,125900,9,1410
+annual_only_old_benchmarks,2026,Stable HC,137864,131054,136356,136144,20,232
+annual_only_old_benchmarks,2021,HC to TP,33357,18663,32481,32179,5,307
+annual_only_old_benchmarks,2022,Stable TP,30936,16692,30858,30760,0,98
+annual_only_old_benchmarks,2022,Stable HC,126480,111789,124286,122999,22,1309
+annual_only_old_benchmarks,2025,Stable TP,25145,19690,25116,25103,15,28
+annual_only_old_benchmarks,2026,HC to TP,44260,36673,43948,43258,0,690
+annual_only_old_benchmarks,2024,Stable HC,129650,122880,128065,127299,36,802
+annual_only_old_benchmarks,2022,HC to TP,36023,20122,34937,33193,33,1777
+annual_only_old_benchmarks,2024,Stable TP,27685,20953,27651,27545,0,106
+annual_only_old_benchmarks,2025,HC to TP,42256,34923,41652,40482,33,1203
+annual_only_old_benchmarks,2025,Stable HC,132204,125941,130396,130012,9,393
+annual_only_old_benchmarks,2026,Stable TP,25315,20167,25299,25281,0,18
+annual_only_old_benchmarks,2023,HC to TP,39620,29865,38447,35869,16,2594
+annual_only_old_benchmarks,2021,Stable TP,34349,18819,34225,34210,0,15
+annual_only_old_benchmarks,2025,Both directions,3536,2928,2817,2797,0,20
+annual_only_old_benchmarks,2023,Stable TP,29580,21433,29546,29477,1,70
+annual_only_old_benchmarks,2022,Both directions,4987,2877,2287,2270,3,20
+annual_only_old_benchmarks,2024,Both directions,3466,2773,2163,2144,0,19
+annual_only_old_benchmarks,2025,TP to HC,4754,4344,4595,4580,0,15
+annual_only_old_benchmarks,2023,Both directions,3587,2589,2384,2346,1,39
+annual_only_old_benchmarks,2021,Both directions,4231,2525,2425,2420,0,5
+annual_only_old_benchmarks,2025,Incomplete history,9669,4949,0,0,0,0
+annual_only_old_benchmarks,2023,TP to HC,3859,3417,3666,3609,0,57
+annual_only_old_benchmarks,2021,TP to HC,4355,3308,4089,3984,6,111
+annual_only_old_benchmarks,2022,TP to HC,3903,2891,3712,3619,2,95
+annual_only_old_benchmarks,2024,Incomplete history,7851,3655,0,0,0,0
+annual_only_old_benchmarks,2023,Incomplete history,6301,3066,0,0,0,0
+annual_only_old_benchmarks,2024,TP to HC,4449,4041,4261,4211,0,50
+annual_only_old_benchmarks,2026,Both directions,2923,2380,2825,2813,0,12
+annual_only_old_benchmarks,2026,TP to HC,4636,4240,4546,4524,0,22
+annual_only_old_benchmarks,2026,Incomplete history,11543,6412,0,0,0,0
+annual_only_old_benchmarks,2022,Incomplete history,6550,2742,0,0,0,0
+annual_only_old_benchmarks,2021,Incomplete history,6435,2993,0,0,0,0
+annual_pooled_modality_linear,2021,Stable HC,124001,110712,121333,120604,35,764
+annual_pooled_modality_linear,2024,HC to TP,41147,32719,40558,39400,27,1185
+annual_pooled_modality_linear,2023,Stable HC,129220,121153,127301,125900,9,1410
+annual_pooled_modality_linear,2026,Stable HC,137864,131054,136356,136144,20,232
+annual_pooled_modality_linear,2021,HC to TP,33357,18663,32481,32179,5,307
+annual_pooled_modality_linear,2022,Stable TP,30936,16692,30858,30760,0,98
+annual_pooled_modality_linear,2022,Stable HC,126480,111789,124286,122999,22,1309
+annual_pooled_modality_linear,2025,Stable TP,25145,19690,25116,25103,15,28
+annual_pooled_modality_linear,2026,HC to TP,44260,36673,43948,43258,0,690
+annual_pooled_modality_linear,2024,Stable HC,129650,122880,128065,127299,36,802
+annual_pooled_modality_linear,2022,HC to TP,36023,20122,34937,33193,33,1777
+annual_pooled_modality_linear,2024,Stable TP,27685,20953,27651,27545,0,106
+annual_pooled_modality_linear,2025,HC to TP,42256,34923,41652,40482,33,1203
+annual_pooled_modality_linear,2025,Stable HC,132204,125941,130396,130012,9,393
+annual_pooled_modality_linear,2026,Stable TP,25315,20167,25299,25281,0,18
+annual_pooled_modality_linear,2023,HC to TP,39620,29865,38447,35869,16,2594
+annual_pooled_modality_linear,2021,Stable TP,34349,18819,34225,34210,0,15
+annual_pooled_modality_linear,2025,Both directions,3536,2928,2817,2797,0,20
+annual_pooled_modality_linear,2023,Stable TP,29580,21433,29546,29477,1,70
+annual_pooled_modality_linear,2022,Both directions,4987,2877,2287,2270,3,20
+annual_pooled_modality_linear,2024,Both directions,3466,2773,2163,2144,0,19
+annual_pooled_modality_linear,2025,TP to HC,4754,4344,4595,4580,0,15
+annual_pooled_modality_linear,2023,Both directions,3587,2589,2384,2346,1,39
+annual_pooled_modality_linear,2021,Both directions,4231,2525,2425,2420,0,5
+annual_pooled_modality_linear,2025,Incomplete history,9669,4949,0,0,0,0
+annual_pooled_modality_linear,2023,TP to HC,3859,3417,3666,3609,0,57
+annual_pooled_modality_linear,2021,TP to HC,4355,3308,4089,3984,6,111
+annual_pooled_modality_linear,2022,TP to HC,3903,2891,3712,3619,2,95
+annual_pooled_modality_linear,2024,Incomplete history,7851,3655,0,0,0,0
+annual_pooled_modality_linear,2023,Incomplete history,6301,3066,0,0,0,0
+annual_pooled_modality_linear,2024,TP to HC,4449,4041,4261,4211,0,50
+annual_pooled_modality_linear,2026,Both directions,2923,2380,2825,2813,0,12
+annual_pooled_modality_linear,2026,TP to HC,4636,4240,4546,4524,0,22
+annual_pooled_modality_linear,2026,Incomplete history,11543,6412,0,0,0,0
+annual_pooled_modality_linear,2022,Incomplete history,6550,2742,0,0,0,0
+annual_pooled_modality_linear,2021,Incomplete history,6435,2993,0,0,0,0
+annual_pooled_school_linear,2021,Stable HC,124001,110712,121333,120899,288,722
+annual_pooled_school_linear,2024,HC to TP,41147,32719,40558,40741,292,109
+annual_pooled_school_linear,2023,Stable HC,129220,121153,127301,126530,400,1171
+annual_pooled_school_linear,2026,Stable HC,137864,131054,136356,136509,340,187
+annual_pooled_school_linear,2021,HC to TP,33357,18663,32481,32799,440,122
+annual_pooled_school_linear,2022,Stable TP,30936,16692,30858,30802,35,91
+annual_pooled_school_linear,2022,Stable HC,126480,111789,124286,123590,407,1103
+annual_pooled_school_linear,2025,Stable TP,25145,19690,25116,25126,18,8
+annual_pooled_school_linear,2026,HC to TP,44260,36673,43948,44116,179,11
+annual_pooled_school_linear,2024,Stable HC,129650,122880,128065,127603,223,685
+annual_pooled_school_linear,2022,HC to TP,36023,20122,34937,35455,643,125
+annual_pooled_school_linear,2024,Stable TP,27685,20953,27651,27569,5,87
+annual_pooled_school_linear,2025,HC to TP,42256,34923,41652,41958,336,30
+annual_pooled_school_linear,2025,Stable HC,132204,125941,130396,130499,370,267
+annual_pooled_school_linear,2026,Stable TP,25315,20167,25299,25293,2,8
+annual_pooled_school_linear,2023,HC to TP,39620,29865,38447,39138,789,98
+annual_pooled_school_linear,2021,Stable TP,34349,18819,34225,34258,43,10
+annual_pooled_school_linear,2025,Both directions,3536,2928,2817,3477,660,0
+annual_pooled_school_linear,2023,Stable TP,29580,21433,29546,29487,5,64
+annual_pooled_school_linear,2022,Both directions,4987,2877,2287,4900,2614,1
+annual_pooled_school_linear,2024,Both directions,3466,2773,2163,3399,1238,2
+annual_pooled_school_linear,2025,TP to HC,4754,4344,4595,4674,87,8
+annual_pooled_school_linear,2023,Both directions,3587,2589,2384,3507,1130,7
+annual_pooled_school_linear,2021,Both directions,4231,2525,2425,4162,1741,4
+annual_pooled_school_linear,2025,Incomplete history,9669,4949,0,0,0,0
+annual_pooled_school_linear,2023,TP to HC,3859,3417,3666,3777,138,27
+annual_pooled_school_linear,2021,TP to HC,4355,3308,4089,4222,168,35
+annual_pooled_school_linear,2022,TP to HC,3903,2891,3712,3808,108,12
+annual_pooled_school_linear,2024,Incomplete history,7851,3655,0,0,0,0
+annual_pooled_school_linear,2023,Incomplete history,6301,3066,0,0,0,0
+annual_pooled_school_linear,2024,TP to HC,4449,4041,4261,4350,94,5
+annual_pooled_school_linear,2026,Both directions,2923,2380,2825,2863,38,0
+annual_pooled_school_linear,2026,TP to HC,4636,4240,4546,4577,35,4
+annual_pooled_school_linear,2026,Incomplete history,11543,6412,0,0,0,0
+annual_pooled_school_linear,2022,Incomplete history,6550,2742,0,0,0,0
+annual_pooled_school_linear,2021,Incomplete history,6435,2993,0,0,0,0
+annual_pooled_modality_bonus,2021,Stable HC,124001,110712,121333,120604,35,764
+annual_pooled_modality_bonus,2024,HC to TP,41147,32719,40558,39400,27,1185
+annual_pooled_modality_bonus,2023,Stable HC,129220,121153,127301,125900,9,1410
+annual_pooled_modality_bonus,2026,Stable HC,137864,131054,136356,136144,20,232
+annual_pooled_modality_bonus,2021,HC to TP,33357,18663,32481,32179,5,307
+annual_pooled_modality_bonus,2022,Stable TP,30936,16692,30858,30760,0,98
+annual_pooled_modality_bonus,2022,Stable HC,126480,111789,124286,122999,22,1309
+annual_pooled_modality_bonus,2025,Stable TP,25145,19690,25116,25103,15,28
+annual_pooled_modality_bonus,2026,HC to TP,44260,36673,43948,43258,0,690
+annual_pooled_modality_bonus,2024,Stable HC,129650,122880,128065,127299,36,802
+annual_pooled_modality_bonus,2022,HC to TP,36023,20122,34937,33193,33,1777
+annual_pooled_modality_bonus,2024,Stable TP,27685,20953,27651,27545,0,106
+annual_pooled_modality_bonus,2025,HC to TP,42256,34923,41652,40482,33,1203
+annual_pooled_modality_bonus,2025,Stable HC,132204,125941,130396,130012,9,393
+annual_pooled_modality_bonus,2026,Stable TP,25315,20167,25299,25281,0,18
+annual_pooled_modality_bonus,2023,HC to TP,39620,29865,38447,35869,16,2594
+annual_pooled_modality_bonus,2021,Stable TP,34349,18819,34225,34210,0,15
+annual_pooled_modality_bonus,2025,Both directions,3536,2928,2817,2797,0,20
+annual_pooled_modality_bonus,2023,Stable TP,29580,21433,29546,29477,1,70
+annual_pooled_modality_bonus,2022,Both directions,4987,2877,2287,2270,3,20
+annual_pooled_modality_bonus,2024,Both directions,3466,2773,2163,2144,0,19
+annual_pooled_modality_bonus,2025,TP to HC,4754,4344,4595,4580,0,15
+annual_pooled_modality_bonus,2023,Both directions,3587,2589,2384,2346,1,39
+annual_pooled_modality_bonus,2021,Both directions,4231,2525,2425,2420,0,5
+annual_pooled_modality_bonus,2025,Incomplete history,9669,4949,0,0,0,0
+annual_pooled_modality_bonus,2023,TP to HC,3859,3417,3666,3609,0,57
+annual_pooled_modality_bonus,2021,TP to HC,4355,3308,4089,3984,6,111
+annual_pooled_modality_bonus,2022,TP to HC,3903,2891,3712,3619,2,95
+annual_pooled_modality_bonus,2024,Incomplete history,7851,3655,0,0,0,0
+annual_pooled_modality_bonus,2023,Incomplete history,6301,3066,0,0,0,0
+annual_pooled_modality_bonus,2024,TP to HC,4449,4041,4261,4211,0,50
+annual_pooled_modality_bonus,2026,Both directions,2923,2380,2825,2813,0,12
+annual_pooled_modality_bonus,2026,TP to HC,4636,4240,4546,4524,0,22
+annual_pooled_modality_bonus,2026,Incomplete history,11543,6412,0,0,0,0
+annual_pooled_modality_bonus,2022,Incomplete history,6550,2742,0,0,0,0
+annual_pooled_modality_bonus,2021,Incomplete history,6435,2993,0,0,0,0
+annual_pooled_school_bonus,2021,Stable HC,124001,110712,121333,120899,288,722
+annual_pooled_school_bonus,2024,HC to TP,41147,32719,40558,40741,292,109
+annual_pooled_school_bonus,2023,Stable HC,129220,121153,127301,126530,400,1171
+annual_pooled_school_bonus,2026,Stable HC,137864,131054,136356,136509,340,187
+annual_pooled_school_bonus,2021,HC to TP,33357,18663,32481,32799,440,122
+annual_pooled_school_bonus,2022,Stable TP,30936,16692,30858,30802,35,91
+annual_pooled_school_bonus,2022,Stable HC,126480,111789,124286,123590,407,1103
+annual_pooled_school_bonus,2025,Stable TP,25145,19690,25116,25126,18,8
+annual_pooled_school_bonus,2026,HC to TP,44260,36673,43948,44116,179,11
+annual_pooled_school_bonus,2024,Stable HC,129650,122880,128065,127603,223,685
+annual_pooled_school_bonus,2022,HC to TP,36023,20122,34937,35455,643,125
+annual_pooled_school_bonus,2024,Stable TP,27685,20953,27651,27569,5,87
+annual_pooled_school_bonus,2025,HC to TP,42256,34923,41652,41958,336,30
+annual_pooled_school_bonus,2025,Stable HC,132204,125941,130396,130499,370,267
+annual_pooled_school_bonus,2026,Stable TP,25315,20167,25299,25293,2,8
+annual_pooled_school_bonus,2023,HC to TP,39620,29865,38447,39138,789,98
+annual_pooled_school_bonus,2021,Stable TP,34349,18819,34225,34258,43,10
+annual_pooled_school_bonus,2025,Both directions,3536,2928,2817,3477,660,0
+annual_pooled_school_bonus,2023,Stable TP,29580,21433,29546,29487,5,64
+annual_pooled_school_bonus,2022,Both directions,4987,2877,2287,4900,2614,1
+annual_pooled_school_bonus,2024,Both directions,3466,2773,2163,3399,1238,2
+annual_pooled_school_bonus,2025,TP to HC,4754,4344,4595,4674,87,8
+annual_pooled_school_bonus,2023,Both directions,3587,2589,2384,3507,1130,7
+annual_pooled_school_bonus,2021,Both directions,4231,2525,2425,4162,1741,4
+annual_pooled_school_bonus,2025,Incomplete history,9669,4949,0,0,0,0
+annual_pooled_school_bonus,2023,TP to HC,3859,3417,3666,3777,138,27
+annual_pooled_school_bonus,2021,TP to HC,4355,3308,4089,4222,168,35
+annual_pooled_school_bonus,2022,TP to HC,3903,2891,3712,3808,108,12
+annual_pooled_school_bonus,2024,Incomplete history,7851,3655,0,0,0,0
+annual_pooled_school_bonus,2023,Incomplete history,6301,3066,0,0,0,0
+annual_pooled_school_bonus,2024,TP to HC,4449,4041,4261,4350,94,5
+annual_pooled_school_bonus,2026,Both directions,2923,2380,2825,2863,38,0
+annual_pooled_school_bonus,2026,TP to HC,4636,4240,4546,4577,35,4
+annual_pooled_school_bonus,2026,Incomplete history,11543,6412,0,0,0,0
+annual_pooled_school_bonus,2022,Incomplete history,6550,2742,0,0,0,0
+annual_pooled_school_bonus,2021,Incomplete history,6435,2993,0,0,0,0
+annual_meanmax_modality_linear,2021,Stable HC,124001,110712,121333,120604,35,764
+annual_meanmax_modality_linear,2024,HC to TP,41147,32719,40558,39400,27,1185
+annual_meanmax_modality_linear,2023,Stable HC,129220,121153,127301,125900,9,1410
+annual_meanmax_modality_linear,2026,Stable HC,137864,131054,136356,136144,20,232
+annual_meanmax_modality_linear,2021,HC to TP,33357,18663,32481,32179,5,307
+annual_meanmax_modality_linear,2022,Stable TP,30936,16692,30858,30760,0,98
+annual_meanmax_modality_linear,2022,Stable HC,126480,111789,124286,122999,22,1309
+annual_meanmax_modality_linear,2025,Stable TP,25145,19690,25116,25103,15,28
+annual_meanmax_modality_linear,2026,HC to TP,44260,36673,43948,43258,0,690
+annual_meanmax_modality_linear,2024,Stable HC,129650,122880,128065,127299,36,802
+annual_meanmax_modality_linear,2022,HC to TP,36023,20122,34937,33193,33,1777
+annual_meanmax_modality_linear,2024,Stable TP,27685,20953,27651,27545,0,106
+annual_meanmax_modality_linear,2025,HC to TP,42256,34923,41652,40482,33,1203
+annual_meanmax_modality_linear,2025,Stable HC,132204,125941,130396,130012,9,393
+annual_meanmax_modality_linear,2026,Stable TP,25315,20167,25299,25281,0,18
+annual_meanmax_modality_linear,2023,HC to TP,39620,29865,38447,35869,16,2594
+annual_meanmax_modality_linear,2021,Stable TP,34349,18819,34225,34210,0,15
+annual_meanmax_modality_linear,2025,Both directions,3536,2928,2817,2797,0,20
+annual_meanmax_modality_linear,2023,Stable TP,29580,21433,29546,29477,1,70
+annual_meanmax_modality_linear,2022,Both directions,4987,2877,2287,2270,3,20
+annual_meanmax_modality_linear,2024,Both directions,3466,2773,2163,2144,0,19
+annual_meanmax_modality_linear,2025,TP to HC,4754,4344,4595,4580,0,15
+annual_meanmax_modality_linear,2023,Both directions,3587,2589,2384,2346,1,39
+annual_meanmax_modality_linear,2021,Both directions,4231,2525,2425,2420,0,5
+annual_meanmax_modality_linear,2025,Incomplete history,9669,4949,0,0,0,0
+annual_meanmax_modality_linear,2023,TP to HC,3859,3417,3666,3609,0,57
+annual_meanmax_modality_linear,2021,TP to HC,4355,3308,4089,3984,6,111
+annual_meanmax_modality_linear,2022,TP to HC,3903,2891,3712,3619,2,95
+annual_meanmax_modality_linear,2024,Incomplete history,7851,3655,0,0,0,0
+annual_meanmax_modality_linear,2023,Incomplete history,6301,3066,0,0,0,0
+annual_meanmax_modality_linear,2024,TP to HC,4449,4041,4261,4211,0,50
+annual_meanmax_modality_linear,2026,Both directions,2923,2380,2825,2813,0,12
+annual_meanmax_modality_linear,2026,TP to HC,4636,4240,4546,4524,0,22
+annual_meanmax_modality_linear,2026,Incomplete history,11543,6412,0,0,0,0
+annual_meanmax_modality_linear,2022,Incomplete history,6550,2742,0,0,0,0
+annual_meanmax_modality_linear,2021,Incomplete history,6435,2993,0,0,0,0
+annual_pooled_modality_linear_round_each,2021,Stable HC,124001,110712,121333,120604,35,764
+annual_pooled_modality_linear_round_each,2024,HC to TP,41147,32719,40558,39400,27,1185
+annual_pooled_modality_linear_round_each,2023,Stable HC,129220,121153,127301,125900,9,1410
+annual_pooled_modality_linear_round_each,2026,Stable HC,137864,131054,136356,136144,20,232
+annual_pooled_modality_linear_round_each,2021,HC to TP,33357,18663,32481,32179,5,307
+annual_pooled_modality_linear_round_each,2022,Stable TP,30936,16692,30858,30760,0,98
+annual_pooled_modality_linear_round_each,2022,Stable HC,126480,111789,124286,122999,22,1309
+annual_pooled_modality_linear_round_each,2025,Stable TP,25145,19690,25116,25103,15,28
+annual_pooled_modality_linear_round_each,2026,HC to TP,44260,36673,43948,43258,0,690
+annual_pooled_modality_linear_round_each,2024,Stable HC,129650,122880,128065,127299,36,802
+annual_pooled_modality_linear_round_each,2022,HC to TP,36023,20122,34937,33193,33,1777
+annual_pooled_modality_linear_round_each,2024,Stable TP,27685,20953,27651,27545,0,106
+annual_pooled_modality_linear_round_each,2025,HC to TP,42256,34923,41652,40482,33,1203
+annual_pooled_modality_linear_round_each,2025,Stable HC,132204,125941,130396,130012,9,393
+annual_pooled_modality_linear_round_each,2026,Stable TP,25315,20167,25299,25281,0,18
+annual_pooled_modality_linear_round_each,2023,HC to TP,39620,29865,38447,35869,16,2594
+annual_pooled_modality_linear_round_each,2021,Stable TP,34349,18819,34225,34210,0,15
+annual_pooled_modality_linear_round_each,2025,Both directions,3536,2928,2817,2797,0,20
+annual_pooled_modality_linear_round_each,2023,Stable TP,29580,21433,29546,29477,1,70
+annual_pooled_modality_linear_round_each,2022,Both directions,4987,2877,2287,2270,3,20
+annual_pooled_modality_linear_round_each,2024,Both directions,3466,2773,2163,2144,0,19
+annual_pooled_modality_linear_round_each,2025,TP to HC,4754,4344,4595,4580,0,15
+annual_pooled_modality_linear_round_each,2023,Both directions,3587,2589,2384,2346,1,39
+annual_pooled_modality_linear_round_each,2021,Both directions,4231,2525,2425,2420,0,5
+annual_pooled_modality_linear_round_each,2025,Incomplete history,9669,4949,0,0,0,0
+annual_pooled_modality_linear_round_each,2023,TP to HC,3859,3417,3666,3609,0,57
+annual_pooled_modality_linear_round_each,2021,TP to HC,4355,3308,4089,3984,6,111
+annual_pooled_modality_linear_round_each,2022,TP to HC,3903,2891,3712,3619,2,95
+annual_pooled_modality_linear_round_each,2024,Incomplete history,7851,3655,0,0,0,0
+annual_pooled_modality_linear_round_each,2023,Incomplete history,6301,3066,0,0,0,0
+annual_pooled_modality_linear_round_each,2024,TP to HC,4449,4041,4261,4211,0,50
+annual_pooled_modality_linear_round_each,2026,Both directions,2923,2380,2825,2813,0,12
+annual_pooled_modality_linear_round_each,2026,TP to HC,4636,4240,4546,4524,0,22
+annual_pooled_modality_linear_round_each,2026,Incomplete history,11543,6412,0,0,0,0
+annual_pooled_modality_linear_round_each,2022,Incomplete history,6550,2742,0,0,0,0
+annual_pooled_modality_linear_round_each,2021,Incomplete history,6435,2993,0,0,0,0
