@@ -4864,3 +4864,400 @@ report<-c('# Same-context and classroom diagnostic — October 19, 2026',
 writeLines(report,file.path(wc_out,'within_context_report_2026-10-19.md'))
 cat('Within-context report and aggregate checks completed.\n')
 ```
+
+## Performance-panel source and historical-benchmark sensitivity
+
+```{r f08-performance-source-audit}
+library(data.table)
+setDTthreads(4)
+pm_input<-'analysis_for_adversarial_report_output/input/f08'
+pm_out<-'analysis_for_adversarial_report_output/f08/ranking/performance_panel_2026-10-19'
+dir.create(pm_out,recursive=TRUE,showWarnings=FALSE)
+pm_path<-file.path(pm_input,'panel_performance_2002_2025_new.rds')
+stopifnot(file.info(pm_path)$size==508450634)
+pm_full<-as.data.table(readRDS(pm_path))
+setnames(pm_full,toupper(names(pm_full)))
+pm_cols<-c('MRUN','AGNO','RBD','COD_ENSE','COD_GRADO','PROM_GRAL','SIT_FIN_R')
+stopifnot(all(pm_cols%in%names(pm_full)))
+fwrite(data.table(column=names(pm_full),class=vapply(pm_full,function(x)paste(class(x),collapse='/'),character(1))),
+ file.path(pm_out,'new_master_schema.csv'))
+fwrite(pm_full[,.(records=.N),by=.(AGNO,COD_ENSE,COD_GRADO)],file.path(pm_out,'new_master_coverage.csv'))
+pm_new<-copy(pm_full[AGNO>=2002L & COD_ENSE%in%c(310L,410L,510L,610L,710L,810L,910L)&
+ COD_GRADO%in%1:4,..pm_cols])
+rm(pm_full);gc()
+pm_new[,PROM_GRAL:=as.numeric(sub(',','.',as.character(PROM_GRAL),fixed=TRUE))]
+pm_old<-rbindlist(list(readRDS(file.path(pm_input,'ranking_grade_records_2010_2023.rds')),
+ as.data.table(readRDS(file.path(pm_input,'rendimiento_grades_2024_2025.rds')))[
+ COD_ENSE%in%c(310L,410L,510L,610L,710L,810L,910L)&COD_GRADO%in%1:4]),use.names=TRUE)
+fwrite(rbindlist(list(pm_old[,.(source='Current inputs',records=.N),by=AGNO],
+ pm_new[,.(source='New 2002-2025 master',records=.N),by=AGNO])),file.path(pm_out,'high_school_row_counts.csv'))
+pm_old<-unique(pm_old[,..pm_cols]);pm_new<-unique(pm_new[,..pm_cols])
+saveRDS(pm_new,file.path(pm_input,'performance_master_high_school_2026-10-19.rds'))
+pm_old[,old_present:=TRUE];pm_new[,new_present:=TRUE]
+pm_compare<-merge(pm_old,pm_new[AGNO>=2010L],by=pm_cols,all=TRUE)
+pm_compare[,status:=fcase(is.na(old_present),'New only',is.na(new_present),'Old only',default='Identical record')]
+fwrite(pm_compare[,.(records=.N),by=.(AGNO,status)],file.path(pm_out,'source_record_comparison.csv'))
+cat('New master versus existing high-school inputs:\n')
+print(pm_compare[,.(records=.N),by=status])
+rm(pm_compare,pm_new);gc()
+# Compare the actual raw 2023 CSV used for classrooms with the harmonized
+# performance inputs; equality is tested on all seven scoring fields.
+pm_raw<-file.path(pm_input,'class_raw_2023.csv')
+stopifnot(file.info(pm_raw)$size==598707057)
+pm_header<-sub('^\ufeff','',names(fread(pm_raw,nrows=0L)))
+pm_raw23<-fread(pm_raw,select=match(pm_cols,pm_header),
+ colClasses=list(character=c('PROM_GRAL','SIT_FIN_R')))
+setnames(pm_raw23,pm_cols)
+pm_raw23<-unique(pm_raw23[AGNO==2023L & COD_ENSE%in%c(310L,410L,510L,610L,710L,810L,910L)&
+ COD_GRADO%in%1:4])
+pm_raw23[,PROM_GRAL:=as.numeric(sub(',','.',PROM_GRAL,fixed=TRUE))]
+pm_raw23[,raw_present:=TRUE]
+pm_raw_compare<-merge(pm_old[AGNO==2023L],pm_raw23,by=pm_cols,all=TRUE)
+pm_raw_compare[,status:=fcase(is.na(old_present),'Raw only',is.na(raw_present),'Harmonized only',default='Identical record')]
+fwrite(pm_raw_compare[,.(records=.N),by=status],file.path(pm_out,'raw_2023_comparison.csv'))
+print(pm_raw_compare[,.(records=.N),by=status])
+pm_files<-c('panel_performance_2002_2023.rds','rendimiento_grades_2024_2025.rds',
+ 'panel_performance_2002_2025_new.rds','class_raw_2023.csv')
+fwrite(data.table(file=pm_files,bytes=file.info(file.path(pm_input,pm_files))$size,
+ md5=unname(tools::md5sum(file.path(pm_input,pm_files)))),file.path(pm_out,'input_manifest.csv'))
+rm(pm_old,pm_raw23,pm_raw_compare);gc()
+```
+
+```{r f08-performance-reference-candidates}
+# Rebuild historical full-course references from the proposed master. The
+# student's own accepted history and context mapping remain fixed, isolating
+# the historical-mean/maximum issue in the exact-NEM diagnostic.
+library(data.table)
+setDTthreads(4)
+pm_input<-'analysis_for_adversarial_report_output/input/f08'
+pm_out<-'analysis_for_adversarial_report_output/f08/ranking/performance_panel_2026-10-19'
+pm_tables<-fread('analysis_for_adversarial_report_output/f08/ranking/nem_tables_used.csv')
+x<-as.data.table(readRDS(file.path(pm_input,'performance_master_high_school_2026-10-19.rds')))
+x<-unique(x[SIT_FIN_R=='P'&MRUN>0&RBD>0&between(PROM_GRAL,1,7),
+ .(MRUN,grade=COD_GRADO,year=AGNO,rbd=RBD,teaching=COD_ENSE,gpa=PROM_GRAL)])
+pm_make_wide<-function(x,start_year){
+ z<-copy(x[year>=start_year]);z[,first_year:=min(year),by=.(MRUN,grade)]
+ z<-z[year==first_year];z[,earliest_records:=.N,by=.(MRUN,grade)]
+ z<-z[earliest_records==1L]
+ dcast(z[,.(MRUN,grade,year,rbd,teaching,gpa)],MRUN~grade,
+  value.var=c('year','rbd','teaching','gpa'))
+}
+w<-pm_make_wide(x,2010L)
+wide_2002<-pm_make_wide(x,2002L);rm(x);gc()
+saveRDS(w,file.path(pm_input,'performance_master_histories_2026-10-19.rds'))
+saveRDS(wide_2002,file.path(pm_input,'performance_master_histories_from_2002_2026-10-19.rds'))
+w<-w[!is.na(year_4)&between(year_4,2010,2024)]
+w[,g_full:=rowMeans(.SD),.SDcols=paste0('gpa_',1:4)]
+w[is.na(year_1<year_2&year_2<year_3&year_3<year_4)|
+ !(year_1<year_2&year_2<year_3&year_3<year_4),g_full:=NA_real_]
+w[,g_round:=score_round(g_full,2L)]
+hg<-as.data.table(readRDS(file.path(pm_input,'historical_official_gpa.rds')))
+hg[admission_year<2016L,official_gpa:=NA_real_]
+w<-merge(w,hg[,.(MRUN,year_4=grad_year,official_gpa)],by=c('MRUN','year_4'),all.x=TRUE)
+w[,`:=`(baseline_gpa=fcoalesce(official_gpa,g_round),
+ preferred_round=fcoalesce(g_round,official_gpa),preferred_full=fcoalesce(g_full,official_gpa))]
+stopifnot(all(is.finite(w$baseline_gpa)==is.finite(w$preferred_round)),
+ all(is.finite(w$baseline_gpa)==is.finite(w$preferred_full)))
+fwrite(w[,.(graduates=.N,complete_performance=sum(is.finite(g_round)),
+ official_available=sum(is.finite(official_gpa)),both=sum(is.finite(g_round)&is.finite(official_gpa)),
+ different=sum(abs(g_round-official_gpa)>1e-7,na.rm=TRUE),
+ official_only=sum(!is.finite(g_round)&is.finite(official_gpa))),by=.(graduation_year=year_4)],
+ file.path(pm_out,'historical_grade_availability.csv'))
+pm_ref_base<-as.data.table(readRDS(file.path(pm_input,'ranking_first_pass_reference_2026-10-19.rds')))
+pm_aggregate<-function(v){
+ z<-w[is.finite(get(v)),.(n=.N,sum_trunc=sum(get(v)),sum_round=sum(get(v)),sum_full=sum(get(v)),
+ max_trunc=max(get(v)),max_round=max(get(v)),max_full=max(get(v))),
+ by=.(rbd=rbd_4,teaching=teaching_4,exit_year=year_4)]
+ z[,`:=`(first=1L,last=4L,population='exit_context')];z
+}
+pm_refs<-lapply(c('baseline_gpa','g_round','preferred_round','preferred_full'),pm_aggregate)
+names(pm_refs)<-c('source_refresh','performance_only','performance_preferred','performance_full_precision')
+old_hist<-w[,.(MRUN,year_4,old_complete=is.finite(g_round),old_gpa=g_round)]
+w<-wide_2002[!is.na(year_4)&between(year_4,2010,2024)]
+w[,g_round:=score_round(rowMeans(.SD),2L),.SDcols=paste0('gpa_',1:4)]
+w[is.na(year_1<year_2&year_2<year_3&year_3<year_4)|
+ !(year_1<year_2&year_2<year_3&year_3<year_4),g_round:=NA_real_]
+w<-merge(w,hg[,.(MRUN,year_4=grad_year,official_gpa)],by=c('MRUN','year_4'),all.x=TRUE)
+w[,baseline_gpa:=fcoalesce(official_gpa,g_round)]
+pm_refs[['history_from_2002']]<-pm_aggregate('baseline_gpa')
+hist_audit<-merge(old_hist,w[,.(MRUN,year_4,new_complete=is.finite(g_round),new_gpa=g_round)],
+ by=c('MRUN','year_4'),all=TRUE)
+fwrite(hist_audit[,.(old_complete=sum(old_complete==TRUE,na.rm=TRUE),
+ new_complete=sum(new_complete==TRUE,na.rm=TRUE),
+ recovered=sum(new_complete==TRUE&(is.na(old_complete)|old_complete==FALSE),na.rm=TRUE),
+ lost=sum(old_complete==TRUE&(is.na(new_complete)|new_complete==FALSE),na.rm=TRUE),
+ changed=sum(abs(old_gpa-new_gpa)>1e-7,na.rm=TRUE)),by=.(graduation_year=year_4)],
+ file.path(pm_out,'history_extension_audit.csv'))
+saveRDS(pm_refs,file.path(pm_input,'performance_full_course_references_2026-10-19.rds'))
+rm(w,hg,old_hist,wide_2002,hist_audit);gc()
+pm_target<-nem_from_history(as.data.table(readRDS(file.path(pm_input,'ranking_targets.rds'))),pm_tables)
+pm_current<-as.data.table(readRDS(file.path(pm_input,'ranking_first_pass_candidates_2026-10-19.rds')))[
+ variant=='first_pass_reference_only',.(MRUN,grad_year,baseline=candidate)]
+pm_target<-merge(pm_target,pm_current,by=c('MRUN','grad_year'),all.x=TRUE)
+pm_defs<-as.data.table(readRDS(file.path(pm_input,'ranking_short_history_contexts_2026-10-19.rds')))[,
+ .(rbd,teaching,exit_year,first,last,MRUN,grad_year,length,g_full,g_trunc,g_round,nem_group,context_group)]
+pm_specs<-data.table(variant=c('source_refresh','history_from_2002','performance_only',
+ 'performance_preferred_mean','performance_preferred_maximum','performance_preferred_both',
+ 'performance_full_precision_mean','performance_full_precision_maximum','performance_full_precision_both'),
+ reference=c('source_refresh','history_from_2002','performance_only',rep('performance_preferred',3),rep('performance_full_precision',3)),
+ change=c('both','both','both','mean','maximum','both','mean','maximum','both'))
+pm_collapse<-function(r){
+ r<-copy(r);r[,teaching:=ifelse(teaching==310L,310L,410L)]
+ r[population=='exit_context',.(n=sum(n),sum_trunc=sum(sum_trunc),sum_round=sum(sum_round),
+ sum_full=sum(sum_full),max_trunc=max(max_trunc),max_round=max(max_round),max_full=max(max_full)),
+ by=.(rbd,teaching,exit_year,first,last,population)]
+}
+pm_base_context<-ranking_context_benchmarks(pm_defs,pm_collapse(pm_ref_base))
+pm_base_context[,h_round_raw:=h_equal_rounded_cohort_raw]
+pm_results<-list();pm_bench<-list()
+for(k in seq_len(nrow(pm_specs))){
+ spec<-pm_specs[k];cat('Performance reference candidate:',spec$variant,'\n')
+ r<-rbindlist(list(pm_ref_base[!(first==1L&last==4L)],pm_refs[[spec$reference]]),use.names=TRUE)
+ cc<-ranking_context_benchmarks(pm_defs,pm_collapse(r));cc[,h_round_raw:=h_equal_rounded_cohort_raw]
+ cc<-merge(cc,pm_base_context[,.(MRUN,grad_year,first,last,base_h=h_round_raw,
+ base_m=m_round_raw,base_n=reference_n)],by=c('MRUN','grad_year','first','last'),all.x=TRUE)
+ if(spec$change=='mean')cc[,m_round_raw:=base_m]
+ if(spec$change=='maximum')cc[,h_round_raw:=base_h]
+ pm_bench[[spec$variant]]<-cc[,.(variant=spec$variant,contexts=.N,
+ mean_changed=sum(abs(score_round(h_round_raw,2)-score_round(base_h,2))>1e-7,na.rm=TRUE),
+ maximum_changed=sum(abs(score_round(m_round_raw,2)-score_round(base_m,2))>1e-7,na.rm=TRUE),
+ count_changed=sum(reference_n!=base_n,na.rm=TRUE)),by=.(admission_year=grad_year+1L)]
+ a<-ranking_from_contexts(cc,pm_tables,own='round',historical='round',
+ benchmark_precision='round',context_rounding='round')
+ a<-merge(pm_target[,.(MRUN,grad_year,nem_history_proxy)],a,by=c('MRUN','grad_year'),all.x=TRUE)
+ a[,candidate:=pmax(ranking_calculated,nem_history_proxy)]
+ pm_results[[spec$variant]]<-a[,.(MRUN,grad_year,variant=spec$variant,candidate)]
+}
+pm_results<-rbindlist(pm_results,use.names=TRUE)
+saveRDS(pm_results,file.path(pm_input,'performance_reference_candidates_2026-10-19.rds'))
+fwrite(pm_specs,file.path(pm_out,'candidate_definitions.csv'))
+fwrite(rbindlist(pm_bench),file.path(pm_out,'benchmark_changes.csv'))
+```
+
+```{r f08-performance-validation}
+library(data.table)
+pm_input<-'analysis_for_adversarial_report_output/input/f08'
+pm_out<-'analysis_for_adversarial_report_output/f08/ranking/performance_panel_2026-10-19'
+pm_tables<-fread('analysis_for_adversarial_report_output/f08/ranking/nem_tables_used.csv')
+target<-nem_from_history(as.data.table(readRDS(file.path(pm_input,'ranking_targets.rds'))),pm_tables)
+base<-as.data.table(readRDS(file.path(pm_input,'ranking_first_pass_candidates_2026-10-19.rds')))[
+ variant=='first_pass_reference_only',.(MRUN,grad_year,baseline=candidate)]
+target<-merge(target,base,by=c('MRUN','grad_year'),all.x=TRUE)
+diag<-readRDS(file.path(pm_input,'ranking_within_context_diagnostics_2026-10-19.rds'))
+clean<-diag[['Exact context, all six cohorts']]$rows[,.(MRUN,grad_year,clean=TRUE)]
+rm(diag);gc()
+target<-merge(target,clean,by=c('MRUN','grad_year'),all.x=TRUE)
+target[is.na(clean),clean:=FALSE]
+res<-as.data.table(readRDS(file.path(pm_input,'performance_reference_candidates_2026-10-19.rds')))
+stopifnot(!anyDuplicated(res,by=c('MRUN','grad_year','variant')),
+ target[is.finite(baseline)&is.finite(reported_ranking),.N]==1033587L,sum(target$clean)==842942L)
+v<-merge(res,target[,.(MRUN,grad_year,baseline,reported_ranking,nem_recorded,nem_history_proxy,
+ clean,pace12,nem_group)],by=c('MRUN','grad_year'),all.x=TRUE)
+v[,coverage:=fcase(is.finite(baseline)&is.finite(candidate),'Common',
+ is.finite(baseline)&!is.finite(candidate),'Lost',
+ !is.finite(baseline)&is.finite(candidate),'Newly available',default='Neither')]
+v[,`:=`(error=candidate-reported_ranking,baseline_error=baseline-reported_ranking)]
+fwrite(v[,.(n=.N),by=.(variant,admission_year=grad_year+1L,coverage,
+ observed_score=is.finite(reported_ranking),clean)],file.path(pm_out,'candidate_coverage.csv'))
+pm_metrics<-function(e,b){
+ list(n=length(e),exact=mean(e==0),baseline_exact=mean(b==0),
+ mismatches=sum(e!=0),baseline_mismatches=sum(b!=0),mae=mean(abs(e)),baseline_mae=mean(abs(b)),
+ resolved=sum(e==0&b!=0),introduced=sum(e!=0&b==0),
+ improved_abs=sum(abs(e)<abs(b)),worsened_abs=sum(abs(e)>abs(b)),
+ large=sum(abs(e)>5),baseline_large=sum(abs(b)>5))
+}
+vcommon<-v[coverage=='Common'&is.finite(error)]
+fwrite(vcommon[,pm_metrics(error,baseline_error),by=variant],file.path(pm_out,'validation_overall.csv'))
+fwrite(vcommon[,pm_metrics(error,baseline_error),by=.(variant,admission_year=grad_year+1L)],
+ file.path(pm_out,'validation_by_year.csv'))
+fwrite(vcommon[,pm_metrics(error,baseline_error),by=.(variant,clean,nem_group,pace12,
+ admission_year=grad_year+1L)],file.path(pm_out,'validation_strata.csv'))
+fwrite(vcommon[clean==TRUE,pm_metrics(error,baseline_error),by=variant],
+ file.path(pm_out,'validation_clean.csv'))
+fwrite(v[coverage=='Newly available'&is.finite(error),score_metrics(error),by=.(variant,grad_year)],
+ file.path(pm_out,'new_score_validation.csv'))
+source_audit<-fread(file.path(pm_out,'source_record_comparison.csv'))
+if(source_audit[status!='Identical record',sum(records)]==0L){
+ fresh<-v[variant=='source_refresh']
+ stopifnot(all(is.finite(fresh$candidate)==is.finite(fresh$baseline)),
+ fresh[is.finite(candidate),all(candidate==baseline)])
+}
+print(fread(file.path(pm_out,'validation_overall.csv')))
+cat('Exact NEM / complete history / one context / three cohorts / adequate counts:\n')
+print(fread(file.path(pm_out,'validation_clean.csv')))
+```
+
+```{r f08-performance-nem-audit}
+library(data.table)
+pm_input<-'analysis_for_adversarial_report_output/input/f08'
+pm_out<-'analysis_for_adversarial_report_output/f08/ranking/performance_panel_2026-10-19'
+pm_tables<-fread('analysis_for_adversarial_report_output/f08/ranking/nem_tables_used.csv')
+nt<-nem_from_history(as.data.table(readRDS(file.path(pm_input,'ranking_targets.rds'))),pm_tables)[,
+ .(MRUN,grad_year,nem_recorded,baseline_nem=nem_history_proxy)]
+nm_stats<-list();nm_coverage<-list()
+for(start_year in c(2010L,2002L)){
+ f<-if(start_year==2010L)'performance_master_histories_2026-10-19.rds' else
+  'performance_master_histories_from_2002_2026-10-19.rds'
+ w<-as.data.table(readRDS(file.path(pm_input,f)))
+ q<-merge(nt,w,by='MRUN',all.x=TRUE)
+ q[,complete:=is.finite(gpa_1+gpa_2+gpa_3+gpa_4)&
+  year_1<year_2&year_2<year_3&year_3<year_4&year_4==grad_year]
+ q[is.na(complete),complete:=FALSE]
+ q[,new_nem:=nem_from_gpa(score_round((gpa_1+gpa_2+gpa_3+gpa_4)/4,2L),
+  grad_year+1L,ifelse(teaching_4==310L,'A','C'),pm_tables)]
+ q[complete==FALSE,new_nem:=NA_real_]
+ q[,scope:=fcase(is.finite(new_nem)&is.finite(baseline_nem),'Common',
+  is.finite(new_nem)&!is.finite(baseline_nem),'Newly available',
+  !is.finite(new_nem)&is.finite(baseline_nem),'Lost',default='Neither')]
+ nm_coverage[[as.character(start_year)]]<-q[,.(start_year=start_year,graduates=.N),
+  by=.(admission_year=grad_year+1L,scope,observed=is.finite(nem_recorded))]
+ nm_stats[[as.character(start_year)]]<-q[is.finite(new_nem)&is.finite(nem_recorded),
+  .(start_year=start_year,n=.N,exact=mean(new_nem==nem_recorded),
+  baseline_exact=mean(baseline_nem==nem_recorded),
+  resolved=sum(new_nem==nem_recorded&baseline_nem!=nem_recorded,na.rm=TRUE),
+  introduced=sum(new_nem!=nem_recorded&baseline_nem==nem_recorded,na.rm=TRUE)),
+  by=.(admission_year=grad_year+1L,scope)]
+}
+fwrite(rbindlist(nm_stats),file.path(pm_out,'nem_source_validation.csv'))
+fwrite(rbindlist(nm_coverage),file.path(pm_out,'nem_source_coverage.csv'))
+print(rbindlist(nm_stats)[,.(n=sum(n),exact=weighted.mean(exact,n),
+ baseline_exact=weighted.mean(baseline_exact,n),resolved=sum(resolved),introduced=sum(introduced)),
+ by=.(start_year,scope)])
+rm(nt,w,q);gc()
+```
+
+```{r f08-performance-record-differences}
+library(data.table)
+setDTthreads(2)
+pm_input<-'analysis_for_adversarial_report_output/input/f08'
+pm_out<-'analysis_for_adversarial_report_output/f08/ranking/performance_panel_2026-10-19'
+fields<-c('MRUN','AGNO','RBD','COD_ENSE','COD_GRADO','PROM_GRAL','SIT_FIN_R')
+diff_cache<-file.path(pm_input,'performance_source_differences_2026-10-19.rds')
+if(!file.exists(diff_cache)){
+old<-rbindlist(list(readRDS(file.path(pm_input,'ranking_grade_records_2010_2023.rds')),
+ as.data.table(readRDS(file.path(pm_input,'rendimiento_grades_2024_2025.rds')))[
+ COD_ENSE%in%c(310L,410L,510L,610L,710L,810L,910L)&COD_GRADO%in%1:4]),use.names=TRUE)
+old<-unique(old[,..fields])
+new<-as.data.table(readRDS(file.path(pm_input,'performance_master_high_school_2026-10-19.rds')))[AGNO>=2010L,..fields]
+old_only<-fsetdiff(old,new);new_only<-fsetdiff(new,old)
+saveRDS(list(old_only=old_only,new_only=new_only),diff_cache)
+rm(old,new);gc()
+}else{
+ diffs<-readRDS(diff_cache);old_only<-as.data.table(diffs$old_only);new_only<-as.data.table(diffs$new_only)
+ rm(diffs)
+}
+keys<-setdiff(fields,c('PROM_GRAL','SIT_FIN_R'))
+stopifnot(!anyDuplicated(old_only,by=keys),!anyDuplicated(new_only,by=keys))
+old_only[,old_present:=TRUE];new_only[,new_present:=TRUE]
+d<-merge(old_only,new_only,by=keys,all=TRUE,suffixes=c('_old','_new'))
+d[,`:=`(paired=!is.na(old_present)&!is.na(new_present),delta=PROM_GRAL_new-PROM_GRAL_old,
+ status_changed=fcoalesce(SIT_FIN_R_old!=SIT_FIN_R_new,FALSE)|
+ xor(is.na(SIT_FIN_R_old),is.na(SIT_FIN_R_new)),
+ grade_missingness_changed=xor(is.na(PROM_GRAL_old),is.na(PROM_GRAL_new)))]
+d[,grade_changed:=is.finite(delta)&abs(delta)>1e-10]
+d[,`:=`(status_blank_equivalent=(is.na(SIT_FIN_R_old)|trimws(SIT_FIN_R_old)=='')&
+ (is.na(SIT_FIN_R_new)|trimws(SIT_FIN_R_new)==''),
+ passed_status_changed=(SIT_FIN_R_old%chin%'P')!=(SIT_FIN_R_new%chin%'P'))]
+fwrite(d[,.(records=.N,paired=sum(paired),grade_changed=sum(grade_changed),
+ grade_missingness_changed=sum(grade_missingness_changed),status_changed=sum(status_changed),
+ status_blank_equivalent=sum(status_blank_equivalent),passed_status_changed=sum(passed_status_changed),
+ floating_point_only=sum(paired&!grade_changed&!grade_missingness_changed&!status_changed),
+ max_abs_grade_delta=max(c(0,abs(delta)),na.rm=TRUE)),by=AGNO],
+ file.path(pm_out,'source_difference_types.csv'))
+fwrite(d[,.(records=.N),by=.(AGNO,SIT_FIN_R_old,SIT_FIN_R_new,
+ old_status_missing=is.na(SIT_FIN_R_old),new_status_missing=is.na(SIT_FIN_R_new),
+ grade_changed,grade_missingness_changed)],
+ file.path(pm_out,'source_status_changes.csv'))
+fwrite(d[grade_changed==TRUE,.(records=.N),by=.(AGNO,grade_delta=score_round(delta,4L))],
+ file.path(pm_out,'source_grade_changes.csv'))
+print(fread(file.path(pm_out,'source_difference_types.csv')))
+rm(old_only,new_only,d);gc()
+```
+
+```{r f08-performance-panel-report}
+library(data.table)
+pm_out<-'analysis_for_adversarial_report_output/f08/ranking/performance_panel_2026-10-19'
+o<-fread(file.path(pm_out,'validation_overall.csv'))
+c<-fread(file.path(pm_out,'validation_clean.csv'))
+y<-fread(file.path(pm_out,'validation_by_year.csv'))
+d<-fread(file.path(pm_out,'source_difference_types.csv'))
+r<-fread(file.path(pm_out,'source_record_comparison.csv'))
+n<-fread(file.path(pm_out,'nem_source_validation.csv'))
+nc<-fread(file.path(pm_out,'nem_source_coverage.csv'))
+cov<-fread(file.path(pm_out,'candidate_coverage.csv'))
+hc<-fread(file.path(pm_out,'history_extension_audit.csv'))
+full<-fread(file.path(pm_out,'new_master_coverage.csv'))
+nm<-n[,.(n=sum(n),exact=weighted.mean(exact,n),baseline_exact=weighted.mean(baseline_exact,n),
+ resolved=sum(resolved),introduced=sum(introduced)),by=.(start_year,scope)]
+fwrite(nm,file.path(pm_out,'nem_validation_summary.csv'))
+stopifnot(all(o$exact<=o$baseline_exact+1e-12),all(c$exact<=c$baseline_exact+1e-12),
+ o[variant=='source_refresh',resolved==0L&introduced==0L],
+ sum(d$records)==1365L,all(d$records==d$status_blank_equivalent),
+ sum(d$grade_changed+d$grade_missingness_changed+d$passed_status_changed)==0L,
+ all(o$mismatches-o$baseline_mismatches==o$introduced-o$resolved),
+ nm[start_year==2010L&scope=='Common',resolved==0L&introduced==0L])
+fmt<-function(x)format(x,big.mark=',',scientific=FALSE,trim=TRUE)
+labels<-c(source_refresh='Refresh from newer master; current rule',
+ history_from_2002='Extend historical records back to 2002',performance_only='Performance grades only',
+ performance_preferred_mean='Prefer performance grades for mean only',
+ performance_preferred_maximum='Prefer performance grades for maximum only',
+ performance_preferred_both='Prefer performance grades for both',
+ performance_full_precision_mean='Unrounded performance GPA for mean only',
+ performance_full_precision_maximum='Unrounded performance GPA for maximum only',
+ performance_full_precision_both='Unrounded performance GPA for both')
+tab<-merge(o,c[,.(variant,clean_n=n,clean_exact=exact,clean_baseline_exact=baseline_exact)],by='variant')
+tab<-tab[match(names(labels),variant)]
+rows<-vapply(seq_len(nrow(tab)),function(i)sprintf('| %s | %s | %.4f%% | %.4f%% | %s | %s |',
+ labels[tab$variant[i]],fmt(tab$n[i]),100*tab$exact[i],100*tab$clean_exact[i],
+ fmt(tab$resolved[i]),fmt(tab$introduced[i])),character(1))
+yr<-y[variant%in%c('source_refresh','performance_only','performance_preferred_both','history_from_2002')]
+yr[,label:=labels[variant]]
+fwrite(yr,file.path(pm_out,'selected_year_comparison.csv'))
+raw<-fread(file.path(pm_out,'raw_2023_comparison.csv'))
+perf<-o[variant=='performance_only'];extension<-o[variant=='history_from_2002']
+base<-o[variant=='source_refresh'];cb<-c[variant=='source_refresh'];cp<-c[variant=='performance_only']
+hist_recent<-hc[graduation_year%in%2017:2024]
+report<-c('# Performance-panel audit and benchmark tests — October 19, 2026',
+ '', '**Decision: retain the existing reconstruction.** The national performance data already feed the NEM/Ranking calculations. Refreshing the source with the newer full panel makes no difference to validated scores. Extending grade histories to 2002 and giving performance-derived historical GPAs priority over historical admissions GPAs both worsen replication. Every candidate is saved separately; no production score delivery or manuscript estimate is overwritten.',
+ '', '## What was checked',
+ '', '- The author\'s [MINEDUC collection](https://datosabiertos.mineduc.cl/rendimiento-por-estudiante-2/) currently lists annual performance downloads for 2002–2025. The code already reads `panel_performance_2002_2023.rds` plus `rendimiento_grades_2024_2025.rds`, including students without college-admission records. The earlier panel is assembled from the shared `/SAE - Datos/Rendimiento` files; `1a_data_processing_primary_secondary.Rmd` documents that source.',
+ sprintf('- A newer shared Dropbox file, `/Grade Inflation/Data/Master/panel_performance_2002_2025.rds`, was independently downloaded and verified against Dropbox\'s byte count and content hash. It has %s rows covering %d–%d, with annual GPA, grade, teaching code, school and final status. Its complete schema and coverage by year/teaching code/grade are archived. These are annual grade averages across school levels, not subject-level transcripts.',fmt(sum(full$records)),min(full$AGNO),max(full$AGNO)),
+ sprintf('- On the common 2010–2025 regular-high-school domain, %s records match literally on all seven scoring fields. The remaining %s paired records have **identical grades and passed-grade status**; the only changes are blank/whitespace versus missing final-status labels. They supply no additional passed-grade information. `source_difference_types.csv` and `source_status_changes.csv` document this by year.',fmt(r[status=='Identical record',sum(records)]),fmt(sum(d$records))),
+ sprintf('- An additional direct check against the raw 2023 CSV finds %s literally identical high-school records and %s unmatched records on each side. Raw source metadata and file hashes are retained. The broader master comparison separately establishes that all observed master/current-input differences are non-passing blank-status representations.',fmt(raw[status=='Identical record',records]),fmt(raw[status=='Raw only',records])),
+ '', '## NEM results',
+ '', sprintf('Rebuilding first-passed histories from the newer master, using the existing 2010 start, preserves NEM agreement at **%.4f%%** on the same **%s** previously reconstructible observed-score students. It resolves no existing mismatches and introduces none. There are %s newly reconstructible observed-score cases under first-passed recovery, but only %.2f%% match. This repeats the earlier poor validation of own-history recovery; they are not added to the accepted delivery.',
+ 100*nm[start_year==2010L&scope=='Common',exact],fmt(nm[start_year==2010L&scope=='Common',n]),
+ fmt(nm[start_year==2010L&scope=='Newly available',n]),100*nm[start_year==2010L&scope=='Newly available',exact]),
+ '', sprintf('Allowing own histories to start in 2002 gives %.4f%% exact NEM versus %.4f%% for the baseline on the same %s cases: %s mismatches resolved and %s introduced. It also loses %s previously calculable observed-score cases. Older repeated passed records can change the selected first completion or create chronology conflicts; additional old records therefore do not automatically improve a student\'s usable history.',
+ 100*nm[start_year==2002L&scope=='Common',exact],100*nm[start_year==2002L&scope=='Common',baseline_exact],
+ fmt(nm[start_year==2002L&scope=='Common',n]),fmt(nm[start_year==2002L&scope=='Common',resolved]),
+ fmt(nm[start_year==2002L&scope=='Common',introduced]),fmt(nc[start_year==2002L&scope=='Lost'&observed==TRUE,sum(graduates)])),
+ '', '## Ranking: isolate the historical mean and maximum',
+ '', 'The target students\' own accepted histories, NEM calculation, narrow HHTT context rule, score formula and rounding remain fixed. The tests change only the historical full-course references. Partial-context references retain their previous definition. This directly addresses the exact-NEM, one-context diagnostic; it is not a new annual-score procedure.',
+ '', '- **Source refresh:** reconstruct the current historical benchmark from the newer master, retaining historical admissions GPA first and performance GPA as fallback.',
+ '- **2002 extension:** use all available earlier high-school records when selecting historical peers\' first passed grades, retaining the current GPA-source priority.',
+ '- **Performance only:** use the rounded average of all four performance grades, excluding historical peers whose usable GPA can only be recovered from admissions records. This can reduce reference coverage.',
+ '- **Performance preferred:** reverse GPA-source priority, using historical admissions GPA only when performance GPA is unavailable. The usable historical roster is preserved relative to the source-refresh rule. Separately replace the mean, maximum, or both.',
+ '- **Full precision:** use the unrounded four-grade performance average before constructing the historical benchmark, with the same admissions fallback. Final benchmark and score rounding remain unchanged. This is a precision sensitivity, not evidence that the official process uses unrounded averages.',
+ '', '| Candidate | Common validation N | Ranking exact | Exact-NEM/full-history subset exact | Errors resolved | Errors introduced |',
+ '|---|---:|---:|---:|---:|---:|',rows,
+ '', sprintf('The current benchmark matches **%.4f%%** of %s observed Ranking scores; in the exact-NEM/one-context/three-cohort/adequate-count subset it matches **%.4f%%** of %s. The newer master reproduces these results unchanged.',100*base$exact,fmt(base$n),100*cb$exact,fmt(cb$n)),
+ '', sprintf('**Common-sample caveat:** performance-only references match %.4f%% versus %.4f%% for the baseline on the same %s students, and lose %s previously calculable observed scores. In the clean subset the corresponding comparison is %.4f%% versus %.4f%% on %s students. All other rows retain the full common validation sample. Coverage tables distinguish common, lost, newly available and unavailable cases; lower coverage must not be mistaken for better accuracy.',
+ 100*perf$exact,100*perf$baseline_exact,fmt(perf$n),
+ fmt(cov[variant=='performance_only'&coverage=='Lost'&observed_score==TRUE,sum(n)]),
+ 100*cp$exact,100*cp$baseline_exact,fmt(cp$n)),
+ '', sprintf('The 2002 extension resolves %s Ranking errors and introduces %s, a net increase of %s. Among the relevant 2017–2024 historical graduation cohorts, it recovers only %s complete performance histories, loses %s and changes %s previously complete GPAs. It substantially fills earlier cohorts, but those earlier graduates generally do not enter the full-course three-cohort references for admission 2021–2026.',
+ fmt(extension$resolved),fmt(extension$introduced),fmt(extension$introduced-extension$resolved),
+ fmt(sum(hist_recent$recovered)),fmt(sum(hist_recent$lost)),fmt(sum(hist_recent$changed))),
+ '', sprintf('Performance-only references worsen exact matching in %d of the six admission years. Detailed year comparisons, error sizes, PACE-school strata, modality and the clean-subset breakdown are saved in `validation_by_year.csv`, `selected_year_comparison.csv` and `validation_strata.csv`. These are exploratory validation comparisons, not held-out evidence for a newly selected rule.',
+ y[variant=='performance_only',sum(exact<baseline_exact)]),
+ '', '## Interpretation and next step',
+ '', 'The residual gap is not reduced by obtaining this more recent master, adding pre-2010 records, or substituting performance-derived GPA for historical admissions GPA. These tests support retaining the existing GPA reconciliation and show that lacking the national performance panel was not the obstacle. They do not establish which DEMRE reference roster, grade version or arithmetic convention explains the remaining within-context curve discrepancies.',
+ '', 'The next useful task is to compare the shared GPA-to-Ranking curve with independently constructed historical means/maxima and exact operational reference definitions, particularly in the exact-NEM clean sample. Do not select a GPA source separately for each student or school based on whether it matches observed Ranking. Keep the observed scores and previous proxy deliveries intact.',
+ '', '## Reproduce and resume',
+ '', 'All statistical logic is in `code/analysis_for_adversarial_report.Rmd`. From `code/`, run `f08-score-reconstruction-functions`, `f08-performance-source-audit`, `f08-performance-reference-candidates`, `f08-performance-validation`, `f08-performance-nem-audit`, `f08-performance-record-differences`, then `f08-performance-panel-report`. The full manuscript notebook need not be knitted. The source-difference cache is tied to the input manifest; invalidate it if replacing any source file.',
+ '', 'New private inputs include the downloaded master, projected high-school records, histories starting in 2010 and 2002, full-course reference candidates, student-level candidate scores and source-difference rows. They remain in ignored `input/f08/`. Only aggregate outputs, source metadata and this report are shared. `source_provenance.json` records the Dropbox revision/content hash; `input_manifest.csv` records local byte counts and MD5s. No temporary download URL is retained in shared artifacts.',
+ '', 'Checks cover source schema and size/hash, unique score keys, expected validation counts, historical-roster equality for preferred-source variants, non-overlapping coverage categories, exact-NEM clean-sample size, mismatch accounting and blank-status versus grade differences. Existing NEM/Ranking deliveries, eligibility measures and manuscript estimates are unchanged. F08.3 remains open.')
+writeLines(report,file.path(pm_out,'performance_panel_report_2026-10-19.md'))
+cat('Performance-panel report and checks completed.\n')
+```

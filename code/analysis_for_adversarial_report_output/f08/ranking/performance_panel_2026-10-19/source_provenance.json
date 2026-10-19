@@ -1,0 +1,19 @@
+{
+  "public_collection": "https://datosabiertos.mineduc.cl/rendimiento-por-estudiante-2/",
+  "new_master": {
+    "path_display": "/Grade Inflation/Data/Master/panel_performance_2002_2025.rds",
+    "id": "id:5cwGG9c7om8AAAAAAAIaFQ",
+    "revision": "0165ddb1e47f42e000000032f67d551",
+    "client_modified": "2026-10-13T00:40:49Z",
+    "server_modified": "2026-10-15T06:25:47Z",
+    "size": 508450634,
+    "dropbox_content_hash": "69db9dde8d61306b7a7194d99f184e1f621fa442be49fc30340478f758a3d25d"
+  },
+  "raw_2023": {
+    "path_display": "/SAE - Datos/Rendimiento/Rendimiento-2023/Rendimiento por estudiante 2023.csv",
+    "id": "id:L0STPQ6hYTsAAAAAACXPPw",
+    "revision": "0162ac1d01fa73300000001e7c4f820",
+    "size": 598707057
+  },
+  "note": "All binary and row-level records are retained privately under input/f08; no download links are stored here."
+}

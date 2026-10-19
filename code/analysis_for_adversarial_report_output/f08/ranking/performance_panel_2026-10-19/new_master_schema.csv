@@ -1,0 +1,11 @@
+column,class
+AGNO,integer
+RBD,integer
+COD_DEPE,integer
+MRUN,integer
+COD_ENSE,integer
+COD_GRADO,integer
+PROM_GRAL,numeric
+ASISTENCIA,integer
+SIT_FIN_R,character
+NIVEL,character

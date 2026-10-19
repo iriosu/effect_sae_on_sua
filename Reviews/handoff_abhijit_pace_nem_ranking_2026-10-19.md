@@ -2,7 +2,17 @@
 
 Prepared October 19, 2026, for continuing the F08 work with Ignacio. The main unresolved task is to establish whether SAE reduced PACE admission through lower attendance at participating schools, lower academic qualification, or both. We now have official school rosters, an audit of the recorded PACE variables, and reconstructed scores for many graduates without recorded NEM/Ranking. **The Ranking reconstruction remains provisional; full academic eligibility and the corresponding mechanism estimates are not finished.**
 
-## Latest diagnostic: same context and actual classroom
+## Latest test: national performance panel and full histories
+
+The author's suggested source was checked against the [MINEDUC collection](https://datosabiertos.mineduc.cl/rendimiento-por-estudiante-2/) and a newly downloaded `/Grade Inflation/Data/Master/panel_performance_2002_2025.rds`. The existing calculation already uses the 2002–2023 panel plus 2024–2025 grades. The [performance-panel report](../code/analysis_for_adversarial_report_output/f08/ranking/performance_panel_2026-10-19/performance_panel_report_2026-10-19.md) records source provenance, comparison checks, NEM tests and nine Ranking candidates.
+
+**Retain the existing reconstruction.** On the common 2010–2025 high-school domain, all grades and passed-grade classifications agree; 1,365 literal record differences concern blank/missing final-status labels only. Source refresh leaves NEM at 98.9797% exact on 1,052,561 existing cases and Ranking at 90.7134% on 1,033,587 cases. Extending historical records back to 2002 fixes 22 Ranking errors but introduces 115. Performance-only historical references fall to 87.9177% exact versus 90.7258% for the baseline on their common 1,033,029 cases, and lose 558 previously calculable observed scores. In the exact-NEM/full-history clean subset, they fall to 89.1542% versus 92.5633% on 842,521 cases. Reversing the historical GPA-source priority on a preserved roster, separately changing the mean or maximum, and using unrounded performance GPAs also worsen matching.
+
+Own-history recovery still validates poorly: the 92 newly reconstructible observed NEM cases match only 56.52%. Extending own histories to 2002 resolves 14 NEM mismatches, introduces 46 and loses four previously calculable observed cases. None of these new candidates replaces existing deliveries. Prioritize the shared score curve and operational reference/arithmetic definitions; adding this panel or pre-2010 records does not solve the residual gap. F08.3 remains open.
+
+Run `f08-score-reconstruction-functions`, followed by `f08-performance-source-audit`, `f08-performance-reference-candidates`, `f08-performance-validation`, `f08-performance-nem-audit`, `f08-performance-record-differences` and `f08-performance-panel-report`. The new master, projected grades, histories, source-difference records and candidate scores remain private under ignored `input/f08/`; the report, aggregate tables and source/hash manifests are shared. The source-difference cache must be invalidated if replacing its input files.
+
+## Earlier diagnostic: same context and actual classroom
 
 The [within-context report](../code/analysis_for_adversarial_report_output/f08/ranking/within_context_2026-10-19/within_context_report_2026-10-19.md) restricts to 842,942 graduates with exact independently reconstructed NEM, complete four-grade histories, one accepted context, three reference cohorts and adequate school/modality counts. Exact contexts hold all four school IDs, attendance years and teaching codes fixed. Raw 2023 grades recover actual classroom letter/session for all 148,084 clean-sample graduates that year; earlier classroom identifiers are not used.
 
