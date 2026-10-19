@@ -3433,3 +3433,426 @@ final_report<-c('# Iterative Ranking and NEM reconstruction audit',
 writeLines(final_report,file.path(v2_out,'ranking_iterative_report_2026-10-19.md'))
 print(final_refined);print(final_clean_summary);print(score_coverage)
 ```
+
+## Follow-up: remaining score discrepancies by year and context
+
+The following diagnostics use the delivered rounded-cohort candidate. They do
+not overwrite score imputations or manuscript estimates. Admission year is
+school graduation year plus one; calendar-year and cohort effects are descriptive.
+
+```{r f08-score-followup-patterns}
+library(data.table)
+setDTthreads(4)
+fu_input <- 'analysis_for_adversarial_report_output/input/f08'
+fu_out <- 'analysis_for_adversarial_report_output/f08/ranking/followup_2026-10-19'
+dir.create(fu_out, recursive=TRUE, showWarnings=FALSE)
+fu_tables <- fread('analysis_for_adversarial_report_output/f08/ranking/nem_tables_used.csv')
+fu_scores <- as.data.table(readRDS(file.path(fu_input,'score_reconstruction_records.rds')))
+fu_target <- as.data.table(readRDS(file.path(fu_input,'ranking_targets.rds')))
+fu <- merge(fu_scores,fu_target[,c('MRUN','grad_year','minimum_ranking','reported_gpa',
+ 'reported_grad_year','one_school',paste0('year_',1:4),paste0('rbd_',1:4),
+ paste0('teaching_',1:4),paste0('gpa_',1:4)),with=FALSE],by=c('MRUN','grad_year'))
+stopifnot(nrow(fu)==1286127L,!anyDuplicated(fu,by=c('MRUN','grad_year')))
+fu[,`:=`(admission_year=grad_year+1L,nem_error=nem_history_proxy-nem_recorded,
+ ranking_error=ranking_proxy_refined-ranking_recorded,
+ common_old=!is.na(old_proxy)&!is.na(ranking_proxy_refined)&!is.na(ranking_recorded),
+ regular_progress=year_1==grad_year-3L & year_2==grad_year-2L & year_3==grad_year-1L,
+ stable_modality=(teaching_1==310L)==(teaching_2==310L) &
+ (teaching_2==310L)==(teaching_3==310L) & (teaching_3==310L)==(teaching_4==310L))]
+fu[,nem_exact:=nem_error==0]
+fu[,recorded_bonus:=fcase(is.na(ranking_recorded)|is.na(nem_recorded),'Unavailable',
+ ranking_recorded==nem_recorded,'At NEM floor',ranking_recorded>nem_recorded,'Above NEM floor',
+ default='Below NEM')]
+fu_context <- as.data.table(readRDS(file.path(fu_input,'ranking_contexts_cohort_averaging.rds')))
+fu_context <- fu_context[population=='exit_context']
+fu_ref <- fu_context[,.(min_reference_n=min(reference_n),min_generations=min(reference_generations),
+ max_generations=max(reference_generations),context_count=.N,
+ min_h= min(h_equal_rounded_cohort_raw),max_m=max(m_round_raw)),by=.(MRUN,grad_year)]
+fu <- merge(fu,fu_ref,by=c('MRUN','grad_year'),all.x=TRUE)
+fu[,reference_size:=cut(min_reference_n,c(-Inf,29,59,149,299,Inf),
+ labels=c('<30','30-59','60-149','150-299','300+'))]
+fu[,clean_one_context:=n_contexts==1L & nem_exact==TRUE & regular_progress==TRUE &
+ min_generations==3L & complete_history==TRUE]
+fu_metrics <- function(e){
+ e<-e[is.finite(e)];n<-length(e)
+ if(!n)return(list(n=0L,mismatches=0L,exact=NA_real_,within1=NA_real_,within5=NA_real_,
+  mae=NA_real_,bias=NA_real_,over=NA_real_,under=NA_real_,p95=NA_real_,large_errors=0L,total_abs_error=0))
+ list(n=n,mismatches=sum(e!=0),exact=mean(e==0),within1=mean(abs(e)<=1),within5=mean(abs(e)<=5),
+ mae=mean(abs(e)),bias=mean(e),over=mean(e>0),under=mean(e<0),p95=as.numeric(quantile(abs(e),.95)),
+ large_errors=sum(abs(e)>5),total_abs_error=sum(abs(e)))
+}
+fu_year<-rbindlist(lapply(c('nem_error','ranking_error'),function(v)
+ fu[,c(list(score=v),fu_metrics(get(v))),by=admission_year]))
+fu_year[,`:=`(share_all_mismatches=mismatches/sum(mismatches),
+ share_all_large_errors=large_errors/sum(large_errors),
+ share_total_absolute_error=total_abs_error/sum(total_abs_error)),by=score]
+setorder(fu_year,score,admission_year)
+fwrite(fu_year,file.path(fu_out,'year_accuracy.csv'))
+fwrite(fu[common_old==TRUE,fu_metrics(ranking_error),by=admission_year],
+ file.path(fu_out,'year_common_sample_accuracy.csv'))
+fu_groups<-list()
+for(v in c('nem_error','ranking_error'))for(g in c('pace12','nem_group','teaching_4','n_contexts',
+ 'regular_progress','stable_modality','nem_exact','recorded_bonus','reference_size','min_generations',
+ 'clean_one_context')){
+ a<-fu[,fu_metrics(get(v)),by=c('admission_year',g)]
+ setnames(a,g,'group_value');a[,group_value:=as.character(group_value)]
+ a[,`:=`(score=v,group_variable=g)];fu_groups[[paste(v,g)]]<-a
+}
+fu_groups<-rbindlist(fu_groups,use.names=TRUE)
+fwrite(fu_groups,file.path(fu_out,'year_group_accuracy.csv'))
+fwrite(fu[,fu_metrics(ranking_error),by=.(admission_year,pace12,nem_group,n_contexts,nem_exact)],
+ file.path(fu_out,'year_pace_modality_context_accuracy.csv'))
+fwrite(fu[,.(graduates=.N,nem_observed=sum(!is.na(nem_recorded)),
+ nem_reconstructible=sum(!is.na(nem_history_proxy)),nem_both=sum(is.finite(nem_error)),
+ ranking_observed=sum(!is.na(ranking_recorded)),ranking_reconstructible=sum(!is.na(ranking_proxy_refined)),
+ ranking_both=sum(is.finite(ranking_error)),nem_missing_filled=sum(nem_is_imputed),
+ ranking_missing_filled=sum(ranking_is_imputed)),by=.(admission_year,pace12)],
+ file.path(fu_out,'year_coverage.csv'))
+# Aggregated concentration, with no school IDs in released files.
+fu_school<-fu[is.finite(ranking_error),.(n=.N,bad=sum(ranking_error!=0),
+ large=sum(abs(ranking_error)>5),abs_sum=sum(abs(ranking_error)),mean_error=mean(ranking_error)),
+ by=.(RBD,admission_year,pace12)]
+fu_concentration<-rbindlist(lapply(c(.01,.05,.1,.2),function(q){
+ z<-copy(fu_school);setorder(z,admission_year,-abs_sum)
+ z[,top:=seq_len(.N)<=ceiling(.N*q),by=admission_year]
+ z[,.(top_school_share=q,school_cohorts=.N,selected=sum(top),
+ student_share=sum(n[top])/sum(n),mismatch_share=sum(bad[top])/sum(bad),
+ large_error_share=sum(large[top])/sum(large),absolute_error_share=sum(abs_sum[top])/sum(abs_sum)),
+ by=admission_year]
+}))
+fwrite(fu_concentration,file.path(fu_out,'year_school_error_concentration.csv'))
+# Rule-stage diagnostics only: never use recorded NEM as a predictor for imputation.
+fu[,floor_with_recorded_nem_error:=pmax(ranking_proxy_refined,nem_recorded)-ranking_recorded]
+fwrite(fu[is.finite(ranking_error)&is.finite(nem_error),
+ .(n=.N,ranking_exact=mean(ranking_error==0),nem_exact=mean(nem_error==0),
+ ranking_exact_if_floor_recorded_nem=mean(floor_with_recorded_nem_error==0),
+ mismatches_resolved_by_floor=sum(ranking_error!=0 & floor_with_recorded_nem_error==0)),
+ by=.(admission_year,pace12)],file.path(fu_out,'nem_floor_diagnostic.csv'))
+# NEM-inverted GPA is a diagnostic outcome, not an independent candidate.
+fu_inv<-fu_tables[,.(grad_year,nem_group,nem_recorded=score,official_gpa_from_nem=gpa)]
+stopifnot(!anyDuplicated(fu_inv,by=c('grad_year','nem_group','nem_recorded')))
+fu<-merge(fu,fu_inv,by=c('grad_year','nem_group','nem_recorded'),all.x=TRUE)
+fu[,gpa_difference_hundredths:=round(100*(gpa_from_history-official_gpa_from_nem))]
+fwrite(fu[is.finite(nem_error),.N,by=.(admission_year,pace12,nem_exact,
+ gpa_difference_hundredths)],file.path(fu_out,'nem_implied_gpa_differences.csv'))
+# Offer comparisons are conditional validation, not causal effects in always-observed students.
+fu_panel<-as.data.table(readRDS(file.path(fu_input,'pace_finalized_panel.rds')))
+fu_lottery<-merge(fu_panel[,.(MRUN,grad_year,YEAR,CHANCE_GROUP,OFFER)],
+ fu[,.(MRUN,grad_year,ranking_error,nem_error,ranking_recorded,ranking_proxy_refined,minimum_ranking)],
+ by=c('MRUN','grad_year'),all.x=TRUE)
+fwrite(fu_lottery[,c(list(score='Ranking'),fu_metrics(ranking_error)),by=.(YEAR,OFFER)],
+ file.path(fu_out,'lottery_offer_validation.csv'))
+saveRDS(fu,file.path(fu_input,'score_followup_diagnostic_records_2026-10-19.rds'))
+fwrite(data.table(input=c('score_reconstruction_records.rds','ranking_targets.rds',
+ 'ranking_contexts_cohort_averaging.rds','pace_finalized_panel.rds'),
+ md5=unname(tools::md5sum(file.path(fu_input,c('score_reconstruction_records.rds','ranking_targets.rds',
+ 'ranking_contexts_cohort_averaging.rds','pace_finalized_panel.rds'))))),file.path(fu_out,'input_provenance.csv'))
+print(fu_year)
+print(fu[common_old==TRUE,fu_metrics(ranking_error),by=pace12])
+print(fu[is.finite(ranking_error),fu_metrics(ranking_error),by=.(pace12,nem_group,n_contexts)])
+```
+
+```{r f08-score-followup-context-hypothesis}
+# Test the data-driven hypothesis of a within-school HC-to-TP transition.
+# Uniform rules use observed histories only; neither Ranking nor PACE status
+# selects a person's rule. Existing delivered scores remain unchanged.
+fu_input <- 'analysis_for_adversarial_report_output/input/f08'
+fu_out <- 'analysis_for_adversarial_report_output/f08/ranking/followup_2026-10-19'
+fu_tables <- fread('analysis_for_adversarial_report_output/f08/ranking/nem_tables_used.csv')
+fu <- readRDS(file.path(fu_input,'score_followup_diagnostic_records_2026-10-19.rds'))
+fu_target <- nem_from_history(as.data.table(readRDS(file.path(fu_input,'ranking_targets.rds'))),fu_tables)
+for(j in 1:4)set(fu_target,j=paste0('teaching_',j),
+ value=ifelse(fu_target[[paste0('teaching_',j)]]==310L,310L,410L))
+fu_annual <- copy(readRDS(file.path(fu_input,'ranking_reference_historical_gpa_v5.rds')))
+fu_annual[,teaching:=ifelse(teaching==310L,310L,410L)]
+fu_annual<-fu_annual[,.(n=sum(n),sum_trunc=sum(sum_trunc),sum_round=sum(sum_round),
+ sum_full=sum(sum_full),max_trunc=max(max_trunc),max_round=max(max_round),max_full=max(max_full)),
+ by=.(rbd,teaching,exit_year,first,last,population)]
+# Combine contiguous years at the same school; retain final context's modality
+# when choosing historical peers and conversion table, rather than pooling HC/TP.
+fu_school_context<-ranking_context_benchmarks(
+ ranking_student_contexts(fu_target,split_teaching=FALSE),fu_annual)
+fu_school_context[,h_round_raw:=h_equal_rounded_cohort_raw]
+fu_school_candidate<-ranking_from_contexts(fu_school_context,fu_tables,own='round',
+ historical='round',benchmark_precision='round',context_rounding='round')
+setnames(fu_school_candidate,'ranking_calculated','school_context_candidate')
+fu_hyp<-merge(fu,fu_school_candidate[,.(MRUN,grad_year,school_context_candidate)],
+ by=c('MRUN','grad_year'),all.x=TRUE)
+fu_hyp[,school_context_candidate:=pmax(school_context_candidate,nem_history_proxy)]
+fu_hyp[,pattern:=paste(ifelse(teaching_1==310,'H','T'),ifelse(teaching_2==310,'H','T'),
+ ifelse(teaching_3==310,'H','T'),ifelse(teaching_4==310,'H','T'),sep='')]
+fu_hyp[,target_transition:=one_school==TRUE & pattern=='HHTT']
+fu_hyp[,targeted_candidate:=fifelse(target_transition==TRUE,
+ school_context_candidate,ranking_proxy_refined)]
+fu_hyp[,`:=`(school_error=school_context_candidate-ranking_recorded,
+ targeted_error=targeted_candidate-ranking_recorded)]
+fu_hyp_results<-rbindlist(lapply(c('ranking_error','school_error','targeted_error'),function(v){
+ z<-fu_hyp[is.finite(ranking_error)&is.finite(school_error)]
+ rbindlist(list(z[,c(list(variant=v,group='All'),fu_metrics(get(v))),by=admission_year],
+ z[,c(list(variant=v),fu_metrics(get(v))),by=.(admission_year,group=paste0('PACE=',pace12))],
+ z[,c(list(variant=v),fu_metrics(get(v))),by=.(admission_year,group=paste0('Target transition=',target_transition))]),use.names=TRUE)
+}),use.names=TRUE)
+stopifnot(!anyDuplicated(fu_hyp_results,by=c('admission_year','variant','group')),
+ fu_hyp_results[group=='All',all(n<=200000L)],
+ all(fu_hyp_results$variant %in% c('ranking_error','school_error','targeted_error')))
+fwrite(fu_hyp_results,file.path(fu_out,'context_hypothesis_same_sample.csv'))
+fwrite(fu_hyp[,.(total=.N,old_available=sum(is.finite(ranking_proxy_refined)),
+ school_available=sum(is.finite(school_context_candidate)),
+ gained=sum(!is.finite(ranking_proxy_refined)&is.finite(school_context_candidate)),
+ lost=sum(is.finite(ranking_proxy_refined)&!is.finite(school_context_candidate))),
+ by=.(admission_year,pace12,target_transition)],file.path(fu_out,'context_hypothesis_coverage.csv'))
+fwrite(fu_hyp[is.finite(ranking_error)&is.finite(school_error),
+ .(n=.N,old_mismatches=sum(ranking_error!=0),new_mismatches=sum(school_error!=0),
+ resolved=sum(ranking_error!=0 & school_error==0),introduced=sum(ranking_error==0 & school_error!=0),
+ improved=sum(abs(school_error)<abs(ranking_error)),worsened=sum(abs(school_error)>abs(ranking_error))),
+ by=.(admission_year,pace12,target_transition)],file.path(fu_out,'context_hypothesis_transitions.csv'))
+fwrite(fu_hyp[is.finite(ranking_error),fu_metrics(ranking_error),
+ by=.(admission_year,pace12,one_school,pattern)],file.path(fu_out,'year_curriculum_sequence_accuracy.csv'))
+saveRDS(fu_hyp[,.(MRUN,grad_year,ranking_proxy_refined,school_context_candidate,
+ targeted_candidate,target_transition,pattern)],
+ file.path(fu_input,'ranking_context_hypothesis_2026-10-19.rds'))
+# Fit comparison is retrospective and does not certify the historical official rule.
+print(fu_hyp[is.finite(ranking_error)&is.finite(school_error),
+ .(n=.N,old_exact=mean(ranking_error==0),new_exact=mean(school_error==0),
+ old_mae=mean(abs(ranking_error)),new_mae=mean(abs(school_error))),by=.(pace12,target_transition)])
+print(fu_hyp_results[group=='All'])
+```
+
+```{r f08-score-followup-validation}
+# Re-read saved candidates so validation does not depend on transient objects.
+fu_input <- 'analysis_for_adversarial_report_output/input/f08'
+fu_out <- 'analysis_for_adversarial_report_output/f08/ranking/followup_2026-10-19'
+fu<-readRDS(file.path(fu_input,'score_followup_diagnostic_records_2026-10-19.rds'))
+hyp<-readRDS(file.path(fu_input,'ranking_context_hypothesis_2026-10-19.rds'))
+hyp[,ranking_proxy_refined:=NULL]
+fu<-merge(fu,hyp,by=c('MRUN','grad_year'),all.x=TRUE)
+fu[,candidate_error:=targeted_candidate-ranking_recorded]
+stopifnot(!anyDuplicated(fu,by=c('MRUN','grad_year')),
+ fu[is.finite(targeted_candidate),all(targeted_candidate>=nem_history_proxy)],
+ fu[is.finite(targeted_candidate),all(targeted_candidate<=ifelse(grad_year<=2021L,850,1000))])
+fu[,comparison_sample:=is.finite(ranking_error)&is.finite(candidate_error)]
+fu_validation<-rbindlist(lapply(c('ranking_error','candidate_error'),function(v){
+ z<-fu[comparison_sample==TRUE]
+ rbindlist(list(z[,c(list(variant=v,group='All'),fu_metrics(get(v))),by=admission_year],
+ z[,c(list(variant=v),fu_metrics(get(v))),by=.(admission_year,group=paste0('PACE=',pace12))]),use.names=TRUE)
+}),use.names=TRUE)
+fwrite(fu_validation,file.path(fu_out,'targeted_candidate_validation.csv'))
+fwrite(fu[comparison_sample==TRUE,fu_metrics(candidate_error),
+ by=.(admission_year,pace12,nem_group,target_transition,nem_exact,min_generations,reference_size)],
+ file.path(fu_out,'targeted_candidate_residual_groups.csv'))
+fwrite(fu[comparison_sample==TRUE,.(n=.N,old_errors=sum(ranking_error!=0),
+ candidate_errors=sum(candidate_error!=0),resolved=sum(ranking_error!=0&candidate_error==0),
+ introduced=sum(ranking_error==0&candidate_error!=0),
+ old_abs_error=sum(abs(ranking_error)),candidate_abs_error=sum(abs(candidate_error))),
+ by=.(admission_year,target_transition)],file.path(fu_out,'targeted_candidate_changes.csv'))
+fu_cutoffs<-rbindlist(lapply(c('ranking_proxy_refined','targeted_candidate'),function(v){
+ fu[comparison_sample==TRUE,.(variant=v,n=.N,
+ observed_above=sum(ranking_recorded>=minimum_ranking),
+ false_positive=sum(get(v)>=minimum_ranking & ranking_recorded<minimum_ranking),
+ false_negative=sum(get(v)<minimum_ranking & ranking_recorded>=minimum_ranking),
+ agreement=mean((get(v)>=minimum_ranking)==(ranking_recorded>=minimum_ranking))),
+ by=.(admission_year,pace12,near_cutoff=abs(ranking_recorded-minimum_ranking)<=10)]
+}),use.names=TRUE)
+fwrite(fu_cutoffs,file.path(fu_out,'targeted_candidate_absolute_threshold.csv'))
+# Preserve unknown scores; do not redefine the PACE percentile population.
+stopifnot(fu[target_transition!=TRUE|is.na(target_transition),
+ all(is.na(targeted_candidate)==is.na(ranking_proxy_refined))],
+ fu[target_transition==FALSE & is.finite(targeted_candidate),
+ all(targeted_candidate==ranking_proxy_refined)])
+# Differential measurement diagnostics on observed-score graduates, conditional on
+# the original offer-probability and year strata. This is not a mechanism effect.
+fp<-as.data.table(readRDS(file.path(fu_input,'pace_finalized_panel.rds')))
+fl<-merge(fp[,.(MRUN,grad_year,YEAR,CHANCE_GROUP,OFFER)],
+ fu[,.(MRUN,grad_year,nem_error,ranking_error,candidate_error,minimum_ranking,
+ ranking_recorded,ranking_proxy_refined,targeted_candidate)],by=c('MRUN','grad_year'),all.x=TRUE)
+fl[,`:=`(old_valid=is.finite(ranking_error),new_valid=is.finite(candidate_error),
+ old_mismatch=as.numeric(ranking_error!=0),new_mismatch=as.numeric(candidate_error!=0))]
+fdi<-rbindlist(lapply(c('old_valid','new_valid','old_mismatch','new_mismatch','ranking_error','candidate_error'),function(v){
+ fit<-fixest::feols(as.formula(paste(v,'~ OFFER | CHANCE_GROUP + YEAR')),data=fl,vcov='hetero',notes=FALSE)
+ data.table(outcome=v,n=stats::nobs(fit),offer_coefficient=stats::coef(fit)[['OFFER']],
+ se=fixest::se(fit)[['OFFER']],p=fixest::pvalue(fit)[['OFFER']])
+}))
+fl_common<-fl[old_valid & new_valid]
+fdi_common<-rbindlist(lapply(c('old_mismatch','new_mismatch','ranking_error','candidate_error'),function(v){
+ fit<-fixest::feols(as.formula(paste(v,'~ OFFER | CHANCE_GROUP + YEAR')),data=fl_common,vcov='hetero',notes=FALSE)
+ data.table(outcome=v,n=stats::nobs(fit),offer_coefficient=stats::coef(fit)[['OFFER']],
+ se=fixest::se(fit)[['OFFER']],p=fixest::pvalue(fit)[['OFFER']])
+}))
+fwrite(fdi,file.path(fu_out,'offer_differential_validation.csv'))
+fwrite(fdi_common,file.path(fu_out,'offer_differential_common_sample.csv'))
+
+# Repeated registrations: compare independently reconstructed GPA with different
+# administrative vintages of the same graduate. Revisions are diagnostic only.
+meta<-jsonlite::fromJSON(file.path(fu_input,'student_columns/metadata.json'),simplifyVector=FALSE)$value
+projection<-jsonlite::fromJSON('analysis_for_adversarial_report_output/f08/student_column_projection.json',simplifyVector=FALSE)
+needed<-c('year','mrun','egreso_yyyy','promedio_notas','nem')
+cols<-lapply(needed,function(nm){
+ index<-as.integer(names(projection)[vapply(projection,identical,logical(1),nm)])+1L
+ readBin(file.path(fu_input,'student_columns',paste0(nm,'.bin')),
+ if(meta[[index]]$type==14L)'double' else 'integer',n=meta[[index]]$n,endian='big')
+});names(cols)<-needed
+reg<-as.data.table(cols);rm(cols)
+reg<-reg[mrun>0 & egreso_yyyy %in% 2020:2024 & year>=egreso_yyyy+1L & year<=2025,
+ .(MRUN=mrun,grad_year=as.integer(egreso_yyyy),process=as.integer(year),
+ raw_gpa=promedio_notas,registered_nem=nem)]
+reg<-merge(reg,fu[,.(MRUN,grad_year,nem_group,gpa_from_history,official_gpa_from_nem,nem_exact)],
+ by=c('MRUN','grad_year'))
+tab<-fread('analysis_for_adversarial_report_output/f08/ranking/nem_tables_used.csv')
+tab[,process:=grad_year+1L]
+reg<-merge(reg,tab[,.(process,nem_group,registered_nem=score,vintage_gpa=gpa)],
+ by=c('process','nem_group','registered_nem'),all.x=TRUE)
+# Comparing implied GPAs rather than scores removes the 2023 scale change.
+reg[,`:=`(matches_history=abs(vintage_gpa-gpa_from_history)<1e-8,
+ matches_initial=abs(vintage_gpa-official_gpa_from_nem)<1e-8)]
+fwrite(reg[,.(n=.N,valid=sum(!is.na(vintage_gpa)),
+ history_agreement=mean(matches_history,na.rm=TRUE),
+ initial_gpa_agreement=mean(matches_initial,na.rm=TRUE)),
+ by=.(grad_year,process,nem_exact)],file.path(fu_out,'nem_registration_vintages.csv'))
+late<-reg[process>grad_year+1L & !is.na(vintage_gpa),.(later_records=.N,
+ any_later_matches_history=any(matches_history,na.rm=TRUE),
+ any_later_changes_gpa=any(!matches_initial,na.rm=TRUE),
+ all_later_match_initial=all(matches_initial %in% TRUE)),by=.(MRUN,grad_year)]
+late<-merge(fu[is.finite(nem_error),.(MRUN,grad_year,nem_exact,nem_error)],late,
+ by=c('MRUN','grad_year'),all.x=TRUE)
+fwrite(late[,.(n=.N,with_later_record=sum(!is.na(later_records)),
+ any_later_match_history=sum(any_later_matches_history %in% TRUE),
+ any_later_gpa_revision=sum(any_later_changes_gpa %in% TRUE),
+ all_later_match_initial=sum(all_later_match_initial %in% TRUE)),
+ by=.(admission_year=grad_year+1L,nem_exact)],file.path(fu_out,'nem_later_registration_diagnostic.csv'))
+# Explicit half-up versus truncation test on the same valid four-grade histories.
+ft<-as.data.table(readRDS(file.path(fu_input,'ranking_targets.rds')))
+ft[,gpa_full:=rowMeans(.SD),.SDcols=paste0('gpa_',1:4)]
+ft[,`:=`(round_proxy=nem_from_gpa(score_round(gpa_full,2L),grad_year+1L,nem_group,tab),
+ trunc_proxy=nem_from_gpa(score_trunc(gpa_full,2L),grad_year+1L,nem_group,tab))]
+fwrite(ft[complete_history==TRUE & reported_nem>0 & is.finite(round_proxy) & is.finite(trunc_proxy),
+ .(n=.N,rounded_exact=mean(round_proxy==reported_nem),truncated_exact=mean(trunc_proxy==reported_nem),
+ resolved_by_truncation=sum(round_proxy!=reported_nem & trunc_proxy==reported_nem),
+ introduced_by_truncation=sum(round_proxy==reported_nem & trunc_proxy!=reported_nem)),
+ by=.(admission_year=grad_year+1L)],file.path(fu_out,'nem_rounding_hypothesis.csv'))
+print(fdi)
+print(fu_validation[group=='All'])
+```
+
+```{r f08-score-followup-report}
+fu_input <- 'analysis_for_adversarial_report_output/input/f08'
+fu_out <- 'analysis_for_adversarial_report_output/f08/ranking/followup_2026-10-19'
+y<-fread(file.path(fu_out,'year_accuracy.csv'))
+v<-fread(file.path(fu_out,'targeted_candidate_validation.csv'))
+summary_v<-v[,.(n=sum(n),exact=1-sum(mismatches)/sum(n),
+ mae=sum(total_abs_error)/sum(n),mismatches=sum(mismatches)),by=.(variant,group)]
+a<-merge(y[score=='nem_error',.(admission_year,nem_n=n,nem_exact=exact,
+ nem_mismatches=mismatches)],
+ v[group=='All'&variant=='ranking_error',.(admission_year,ranking_n=n,before=exact,
+ old_mae=mae,ranking_mismatches=mismatches)],by='admission_year')
+a<-merge(a,v[group=='All'&variant=='candidate_error',.(admission_year,after=exact,new_mae=mae)],
+ by='admission_year');setorder(a,admission_year)
+fwrite(a,file.path(fu_out,'report_year_comparison.csv'))
+pace<-merge(v[group=='PACE=1'&variant=='ranking_error',.(admission_year,n,before=exact,old_mae=mae)],
+ v[group=='PACE=1'&variant=='candidate_error',.(admission_year,after=exact,new_mae=mae)],by='admission_year')
+setorder(pace,admission_year)
+changes<-fread(file.path(fu_out,'targeted_candidate_changes.csv'))
+residual<-fread(file.path(fu_out,'targeted_candidate_residual_groups.csv'))
+gpa<-fread(file.path(fu_out,'nem_implied_gpa_differences.csv'))
+late<-fread(file.path(fu_out,'nem_later_registration_diagnostic.csv'))
+rounding<-fread(file.path(fu_out,'nem_rounding_hypothesis.csv'))
+cut<-fread(file.path(fu_out,'targeted_candidate_absolute_threshold.csv'))
+cut_sum<-cut[pace12==1,.(n=sum(n),false_positive=sum(false_positive),false_negative=sum(false_negative)),
+ by=.(variant,near_cutoff)]
+cut_sum[,agreement:=1-(false_positive+false_negative)/n]
+diff<-fread(file.path(fu_out,'offer_differential_common_sample.csv'))
+fmt<-function(n)format(n,big.mark=',',trim=TRUE,scientific=FALSE)
+old<-summary_v[variant=='ranking_error'&group=='All']
+new<-summary_v[variant=='candidate_error'&group=='All']
+pold<-summary_v[variant=='ranking_error'&group=='PACE=1']
+pnew<-summary_v[variant=='candidate_error'&group=='PACE=1']
+cn<-sum(changes[target_transition==TRUE,n]);resolved<-sum(changes[target_transition==TRUE,resolved])
+introduced<-sum(changes[target_transition==TRUE,introduced])
+report<-c('# Follow-up: NEM and Ranking mismatches by year',
+ '', 'Prepared October 19, 2026. All new statistical work is in `code/analysis_for_adversarial_report.Rmd`, chunks `f08-score-followup-patterns`, `f08-score-followup-context-hypothesis`, `f08-score-followup-validation`, and `f08-score-followup-report`. Aggregate outputs are alongside this report. Individual records remain in the ignored `input/f08/` directory.',
+ '', '## Main result',
+ '', sprintf('The errors are not concentrated in one year. A specific context-definition hypothesis improves exact Ranking agreement from %.2f%% to %.2f%% on the same %s observed-score graduates. Mean absolute error falls from %.3f to %.3f points. At PACE schools, agreement rises from %.2f%% to %.2f%% and MAE falls from %.3f to %.3f. This is a new provisional candidate, not a verified official rule or a completed reconstruction of PACE eligibility.',
+ 100*old$exact,100*new$exact,fmt(new$n),old$mae,new$mae,100*pold$exact,100*pnew$exact,pold$mae,pnew$mae),
+ '', 'PACE is not itself a score. The earlier audit reproduced recorded PACE selection exactly from selection-status records; full academic eligibility, including the percentile alternative, remains unresolved. The score results here concern NEM and Ranking.',
+ '', '## Year-by-year accuracy',
+ '', 'Years below are **college admission processes**: graduates from 2020 enter the 2021 row. NEM is independently reconstructed from four annual grades. Each Ranking before/after pair uses identical observed-score students with both candidates available; NEM has its own valid-history sample.',
+ '', '| Admission | NEM validation N | NEM exact | Ranking comparison N | Ranking before | Ranking candidate | MAE before → candidate |',
+ '|---|---:|---:|---:|---:|---:|---:|',
+ a[,sprintf('| %d | %s | %.2f%% | %s | %.2f%% | %.2f%% | %.3f → %.3f |',
+ admission_year,fmt(nem_n),100*nem_exact,fmt(ranking_n),100*before,100*after,old_mae,new_mae)],
+ '', sprintf('NEM has %s mismatches spread across all six years. On the full baseline Ranking validation sample, each year accounts for %.1f%%–%.1f%% of mismatches. The latest cohort contributes the most mismatches, while 2023 has the largest baseline average absolute error. Raw score points use an 850 maximum in 2021–2022 and a 1,000 maximum thereafter, so cross-period MAEs are not on an identical scale.',
+ fmt(sum(y[score=='nem_error',mismatches])),100*min(y[score=='ranking_error',share_all_mismatches]),
+ 100*max(y[score=='ranking_error',share_all_mismatches])),
+ '', 'These comparison counts differ slightly from the morning report’s 1,032,921 common original/refined observations. The new comparison requires the delivered refined score and the new candidate, rather than the original pre-refinement score. All differences within the table are computed on the same students; `year_common_sample_accuracy.csv` reproduces the morning baseline separately.',
+ '', '### Ranking at PACE schools',
+ '', '| Admission | Same-sample N | Before | Candidate | MAE before → candidate |',
+ '|---|---:|---:|---:|---:|',
+ pace[,sprintf('| %d | %s | %.2f%% | %.2f%% | %.3f → %.3f |',
+ admission_year,fmt(n),100*before,100*after,old_mae,new_mae)],
+ '', '## Main pattern: an internal HC-to-TP transition',
+ '', 'The strongest mismatch concentration is among students staying at one RBD for all four grades, with HC code 310 in grades 1–2 and a TP code in grades 3–4 (HHTT). In the full baseline validation, their exact agreement is 34.19%, versus 83.63% for HHTT students who change schools. The poor same-school fit appears in every admission year.',
+ '', 'The targeted hypothesis treats the four years in this particular same-school HHTT sequence as one context, using the exit TP modality for the historical peers and conversion table. It retains the existing context definition for every other history. The history-based rule is uniform across years and PACE/offer groups; it never selects a score using that student’s observed Ranking.',
+ '', sprintf('Among %s affected students with both scores available, the change resolves %s former mismatches but introduces %s new mismatches; net improvement is %s matches. It is not a universal fix. A broader rule collapsing every within-school modality change performs worse (89.00%% exact overall) and harms other histories, so that broad rule is not retained.',
+ fmt(cn),fmt(resolved),fmt(introduced),fmt(resolved-introduced)),
+ '', 'Interpretation: the empirical pattern is consistent with an administrative HC/TP code transition being mistaken for a genuine change of educational context. It does **not** establish that explanation conclusively. [MINEDUC describes context using school and teaching type](https://ayudamineduc.cl/ficha/puntaje-ranking), while the dated annual guides describe accumulated grades in consecutive institutional contexts. The mapping between the raw codes and DEMRE’s operational contexts needs confirmation. The prior rounding-versus-truncation documentation conflict also remains. This candidate was discovered and evaluated on the available data; year/subgroup checks are not a prospectively held-out validation.',
+ '', '## NEM: evidence against a final-rounding explanation',
+ '', sprintf('Independent NEM remains %.2f%% exact over %s complete observed-score histories. Of %s mismatches, %.2f%% imply a GPA discrepancy of ±0.02 or ±0.03, and %.2f%% imply ±0.02, ±0.03, or ±0.05. These increments are consistent with differences in the underlying annual grades (a 0.1 difference in one annual grade changes a four-year mean by 0.025), but do not identify which record is correct.',
+ 100*(1-sum(y[score=='nem_error',mismatches])/sum(y[score=='nem_error',n])),fmt(sum(y[score=='nem_error',n])),
+ fmt(sum(y[score=='nem_error',mismatches])),
+ 100*sum(gpa[nem_exact==FALSE & abs(gpa_difference_hundredths)%in%c(2,3),N])/sum(y[score=='nem_error',mismatches]),
+ 100*sum(gpa[nem_exact==FALSE & abs(gpa_difference_hundredths)%in%c(2,3,5),N])/sum(y[score=='nem_error',mismatches])),
+ '', sprintf('Truncating rather than rounding the four-year GPA repairs %s mismatches and introduces %s new ones. Exact agreement falls to roughly 49.5%%. A blanket truncation change is rejected.',
+ fmt(sum(rounding$resolved_by_truncation)),fmt(sum(rounding$introduced_by_truncation))),
+ '', sprintf('Among %s mismatched graduates with a later registration and invertible NEM, only %s later agree with the grade-history calculation; %s keep the original score-implied GPA in all available later records. The longitudinal comparison converts each process’s NEM back to GPA to avoid confusing the 2023 scale change with revisions. Later records end in 2025, so this does not test subsequent revisions for the last two admission cohorts.',
+ fmt(sum(late[nem_exact==FALSE,with_later_record])),fmt(sum(late[nem_exact==FALSE,any_later_match_history])),
+ fmt(sum(late[nem_exact==FALSE,all_later_match_initial]))),
+ '', 'The evidence points toward persistent differences between grade-history extracts and admissions academic records, rather than a universal final-rounding error. No observed NEM is used to choose a replacement prediction for that same student. The score-inverted GPAs here are diagnostic outcomes only.',
+ '', '## Implications for PACE qualification',
+ '', sprintf('For observed-score graduates at PACE schools within 10 points of the annual absolute threshold (N=%s), threshold-side agreement improves from %.2f%% to %.2f%%. False positives fall from %s to %s; false negatives from %s to %s. These are checks of the **absolute-score alternative**, not the full percentile-OR-absolute PACE rule, school/exam conditions, or carryover.',
+ fmt(cut_sum[variant=='targeted_candidate'&near_cutoff==TRUE,n]),
+ 100*cut_sum[variant=='ranking_proxy_refined'&near_cutoff==TRUE,agreement],
+ 100*cut_sum[variant=='targeted_candidate'&near_cutoff==TRUE,agreement],
+ fmt(cut_sum[variant=='ranking_proxy_refined'&near_cutoff==TRUE,false_positive]),
+ fmt(cut_sum[variant=='targeted_candidate'&near_cutoff==TRUE,false_positive]),
+ fmt(cut_sum[variant=='ranking_proxy_refined'&near_cutoff==TRUE,false_negative]),
+ fmt(cut_sum[variant=='targeted_candidate'&near_cutoff==TRUE,false_negative])),
+ '', sprintf('On the same %s lottery-sample graduates with both reconstructions observed, the conditional OFFER coefficient on mismatch probability changes from %.2f pp to %.2f pp; the coefficient on signed Ranking error changes from %.3f to %.3f points. The diagnostic conditions on hundredth propensity-group and application-year effects and uses heteroskedasticity-robust uncertainty. Differential measurement error remains. These selected-sample diagnostics do not identify a causal effect among always-observed students.',
+ fmt(diff[outcome=='old_mismatch',n]),100*diff[outcome=='old_mismatch',offer_coefficient],
+ 100*diff[outcome=='new_mismatch',offer_coefficient],diff[outcome=='ranking_error',offer_coefficient],
+ diff[outcome=='candidate_error',offer_coefficient]),
+ '', sprintf('After the context change, cases whose independent NEM does not match account for %.1f%% of remaining absolute Ranking error, although they are only %.1f%% of the validation sample. GPA input reconciliation is therefore a useful next step for both scores.',
+ 100*sum(residual[nem_exact==FALSE,total_abs_error])/sum(residual$total_abs_error),
+ 100*sum(residual[nem_exact==FALSE,n])/sum(residual$n)),
+ '', '## Files, checks, and next steps',
+ '', '- The morning delivery `input/f08/score_reconstruction_records.rds` is preserved. The new candidate is in ignored `input/f08/ranking_context_hypothesis_2026-10-19.rds`, keyed by `MRUN, grad_year`; `targeted_candidate` is the narrow hypothesis and `school_context_candidate` is the rejected broad sensitivity. Recorded scores are not overwritten. Unknown scores remain unknown.',
+ '- `context_hypothesis_coverage.csv` reports changes in reconstructibility, so matched-score gains are not confused with gaining/losing validation cases. `targeted_candidate_changes.csv` reports both resolved and introduced errors.',
+ '- Confirm the operational treatment of the same-school HHTT sequence with DEMRE’s context/benchmark data or codebook; examine whether mixed HC/TP schools differ from schools offering only TP in upper grades.',
+ '- Reconcile annual grades against authoritative academic certificates or revised grade files for the remaining NEM discrepancies. Later registration records generally preserve the initial GPA, so simply choosing a later NEM does not solve them.',
+ '- Investigate remaining Ranking errors conditional on exact NEM and correct context, including historical cohort rosters, maxima, small-school pooling and reference precision. Do not infer benchmarks from current Ranking and then report in-sample agreement as independent validation.',
+ '- Keep the official PACE percentile population, ties/quota rounding, school history, exams, and carryover as separate unresolved eligibility tasks. Do not insert imputed eligibility mechanism estimates into the manuscript yet.',
+ '', '### Reproduce from the code directory',
+ '', '```r',
+ 'lines <- readLines("analysis_for_adversarial_report.Rmd")',
+ 'run_chunk <- function(name) {',
+ '  start <- which(lines == paste0("```{r ", name, "}"))',
+ '  stopifnot(length(start) == 1L)',
+ '  end <- start + which(lines[(start + 1L):length(lines)] == "```")[1L]',
+ '  eval(parse(text = lines[(start + 1L):(end - 1L)]), envir = .GlobalEnv)',
+ '}',
+ 'for (name in c("f08-score-reconstruction-functions",',
+ '               "f08-score-followup-patterns",',
+ '               "f08-score-followup-context-hypothesis",',
+ '               "f08-score-followup-validation",',
+ '               "f08-score-followup-report")) run_chunk(name)',
+ '```',
+ '', 'The required private caches are listed in the handoff and the code; they are not delivered by Git. The full notebook need not be reknit to reproduce this follow-up. Package versions and input hashes are saved alongside the report.')
+writeLines(report,file.path(fu_out,'score_mismatch_followup_2026-10-19.md'))
+fwrite(data.table(package=c('R','data.table','fixest','jsonlite'),version=c(as.character(getRversion()),
+ vapply(c('data.table','fixest','jsonlite'),function(p)as.character(packageVersion(p)),character(1)))),
+ file.path(fu_out,'runtime_versions.csv'))
+# Verify that the delivered morning scores were not modified by diagnostics.
+provenance<-fread(file.path(fu_out,'input_provenance.csv'))
+stopifnot(identical(unname(tools::md5sum(file.path(fu_input,provenance$input))),provenance$md5),
+ all(v$variant %in% c('ranking_error','candidate_error')),
+ !anyDuplicated(v,by=c('admission_year','variant','group')))
+cat('Follow-up report written; original input hashes unchanged.\n')
+```

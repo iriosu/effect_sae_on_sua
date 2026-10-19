@@ -2,6 +2,18 @@
 
 Prepared October 19, 2026, for continuing the F08 work with Ignacio. The main unresolved task is to establish whether SAE reduced PACE admission through lower attendance at participating schools, lower academic qualification, or both. We now have official school rosters, an audit of the recorded PACE variables, and reconstructed scores for many graduates without recorded NEM/Ranking. **The Ranking reconstruction remains provisional; full academic eligibility and the corresponding mechanism estimates are not finished.**
 
+## Follow-up later on October 19: year patterns and a better context candidate
+
+Read the [score-mismatch follow-up](../code/analysis_for_adversarial_report_output/f08/ranking/followup_2026-10-19/score_mismatch_followup_2026-10-19.md) for the newest diagnostic results. The tables below describing 84.57% Ranking accuracy refer to the **morning delivery**, which is preserved.
+
+- Mismatches occur in every admission year, 2021–2026. Independent NEM matches 98.70%–99.26% by year, 98.98% overall.
+- The main new pattern is students staying at one school with HC codes in the first two grades and TP codes in the last two. Treating that particular same-school HHTT sequence as one context improves Ranking accuracy from **84.56% to 90.71%** on the same 1,033,342 observed-score graduates; MAE falls from **1.458 to 0.420**. At PACE schools, exact agreement improves from **73.34% to 85.82%**. The improvement appears in every year. A broader rule collapsing all within-school modality changes performs worse.
+- This is a **tested provisional candidate**, not a confirmed official context rule. The narrow change resolves 64,347 mismatches but introduces 801. Confirm whether the raw HC/TP code transition represents a genuine DEMRE context change. The earlier arithmetic/documentation conflict remains.
+- Near the PACE absolute threshold (within 10 points), agreement improves from 89.82% to 97.27% among 7,871 observed-score PACE-school graduates. This does not establish full eligibility. Differential error by lottery offer remains, even on a common validation sample.
+- NEM mismatches primarily imply GPA differences of 0.02–0.03. Truncation repairs none and introduces 520,162 errors; later registration vintages agree with our grade histories for only 15 of 2,351 initially mismatched graduates with usable later records. The priority is reconciling underlying academic records, not switching final rounding.
+
+New code: the four `f08-score-followup-*` chunks in the central notebook. New private candidate: `input/f08/ranking_context_hypothesis_2026-10-19.rds`, keyed by `MRUN, grad_year`; use `targeted_candidate` for the narrow hypothesis. `school_context_candidate` is the broader sensitivity, **not** the preferred candidate. No morning score-delivery file or manuscript estimate was overwritten. The follow-up report includes an executable chunk runner, aggregate comparisons, coverage, and limitations. F08.3 remains open.
+
 ## 1. Start here
 
 All statistical work is in [`code/analysis_for_adversarial_report.Rmd`](../code/analysis_for_adversarial_report.Rmd). The exception is the F04 entrant-count implementation, which that notebook calls from `code/f04_entrant_counts.R`. The F08 Python helper only projects columns from a large RDS file; it does not estimate models.
@@ -14,7 +26,7 @@ Three directories matter:
 | `code/analysis_for_adversarial_report_output/f08/ranking/` | Score-validation reports, aggregate diagnostics, NEM tables and reusable functions |
 | `code/analysis_for_adversarial_report_output/input/f08/` | **Private student-level records and intermediate caches; excluded from Git** |
 
-Read the [latest iterative score report](../code/analysis_for_adversarial_report_output/f08/ranking/ranking_iterative_report_2026-10-19.md) first, then the [broader PACE findings](../code/analysis_for_adversarial_report_output/f08/pace_findings_2026-10-19.md). The [review checklist](adversarial_report_action_checklist_2026-10-17.md) records author decisions and leaves F08.3 open.
+For the morning baseline, read the [iterative score report](../code/analysis_for_adversarial_report_output/f08/ranking/ranking_iterative_report_2026-10-19.md) first, then the [broader PACE findings](../code/analysis_for_adversarial_report_output/f08/pace_findings_2026-10-19.md). The [review checklist](adversarial_report_action_checklist_2026-10-17.md) records author decisions and leaves F08.3 open.
 
 Local locations on Ignacio's machine:
 
