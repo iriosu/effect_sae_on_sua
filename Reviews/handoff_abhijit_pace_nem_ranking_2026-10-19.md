@@ -2,7 +2,17 @@
 
 Prepared October 19, 2026, for continuing the F08 work with Ignacio. The main unresolved task is to establish whether SAE reduced PACE admission through lower attendance at participating schools, lower academic qualification, or both. We now have official school rosters, an audit of the recorded PACE variables, and reconstructed scores for many graduates without recorded NEM/Ranking. **The Ranking reconstruction remains provisional; full academic eligibility and the corresponding mechanism estimates are not finished.**
 
-## Latest diagnosis: what still drives mismatches
+## Latest diagnostic: same context and actual classroom
+
+The [within-context report](../code/analysis_for_adversarial_report_output/f08/ranking/within_context_2026-10-19/within_context_report_2026-10-19.md) restricts to 842,942 graduates with exact independently reconstructed NEM, complete four-grade histories, one accepted context, three reference cohorts and adequate school/modality counts. Exact contexts hold all four school IDs, attendance years and teaching codes fixed. Raw 2023 grades recover actual classroom letter/session for all 148,084 clean-sample graduates that year; earlier classroom identifiers are not used.
+
+- Mixed matches are common: 6,765 exact-context groups across all six admission years; 2,188 of 7,973 actual 2023 classroom-context groups with at least two students. Removing floors and caps still leaves 1,516 mixed classroom groups.
+- Identical inputs behave consistently: among 21,236 same-class/context/GPA groups (46,479 students), none has differing recorded Ranking. Among all six cohorts' 176,079 same-context/GPA groups, only one three-student group differs (admission 2021, 14 points). None of 9,108 exact-context groups with identical four annual grades differs in recorded Ranking.
+- Common benchmark errors can produce different integer errors at different own GPAs. Correct NEM does not validate historical means or maxima. Allowing a shared continuous maximum while holding the mean/formula fixed can reconcile only 18.34% of mixed classroom groups (13.37% across all exact contexts). Prioritize historical-mean construction and arithmetic jointly with the maximum; inspect the lone equal-GPA anomaly separately. These are diagnostics, not certified causes or outcome-calibrated imputations.
+
+Run `f08-score-reconstruction-functions`, `f08-ranking-remaining-patterns`, `f08-ranking-classroom-map`, `f08-ranking-within-context`, then `f08-ranking-within-context-report` from `code/`. Raw classroom data, the class map and the diagnostic records remain private under ignored `input/f08/`; source metadata, aggregate results and an anonymous classroom score example are shared. All 66 R chunks parse; the new chunks and substantive assertions pass. Existing scores and manuscript estimates are unchanged; F08.3 remains open.
+
+## Earlier diagnosis: what still drives mismatches
 
 [Remaining-discrepancy patterns](../code/analysis_for_adversarial_report_output/f08/ranking/remaining_patterns_2026-10-19/remaining_discrepancy_patterns_2026-10-19.md) uses the first-pass historical-reference candidate on the same 1,033,587 validated students (95,985 mismatches). Small-school pooling is not the main observed-error pattern: 99.41% of mismatches have school-wide historical graduation counts >=30 in every context; 93.45% still do when counts are split by HC/TP modality. This conclusion concerns reconstructible scores; small references excluded from scoring remain a coverage problem.
 

@@ -1,0 +1,17 @@
+scope,subset,type,cells,students,matched,mismatches
+"Exact context, all six cohorts",All score positions,All match,19818,650214,650214,0
+"Exact context, all six cohorts",All score positions,Mixed,6765,184452,122690,61762
+"Exact context, all six cohorts",All score positions,Singleton,7687,7687,7266,421
+"Exact context, all six cohorts",All score positions,None match,175,589,0,589
+"Exact context, all six cohorts",Interior in both calculations,All match,16927,375847,375847,0
+"Exact context, all six cohorts",Interior in both calculations,Mixed,4923,93808,47843,45965
+"Exact context, all six cohorts",Interior in both calculations,Singleton,3557,3557,2772,785
+"Exact context, all six cohorts",Interior in both calculations,None match,1566,12997,0,12997
+"Actual classroom, graduation 2023",All score positions,All match,5736,112225,112225,0
+"Actual classroom, graduation 2023",All score positions,Mixed,2188,33928,21750,12178
+"Actual classroom, graduation 2023",All score positions,Singleton,1763,1763,1638,125
+"Actual classroom, graduation 2023",All score positions,None match,49,168,0,168
+"Actual classroom, graduation 2023",Interior in both calculations,All match,5216,62745,62745,0
+"Actual classroom, graduation 2023",Interior in both calculations,Mixed,1516,15549,7739,7810
+"Actual classroom, graduation 2023",Interior in both calculations,Singleton,818,818,580,238
+"Actual classroom, graduation 2023",Interior in both calculations,None match,585,3849,0,3849

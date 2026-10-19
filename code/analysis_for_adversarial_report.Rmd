@@ -4634,3 +4634,233 @@ stopifnot(sum(d$n)==total$n,sum(d$mismatches)==total$mismatches,sum(d$abs_error)
 writeLines(report,file.path(rp_out,'remaining_discrepancy_patterns_2026-10-19.md'))
 cat('Remaining-patterns report and decomposition checks completed.\n')
 ```
+
+## Within-context mixed matches and identical-input checks
+
+```{r f08-ranking-classroom-map}
+library(data.table)
+wc_input<-'analysis_for_adversarial_report_output/input/f08'
+wc_out<-'analysis_for_adversarial_report_output/f08/ranking/within_context_2026-10-19'
+dir.create(wc_out,recursive=TRUE,showWarnings=FALSE)
+wc_raw<-file.path(wc_input,'class_raw_2023.csv')
+# Retrieved from the existing private Dropbox raw-grade source. Never share the
+# raw file or classroom/student map through Git. A single cohort suffices to
+# establish existence at the actual classroom level; six cohorts are compared
+# at the exact educational-history level separately.
+stopifnot(file.info(wc_raw)$size==598707057)
+wc_header<-sub('^\ufeff','',names(fread(wc_raw,nrows=0L)))
+wc_needed<-c('AGNO','MRUN','RBD','COD_ENSE','COD_GRADO','LET_CUR','COD_JOR','PROM_GRAL','SIT_FIN_R')
+stopifnot(all(wc_needed%in%wc_header))
+wc_map<-fread(wc_raw,select=match(wc_needed,wc_header),
+ colClasses=list(character=c('LET_CUR','PROM_GRAL','SIT_FIN_R')))
+setnames(wc_map,wc_needed)
+wc_map<-unique(wc_map[AGNO==2023L & COD_GRADO==4L & SIT_FIN_R=='P' &
+ COD_ENSE%in%c(310L,410L,510L,610L,710L,810L,910L),
+ .(MRUN,grad_year=AGNO,rbd_4=RBD,teaching_4=COD_ENSE,
+ gpa_4=as.numeric(sub(',','.',PROM_GRAL,fixed=TRUE)),
+ class_letter=toupper(trimws(LET_CUR)),class_shift=COD_JOR)])
+wc_map[,records:=.N,by=.(MRUN,grad_year)]
+fwrite(wc_map[,.(records=.N),by=.(distinct_records=records,
+ missing_letter=is.na(class_letter)|class_letter=='',missing_shift=is.na(class_shift))],
+ file.path(wc_out,'class_source_coverage.csv'))
+wc_map<-wc_map[records==1L & !is.na(class_letter)&class_letter!='' & !is.na(class_shift)]
+stopifnot(!anyDuplicated(wc_map,by=c('MRUN','grad_year')))
+saveRDS(wc_map,file.path(wc_input,'ranking_class_map_2023.rds'))
+fwrite(data.table(source='Rendimiento por estudiante 2023.csv',graduation_year=2023L,
+ bytes=file.info(wc_raw)$size,md5=unname(tools::md5sum(wc_raw)),
+ dropbox_file_id='id:L0STPQ6hYTsAAAAAACXPPw',revision='0162ac1d01fa73300000001e7c4f820'),
+ file.path(wc_out,'class_source_manifest.csv'))
+```
+
+```{r f08-ranking-within-context}
+# Requires f08-ranking-remaining-patterns, which builds rp and the latest
+# context references c from the first-pass-reference candidate.
+wc_input<-'analysis_for_adversarial_report_output/input/f08'
+wc_out<-'analysis_for_adversarial_report_output/f08/ranking/within_context_2026-10-19'
+tables<-fread('analysis_for_adversarial_report_output/f08/ranking/nem_tables_used.csv')
+wc<-rp[is.finite(error)&nem_error==0&complete_history==TRUE&latest_contexts==1L&
+ cohorts_min==3L&school_pool_flag=='All contexts at least 30 graduates'&
+ modality_pool_flag=='All contexts at least 30 graduates']
+# The strict context holds all four school IDs, actual attendance years, and
+# exact teaching codes fixed, not just graduation school or broad modality.
+wc_context_cols<-c('grad_year',paste0('rbd_',1:4),paste0('year_',1:4),paste0('teaching_',1:4))
+wc[,strict_context:=.GRP,by=wc_context_cols]
+wc[,annual_grade_key:=do.call(paste,c(lapply(.SD,function(x)sprintf('%.6f',x)),sep='/')),
+ .SDcols=paste0('gpa_',1:4)]
+wc[,`:=`(g_full=rowMeans(.SD),g_round=score_round(rowMeans(.SD),2L)),.SDcols=paste0('gpa_',1:4)]
+wc[,`:=`(g_round_key=as.integer(score_round(g_round*100)),g_full_key=score_round(g_full*1e6),
+ exact=error==0,cap=ifelse(grad_year<=2021L,850,1000))]
+wc<-merge(wc,c[,.(MRUN,grad_year,h=score_round(h_equal_rounded_cohort_raw,2L),
+ m=score_round(m_round_raw,2L))],by=c('MRUN','grad_year'),all.x=TRUE)
+stopifnot(!anyDuplicated(wc,by=c('MRUN','grad_year')),
+ wc[,all(uniqueN(h)==1L&uniqueN(m)==1L),by=strict_context]$V1)
+wc[,nh:=nem_from_gpa(h,grad_year+1L,nem_group,tables)]
+wc[,formula_check:=pmax(nem_recorded,score_round(ifelse(g_round<=h,nem_recorded,
+ ifelse(g_round>=m,cap,nh+(cap-nh)*(g_round-h)/(m-h)))))]
+stopifnot(nrow(wc)==842942L,all(wc$formula_check==wc$latest))
+wc[,position:=fcase(ranking_recorded==nem_recorded,'Recorded NEM floor',
+ ranking_recorded==cap,'Recorded cap',default='Recorded interior bonus')]
+wc[,interior:=g_round>h & g_round<m & latest>nem_recorded & latest<cap &
+ ranking_recorded>nem_recorded & ranking_recorded<cap]
+wc<-merge(wc,as.data.table(readRDS(file.path(wc_input,'ranking_class_map_2023.rds')))[,
+ .(MRUN,grad_year,rbd_4,teaching_4,gpa_4,class_letter,class_shift)],
+ by=c('MRUN','grad_year','rbd_4','teaching_4','gpa_4'),all.x=TRUE)
+wc[,class_available:=!is.na(class_letter)&!is.na(class_shift)]
+fwrite(wc[,.(n=.N,matched=sum(exact),mismatches=sum(!exact),class_linked=sum(class_available)),
+ by=.(admission_year=grad_year+1L,position)],file.path(wc_out,'sample_and_positions.csv'))
+wc_summary<-list();wc_ties<-list();wc_max<-list();wc_private<-list()
+for(scope in c('Exact context, all six cohorts','Actual classroom, graduation 2023')){
+ z<-if(scope=='Exact context, all six cohorts')copy(wc) else copy(wc[class_available==TRUE])
+ keys<-if(scope=='Exact context, all six cohorts')'strict_context' else c('strict_context','class_letter','class_shift')
+ z[,cell:=.GRP,by=keys]
+ for(subset in c('All score positions','Interior in both calculations')){
+  q<-if(subset=='All score positions')copy(z) else copy(z[interior==TRUE])
+  g<-q[,.(n=.N,matched=sum(exact)),
+   by=.(cell,grad_year)]
+  g[,mismatches:=n-matched]
+  g[,type:=fcase(n==1L,'Singleton',matched==n,'All match',matched==0L,'None match',default='Mixed')]
+  wc_summary[[paste(scope,subset)]]<-g[,.(scope=scope,subset=subset,cells=.N,
+   students=sum(n),matched=sum(matched),mismatches=sum(mismatches)),by=.(admission_year=grad_year+1L,type)]
+  for(tie in c('Same rounded GPA','Same unrounded GPA','Same four annual GPAs')){
+   tie_col<-switch(tie,'Same rounded GPA'='g_round_key','Same unrounded GPA'='g_full_key',
+    'Same four annual GPAs'='annual_grade_key')
+   t<-q[,.(n=.N,matched=sum(exact),observed_min=min(ranking_recorded),
+    observed_max=max(ranking_recorded),predicted_min=min(latest),predicted_max=max(latest)),
+    by=c('cell','grad_year',tie_col)]
+   stopifnot(all(t$predicted_min==t$predicted_max))
+   t[,`:=`(mismatches=n-matched,observed_values=1L+as.integer(observed_min!=observed_max),
+    spread=observed_max-observed_min)]
+   t<-t[n>=2L]
+   wc_ties[[paste(scope,subset,tie)]]<-t[,.(scope=scope,subset=subset,tie=tie,cells=.N,
+    students=sum(n),discordant_cells=sum(observed_values>1L),
+    students_in_discordant=sum(n[observed_values>1L]),mixed_match_cells=sum(matched>0L&mismatches>0L),
+    mismatches_in_mixed=sum(mismatches[matched>0L&mismatches>0L]),
+    max_spread=max(c(0,spread))),by=.(admission_year=grad_year+1L)]
+   if(tie=='Same four annual GPAs'&subset=='All score positions'){
+    # Private group keys only; aggregate published examples are anonymized later.
+    wc_private[[scope]]<-list(rows=q,groups=t)
+   }
+  }
+ }
+ # Test whether changing only the shared historical maximum could fit every
+ # interior observed integer score within its rounding interval, holding h fixed.
+ # This uses observed outcomes for diagnosis only, never for score imputation.
+ q<-z[interior & ranking_recorded-.5-1e-8>nh]
+ # score_round adds 1e-8. Its score interval is closed on the lower end
+ # and open on the upper end; inversion makes the maximum's lower bound open.
+ q[,`:=`(m_lower=h+(cap-nh)*(g_round-h)/(ranking_recorded+.5-1e-8-nh),
+ m_upper=h+(cap-nh)*(g_round-h)/(ranking_recorded-.5-1e-8-nh))]
+ a<-q[,.(n=.N,matched=sum(exact),mismatches=sum(!exact),distinct_gpa=uniqueN(g_round_key),
+ lower=max(m_lower,g_round),upper=min(m_upper,7),current_m=unique(m)),by=.(cell,grad_year)]
+ a[,`:=`(mixed=matched>0&mismatches>0,feasible=lower<upper-1e-10,
+ current_feasible=current_m>lower&current_m<=upper)]
+ wc_max[[scope]]<-a[n>=2&distinct_gpa>=2,.(scope=scope,cells=.N,students=sum(n),
+ feasible_cells=sum(feasible),current_feasible_cells=sum(current_feasible)),
+ by=.(admission_year=grad_year+1L,mixed)]
+}
+fwrite(rbindlist(wc_summary,use.names=TRUE),file.path(wc_out,'mixed_match_groups.csv'))
+fwrite(rbindlist(wc_ties,use.names=TRUE),file.path(wc_out,'identical_input_groups.csv'))
+fwrite(rbindlist(wc_max,use.names=TRUE),file.path(wc_out,'shared_maximum_feasibility.csv'))
+saveRDS(wc_private,file.path(wc_input,'ranking_within_context_diagnostics_2026-10-19.rds'))
+print(rbindlist(wc_summary)[,.(cells=sum(cells),students=sum(students),matched=sum(matched),
+ mismatches=sum(mismatches)),by=.(scope,subset,type)])
+print(rbindlist(wc_ties)[,.(cells=sum(cells),students=sum(students),discordant_cells=sum(discordant_cells),
+ students_in_discordant=sum(students_in_discordant),mixed_match_cells=sum(mixed_match_cells),
+ mismatches_in_mixed=sum(mismatches_in_mixed),max_spread=max(max_spread)),by=.(scope,subset,tie)])
+```
+
+```{r f08-ranking-within-context-report}
+library(data.table)
+wc_input<-'analysis_for_adversarial_report_output/input/f08'
+wc_out<-'analysis_for_adversarial_report_output/f08/ranking/within_context_2026-10-19'
+s<-fread(file.path(wc_out,'sample_and_positions.csv'))
+g<-fread(file.path(wc_out,'mixed_match_groups.csv'))
+t<-fread(file.path(wc_out,'identical_input_groups.csv'))
+a<-fread(file.path(wc_out,'shared_maximum_feasibility.csv'))
+fmt<-function(x)format(x,big.mark=',',scientific=FALSE,trim=TRUE)
+ga<-g[,.(cells=sum(cells),students=sum(students),matched=sum(matched),mismatches=sum(mismatches)),
+ by=.(scope,subset,type)]
+ta<-t[,.(cells=sum(cells),students=sum(students),discordant_cells=sum(discordant_cells),
+ students_in_discordant=sum(students_in_discordant),max_spread=max(max_spread)),by=.(scope,subset,tie)]
+aa<-a[,.(cells=sum(cells),feasible_cells=sum(feasible_cells)),by=.(scope,mixed)]
+fwrite(ga,file.path(wc_out,'mixed_match_summary.csv'))
+fwrite(ta,file.path(wc_out,'identical_input_summary.csv'))
+fwrite(aa,file.path(wc_out,'shared_maximum_summary.csv'))
+stopifnot(sum(s$n)==842942L,sum(s$mismatches)==62772L,
+ g[scope=='Exact context, all six cohorts'&subset=='All score positions',sum(students)]==sum(s$n),
+ g[scope=='Actual classroom, graduation 2023'&subset=='All score positions',sum(students)]==sum(s$class_linked),
+ s[admission_year==2024L,sum(n)]==sum(s$class_linked),
+ a[mixed==TRUE,all(current_feasible_cells==0L)])
+# One illustrative classroom-context group. Publish only a GPA/score frequency
+# table with an anonymous label; exclude school, classroom and person keys.
+p<-readRDS(file.path(wc_input,'ranking_within_context_diagnostics_2026-10-19.rds'))
+z<-p[['Actual classroom, graduation 2023']]$rows[interior==TRUE]
+ex_cells<-z[,.(n=.N,matched=sum(exact),max_abs=max(abs(error))),by=cell][
+ n>=20L & matched>0L & matched<n & max_abs==1L]
+setorder(ex_cells,-n,cell)
+stopifnot(nrow(ex_cells)>0L)
+ex<-z[cell==ex_cells$cell[1L],.(students=.N),by=.(gpa=g_round,nem=nem_recorded,
+ recorded_ranking=ranking_recorded,calculated_ranking=latest,error,historical_mean=h,historical_maximum=m)]
+setorder(ex,gpa)
+fwrite(ex,file.path(wc_out,'anonymous_classroom_example.csv'))
+pick_bad<-ex[error!=0][1L]
+pick_good<-ex[error==0][order(abs(gpa-pick_bad$gpa))][1L]
+eg<-rbind(pick_good,pick_bad)
+example_rows<-vapply(seq_len(nrow(eg)),function(i)sprintf('| %.2f | %s | %s | %+d |',
+ eg$gpa[i],fmt(eg$recorded_ranking[i]),fmt(eg$calculated_ranking[i]),as.integer(eg$error[i])),character(1))
+mix<-ga[scope=='Exact context, all six cohorts'&subset=='All score positions'&type=='Mixed']
+cl<-ga[scope=='Actual classroom, graduation 2023'&subset=='All score positions'&type=='Mixed']
+cli<-ga[scope=='Actual classroom, graduation 2023'&subset=='Interior in both calculations'&type=='Mixed']
+ctx_tie<-ta[scope=='Exact context, all six cohorts'&subset=='All score positions'&tie=='Same rounded GPA']
+class_tie<-ta[scope=='Actual classroom, graduation 2023'&subset=='All score positions'&tie=='Same rounded GPA']
+class_annual<-ta[scope=='Actual classroom, graduation 2023'&subset=='All score positions'&tie=='Same four annual GPAs']
+year_rows<-g[scope=='Exact context, all six cohorts'&subset=='All score positions',
+ .(groups=sum(cells[type!='Singleton']),mixed=sum(cells[type=='Mixed']),
+ mismatches_in_mixed=sum(mismatches[type=='Mixed'])),by=admission_year][order(admission_year)]
+year_md<-vapply(seq_len(nrow(year_rows)),function(i)sprintf('| %d | %s | %s | %s |',
+ year_rows$admission_year[i],fmt(year_rows$groups[i]),fmt(year_rows$mixed[i]),
+ fmt(year_rows$mismatches_in_mixed[i])),character(1))
+report<-c('# Same-context and classroom diagnostic — October 19, 2026',
+ '', '**Answer:** yes, students with exact reconstructed NEM and complete observed histories can share a classroom/context while some Ranking scores match and others do not. However, virtually all students with the same GPA within an identical context have the same recorded Ranking. This is consistent with a shared reference or formula discrepancy whose score effect varies with GPA; it does not identify the precise cause.',
+ '', '## Sample and definitions',
+ '', sprintf('The sample has %s graduates with exact independently reconstructed NEM, all four passed-grade records, one accepted context, three usable historical cohorts, and at least 30 observed prior graduates both school-wide and within modality. There are %s remaining Ranking mismatches. The latest provisional `first_pass_reference_only` candidate is used; earlier score deliveries are preserved.',fmt(sum(s$n)),fmt(sum(s$mismatches))),
+ '', '- An exact context fixes graduation year, all four school IDs, actual attendance years and exact teaching codes. It is stricter than grouping by final school/cohort or broad HC/TP modality. The accepted narrow same-school HHTT mapping is retained.',
+ '- Actual classroom groups additionally fix the fourth-grade classroom letter (`LET_CUR`) and session (`COD_JOR`). These identifiers were recovered from the raw 2023 grade file because the harmonized extracts omit them. Classroom identity in earlier grades is not observed here.',
+ sprintf('- All %s clean-sample graduates from 2023 link to an unambiguous raw classroom record using person, year, school, teaching code and annual GPA. Actual-classroom conclusions cover graduation 2023/admission 2024; the exact-history comparison covers admission 2021–2026.',fmt(sum(s$class_linked))),
+ '- A usable three-cohort reference means three cohorts appear in our extract, not that DEMRE used precisely the same students or grade versions. Exact NEM establishes agreement on this student\'s rounded GPA conversion; it does not validate historical means or maxima.',
+ '', '## Mixed matches within groups',
+ '', sprintf('Across six cohorts, %s exact-context groups contain both matches and mismatches. They contain %s mismatches, %.2f%% of all %s clean-sample errors. The groups below require at least two eligible students; singletons are reported separately in the CSVs.',fmt(mix$cells),fmt(mix$mismatches),100*mix$mismatches/sum(s$mismatches),fmt(sum(s$mismatches))),
+ '', '| Admission year | Context groups with 2+ students | Mixed groups | Mismatches in mixed groups |',
+ '|---|---:|---:|---:|',year_md,
+ '', sprintf('For actual 2023 classrooms, %s of %s classroom-context groups with at least two eligible students are mixed (%.2f%%). They contain %s matching and %s nonmatching students. Restricting both recorded and predicted scores to a positive bonus strictly below the ceiling still leaves %s mixed groups, with %s matches and %s mismatches. Thus floors and caps explain some apparent coexistence but do not eliminate it.',
+ fmt(cl$cells),fmt(ga[scope=='Actual classroom, graduation 2023'&subset=='All score positions'&type!='Singleton',sum(cells)]),
+ 100*cl$cells/ga[scope=='Actual classroom, graduation 2023'&subset=='All score positions'&type!='Singleton',sum(cells)],
+ fmt(cl$matched),fmt(cl$mismatches),fmt(cli$cells),fmt(cli$matched),fmt(cli$mismatches)),
+ '', '## Stronger test: identical GPA and annual grades',
+ '', sprintf('Among %s exact-context/rounded-GPA groups with two or more students (%s students), only %s group has different recorded Rankings: three students in admission 2021, with a 14-point range. The same exception survives holding the unrounded mean fixed. It should be checked as a record/context anomaly, but is not a widespread pattern.',fmt(ctx_tie$cells),fmt(ctx_tie$students),fmt(ctx_tie$discordant_cells)),
+ '', sprintf('Within actual classrooms, **none of the %s same-GPA groups (%s students) has differing recorded Ranking scores**. Requiring all four annual grades to coincide gives %s groups and %s students, again with no disagreement. Across all six cohorts, none of the %s exact-context/four-annual-grade groups (%s students) differs in recorded Ranking. These are groups of at least two observed students, not pair counts; the nested definitions must not be added together.',
+ fmt(class_tie$cells),fmt(class_tie$students),fmt(class_annual$cells),fmt(class_annual$students),
+ fmt(ta[scope=='Exact context, all six cohorts'&subset=='All score positions'&tie=='Same four annual GPAs',cells]),
+ fmt(ta[scope=='Exact context, all six cohorts'&subset=='All score positions'&tie=='Same four annual GPAs',students])),
+ '', '## Why a common benchmark can produce mixed exact matches',
+ '', 'Inside the bonus region, the current formula is `T(h) + [C - T(h)] * (g - h)/(M - h)`, rounded to an integer: `g` is own GPA, `h` the historical mean, `M` the historical maximum benchmark, `T` the NEM conversion and `C` the score ceiling. A common error in `h` or `M` changes scores differently at different GPAs. Integer rounding can hide the discrepancy for some students while revealing it for others. Therefore common context and correct NEM do not imply that everyone must either match or mismatch.',
+ '', sprintf('An anonymized actual classroom example uses the same estimated historical mean %.2f and maximum %.2f for both rows. Both students\' NEM conversions match; their own GPAs differ. The full frequency table is `anonymous_classroom_example.csv`.',eg$historical_mean[1L],eg$historical_maximum[1L]),
+ '', '| Own GPA | Recorded Ranking | Calculated Ranking | Calculation − recorded |',
+ '|---|---:|---:|---:|',example_rows,
+ '', '## Can the maximum alone fix these groups?',
+ '', 'For each student strictly inside both score curves, invert the observed integer score\'s half-open rounding interval into an admissible interval for the common maximum, holding the current historical mean and formula fixed. Intersect the intervals within each group, requiring at least two students and two distinct GPAs. Allow any continuous maximum up to 7, a more permissive test than restricting it to hundredths. The implementation includes the scoring helper\'s numerical rounding offset and independently reproduces the current score for every clean-sample student.',
+ '', sprintf('Only %s of %s mixed exact-context groups (%.2f%%), and %s of %s mixed classroom-context groups (%.2f%%), admit such a common maximum. Hence a maximum-only adjustment is insufficient for most mixed groups under the current historical mean/formula. This does not rule out jointly correcting the mean and maximum, a common arithmetic convention, or an incomplete context definition. The outcome-implied intervals are a diagnostic, not an independently validated reconstruction or imputation rule.',
+ fmt(aa[scope=='Exact context, all six cohorts'&mixed==TRUE,feasible_cells]),
+ fmt(aa[scope=='Exact context, all six cohorts'&mixed==TRUE,cells]),
+ 100*aa[scope=='Exact context, all six cohorts'&mixed==TRUE,feasible_cells/cells],
+ fmt(aa[scope=='Actual classroom, graduation 2023'&mixed==TRUE,feasible_cells]),
+ fmt(aa[scope=='Actual classroom, graduation 2023'&mixed==TRUE,cells]),
+ 100*aa[scope=='Actual classroom, graduation 2023'&mixed==TRUE,feasible_cells/cells]),
+ '', '**Next analysis:** inspect the shared GPA-to-Ranking curve in these groups, varying historical-mean construction and arithmetic jointly with the maximum. Validate any proposed rule using independently constructed references and held-out cohorts/schools. Separately trace the lone identical-GPA discrepancy to its source records. There is little evidence here for pervasive person-specific Ranking discrepancies after holding GPA and context fixed.',
+ '', '## Reproduction and source provenance',
+ '', 'From `code/`, execute `f08-score-reconstruction-functions`, `f08-ranking-remaining-patterns`, `f08-ranking-classroom-map`, `f08-ranking-within-context`, then `f08-ranking-within-context-report`. All statistical logic is in the central Rmd; the full notebook need not be knitted for this diagnostic.',
+ '', 'Private raw source: shared Dropbox `/SAE - Datos/Rendimiento/Rendimiento-2023/Rendimiento por estudiante 2023.csv`; `class_source_manifest.csv` records its file ID, revision, exact byte count and MD5. The 2019–2023 grade-file dictionary identifies `LET_CUR` as classroom letter and `COD_JOR` as school session. The raw file contains 214,248 unique regular fourth-grade passed records with unambiguous class/session; `class_source_coverage.csv` records the screening counts. The byte count is checked before parsing, including handling the header BOM and decimal commas.',
+ '', 'The raw file, person/class map and within-context records remain in ignored `input/f08/`. Only aggregate tables and the anonymized score example are shared. Assertions check unique graduate keys, identical references within strict contexts, exact formula reproduction, one prediction per identical GPA/context group, clean-sample totals, complete 2023 classroom linkage and infeasibility of the current maximum in mixed groups. No NEM/Ranking deliveries, eligibility measures or manuscript estimates are changed. F08.3 remains open.')
+writeLines(report,file.path(wc_out,'within_context_report_2026-10-19.md'))
+cat('Within-context report and aggregate checks completed.\n')
+```

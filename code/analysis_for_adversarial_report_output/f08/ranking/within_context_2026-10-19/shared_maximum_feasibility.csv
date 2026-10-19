@@ -1,0 +1,15 @@
+admission_year,mixed,scope,cells,students,feasible_cells,current_feasible_cells
+2021,FALSE,"Exact context, all six cohorts",3188,67926,3048,3019
+2026,FALSE,"Exact context, all six cohorts",2807,55279,2562,2508
+2022,TRUE,"Exact context, all six cohorts",607,11814,75,0
+2023,FALSE,"Exact context, all six cohorts",3176,71830,2940,2892
+2022,FALSE,"Exact context, all six cohorts",3121,68636,2958,2908
+2025,FALSE,"Exact context, all six cohorts",3065,59666,2850,2800
+2024,FALSE,"Exact context, all six cohorts",3081,65395,2823,2759
+2024,TRUE,"Exact context, all six cohorts",928,16996,126,0
+2023,TRUE,"Exact context, all six cohorts",733,14753,87,0
+2026,TRUE,"Exact context, all six cohorts",1231,23594,157,0
+2025,TRUE,"Exact context, all six cohorts",966,17810,156,0
+2021,TRUE,"Exact context, all six cohorts",458,8841,57,0
+2024,FALSE,"Actual classroom, graduation 2023",5791,66573,5351,5209
+2024,TRUE,"Actual classroom, graduation 2023",1516,15549,278,0

@@ -1,0 +1,13 @@
+scope,subset,tie,cells,students,discordant_cells,students_in_discordant,max_spread
+"Exact context, all six cohorts",All score positions,Same rounded GPA,176079,466303,1,3,14
+"Exact context, all six cohorts",All score positions,Same unrounded GPA,176079,466303,1,3,14
+"Exact context, all six cohorts",All score positions,Same four annual GPAs,9108,19604,0,0,0
+"Exact context, all six cohorts",Interior in both calculations,Same rounded GPA,107700,291629,1,3,14
+"Exact context, all six cohorts",Interior in both calculations,Same unrounded GPA,107700,291629,1,3,14
+"Exact context, all six cohorts",Interior in both calculations,Same four annual GPAs,6947,14793,0,0,0
+"Actual classroom, graduation 2023",All score positions,Same rounded GPA,21236,46479,0,0,0
+"Actual classroom, graduation 2023",All score positions,Same unrounded GPA,21236,46479,0,0,0
+"Actual classroom, graduation 2023",All score positions,Same four annual GPAs,817,1711,0,0,0
+"Actual classroom, graduation 2023",Interior in both calculations,Same rounded GPA,13171,29102,0,0,0
+"Actual classroom, graduation 2023",Interior in both calculations,Same unrounded GPA,13171,29102,0,0,0
+"Actual classroom, graduation 2023",Interior in both calculations,Same four annual GPAs,550,1127,0,0,0

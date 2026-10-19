@@ -1,0 +1,57 @@
+admission_year,type,scope,subset,cells,students,matched,mismatches
+2021,All match,"Exact context, all six cohorts",All score positions,3701,106094,106094,0
+2024,All match,"Exact context, all six cohorts",All score positions,3193,111395,111395,0
+2023,All match,"Exact context, all six cohorts",All score positions,3389,115246,115246,0
+2026,All match,"Exact context, all six cohorts",All score positions,2835,104428,104428,0
+2022,Mixed,"Exact context, all six cohorts",All score positions,855,21327,13905,7422
+2022,All match,"Exact context, all six cohorts",All score positions,3406,102116,102116,0
+2025,All match,"Exact context, all six cohorts",All score positions,3294,110935,110935,0
+2024,Mixed,"Exact context, all six cohorts",All score positions,1306,35325,23052,12273
+2026,Mixed,"Exact context, all six cohorts",All score positions,1593,46898,32862,14036
+2023,Mixed,"Exact context, all six cohorts",All score positions,1079,29839,18984,10855
+2025,Mixed,"Exact context, all six cohorts",All score positions,1276,35094,23561,11533
+2025,Singleton,"Exact context, all six cohorts",All score positions,1277,1277,1202,75
+2024,Singleton,"Exact context, all six cohorts",All score positions,1252,1252,1166,86
+2021,Mixed,"Exact context, all six cohorts",All score positions,656,15969,10326,5643
+2026,Singleton,"Exact context, all six cohorts",All score positions,1037,1037,980,57
+2022,Singleton,"Exact context, all six cohorts",All score positions,1336,1336,1276,60
+2023,Singleton,"Exact context, all six cohorts",All score positions,1386,1386,1296,90
+2023,None match,"Exact context, all six cohorts",All score positions,30,92,0,92
+2021,Singleton,"Exact context, all six cohorts",All score positions,1399,1399,1346,53
+2024,None match,"Exact context, all six cohorts",All score positions,35,112,0,112
+2025,None match,"Exact context, all six cohorts",All score positions,37,155,0,155
+2021,None match,"Exact context, all six cohorts",All score positions,24,75,0,75
+2026,None match,"Exact context, all six cohorts",All score positions,17,49,0,49
+2022,None match,"Exact context, all six cohorts",All score positions,32,106,0,106
+2021,All match,"Exact context, all six cohorts",Interior in both calculations,3029,66678,66678,0
+2026,All match,"Exact context, all six cohorts",Interior in both calculations,2511,53255,53255,0
+2022,Mixed,"Exact context, all six cohorts",Interior in both calculations,607,11814,6583,5231
+2023,All match,"Exact context, all six cohorts",Interior in both calculations,2901,69089,69089,0
+2022,All match,"Exact context, all six cohorts",Interior in both calculations,2914,66736,66736,0
+2025,All match,"Exact context, all six cohorts",Interior in both calculations,2808,57794,57794,0
+2024,All match,"Exact context, all six cohorts",Interior in both calculations,2764,62295,62295,0
+2024,Mixed,"Exact context, all six cohorts",Interior in both calculations,928,16996,8376,8620
+2023,Mixed,"Exact context, all six cohorts",Interior in both calculations,733,14753,7099,7654
+2024,Singleton,"Exact context, all six cohorts",Interior in both calculations,560,560,393,167
+2026,Mixed,"Exact context, all six cohorts",Interior in both calculations,1231,23594,12428,11166
+2025,Mixed,"Exact context, all six cohorts",Interior in both calculations,966,17810,8738,9072
+2024,None match,"Exact context, all six cohorts",Interior in both calculations,322,3110,0,3110
+2026,None match,"Exact context, all six cohorts",Interior in both calculations,302,2036,0,2036
+2022,None match,"Exact context, all six cohorts",Interior in both calculations,218,1923,0,1923
+2021,None match,"Exact context, all six cohorts",Interior in both calculations,171,1272,0,1272
+2025,Singleton,"Exact context, all six cohorts",Interior in both calculations,512,512,379,133
+2021,Mixed,"Exact context, all six cohorts",Interior in both calculations,458,8841,4619,4222
+2023,None match,"Exact context, all six cohorts",Interior in both calculations,288,2768,0,2768
+2023,Singleton,"Exact context, all six cohorts",Interior in both calculations,681,681,517,164
+2021,Singleton,"Exact context, all six cohorts",Interior in both calculations,723,723,624,99
+2026,Singleton,"Exact context, all six cohorts",Interior in both calculations,319,319,211,108
+2025,None match,"Exact context, all six cohorts",Interior in both calculations,265,1888,0,1888
+2022,Singleton,"Exact context, all six cohorts",Interior in both calculations,762,762,648,114
+2024,All match,"Actual classroom, graduation 2023",All score positions,5736,112225,112225,0
+2024,Mixed,"Actual classroom, graduation 2023",All score positions,2188,33928,21750,12178
+2024,Singleton,"Actual classroom, graduation 2023",All score positions,1763,1763,1638,125
+2024,None match,"Actual classroom, graduation 2023",All score positions,49,168,0,168
+2024,All match,"Actual classroom, graduation 2023",Interior in both calculations,5216,62745,62745,0
+2024,Mixed,"Actual classroom, graduation 2023",Interior in both calculations,1516,15549,7739,7810
+2024,Singleton,"Actual classroom, graduation 2023",Interior in both calculations,818,818,580,238
+2024,None match,"Actual classroom, graduation 2023",Interior in both calculations,585,3849,0,3849

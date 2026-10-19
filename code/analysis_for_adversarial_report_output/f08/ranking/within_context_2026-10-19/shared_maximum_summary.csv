@@ -1,0 +1,5 @@
+scope,mixed,cells,feasible_cells
+"Exact context, all six cohorts",FALSE,18438,17181
+"Exact context, all six cohorts",TRUE,4923,658
+"Actual classroom, graduation 2023",FALSE,5791,5351
+"Actual classroom, graduation 2023",TRUE,1516,278
