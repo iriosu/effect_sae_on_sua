@@ -1,0 +1,25 @@
+split,admission_year,only_one_point,contexts,interpolation_fits,plus_one_fits,minus_one_fits
+Development schools,2022,TRUE,369,17,104,16
+Development schools,2024,FALSE,250,1,0,0
+Development schools,2026,TRUE,690,50,140,38
+Reserved schools,2022,TRUE,90,3,20,8
+Development schools,2024,TRUE,492,34,106,35
+Development schools,2023,FALSE,217,3,0,0
+Development schools,2025,FALSE,256,3,0,0
+Reserved schools,2026,TRUE,179,21,28,13
+Development schools,2025,TRUE,517,27,89,44
+Reserved schools,2025,TRUE,134,8,22,13
+Development schools,2023,TRUE,377,24,74,19
+Reserved schools,2023,TRUE,79,8,12,12
+Development schools,2021,TRUE,281,10,71,21
+Reserved schools,2026,FALSE,60,0,0,0
+Development schools,2026,FALSE,302,2,0,0
+Reserved schools,2021,TRUE,62,3,18,2
+Reserved schools,2025,FALSE,59,0,0,0
+Reserved schools,2021,FALSE,27,0,0,0
+Reserved schools,2024,FALSE,62,0,0,0
+Reserved schools,2022,FALSE,30,0,0,0
+Development schools,2022,FALSE,118,0,0,0
+Development schools,2021,FALSE,88,0,0,0
+Reserved schools,2024,TRUE,124,4,30,17
+Reserved schools,2023,FALSE,60,0,0,0

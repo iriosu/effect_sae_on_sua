@@ -5261,3 +5261,444 @@ report<-c('# Performance-panel audit and benchmark tests — October 19, 2026',
 writeLines(report,file.path(pm_out,'performance_panel_report_2026-10-19.md'))
 cat('Performance-panel report and checks completed.\n')
 ```
+
+### F08: one-point Ranking errors and the common score curve (October 19)
+
+These diagnostics preserve observed scores and existing deliveries. Candidate rules
+use grades, historical references and published tables only. Recorded Ranking is
+used to evaluate rules, never to choose a correction for an individual student.
+
+```{r f08-one-point-setup}
+op_input<-'analysis_for_adversarial_report_output/input/f08'
+op_out<-'analysis_for_adversarial_report_output/f08/ranking/one_point_2026-10-19'
+dir.create(op_out,recursive=TRUE,showWarnings=FALSE)
+op_tables<-fread('analysis_for_adversarial_report_output/f08/ranking/nem_tables_used.csv')
+op_w<-as.data.table(readRDS(file.path(op_input,'ranking_within_context_diagnostics_2026-10-19.rds'))[[
+ 'Exact context, all six cohorts']]$rows)
+op_w<-op_w[,.(MRUN,grad_year,rbd_4,nem_group,g_round,strict_context,latest,
+ ranking_recorded,nem_recorded,h,m,nh,cap,interior,pace12)]
+op_c0<-as.data.table(readRDS(file.path(op_input,'ranking_short_history_contexts_2026-10-19.rds')))[,
+ .(rbd,teaching,exit_year,first,last,MRUN,grad_year,length,g_full,g_trunc,g_round,nem_group,context_group)]
+op_r<-as.data.table(readRDS(file.path(op_input,'ranking_first_pass_reference_2026-10-19.rds')))
+op_r[,teaching:=ifelse(teaching==310,310L,410L)]
+op_r<-op_r[population=='exit_context',.(n=sum(n),sum_trunc=sum(sum_trunc),sum_round=sum(sum_round),
+ sum_full=sum(sum_full),max_trunc=max(max_trunc),max_round=max(max_round),max_full=max(max_full)),
+ by=.(rbd,teaching,exit_year,first,last,population)]
+op_c<-ranking_context_benchmarks(op_c0,op_r)
+op_w<-merge(op_w,op_c[first==1L&last==4L,.(MRUN,grad_year,h_equal_rounded_cohort_raw,
+ h_equal_round_raw,h_round_raw,m_round_raw)],by=c('MRUN','grad_year'),all.x=TRUE)
+stopifnot(nrow(op_w)==842942L,!anyDuplicated(op_w,by=c('MRUN','grad_year')),
+ sum(abs(op_w$latest-op_w$ranking_recorded)==1)==42007L,
+ all(op_w$h==score_round(op_w$h_equal_rounded_cohort_raw,2L)))
+# School-block split fixed before candidate evaluation: all cohorts of a school
+# stay together. Validation schools were explored in previous diagnostics, so
+# this is a reserved check for these new rules, not an untouched research sample.
+op_w[,split:=ifelse(rbd_4%%5L==0L,'Reserved schools','Development schools')]
+op_metrics<-function(pred,base,obs){
+ e<-pred-obs;b<-base-obs;ok<-is.finite(e)&is.finite(b)
+ e<-e[ok];b<-b[ok]
+ data.table(n=length(e),exact=sum(e==0),exact_rate=mean(e==0),mae=mean(abs(e)),
+ baseline_exact=sum(b==0),fixed=sum(b!=0&e==0),introduced=sum(b==0&e!=0),
+ net_fixed=sum(b!=0&e==0)-sum(b==0&e!=0),one_point_baseline=sum(abs(b)==1),
+ one_point_fixed=sum(abs(b)==1&e==0),one_point_worsened=sum(abs(b)==1&abs(e)>1),
+  improved=sum(abs(e)<abs(b)),worsened=sum(abs(e)>abs(b)),
+ lost=sum(is.finite(base)&is.finite(obs)&!is.finite(pred)))
+}
+op_interp<-function(g,year,group){
+ lo<-score_trunc(g,2L);hi<-pmin(lo+.01,7)
+ a<-nem_from_gpa(lo,year+1L,group,op_tables)
+ b<-nem_from_gpa(hi,year+1L,group,op_tables)
+ a+(b-a)*ifelse(hi>lo,(g-lo)/(hi-lo),0)
+}
+op_predict<-function(g,h,m,nh,cap,base,formula='grade',ms=NULL){
+ middle<-nh+(cap-nh)*(g-h)/(m-h)
+ if(formula=='score')middle<-nh+(cap-nh)*(base-nh)/(ms-nh)
+ if(formula=='own_bonus')middle<-base+(cap-ms)*(g-h)/(m-h)
+ pmax(base,score_round(ifelse(g<=h,base,ifelse(g>=m,cap,middle))))
+}
+# Historical cohort NEM anchors converted using the target admission-year table.
+op_lag<-rbindlist(lapply(1:3,function(k){z<-copy(op_r[first==1L&last==4L]);z[,exit_year:=exit_year+k];z}))
+op_keys<-unique(op_c[first==1L&last==4L,.(rbd,teaching,exit_year,grad_year,context_group)])
+op_a<-op_lag[op_keys,on=.(rbd,teaching,exit_year),allow.cartesian=TRUE,nomatch=0]
+op_a[,anchor:=nem_from_gpa(score_round(sum_round/n,2L),grad_year+1L,context_group,op_tables)]
+op_a<-op_a[,.(cohort_anchor=mean(anchor)),by=.(rbd,teaching,exit_year,grad_year,context_group)]
+op_a<-merge(op_c0[first==1L&last==4L,.(MRUN,grad_year,rbd,teaching,exit_year,context_group)],
+ op_a,by=c('rbd','teaching','exit_year','grad_year','context_group'),all.x=TRUE)
+op_w<-merge(op_w,op_a[,.(MRUN,grad_year,cohort_anchor)],by=c('MRUN','grad_year'),all.x=TRUE)
+saveRDS(op_w,file.path(op_input,'ranking_one_point_clean_inputs_2026-10-19.rds'))
+```
+
+```{r f08-one-point-development}
+# Fixed, mechanical specifications; no rule conditions on observed score/error.
+op_specs<-data.table(variant='baseline',h_source='rounded',m_source='rounded',
+ anchor='table',anchor_precision='none',formula='grade')
+for(source in c('rounded_cohort_mean','raw_cohort_mean','pooled_mean')){
+ for(precision in c('none','round','floor','ceiling'))op_specs<-rbind(op_specs,
+  data.table(variant=paste('anchor',source,precision,sep='_'),h_source='rounded',
+   m_source='rounded',anchor=source,anchor_precision=precision,formula='grade'))
+}
+for(precision in c('none','round','floor','ceiling'))op_specs<-rbind(op_specs,
+ data.table(variant=paste0('anchor_cohort_scores_',precision),h_source='rounded',
+ m_source='rounded',anchor='cohort_scores',anchor_precision=precision,formula='grade'))
+for(hsource in c('rounded_cohort_mean','raw_cohort_mean')){
+ for(msource in c('rounded','raw'))op_specs<-rbind(op_specs,data.table(
+  variant=paste('interpolated',hsource,msource,sep='_'),h_source=hsource,
+  m_source=msource,anchor=hsource,anchor_precision='none',formula='grade'))
+}
+for(formula in c('score','own_bonus'))op_specs<-rbind(op_specs,data.table(
+ variant=paste0('formula_',formula),h_source='rounded',m_source='rounded',
+ anchor='table',anchor_precision='none',formula=formula))
+# A uniform one-point anchor shift is a diagnostic, not an official rule.
+for(k in c(-1L,1L))op_specs<-rbind(op_specs,data.table(variant=paste0('diagnostic_anchor_',k),
+ h_source='rounded',m_source='rounded',anchor=paste0('shift',k),anchor_precision='none',formula='grade'))
+op_getpred<-function(z,s){
+ hvalues<-list(rounded=z$h,rounded_cohort_mean=z$h_equal_rounded_cohort_raw,
+  raw_cohort_mean=z$h_equal_round_raw,pooled_mean=z$h_round_raw)
+ h<-hvalues[[s$h_source]];m<-if(s$m_source=='raw')z$m_round_raw else z$m
+ nh<-switch(s$anchor,table=z$nh,cohort_scores=z$cohort_anchor,shift1=z$nh+1,
+  `shift-1`=z$nh-1,op_interp(hvalues[[s$anchor]],z$grad_year,z$nem_group))
+ nh<-switch(s$anchor_precision,round=score_round(nh),floor=score_trunc(nh),
+  ceiling=ceiling(nh-1e-8),nh)
+ op_predict(z$g_round,h,m,nh,z$cap,z$nem_recorded,s$formula,
+  nem_from_gpa(m,z$grad_year+1L,z$nem_group,op_tables))
+}
+op_dev<-op_w[split=='Development schools']
+op_devm<-rbindlist(lapply(seq_len(nrow(op_specs)),function(i){
+ p<-op_getpred(op_dev,op_specs[i]);cbind(op_specs[i],op_metrics(p,op_dev$latest,op_dev$ranking_recorded))
+}))
+stopifnot(op_devm[variant=='baseline',net_fixed]==0L,op_devm[variant=='baseline',introduced]==0L)
+setorder(op_devm,-net_fixed,mae)
+fwrite(op_devm,file.path(op_out,'development_candidates.csv'))
+# Freeze a single input-based candidate before inspecting reserved-school scores.
+# Diagnostic +/-1 shifts are not eligible for selection as reconstruction rules.
+op_selected<-op_devm[!grepl('^diagnostic_',variant)][1L,variant]
+fwrite(op_specs[variant==op_selected],file.path(op_out,'frozen_candidate.csv'))
+print(op_devm[,.(variant,n,exact_rate,fixed,introduced,net_fixed,one_point_fixed,one_point_worsened)])
+cat('Frozen candidate:',op_selected,'\n')
+```
+
+```{r f08-one-point-curve-diagnostic}
+op_d<-copy(op_w)
+op_d[,`:=`(raw=nh+(cap-nh)*(g_round-h)/(m-h),error=latest-ranking_recorded)]
+op_d[,fraction_bin:=cut(raw-floor(raw),c(-1e-8,.1,.2,.3,.4,.49,.499999,.500001,.51,.6,.7,.8,.9,1),include.lowest=TRUE)]
+fwrite(op_d[interior==TRUE,.(n=.N),by=.(split,admission_year=grad_year+1L,
+ error_class=fifelse(abs(error)<=1,as.character(error),'Larger'),fraction_bin)],
+ file.path(op_out,'final_rounding_patterns.csv'))
+op_curve<-op_d[interior==TRUE,{
+  u<-unique(data.table(g=g_round,y=ranking_recorded));setorder(u,g,y)
+  dg<-outer(u$g,u$g,function(a,b)b-a);dy<-outer(u$y,u$y,function(a,b)b-a)
+  keep<-dg>1e-8
+  low<-if(any(keep))max((dy[keep]-1)/dg[keep]) else -Inf
+  high<-if(any(keep))min((dy[keep]+1)/dg[keep]) else Inf
+  ties_ok<-all(u[,uniqueN(y),by=g]$V1==1L)
+  t<-(g_round-h)/(m-h)
+  anchor_low<-max((ranking_recorded-.5-raw)/(1-t))
+  anchor_high<-min((ranking_recorded+.5-raw)/(1-t))
+  list(n=.N,distinct_gpa=uniqueN(g_round),matched=sum(error==0),
+   one_point=sum(abs(error)==1),larger=sum(abs(error)>1),
+   line_feasible=ties_ok&max(low,0)<high-1e-7,
+   anchor_feasible=anchor_low<anchor_high-1e-7,
+   anchor_low=anchor_low,anchor_high=anchor_high,
+   intercept_feasible=max(ranking_recorded-.5-raw)<min(ranking_recorded+.5-raw)-1e-7,
+   h=h[1],m=m[1],nh=nh[1],h_raw=h_equal_rounded_cohort_raw[1])
+ },by=.(strict_context,grad_year,rbd_4,nem_group,split)]
+op_curve[,mixed:=matched>0&matched<n]
+op_curve[,only_one_point:=larger==0&one_point>0]
+fwrite(op_curve[n>=2&distinct_gpa>=2,.(contexts=.N,students=sum(n),one_point=sum(one_point),
+ line_feasible=sum(line_feasible),anchor_feasible=sum(anchor_feasible),
+ intercept_feasible=sum(intercept_feasible)),by=.(split,admission_year=grad_year+1L,mixed,only_one_point)],
+ file.path(op_out,'shared_curve_feasibility.csv'))
+saveRDS(op_curve,file.path(op_input,'ranking_one_point_curve_diagnostics_2026-10-19.rds'))
+# Diagnostic only: integer anchor changes that fit every interior score in a
+# context. Feasibility uses outcomes and must not be exported as predictions.
+fwrite(rbindlist(lapply(-3:3,function(k)op_curve[n>=2&distinct_gpa>=2&mixed==TRUE,
+ .(anchor_shift=k,contexts=.N,feasible=sum(anchor_low<=k&anchor_high>k)),
+ by=.(split,admission_year=grad_year+1L)])),file.path(op_out,'anchor_shift_feasibility.csv'))
+print(op_curve[n>=2&distinct_gpa>=2&mixed==TRUE,.(contexts=.N,
+ line_feasible=mean(line_feasible),anchor_feasible=mean(anchor_feasible),
+ intercept_feasible=mean(intercept_feasible)),by=.(split,only_one_point)])
+```
+
+```{r f08-one-point-arithmetic-development}
+# The 2023 guide states that slope/intercept arithmetic uses all decimals;
+# rounded-coefficient variants are therefore diagnostics, not supported fixes.
+op_z<-op_w[split=='Development schools']
+op_raw<-with(op_z,nh+(cap-nh)*(g_round-h)/(m-h))
+op_finish<-function(raw,z,rounder=score_round){
+ pmax(z$nem_recorded,rounder(ifelse(z$g_round<=z$h,z$nem_recorded,
+  ifelse(z$g_round>=z$m,z$cap,raw))))
+}
+op_extra<-list(baseline=op_z$latest,
+ final_bankers=op_finish(op_raw,op_z,round),final_floor=op_finish(op_raw,op_z,floor),
+ final_ceiling=op_finish(op_raw,op_z,function(x)ceiling(x-1e-8)))
+for(d in 2:4){
+ b<-with(op_z,score_round((cap-nh)/(m-h),d))
+ a<-score_round(op_z$cap-b*op_z$m,d)
+ op_extra[[paste0('coefficients_',d)]]<-op_finish(a+b*op_z$g_round,op_z)
+}
+op_parse_scale<-function(lines,k){
+ pat<-paste0('^[4-7](,[0-9]{1,2})?',paste(rep(' [0-9]+',k-1L),collapse=''),'$')
+ mat<-do.call(rbind,strsplit(grep(pat,trimws(lines),value=TRUE),' +'))
+ as.data.table(matrix(as.numeric(gsub(',','.',mat,fixed=TRUE)),ncol=k))
+}
+op_sources<-'analysis_for_adversarial_report_output/f08/sources/ranking'
+op_sa<-unique(op_parse_scale(readLines(file.path(op_sources,'demre_nem_a_2019_archive.txt')),7L))
+setnames(op_sa,c('gpa',as.character(2018:2023)))
+op_ll<-readLines(file.path(op_sources,'mineduc_access_tables_2020.txt'))
+op_sc<-unique(op_parse_scale(op_ll[(which(op_ll=='--- PAGE 18 ---')+1L):length(op_ll)],5L))
+setnames(op_sc,c('gpa',as.character(2020:2023)))
+op_old<-rbind(op_sa[,.(gpa,nem_group='A',old_score=get('2023'))],
+ op_sc[,.(gpa,nem_group='C',old_score=get('2023'))])
+op_st<-merge(copy(op_tables),op_old,by=c('gpa','nem_group'),all.x=TRUE)
+op_st[,score:=as.numeric(score)]
+op_st[grad_year>=2022,score:=100+(old_score-150)*900/700]
+op_ha<-nem_from_gpa(op_z$h,op_z$grad_year+1L,op_z$nem_group,op_st)
+op_ur<-with(op_z,op_ha+(cap-op_ha)*(g_round-h)/(m-h))
+op_extra[['unrounded_legacy_anchor']]<-op_finish(op_ur,op_z)
+op_legacy<-score_round((op_ur-100)*700/900+150)
+op_extra[['legacy_score_round_then_transform']]<-op_finish(
+ ifelse(op_z$grad_year>=2022,100+(op_legacy-150)*900/700,op_raw),op_z)
+# Historical-cohort means exactly at half-cent may use half-to-even or binary
+# rounding rather than decimal half-up. Recompute means without changing roster.
+op_lag[,`:=`(cohort_even=round(sum_round/n,2),cohort_binary=floor(sum_round/n*100+.5)/100)]
+op_hr<-op_lag[op_keys,on=.(rbd,teaching,exit_year),allow.cartesian=TRUE,nomatch=0][,
+ .(h_even=score_round(mean(cohort_even),2),h_binary=score_round(mean(cohort_binary),2)),
+ by=.(rbd,teaching,exit_year,grad_year,context_group)]
+op_hr<-merge(op_c0[first==1&last==4,.(MRUN,grad_year,rbd,teaching,exit_year,context_group)],
+ op_hr,by=c('rbd','teaching','exit_year','grad_year','context_group'))
+op_z<-merge(op_z,op_hr[,.(MRUN,grad_year,h_even,h_binary)],by=c('MRUN','grad_year'),all.x=TRUE,sort=FALSE)
+# Restore input order explicitly before comparing candidate vectors.
+op_z<-op_z[op_w[split=='Development schools',.(MRUN,grad_year)],on=.(MRUN,grad_year)]
+for(k in c('even','binary')){
+ h<-op_z[[paste0('h_',k)]]
+ op_extra[[paste0('cohort_mean_',k)]]<-op_predict(op_z$g_round,h,op_z$m,
+  nem_from_gpa(h,op_z$grad_year+1L,op_z$nem_group,op_tables),op_z$cap,op_z$nem_recorded)
+}
+op_extram<-rbindlist(lapply(names(op_extra),function(nm)cbind(data.table(variant=nm),
+ op_metrics(op_extra[[nm]],op_z$latest,op_z$ranking_recorded))))
+setorder(op_extram,-net_fixed,mae)
+fwrite(op_extram,file.path(op_out,'arithmetic_development.csv'))
+print(op_extram)
+```
+
+```{r f08-one-point-benchmark-diagnostic}
+# Outcome-based feasibility is diagnosis only. It never supplies the score
+# reconstruction: a fitted benchmark is not an independently observed one.
+op_q<-op_d[interior==TRUE]
+op_grid<-CJ(dh=-2:2,dm=-1:1)
+op_grid_rows<-rbindlist(lapply(seq_len(nrow(op_grid)),function(i){
+ h<-score_round(op_q$h+op_grid$dh[i]/100,2)
+ m<-score_round(op_q$m+op_grid$dm[i]/100,2)
+ nh<-nem_from_gpa(h,op_q$grad_year+1L,op_q$nem_group,op_tables)
+ pred<-op_predict(op_q$g_round,h,m,nh,op_q$cap,op_q$nem_recorded)
+ op_q[,.(all_fit=all(pred[.I]==ranking_recorded)),by=.(strict_context,grad_year)][,
+  `:=`(dh=op_grid$dh[i],dm=op_grid$dm[i])]
+}))
+op_g<-op_grid_rows[,.(any_fit=any(all_fit),mean_only=any(all_fit&dm==0),
+ max_only=any(all_fit&dh==0),joint=any(all_fit&dh!=0&dm!=0)),by=.(strict_context,grad_year)]
+op_g<-merge(op_curve,op_g,by=c('strict_context','grad_year'),all.x=TRUE)
+op_g[,anchor_mid:=(anchor_low+anchor_high)/2]
+op_g[,anchor_bucket:=cut(anchor_mid,c(-Inf,-2,-1,-.5,0,.5,1,2,Inf),include.lowest=TRUE)]
+fwrite(op_g[n>=2&distinct_gpa>=2&mixed==TRUE,.(contexts=.N,
+ students=sum(n),one_point=sum(one_point),any_grid_fit=sum(any_fit),
+ mean_only_fit=sum(mean_only),max_only_fit=sum(max_only),joint_fit=sum(joint)),
+ by=.(split,admission_year=grad_year+1L,only_one_point)],file.path(op_out,'benchmark_grid_feasibility.csv'))
+fwrite(op_g[n>=2&distinct_gpa>=2&mixed==TRUE&anchor_feasible==TRUE,
+ .(contexts=.N,students=sum(n),one_point=sum(one_point),
+ median_interval_width=median(anchor_high-anchor_low)),
+ by=.(split,admission_year=grad_year+1L,only_one_point,anchor_bucket)],
+ file.path(op_out,'anchor_adjustment_distribution.csv'))
+fwrite(op_g[n>=10&distinct_gpa>=5&mixed==TRUE,
+ .(contexts=.N,students=sum(n),one_point=sum(one_point),
+ line_feasible=sum(line_feasible),anchor_feasible=sum(anchor_feasible),
+ median_anchor_width=median(anchor_high-anchor_low),any_grid_fit=sum(any_fit),
+ mean_only_fit=sum(mean_only),max_only_fit=sum(max_only)),by=.(split,only_one_point)],
+ file.path(op_out,'well_supported_contexts.csv'))
+# Compare an input-only historical-mean interpolation shift with feasible
+# anchor intervals. A visually fitting example is not evidence of a global rule.
+op_g[,interpolated_shift:=op_interp(h_raw,grad_year,nem_group)-nh]
+fwrite(op_g[n>=2&distinct_gpa>=2&mixed==TRUE,
+ .(contexts=.N,interpolation_fits=sum(interpolated_shift>=anchor_low&interpolated_shift<anchor_high),
+ plus_one_fits=sum(1>=anchor_low&1<anchor_high),minus_one_fits=sum(-1>=anchor_low&-1<anchor_high)),
+ by=.(split,admission_year=grad_year+1L,only_one_point)],
+ file.path(op_out,'candidate_anchor_interval_check.csv'))
+saveRDS(list(contexts=op_g,grid=op_grid_rows),
+ file.path(op_input,'ranking_one_point_benchmark_diagnostics_2026-10-19.rds'))
+# Describe the scope of the one-point problem, including floors and caps.
+fwrite(op_d[,.(n=.N,mismatches=sum(error!=0),one_point=sum(abs(error)==1),
+ negative_one=sum(error== -1),positive_one=sum(error==1),
+ interior_one_point=sum(abs(error)==1&interior),
+ at_half_one_point=sum(abs(error)==1&interior&abs(raw-floor(raw)-.5)<1e-6)),
+ by=.(split,admission_year=grad_year+1L,nem_group,pace12)],file.path(op_out,'baseline_one_point_scope.csv'))
+print(op_g[n>=2&distinct_gpa>=2&mixed==TRUE,.(contexts=.N,
+ any_grid_fit=mean(any_fit),mean_only=mean(mean_only),max_only=mean(max_only)),by=only_one_point])
+```
+
+```{r f08-one-point-peer-diagnostic}
+# Separate diagnostic, NOT an independent reconstruction: fit a context's
+# common anchor from OTHER students' recorded Ranking, then predict held-out
+# students. This tests whether the inferred context discrepancy generalizes.
+# No held-out student's score enters its prediction; no target-error selection.
+op_peer<-copy(op_w)
+op_peer[,fold:=MRUN%%2L]
+op_peer_predictions<-list();op_peer_parameters<-list()
+for(f in 0:1){
+ train<-op_peer[fold!=f & g_round>h & g_round<m & ranking_recorded>nem_recorded & ranking_recorded<cap]
+ train[,`:=`(t=(g_round-h)/(m-h),raw=nh+(cap-nh)*(g_round-h)/(m-h))]
+ fit<-train[,.(n_train=.N,gpas_train=uniqueN(g_round),
+  lower=max((ranking_recorded-.5-1e-8-raw)/(1-t)),
+  upper=min((ranking_recorded+.5-1e-8-raw)/(1-t))),by=strict_context]
+ fit[,eligible:=n_train>=5L&gpas_train>=3L&lower<upper-1e-7]
+ # Retain the input-based anchor whenever it is feasible. Otherwise use the
+ # interval midpoint, without looking at held-out outcomes or selecting signs.
+ fit[,delta:=ifelse(eligible,ifelse(lower<=0&upper>0,0,(lower+upper)/2),0)]
+ fit[,heldout_fold:=f]
+ op_peer_parameters[[as.character(f)]]<-fit
+ test<-merge(op_peer[fold==f],fit,by='strict_context',all.x=TRUE)
+ stopifnot(all(train$fold!=f),all(test$fold==f),
+  length(intersect(train$MRUN,test$MRUN))==0L)
+ test[is.na(delta),delta:=0]
+ test[is.na(eligible),eligible:=FALSE]
+ test[,pred:=op_predict(g_round,h,m,nh+delta,cap,nem_recorded)]
+ # A conservative second diagnostic changes a score only when every anchor
+ # in the training interval implies the same rounded held-out score.
+ # Expand rather than shrink the interval at numerical boundaries: an
+ # ambiguous half-point must not be labeled uniquely implied by the peers.
+ test[,`:=`(pred_lower=op_predict(g_round,h,m,nh+lower-1e-6,cap,nem_recorded),
+  pred_upper=op_predict(g_round,h,m,nh+upper+1e-6,cap,nem_recorded))]
+ test[,identified:=eligible&!is.na(pred_lower)&!is.na(pred_upper)&pred_lower==pred_upper]
+ test[,safe_pred:=ifelse(identified,pred_lower,latest)]
+ op_peer_predictions[[as.character(f)]]<-test
+}
+op_peer_pred<-rbindlist(op_peer_predictions,use.names=TRUE)
+stopifnot(nrow(op_peer_pred)==nrow(op_w),!anyDuplicated(op_peer_pred,by=c('MRUN','grad_year')))
+stopifnot(op_peer_pred[identified==TRUE,all(pred==safe_pred)],
+ op_peer_pred[eligible==FALSE,all(safe_pred==latest)],
+ all(op_peer_pred$safe_pred>=op_peer_pred$nem_recorded),
+ all(op_peer_pred$safe_pred<=op_peer_pred$cap))
+op_peer_metrics<-rbindlist(lapply(c('pred','safe_pred'),function(col){
+ z<-copy(op_peer_pred);z[,p:=get(col)]
+ ans<-rbindlist(list(
+  z[,cbind(data.table(scope='All clean students'),op_metrics(p,latest,ranking_recorded))],
+  z[eligible==TRUE,cbind(data.table(scope='Sufficient feasible peer references'),op_metrics(p,latest,ranking_recorded))],
+  z[identified==TRUE,cbind(data.table(scope='Interval identified predictions'),op_metrics(p,latest,ranking_recorded))],
+  z[,cbind(data.table(scope=paste0('Admission ',grad_year+1L)),op_metrics(p,latest,ranking_recorded)),by=grad_year],
+  z[,cbind(data.table(scope=paste0('PACE ',pace12)),op_metrics(p,latest,ranking_recorded)),by=pace12]),fill=TRUE)
+ ans[,method:=ifelse(col=='pred','Anchor interval midpoint','Change only interval-identified scores')];ans
+}),fill=TRUE)
+fwrite(op_peer_metrics,file.path(op_out,'peer_anchor_heldout_diagnostic.csv'))
+fwrite(op_peer_pred[,.(students=.N,changed=sum(safe_pred!=latest),one_point=sum(abs(latest-ranking_recorded)==1)),
+ by=.(admission_year=grad_year+1L,eligible,identified)],file.path(op_out,'peer_anchor_coverage.csv'))
+saveRDS(list(predictions=op_peer_pred[,.(MRUN,grad_year,fold,eligible,delta,latest,
+ ranking_recorded,diagnostic_prediction=pred,identified,conservative_diagnostic=safe_pred)],parameters=rbindlist(op_peer_parameters)),
+ file.path(op_input,'ranking_one_point_peer_diagnostic_2026-10-19.rds'))
+print(op_peer_metrics)
+```
+
+```{r f08-one-point-nem-table-diagnostic}
+# Check whether published NEM cells disagree systematically with recorded NEM
+# when the admissions file actually preserves two-decimal graduation GPA.
+# The 2023--2025 admission GPA fields lose decimals and cannot validate cells.
+op_nt<-as.data.table(readRDS(file.path(op_input,'ranking_targets.rds')))[
+ grad_year%in%c(2020L,2021L,2025L)&between(reported_gpa,4,7)&reported_nem>0,
+ .(grad_year,nem_group,gpa=score_round(reported_gpa,2),reported_nem)]
+op_nt[,table_score:=nem_from_gpa(gpa,grad_year+1L,nem_group,op_tables)]
+op_nt[,error:=table_score-reported_nem]
+op_nt<-op_nt[is.finite(error)]
+op_cells<-op_nt[,.(n=.N,table_match=sum(error==0),one_point=sum(abs(error)==1),
+ modal_n=max(tabulate(match(reported_nem,unique(reported_nem)))),
+ modal_score=as.numeric(names(sort(table(reported_nem),decreasing=TRUE))[1]),
+ table_score=table_score[1]),by=.(grad_year,nem_group,gpa)]
+op_cells[,systematic_disagreement:=n>=20&modal_n/n>=.9&modal_score!=table_score]
+fwrite(op_cells[,.(admission_year=grad_year+1L,nem_group,gpa,n,table_match,one_point,
+ modal_n,modal_score,table_score,systematic_disagreement)],file.path(op_out,'nem_table_cell_audit.csv'))
+fwrite(op_cells[,.(cells=.N,students=sum(n),mismatches=sum(n-table_match),
+ systematic_cells=sum(systematic_disagreement)),by=.(admission_year=grad_year+1L,nem_group)],
+ file.path(op_out,'nem_table_cell_summary.csv'))
+print(op_cells[systematic_disagreement==TRUE])
+```
+
+```{r f08-one-point-report}
+op_summary<-fread(file.path(op_out,'baseline_one_point_scope.csv'))
+op_peer_summary<-fread(file.path(op_out,'peer_anchor_heldout_diagnostic.csv'))
+op_dev_summary<-fread(file.path(op_out,'development_candidates.csv'))
+op_arith_summary<-fread(file.path(op_out,'arithmetic_development.csv'))
+op_grid_summary<-fread(file.path(op_out,'benchmark_grid_feasibility.csv'))
+op_line_summary<-fread(file.path(op_out,'shared_curve_feasibility.csv'))
+op_supported<-fread(file.path(op_out,'well_supported_contexts.csv'))
+op_nem_summary<-fread(file.path(op_out,'nem_table_cell_summary.csv'))
+op_safe<-op_peer_summary[scope=='All clean students'&method=='Change only interval-identified scores']
+op_mid<-op_peer_summary[scope=='All clean students'&method=='Anchor interval midpoint']
+op_ident<-op_peer_summary[scope=='Interval identified predictions'&method=='Change only interval-identified scores']
+op_mix<-op_grid_summary[only_one_point==TRUE,.(contexts=sum(contexts),
+ mean_only=sum(mean_only_fit),max_only=sum(max_only_fit),any=sum(any_grid_fit))]
+op_lines<-op_line_summary[mixed==TRUE&only_one_point==TRUE,.(contexts=sum(contexts),
+ line=sum(line_feasible),anchor=sum(anchor_feasible),intercept=sum(intercept_feasible))]
+op_strong<-op_supported[only_one_point==TRUE,.(contexts=sum(contexts),
+ anchor=sum(anchor_feasible),mean_only=sum(mean_only_fit))]
+op_year<-op_peer_summary[method=='Change only interval-identified scores'&!is.na(grad_year)]
+setorder(op_year,grad_year)
+stopifnot(op_safe$n==842942L,op_safe$baseline_exact==780170L,
+ op_safe$introduced==0L,op_safe$worsened==0L,op_safe$lost==0L,
+ all(op_year$net_fixed>0L),sum(op_year$fixed)==op_safe$fixed,
+ sum(op_year$introduced)==op_safe$introduced,
+ op_safe$exact-op_safe$baseline_exact==op_safe$fixed-op_safe$introduced,
+ op_dev_summary[variant!='baseline',all(net_fixed<0)],
+ op_arith_summary[variant!='baseline',all(net_fixed<0)])
+op_fmt<-function(x)format(x,big.mark=',',scientific=FALSE,trim=TRUE)
+op_report<-c('# One-point Ranking errors: historical-mean and peer-curve diagnostics',
+ '', 'October 19, 2026. F08.3 remains open. Existing score deliveries and manuscript estimates are preserved.',
+ '', '## Result and scope',
+ '', sprintf('The clean sample contains %s students with exact independently reconstructed NEM, complete grade histories, one accepted context, three historical cohorts and adequate school/modality counts. The baseline matches %s/%s (%.4f%%), with %s mismatches, including %s one-point discrepancies.',
+ op_fmt(op_safe$n),op_fmt(op_safe$baseline_exact),op_fmt(op_safe$n),100*op_safe$baseline_exact/op_safe$n,
+ op_fmt(op_safe$n-op_safe$baseline_exact),op_fmt(op_safe$one_point_baseline)),
+ '', '**No new independent arithmetic rule improves matching.** The 34 alternatives cover interpolating historical NEM anchors; averaging cohort NEM anchors; changing historical precision; grade-space versus NEM-space formulas; uniform anchor shifts; final rounding; coefficient rounding; the legacy score transformation; and binary/half-to-even cohort rounding. Every alternative introduces more exact-match losses than it resolves on development schools. The frozen input-only selection is the existing baseline.',
+ '', 'Development schools have RBD modulo 5 different from zero; all cohorts of a school stay together. Reserved schools have RBD modulo 5 equal to zero. Prior investigations have already examined these schools, so this is a reserved comparison for new arithmetic rules, not an untouched research holdout. No new arithmetic rule passed development, so none was promoted for reserved-school validation. The peer experiment below has a separate student-level split.',
+ '', '## What the common score curves reveal',
+ '', sprintf('Among %s strict contexts with both matches and discrepancies, and only one-point errors among interior students, all %s admit a common straight line. Holding the existing mean and maximum fixed, a shared adjustment to the historical NEM anchor fits every interior score in %s (%.2f%%). A uniform additive shift to all students is feasible in only %.2f%%.',
+ op_fmt(op_lines$contexts),op_fmt(op_lines$line),op_fmt(op_lines$anchor),100*op_lines$anchor/op_lines$contexts,
+ 100*op_lines$intercept/op_lines$contexts),
+ '', sprintf('Changing only the historical mean by -0.02, -0.01, 0, +0.01 or +0.02 GPA points, with its corresponding published NEM-table anchor and the maximum unchanged, reconciles every interior score in %s/%s contexts (%.2f%%). A maximum-only shift of at most 0.01 works in %s contexts. Among the better-supported contexts (at least 10 interior students and five distinct GPAs), the mean-only grid fits %s/%s. These are outcome-based feasibility calculations, not recovered official benchmarks or admissible per-context tuning rules.',
+ op_fmt(op_mix$mean_only),op_fmt(op_mix$contexts),100*op_mix$mean_only/op_mix$contexts,
+ op_fmt(op_mix$max_only),op_fmt(op_strong$mean_only),op_fmt(op_strong$contexts)),
+ '', sprintf('Only %s/%s interior one-point discrepancies (%.2f%%) sit within 0.000001 of a final half-point boundary. This and the failed rounding candidates argue against final tie-breaking as the main explanation.',
+ op_fmt(sum(op_summary$at_half_one_point)),op_fmt(sum(op_summary$interior_one_point)),
+ 100*sum(op_summary$at_half_one_point)/sum(op_summary$interior_one_point)),
+ '', sprintf('The recorded-GPA/official-NEM cell audit covers %s students in admissions 2021, 2022 and 2026, when two-decimal GPA is usable. No cell with at least 20 observations has a different modal NEM supported by at least 90%% of its observations. This does not cover sparse cells or the years whose recorded GPA loses decimals, but gives no basis to replace the published conversion table.',op_fmt(sum(op_nem_summary$students))),
+ '', '**Interpretation:** small errors in the shared historical mean, its reference roster, or the operational grade version are a stronger lead than the maximum or final integer rounding for this subset. A changed anchor can also compensate for other formula/reference differences, so these diagnostics do not identify a unique administrative cause. The tested full-precision/cohort-mean arithmetic alternatives do not explain which contexts need an adjustment.',
+ '', '## Separate held-out peer experiment',
+ '', 'Within each strict context, students are split by MRUN modulo 2. Each half is predicted using only the other half\'s recorded Ranking. The training half must contain at least five interior students and three distinct GPAs. Their observed integer scores bound a single common anchor adjustment. The held-out student\'s Ranking never enters its prediction; neither variant selects targets by whether their current prediction is wrong.',
+ '', 'Two exploratory variants are retained. The midpoint variant keeps the original anchor whenever feasible and otherwise uses the midpoint of the training interval. The conservative variant changes a score only if every anchor in that interval implies the same held-out integer score. Intervals account for the existing decimal half-up epsilon and are expanded slightly for the conservative endpoint check, preventing borderline half-points from being treated as uniquely determined.',
+ '', '| Peer diagnostic, all 842,942 clean students | Exact agreement | All mismatches resolved | New mismatches | One-point errors resolved |',
+ '|---|---:|---:|---:|---:|',
+ sprintf('| Baseline | %.4f%% | — | — | — |',100*op_safe$baseline_exact/op_safe$n),
+ sprintf('| Anchor interval midpoint | %.4f%% | %s | %s | %s |',100*op_mid$exact_rate,op_fmt(op_mid$fixed),op_fmt(op_mid$introduced),op_fmt(op_mid$one_point_fixed)),
+ sprintf('| Change only uniquely implied scores | %.4f%% | %s | %s | %s |',100*op_safe$exact_rate,op_fmt(op_safe$fixed),op_fmt(op_safe$introduced),op_fmt(op_safe$one_point_fixed)),
+ '', sprintf('The conservative diagnostic resolves %.2f%% of the original one-point discrepancies, introduces no new mismatches, and worsens no existing errors in this evaluation. It has %s uniquely implied predictions (%.2f%% of the clean sample), of which %.4f%% match. There remain %s original one-point cases unresolved and %s total mismatches across the clean sample. Full agreement has not been obtained.',
+ 100*op_safe$one_point_fixed/op_safe$one_point_baseline,op_fmt(op_ident$n),100*op_ident$n/op_safe$n,
+ 100*op_ident$exact_rate,op_fmt(op_safe$one_point_baseline-op_safe$one_point_fixed),op_fmt(op_safe$n-op_safe$exact)),
+ '', '| Admission year | Clean students | Baseline exact | Conservative diagnostic exact | One-point cases resolved | New mismatches |',
+ '|---|---:|---:|---:|---:|---:|',
+ vapply(seq_len(nrow(op_year)),function(i){z<-op_year[i];sprintf('| %d | %s | %.2f%% | %.2f%% | %s | %s |',
+ z$grad_year+1L,op_fmt(z$n),100*z$baseline_exact/z$n,100*z$exact_rate,op_fmt(z$one_point_fixed),op_fmt(z$introduced))},character(1)),
+ '', '**This is empirical calibration using peers\' recorded Ranking, not independent reconstruction from grades and published rules.** The clean evaluation sample also requires exact observed NEM. The results do not establish performance among nonregistrants, NEM-mismatched students, multiple-context histories or contexts with few observed scores. The zero newly introduced errors is a sample result, not a guarantee. These are exploratory diagnostics, and the existing independently reconstructed scores remain the main comparison.',
+ '', '## Next tasks',
+ '', '- Prioritize the historical **mean** and its roster/grade version. For contexts with narrow feasible intervals, compare the independently constructed cohort means with the implied interval; seek official school-context means or archived operational reference records. Do not substitute outcome-fitted means in the main reconstruction.',
+ '- Audit historical-peer inclusion and GPA provenance near the rounding boundary: missing cumulative GPAs, late registrations, revised grade records and reported-GPA versus NEM-implied GPA. The national performance refresh and simple alternative rounding rules have already been tested and rejected.',
+ '- If peer calibration is pursued as an imputation sensitivity, keep it labeled separately. Validate across fixed additional folds and school/cohort groups; characterize coverage and remaining errors before testing NEM mismatches, multiple contexts or missing-score students. Examine dependence on offer status and observed-score availability before using it in PACE mechanism estimates.',
+ '- Preserve unknown eligibility cases and existing score files. F08.3 and the complete academic-eligibility reconstruction remain open.',
+ '', '## Reproduce and inspect',
+ '', 'All statistical logic is in `code/analysis_for_adversarial_report.Rmd`. From `code/`, run `f08-score-reconstruction-functions`, followed by `f08-one-point-setup`, `f08-one-point-development`, `f08-one-point-curve-diagnostic`, `f08-one-point-arithmetic-development`, `f08-one-point-benchmark-diagnostic`, `f08-one-point-peer-diagnostic`, `f08-one-point-nem-table-diagnostic`, and `f08-one-point-report`. The full notebook need not be knitted.',
+ '', 'Aggregate CSVs in this folder contain development comparisons, the frozen baseline selection, rounding frequencies, curve/benchmark feasibility, NEM-table-cell checks and held-out peer results. Private clean inputs, feasible intervals and peer predictions are versioned `ranking_one_point_*_2026-10-19.rds` under ignored `input/f08/`. None replaces a delivered score file. Input fingerprints are in `input_manifest.csv`.',
+ '', 'Checks assert the baseline sample and one-point counts, unique student/cohort keys, prediction bounds, honest held-out-fold assignment, interval/midpoint consistency, unchanged fallback predictions, all-year improvement for the conservative diagnostic, zero introduced/worsened errors, and resolved-minus-introduced accounting. All R chunks are parsed after the edit.',
+ '', 'The [2023 MINEDUC guide](https://acceso.mineduc.cl/wp-content/uploads/2022/06/2.-INSTRUMENTOS-ACCESO-ADM-2023.pdf), pp. 8–9, gives the shared straight-line formula and says coefficient calculations use full precision; pp. 13–14 discuss the legacy scale transformation. Current annual-score descriptions should not silently replace the dated context rules for this sample.')
+writeLines(op_report,file.path(op_out,'one_point_report_2026-10-19.md'))
+op_files<-file.path(op_input,c('ranking_within_context_diagnostics_2026-10-19.rds',
+ 'ranking_short_history_contexts_2026-10-19.rds','ranking_first_pass_reference_2026-10-19.rds',
+ 'ranking_targets.rds'))
+op_files<-c(op_files,'analysis_for_adversarial_report_output/f08/ranking/nem_tables_used.csv',
+ file.path(op_sources,c('demre_nem_a_2019_archive.txt','mineduc_access_tables_2020.txt')))
+fwrite(data.table(file=basename(op_files),bytes=file.info(op_files)$size,
+ md5=unname(tools::md5sum(op_files))),file.path(op_out,'input_manifest.csv'))
+cat('One-point report and checks completed.\n')
+```

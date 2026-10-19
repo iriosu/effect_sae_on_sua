@@ -2,7 +2,19 @@
 
 Prepared October 19, 2026, for continuing the F08 work with Ignacio. The main unresolved task is to establish whether SAE reduced PACE admission through lower attendance at participating schools, lower academic qualification, or both. We now have official school rosters, an audit of the recorded PACE variables, and reconstructed scores for many graduates without recorded NEM/Ranking. **The Ranking reconstruction remains provisional; full academic eligibility and the corresponding mechanism estimates are not finished.**
 
-## Latest test: national performance panel and full histories
+## Latest test: one-point errors and the shared historical mean
+
+The [one-point report](../code/analysis_for_adversarial_report_output/f08/ranking/one_point_2026-10-19/one_point_report_2026-10-19.md) narrows the next investigation to the historical **mean** and its operational reference records. In the exact-NEM, complete-history, one-context sample, the baseline has 42,007 one-point errors among 842,942 students. Changing only the historical mean by at most 0.02 GPA points can reconcile every interior score in 3,300/3,394 mixed contexts whose errors are all one point (97.23%). A maximum-only change of at most 0.01 works in just 24. Only 404/40,106 interior one-point errors lie at a final half-point rounding threshold. These are feasibility diagnostics, not recovered official benchmarks.
+
+**Retain the independent reconstruction.** None of 34 new arithmetic, interpolation or scale variants improves development-school agreement. The published NEM-cell audit also finds no supported systematic table replacement in admissions 2021, 2022 or 2026. Do not add one point uniformly or choose a formula separately for each student's observed error.
+
+A separate **peer-based calibration diagnostic** is promising: split students within each strict context by MRUN parity, infer an anchor interval from the other half, and change a held-out score only when every feasible anchor implies the same integer. This resolves **24,316/42,007 one-point errors (57.89%)**, resolves 27,473 mismatches overall, introduces **zero new mismatches**, and worsens no existing errors in this evaluation. Clean-sample exact agreement rises from **92.5532% to 95.8124%**, with improvements in every admission year. Of 632,385 uniquely implied predictions, **99.8901%** match. The less conservative midpoint variant resolves more errors but introduces 814, so keep both clearly labeled as diagnostics.
+
+This calibration uses **other students' recorded Ranking**, rather than grades and official rules alone. No held-out student's Ranking enters its prediction, but the clean evaluation requires exact observed NEM and does not establish performance among nonregistrants or complex histories. No delivered score file or eligibility estimate has been replaced. Private `ranking_one_point_peer_diagnostic_2026-10-19.rds` contains the two separate exploratory predictions and training intervals; aggregate outputs, input hashes and the reproduction instructions are shared. Run the `f08-one-point-*` chunks after `f08-score-reconstruction-functions`.
+
+Next: obtain or independently reconstruct the operational historical means; audit reference-roster completeness, historical GPA provenance and grade revisions near mean-rounding boundaries. If pursuing peer calibration as an imputation sensitivity, validate additional fixed folds and applicability beyond this clean sample before using it for PACE mechanism estimates. F08.3 stays open.
+
+## Earlier test: national performance panel and full histories
 
 The author's suggested source was checked against the [MINEDUC collection](https://datosabiertos.mineduc.cl/rendimiento-por-estudiante-2/) and a newly downloaded `/Grade Inflation/Data/Master/panel_performance_2002_2025.rds`. The existing calculation already uses the 2002–2023 panel plus 2024–2025 grades. The [performance-panel report](../code/analysis_for_adversarial_report_output/f08/ranking/performance_panel_2026-10-19/performance_panel_report_2026-10-19.md) records source provenance, comparison checks, NEM tests and nine Ranking candidates.
 

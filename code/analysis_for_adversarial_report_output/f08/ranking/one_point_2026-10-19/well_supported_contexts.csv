@@ -1,0 +1,5 @@
+split,only_one_point,contexts,students,one_point,line_feasible,anchor_feasible,median_anchor_width,any_grid_fit,mean_only_fit,max_only_fit
+Development schools,TRUE,1698,47579,16927,1698,1697,0.172619047618852,1645,1644,1
+Reserved schools,TRUE,420,12081,4314,420,420,0.185714285714306,411,411,0
+Development schools,FALSE,812,19982,9377,810,684,0.152393361394066,620,568,37
+Reserved schools,FALSE,191,4151,1805,190,150,0.130838835901458,146,127,18

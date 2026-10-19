@@ -1,0 +1,8 @@
+file,bytes,md5
+ranking_within_context_diagnostics_2026-10-19.rds,83260929,fce3cda9746bcf18a94eae1cd9f32f6c
+ranking_short_history_contexts_2026-10-19.rds,24721646,70d0386cfa752e72d140abd9185eecfc
+ranking_first_pass_reference_2026-10-19.rds,8977911,421ddf2891d68bf8fbfc11e1ccd647f5
+ranking_targets.rds,39545122,3d1131fed52c90c4e5204bcf5127f640
+nem_tables_used.csv,248203,eec5f866c615248fc082b37ab31176c6
+demre_nem_a_2019_archive.txt,12647,04c64cfe37533ae24796fc0c637a47b9
+mineduc_access_tables_2020.txt,30548,71720ca5d6738ee884555a12a1abefee
