@@ -1,0 +1,151 @@
+YEAR,OFFER,missing_reason,GRAD_EVER,GRAD_OT,score,n
+2016,0,Linked graduation; reconstruction unavailable,1,1,NEM,1
+2016,1,Available,1,0,NEM,6
+2016,0,Available,1,1,NEM,180
+2016,0,Available,1,0,NEM,20
+2016,1,Available,1,1,NEM,29
+2016,0,Available,0,0,NEM,7
+2016,0,Original standardized value; raw source unresolved,0,0,NEM,1
+2016,1,No target graduation record,0,0,NEM,3
+2016,0,No target graduation record,0,0,NEM,11
+2016,1,Available,0,0,NEM,2
+2017,1,Available,1,1,NEM,2711
+2017,0,Available,1,1,NEM,4408
+2017,0,No target graduation record,0,0,NEM,587
+2017,1,Available,1,0,NEM,556
+2017,1,No target graduation record,0,0,NEM,491
+2017,0,Available,0,0,NEM,190
+2017,0,Available,1,0,NEM,693
+2017,1,Available,0,0,NEM,124
+2017,1,Linked graduation; reconstruction unavailable,1,0,NEM,2
+2017,1,Original standardized value; raw source unresolved,0,0,NEM,13
+2017,0,Linked graduation; reconstruction unavailable,1,1,NEM,11
+2017,0,Original standardized value; raw source unresolved,0,0,NEM,17
+2017,1,Linked graduation; reconstruction unavailable,1,1,NEM,3
+2017,0,Linked graduation; reconstruction unavailable,1,0,NEM,3
+2017,0,Original standardized value; raw source unresolved,1,1,NEM,2
+2017,1,Original standardized value; raw source unresolved,1,1,NEM,1
+2018,1,Available,1,1,NEM,9496
+2018,0,Available,0,0,NEM,582
+2018,0,Available,1,1,NEM,15572
+2018,1,No target graduation record,0,0,NEM,1184
+2018,0,No target graduation record,0,0,NEM,1772
+2018,1,Available,1,0,NEM,1141
+2018,1,Available,0,0,NEM,304
+2018,0,Available,1,0,NEM,1347
+2018,0,Original standardized value; raw source unresolved,0,0,NEM,21
+2018,0,Linked graduation; reconstruction unavailable,1,1,NEM,18
+2018,0,Linked graduation; reconstruction unavailable,1,0,NEM,10
+2018,1,Original standardized value; raw source unresolved,0,0,NEM,7
+2018,1,Linked graduation; reconstruction unavailable,1,1,NEM,10
+2018,1,Linked graduation; reconstruction unavailable,1,0,NEM,2
+2018,0,Original standardized value; raw source unresolved,1,1,NEM,1
+2019,0,Available,1,1,NEM,25528
+2019,1,Available,1,1,NEM,13629
+2019,0,Available,0,0,NEM,978
+2019,0,Available,1,0,NEM,1718
+2019,0,No target graduation record,0,0,NEM,3018
+2019,1,Available,1,0,NEM,1012
+2019,1,No target graduation record,0,0,NEM,1715
+2019,1,Available,0,0,NEM,522
+2019,0,Linked graduation; reconstruction unavailable,1,1,NEM,32
+2019,1,Linked graduation; reconstruction unavailable,1,1,NEM,18
+2019,0,Original standardized value; raw source unresolved,0,0,NEM,5
+2019,1,Linked graduation; reconstruction unavailable,1,0,NEM,7
+2019,0,Linked graduation; reconstruction unavailable,1,0,NEM,9
+2020,0,Available,0,0,NEM,718
+2020,0,Available,1,1,NEM,21881
+2020,1,Available,1,1,NEM,12158
+2020,0,No target graduation record,0,0,NEM,3017
+2020,1,Available,1,0,NEM,848
+2020,1,No target graduation record,0,0,NEM,1705
+2020,0,Available,1,0,NEM,1213
+2020,1,Available,0,0,NEM,393
+2020,0,Linked graduation; reconstruction unavailable,1,1,NEM,25
+2020,1,Linked graduation; reconstruction unavailable,1,0,NEM,5
+2020,1,Linked graduation; reconstruction unavailable,1,1,NEM,11
+2020,0,Linked graduation; reconstruction unavailable,1,0,NEM,5
+2021,0,Available,1,1,NEM,23741
+2021,1,Available,1,1,NEM,12069
+2021,0,No target graduation record,0,0,NEM,4842
+2021,1,No target graduation record,0,0,NEM,2590
+2021,0,Available,0,0,NEM,556
+2021,1,Linked graduation; reconstruction unavailable,1,1,NEM,18
+2021,1,Available,0,0,NEM,288
+2021,0,Linked graduation; reconstruction unavailable,1,1,NEM,56
+2016,0,Linked graduation; reconstruction unavailable,1,1,RANKING,2
+2016,1,Available,1,0,RANKING,6
+2016,0,Available,1,1,RANKING,177
+2016,0,Available,1,0,RANKING,20
+2016,1,Available,1,1,RANKING,28
+2016,0,Original standardized value; raw source unresolved,1,1,RANKING,2
+2016,0,Available,0,0,RANKING,7
+2016,0,Original standardized value; raw source unresolved,0,0,RANKING,1
+2016,1,No target graduation record,0,0,RANKING,3
+2016,0,No target graduation record,0,0,RANKING,11
+2016,1,Available,0,0,RANKING,2
+2016,1,Linked graduation; reconstruction unavailable,1,1,RANKING,1
+2017,1,Available,1,1,RANKING,2650
+2017,0,Available,1,1,RANKING,4338
+2017,0,No target graduation record,0,0,RANKING,587
+2017,0,Linked graduation; reconstruction unavailable,1,1,RANKING,61
+2017,1,Available,1,0,RANKING,551
+2017,1,No target graduation record,0,0,RANKING,491
+2017,0,Available,0,0,RANKING,190
+2017,0,Available,1,0,RANKING,687
+2017,1,Available,0,0,RANKING,124
+2017,1,Linked graduation; reconstruction unavailable,1,0,RANKING,7
+2017,0,Original standardized value; raw source unresolved,1,1,RANKING,22
+2017,1,Linked graduation; reconstruction unavailable,1,1,RANKING,56
+2017,1,Original standardized value; raw source unresolved,0,0,RANKING,13
+2017,1,Original standardized value; raw source unresolved,1,1,RANKING,9
+2017,0,Original standardized value; raw source unresolved,0,0,RANKING,17
+2017,0,Linked graduation; reconstruction unavailable,1,0,RANKING,9
+2018,1,Available,1,1,RANKING,9465
+2018,0,Available,0,0,RANKING,582
+2018,0,Available,1,1,RANKING,15529
+2018,1,No target graduation record,0,0,RANKING,1184
+2018,0,No target graduation record,0,0,RANKING,1772
+2018,1,Available,1,0,RANKING,1135
+2018,1,Available,0,0,RANKING,304
+2018,0,Available,1,0,RANKING,1338
+2018,0,Original standardized value; raw source unresolved,0,0,RANKING,21
+2018,0,Linked graduation; reconstruction unavailable,1,1,RANKING,61
+2018,1,Linked graduation; reconstruction unavailable,1,1,RANKING,41
+2018,0,Linked graduation; reconstruction unavailable,1,0,RANKING,19
+2018,1,Original standardized value; raw source unresolved,0,0,RANKING,7
+2018,1,Linked graduation; reconstruction unavailable,1,0,RANKING,8
+2018,0,Original standardized value; raw source unresolved,1,1,RANKING,1
+2019,0,Available,1,1,RANKING,25444
+2019,1,Available,1,1,RANKING,13608
+2019,0,Available,0,0,RANKING,978
+2019,0,Available,1,0,RANKING,1711
+2019,0,No target graduation record,0,0,RANKING,3018
+2019,1,Available,1,0,RANKING,1010
+2019,1,No target graduation record,0,0,RANKING,1715
+2019,0,Linked graduation; reconstruction unavailable,1,1,RANKING,116
+2019,1,Available,0,0,RANKING,522
+2019,1,Linked graduation; reconstruction unavailable,1,1,RANKING,39
+2019,0,Original standardized value; raw source unresolved,0,0,RANKING,5
+2019,1,Linked graduation; reconstruction unavailable,1,0,RANKING,9
+2019,0,Linked graduation; reconstruction unavailable,1,0,RANKING,16
+2020,0,Available,0,0,RANKING,718
+2020,0,Available,1,1,RANKING,21842
+2020,1,Available,1,1,RANKING,12146
+2020,0,No target graduation record,0,0,RANKING,3017
+2020,1,Available,1,0,RANKING,845
+2020,1,No target graduation record,0,0,RANKING,1705
+2020,0,Available,1,0,RANKING,1205
+2020,1,Available,0,0,RANKING,393
+2020,1,Linked graduation; reconstruction unavailable,1,0,RANKING,8
+2020,1,Linked graduation; reconstruction unavailable,1,1,RANKING,23
+2020,0,Linked graduation; reconstruction unavailable,1,1,RANKING,64
+2020,0,Linked graduation; reconstruction unavailable,1,0,RANKING,13
+2021,0,Available,1,1,RANKING,23712
+2021,1,Available,1,1,RANKING,12059
+2021,0,No target graduation record,0,0,RANKING,4842
+2021,1,No target graduation record,0,0,RANKING,2590
+2021,0,Available,0,0,RANKING,556
+2021,0,Linked graduation; reconstruction unavailable,1,1,RANKING,85
+2021,1,Linked graduation; reconstruction unavailable,1,1,RANKING,28
+2021,1,Available,0,0,RANKING,288

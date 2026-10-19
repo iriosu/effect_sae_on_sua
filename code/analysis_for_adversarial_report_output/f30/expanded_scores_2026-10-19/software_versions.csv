@@ -1,0 +1,4 @@
+package,version
+R,4.6.0
+data.table,1.18.4
+fixest,0.14.2

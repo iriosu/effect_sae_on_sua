@@ -1,0 +1,177 @@
+YEAR,OFFER,uncertainty_reason,error_radius,n
+2016,0,Determinate,0,215
+2016,1,Determinate,0,40
+2016,0,Unresolved PACE school history,0,4
+2016,0,"Peer ranks, ties, quota or score-error sensitivity",0,1
+2017,1,Determinate,0,3784
+2017,0,Determinate,0,5691
+2017,0,Unresolved own Ranking,0,84
+2017,0,"Peer ranks, ties, quota or score-error sensitivity",0,67
+2017,0,Unresolved PACE school history,0,69
+2017,1,Unresolved own Ranking,0,65
+2017,1,"Peer ranks, ties, quota or score-error sensitivity",0,26
+2017,1,Unresolved PACE school history,0,26
+2018,1,Determinate,0,11930
+2018,0,Determinate,0,18736
+2018,0,Unresolved PACE school history,0,222
+2018,0,"Peer ranks, ties, quota or score-error sensitivity",0,316
+2018,1,"Peer ranks, ties, quota or score-error sensitivity",0,64
+2018,0,Unresolved own Ranking,0,49
+2018,1,Unresolved PACE school history,0,120
+2018,1,Unresolved own Ranking,0,30
+2019,0,Determinate,0,29972
+2019,1,Determinate,0,16507
+2019,0,Unresolved PACE school history,0,717
+2019,1,Unresolved PACE school history,0,265
+2019,0,"Peer ranks, ties, quota or score-error sensitivity",0,575
+2019,1,"Peer ranks, ties, quota or score-error sensitivity",0,119
+2019,1,Unresolved own Ranking,0,12
+2019,0,Unresolved own Ranking,0,24
+2020,0,Determinate,0,25767
+2020,1,Determinate,0,14686
+2020,1,Unresolved PACE school history,0,256
+2020,0,Unresolved PACE school history,0,539
+2020,0,"Peer ranks, ties, quota or score-error sensitivity",0,525
+2020,1,"Peer ranks, ties, quota or score-error sensitivity",0,168
+2020,0,Unresolved own Ranking,0,28
+2020,1,Unresolved own Ranking,0,10
+2021,0,Determinate,0,28030
+2021,1,Determinate,0,14573
+2021,0,"Peer ranks, ties, quota or score-error sensitivity",0,598
+2021,0,Unresolved PACE school history,0,551
+2021,0,Unresolved own Ranking,0,16
+2021,1,Unresolved PACE school history,0,224
+2021,1,"Peer ranks, ties, quota or score-error sensitivity",0,162
+2021,1,Unresolved own Ranking,0,6
+2016,0,Determinate,1,215
+2016,1,Determinate,1,40
+2016,0,Unresolved PACE school history,1,4
+2016,0,"Peer ranks, ties, quota or score-error sensitivity",1,1
+2017,1,Determinate,1,3784
+2017,0,Determinate,1,5691
+2017,0,Unresolved own Ranking,1,84
+2017,0,"Peer ranks, ties, quota or score-error sensitivity",1,67
+2017,0,Unresolved PACE school history,1,69
+2017,1,Unresolved own Ranking,1,65
+2017,1,"Peer ranks, ties, quota or score-error sensitivity",1,26
+2017,1,Unresolved PACE school history,1,26
+2018,1,Determinate,1,11930
+2018,0,Determinate,1,18734
+2018,0,Unresolved PACE school history,1,222
+2018,0,"Peer ranks, ties, quota or score-error sensitivity",1,318
+2018,1,"Peer ranks, ties, quota or score-error sensitivity",1,64
+2018,0,Unresolved own Ranking,1,49
+2018,1,Unresolved PACE school history,1,120
+2018,1,Unresolved own Ranking,1,30
+2019,0,Determinate,1,29971
+2019,1,Determinate,1,16505
+2019,0,Unresolved PACE school history,1,717
+2019,1,Unresolved PACE school history,1,265
+2019,0,"Peer ranks, ties, quota or score-error sensitivity",1,576
+2019,1,"Peer ranks, ties, quota or score-error sensitivity",1,121
+2019,1,Unresolved own Ranking,1,12
+2019,0,Unresolved own Ranking,1,24
+2020,0,Determinate,1,25764
+2020,1,Determinate,1,14684
+2020,1,Unresolved PACE school history,1,256
+2020,0,Unresolved PACE school history,1,539
+2020,0,"Peer ranks, ties, quota or score-error sensitivity",1,528
+2020,1,"Peer ranks, ties, quota or score-error sensitivity",1,170
+2020,0,Unresolved own Ranking,1,28
+2020,1,Unresolved own Ranking,1,10
+2021,0,Determinate,1,28025
+2021,1,Determinate,1,14573
+2021,0,"Peer ranks, ties, quota or score-error sensitivity",1,603
+2021,0,Unresolved PACE school history,1,551
+2021,0,Unresolved own Ranking,1,16
+2021,1,Unresolved PACE school history,1,224
+2021,1,"Peer ranks, ties, quota or score-error sensitivity",1,162
+2021,1,Unresolved own Ranking,1,6
+2016,0,Determinate,5,215
+2016,1,Determinate,5,40
+2016,0,Unresolved PACE school history,5,4
+2016,0,"Peer ranks, ties, quota or score-error sensitivity",5,1
+2017,1,Determinate,5,3784
+2017,0,Determinate,5,5690
+2017,0,Unresolved own Ranking,5,84
+2017,0,"Peer ranks, ties, quota or score-error sensitivity",5,68
+2017,0,Unresolved PACE school history,5,69
+2017,1,Unresolved own Ranking,5,65
+2017,1,"Peer ranks, ties, quota or score-error sensitivity",5,26
+2017,1,Unresolved PACE school history,5,26
+2018,1,Determinate,5,11924
+2018,0,Determinate,5,18729
+2018,0,Unresolved PACE school history,5,222
+2018,0,"Peer ranks, ties, quota or score-error sensitivity",5,323
+2018,1,"Peer ranks, ties, quota or score-error sensitivity",5,70
+2018,0,Unresolved own Ranking,5,49
+2018,1,Unresolved PACE school history,5,120
+2018,1,Unresolved own Ranking,5,30
+2019,0,Determinate,5,29968
+2019,1,Determinate,5,16505
+2019,0,Unresolved PACE school history,5,717
+2019,1,Unresolved PACE school history,5,265
+2019,0,"Peer ranks, ties, quota or score-error sensitivity",5,579
+2019,1,"Peer ranks, ties, quota or score-error sensitivity",5,121
+2019,1,Unresolved own Ranking,5,12
+2019,0,Unresolved own Ranking,5,24
+2020,0,Determinate,5,25760
+2020,1,Determinate,5,14682
+2020,1,Unresolved PACE school history,5,256
+2020,0,Unresolved PACE school history,5,539
+2020,0,"Peer ranks, ties, quota or score-error sensitivity",5,532
+2020,1,"Peer ranks, ties, quota or score-error sensitivity",5,172
+2020,0,Unresolved own Ranking,5,28
+2020,1,Unresolved own Ranking,5,10
+2021,0,Determinate,5,28016
+2021,1,Determinate,5,14570
+2021,0,"Peer ranks, ties, quota or score-error sensitivity",5,612
+2021,0,Unresolved PACE school history,5,551
+2021,0,Unresolved own Ranking,5,16
+2021,1,Unresolved PACE school history,5,224
+2021,1,"Peer ranks, ties, quota or score-error sensitivity",5,165
+2021,1,Unresolved own Ranking,5,6
+2016,0,Determinate,10,215
+2016,1,Determinate,10,40
+2016,0,Unresolved PACE school history,10,4
+2016,0,"Peer ranks, ties, quota or score-error sensitivity",10,1
+2017,1,Determinate,10,3782
+2017,0,Determinate,10,5687
+2017,0,Unresolved own Ranking,10,84
+2017,0,"Peer ranks, ties, quota or score-error sensitivity",10,71
+2017,0,Unresolved PACE school history,10,69
+2017,1,Unresolved own Ranking,10,65
+2017,1,"Peer ranks, ties, quota or score-error sensitivity",10,28
+2017,1,Unresolved PACE school history,10,26
+2018,1,Determinate,10,11912
+2018,0,Determinate,10,18716
+2018,0,Unresolved PACE school history,10,222
+2018,0,"Peer ranks, ties, quota or score-error sensitivity",10,336
+2018,1,"Peer ranks, ties, quota or score-error sensitivity",10,82
+2018,0,Unresolved own Ranking,10,49
+2018,1,Unresolved PACE school history,10,120
+2018,1,Unresolved own Ranking,10,30
+2019,0,Determinate,10,29956
+2019,1,Determinate,10,16501
+2019,0,Unresolved PACE school history,10,717
+2019,1,Unresolved PACE school history,10,265
+2019,0,"Peer ranks, ties, quota or score-error sensitivity",10,591
+2019,1,"Peer ranks, ties, quota or score-error sensitivity",10,125
+2019,1,Unresolved own Ranking,10,12
+2019,0,Unresolved own Ranking,10,24
+2020,0,Determinate,10,25754
+2020,1,Determinate,10,14676
+2020,1,Unresolved PACE school history,10,256
+2020,0,Unresolved PACE school history,10,539
+2020,0,"Peer ranks, ties, quota or score-error sensitivity",10,538
+2020,1,"Peer ranks, ties, quota or score-error sensitivity",10,178
+2020,0,Unresolved own Ranking,10,28
+2020,1,Unresolved own Ranking,10,10
+2021,0,Determinate,10,28005
+2021,1,Determinate,10,14560
+2021,0,"Peer ranks, ties, quota or score-error sensitivity",10,623
+2021,0,Unresolved PACE school history,10,551
+2021,0,Unresolved own Ranking,10,16
+2021,1,Unresolved PACE school history,10,224
+2021,1,"Peer ranks, ties, quota or score-error sensitivity",10,175
+2021,1,Unresolved own Ranking,10,6

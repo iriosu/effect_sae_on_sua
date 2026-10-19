@@ -1,0 +1,9 @@
+error_radius,estimator,n,uncertain,mean_lower,mean_upper,coefficient_min,coefficient_max,note
+0,RF,175869,5938,0.0513052328721946,0.085069000221756,-0.0643427490677577,-0.00182088188206551,Conservative fitted-coefficient completion range; no sampling uncertainty; not certified official eligibility
+0,IV,175869,5938,0.0513052328721946,0.085069000221756,-0.102829499499728,-0.0029100462024671,Conservative fitted-coefficient completion range; no sampling uncertainty; not certified official eligibility
+1,RF,175869,5953,0.0512824886705446,0.0851315467762937,-0.064452831076263,-0.00173549550521757,Conservative fitted-coefficient completion range; no sampling uncertainty; not certified official eligibility
+1,IV,175869,5953,0.0512824886705446,0.0851315467762937,-0.10300542729272,-0.00277358578505282,Conservative fitted-coefficient completion range; no sampling uncertainty; not certified official eligibility
+5,RF,175869,5986,0.0512028839647692,0.0852395817341317,-0.0646283831071594,-0.00156808141826921,Conservative fitted-coefficient completion range; no sampling uncertainty; not certified official eligibility
+5,IV,175869,5986,0.0512028839647692,0.0852395817341317,-0.10328598613944,-0.00250603261053775,Conservative fitted-coefficient completion range; no sampling uncertainty; not certified official eligibility
+10,RF,175869,6065,0.0510436745532186,0.0855295703051703,-0.0651059157958659,-0.00110334016968129,Conservative fitted-coefficient completion range; no sampling uncertainty; not certified official eligibility
+10,IV,175869,6065,0.0510436745532186,0.0855295703051703,-0.104049156008398,-0.00176330540845861,Conservative fitted-coefficient completion range; no sampling uncertainty; not certified official eligibility

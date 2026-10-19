@@ -1,0 +1,127 @@
+reference,scope,subset,admission_year,n,determinate,undetermined,agreement,false_positive,false_negative,positive_reference,negative_reference,definite_contradictions
+full_graduating_cohort,All graduates,All comparable,0,1033587,1006646,26941,0.999222169461757,221,562,309646,697000,783
+full_graduating_cohort,All graduates,All comparable,2021,150053,147906,2147,0.999114302327154,43,88,43590,104316,131
+full_graduating_cohort,All graduates,All comparable,2022,150361,146908,3453,0.999115092438805,44,86,39716,107192,130
+full_graduating_cohort,All graduates,All comparable,2023,175043,169741,5302,0.99919288798817,21,116,48482,121259,137
+full_graduating_cohort,All graduates,All comparable,2024,180296,175318,4978,0.99919004323572,36,106,52849,122469,142
+full_graduating_cohort,All graduates,All comparable,2025,184980,179826,5154,0.999321566403079,43,79,63253,116573,122
+full_graduating_cohort,All graduates,All comparable,2026,192854,186947,5907,0.999352757733475,34,87,61756,125191,121
+full_graduating_cohort,All graduates,Within 10 of absolute threshold,0,45673,43142,2531,0.988387186500394,153,348,27898,15244,501
+full_graduating_cohort,All graduates,Within 10 of absolute threshold,2021,7446,7076,370,0.986574335782928,30,65,4168,2908,95
+full_graduating_cohort,All graduates,Within 10 of absolute threshold,2022,7812,7367,445,0.986290213112529,34,67,4626,2741,101
+full_graduating_cohort,All graduates,Within 10 of absolute threshold,2023,6823,6505,318,0.990007686395081,13,52,4378,2127,65
+full_graduating_cohort,All graduates,Within 10 of absolute threshold,2024,7336,6908,428,0.989143022582513,18,57,4562,2346,75
+full_graduating_cohort,All graduates,Within 10 of absolute threshold,2025,7947,7498,449,0.988663643638304,32,53,4862,2636,85
+full_graduating_cohort,All graduates,Within 10 of absolute threshold,2026,8309,7788,521,0.989727786337956,26,54,5302,2486,80
+full_graduating_cohort,All graduates,Within 2 rank positions of quota,0,124093,105417,18676,0.997704355085043,51,191,90620,14797,242
+full_graduating_cohort,All graduates,Within 2 rank positions of quota,2021,18606,16966,1640,0.997701284922787,10,29,15384,1582,39
+full_graduating_cohort,All graduates,Within 2 rank positions of quota,2022,20440,17513,2927,0.997830183292411,14,24,15073,2440,38
+full_graduating_cohort,All graduates,Within 2 rank positions of quota,2023,20307,16847,3460,0.996972754793138,3,48,14013,2834,51
+full_graduating_cohort,All graduates,Within 2 rank positions of quota,2024,21411,18092,3319,0.996738890117179,8,51,15460,2632,59
+full_graduating_cohort,All graduates,Within 2 rank positions of quota,2025,21420,18059,3361,0.998726396810455,7,16,15566,2493,23
+full_graduating_cohort,All graduates,Within 2 rank positions of quota,2026,21909,17940,3969,0.998216276477146,9,23,15124,2816,32
+full_graduating_cohort,PACE graduation school,All comparable,0,211262,204643,6619,0.999218150633054,40,120,56587,148056,160
+full_graduating_cohort,PACE graduation school,All comparable,2021,25982,25443,539,0.998663679597532,7,27,7207,18236,34
+full_graduating_cohort,PACE graduation school,All comparable,2022,25677,24644,1033,0.999147865606233,4,17,6349,18295,21
+full_graduating_cohort,PACE graduation school,All comparable,2023,34734,33596,1138,0.999464221931182,5,13,8255,25341,18
+full_graduating_cohort,PACE graduation school,All comparable,2024,39504,38186,1318,0.999292934583355,8,19,9541,28645,27
+full_graduating_cohort,PACE graduation school,All comparable,2025,40847,39636,1211,0.999344030679181,7,19,12213,27423,26
+full_graduating_cohort,PACE graduation school,All comparable,2026,44518,43138,1380,0.999211831795633,9,25,13022,30116,34
+full_graduating_cohort,PACE graduation school,Within 10 of absolute threshold,0,7876,7196,680,0.988187882156754,20,65,5318,1878,85
+full_graduating_cohort,PACE graduation school,Within 10 of absolute threshold,2021,1174,1075,99,0.982325581395349,4,15,673,402,19
+full_graduating_cohort,PACE graduation school,Within 10 of absolute threshold,2022,1139,1024,115,0.986328125,3,11,755,269,14
+full_graduating_cohort,PACE graduation school,Within 10 of absolute threshold,2023,1055,980,75,0.988775510204082,4,7,761,219,11
+full_graduating_cohort,PACE graduation school,Within 10 of absolute threshold,2024,1320,1194,126,0.994974874371859,2,4,921,273,6
+full_graduating_cohort,PACE graduation school,Within 10 of absolute threshold,2025,1486,1378,108,0.989840348330914,4,10,1024,354,14
+full_graduating_cohort,PACE graduation school,Within 10 of absolute threshold,2026,1702,1545,157,0.986407766990291,3,18,1184,361,21
+full_graduating_cohort,PACE graduation school,Within 2 rank positions of quota,0,27590,21004,6586,0.996238811654923,13,66,16947,4057,79
+full_graduating_cohort,PACE graduation school,Within 2 rank positions of quota,2021,3811,3275,536,0.994198473282443,3,16,2856,419,19
+full_graduating_cohort,PACE graduation school,Within 2 rank positions of quota,2022,4292,3266,1026,0.995713410900184,3,11,2632,634,14
+full_graduating_cohort,PACE graduation school,Within 2 rank positions of quota,2023,4177,3042,1135,0.997041420118343,0,9,2312,730,9
+full_graduating_cohort,PACE graduation school,Within 2 rank positions of quota,2024,5070,3759,1311,0.995743548816175,1,15,2922,837,16
+full_graduating_cohort,PACE graduation school,Within 2 rank positions of quota,2025,5050,3848,1202,0.997661122661123,3,6,3141,707,9
+full_graduating_cohort,PACE graduation school,Within 2 rank positions of quota,2026,5190,3814,1376,0.996853696906135,3,9,3084,730,12
+full_graduating_cohort,PACE school history,All comparable,0,196833,190652,6181,0.999260432620691,32,109,54049,136603,141
+full_graduating_cohort,PACE school history,All comparable,2021,24308,23800,508,0.998655462184874,5,27,6925,16875,32
+full_graduating_cohort,PACE school history,All comparable,2022,24739,23746,993,0.999115640528931,4,17,6214,17532,21
+full_graduating_cohort,PACE school history,All comparable,2023,33282,32179,1103,0.999564933652382,1,13,8086,24093,14
+full_graduating_cohort,PACE school history,All comparable,2024,34521,33373,1148,0.999550534863512,6,9,8591,24782,15
+full_graduating_cohort,PACE school history,All comparable,2025,38550,37398,1152,0.999331515054281,7,18,11807,25591,25
+full_graduating_cohort,PACE school history,All comparable,2026,41433,40156,1277,0.999153302121725,9,25,12426,27730,34
+full_graduating_cohort,PACE school history,Within 10 of absolute threshold,0,7483,6842,641,0.988599824612686,15,63,5041,1801,78
+full_graduating_cohort,PACE school history,Within 10 of absolute threshold,2021,1124,1030,94,0.981553398058253,4,15,639,391,19
+full_graduating_cohort,PACE school history,Within 10 of absolute threshold,2022,1108,1000,108,0.986,3,11,735,265,14
+full_graduating_cohort,PACE school history,Within 10 of absolute threshold,2023,1028,954,74,0.992662473794549,0,7,743,211,7
+full_graduating_cohort,PACE school history,Within 10 of absolute threshold,2024,1186,1070,116,0.996261682242991,1,3,823,247,4
+full_graduating_cohort,PACE school history,Within 10 of absolute threshold,2025,1422,1318,104,0.990136570561457,4,9,977,341,13
+full_graduating_cohort,PACE school history,Within 10 of absolute threshold,2026,1615,1470,145,0.985714285714286,3,18,1124,346,21
+full_graduating_cohort,PACE school history,Within 2 rank positions of quota,0,25937,19785,6152,0.996563052817791,13,55,16045,3740,68
+full_graduating_cohort,PACE school history,Within 2 rank positions of quota,2021,3599,3094,505,0.993859082094376,3,16,2718,376,19
+full_graduating_cohort,PACE school history,Within 2 rank positions of quota,2022,4154,3168,986,0.995580808080808,3,11,2558,610,14
+full_graduating_cohort,PACE school history,Within 2 rank positions of quota,2023,4053,2952,1101,0.996951219512195,0,9,2253,699,9
+full_graduating_cohort,PACE school history,Within 2 rank positions of quota,2024,4452,3309,1143,0.99818676337262,1,5,2595,714,6
+full_graduating_cohort,PACE school history,Within 2 rank positions of quota,2025,4815,3672,1143,0.997821350762527,3,5,3003,669,8
+full_graduating_cohort,PACE school history,Within 2 rank positions of quota,2026,4864,3590,1274,0.996657381615599,3,9,2918,672,12
+school_history,All graduates,All comparable,0,1033587,1009246,24341,0.999891998581119,26,83,50119,959127,109
+school_history,All graduates,All comparable,2021,150053,147938,2115,0.999803971934189,3,26,6727,141211,29
+school_history,All graduates,All comparable,2022,150361,147950,2411,0.999885096316323,4,13,5792,142158,17
+school_history,All graduates,All comparable,2023,175043,171291,3752,0.999947457834913,5,4,7335,163956,9
+school_history,All graduates,All comparable,2024,180296,175169,5127,0.999971456136645,3,2,7752,167417,5
+school_history,All graduates,All comparable,2025,184980,179796,5184,0.999883200961089,5,16,11017,168779,21
+school_history,All graduates,All comparable,2026,192854,187102,5752,0.999850349007493,6,22,11496,175606,28
+school_history,All graduates,Within 10 of absolute threshold,0,45673,43943,1730,0.998543567803746,13,51,4366,39577,64
+school_history,All graduates,Within 10 of absolute threshold,2021,7446,7237,209,0.997650960342683,3,14,576,6661,17
+school_history,All graduates,Within 10 of absolute threshold,2022,7812,7602,210,0.998289923704288,3,10,664,6938,13
+school_history,All graduates,Within 10 of absolute threshold,2023,6823,6615,208,1,0,0,652,5963,0
+school_history,All graduates,Within 10 of absolute threshold,2024,7336,7005,331,0.99971448965025,1,1,696,6309,2
+school_history,All graduates,Within 10 of absolute threshold,2025,7947,7599,348,0.99828924858534,4,9,839,6760,13
+school_history,All graduates,Within 10 of absolute threshold,2026,8309,7885,424,0.997590361445783,2,17,939,6946,19
+school_history,All graduates,Within 2 rank positions of quota,0,868496,851464,17032,0.999930707581295,11,48,24883,826581,59
+school_history,All graduates,Within 2 rank positions of quota,2021,129804,128616,1188,0.999860048516514,1,17,3956,124660,18
+school_history,All graduates,Within 2 rank positions of quota,2022,130276,128408,1868,0.999906547878637,3,9,3179,125229,12
+school_history,All graduates,Within 2 rank positions of quota,2023,146438,143611,2827,0.999958220470577,4,2,3154,140457,6
+school_history,All graduates,Within 2 rank positions of quota,2024,151193,147668,3525,0.999979684156351,1,2,4210,143458,3
+school_history,All graduates,Within 2 rank positions of quota,2025,152744,149142,3602,0.999939654825602,0,9,5114,144028,9
+school_history,All graduates,Within 2 rank positions of quota,2026,158041,154019,4022,0.9999285802401,2,9,5270,148749,11
+school_history,PACE graduation school,All comparable,0,211262,190491,20771,0.999427794488978,26,83,50119,140372,109
+school_history,PACE graduation school,All comparable,2021,25982,23995,1987,0.9987914148781,3,26,6727,17268,29
+school_history,PACE graduation school,All comparable,2022,25677,23416,2261,0.999274000683294,4,13,5792,17624,17
+school_history,PACE graduation school,All comparable,2023,34734,31664,3070,0.999715765538151,5,4,7335,24329,9
+school_history,PACE graduation school,All comparable,2024,39504,35108,4396,0.999857582317421,3,2,7752,27356,5
+school_history,PACE graduation school,All comparable,2025,40847,36556,4291,0.999425538899223,5,16,11017,25539,21
+school_history,PACE graduation school,All comparable,2026,44518,39752,4766,0.99929563292413,6,22,11496,28256,28
+school_history,PACE graduation school,Within 10 of absolute threshold,0,7876,6230,1646,0.989727126805778,13,51,4366,1864,64
+school_history,PACE graduation school,Within 10 of absolute threshold,2021,1174,968,206,0.982438016528926,3,14,576,392,17
+school_history,PACE graduation school,Within 10 of absolute threshold,2022,1139,936,203,0.986111111111111,3,10,664,272,13
+school_history,PACE graduation school,Within 10 of absolute threshold,2023,1055,855,200,1,0,0,652,203,0
+school_history,PACE graduation school,Within 10 of absolute threshold,2024,1320,1006,314,0.998011928429423,1,1,696,310,2
+school_history,PACE graduation school,Within 10 of absolute threshold,2025,1486,1167,319,0.988860325621251,4,9,839,328,13
+school_history,PACE graduation school,Within 10 of absolute threshold,2026,1702,1298,404,0.985362095531587,2,17,939,359,19
+school_history,PACE graduation school,Within 2 rank positions of quota,0,46171,32709,13462,0.998196215108991,11,48,24883,7826,59
+school_history,PACE graduation school,Within 2 rank positions of quota,2021,5733,4673,1060,0.996148084742136,1,17,3956,717,18
+school_history,PACE graduation school,Within 2 rank positions of quota,2022,5592,3874,1718,0.996902426432628,3,9,3179,695,12
+school_history,PACE graduation school,Within 2 rank positions of quota,2023,6129,3984,2145,0.998493975903614,4,2,3154,830,6
+school_history,PACE graduation school,Within 2 rank positions of quota,2024,10401,7607,2794,0.99960562639674,1,2,4210,3397,3
+school_history,PACE graduation school,Within 2 rank positions of quota,2025,8611,5902,2709,0.99847509318875,0,9,5114,788,9
+school_history,PACE graduation school,Within 2 rank positions of quota,2026,9705,6669,3036,0.998350577297946,2,9,5270,1399,11
+school_history,PACE school history,All comparable,0,196833,185068,11765,0.999411027298074,26,83,50119,134949,109
+school_history,PACE school history,All comparable,2021,24308,23474,834,0.998764590610889,3,26,6727,16747,29
+school_history,PACE school history,All comparable,2022,24739,23201,1538,0.999267272962372,4,13,5792,17409,17
+school_history,PACE school history,All comparable,2023,33282,31260,2022,0.999712092130518,5,4,7335,23925,9
+school_history,PACE school history,All comparable,2024,34521,32180,2341,0.999844623990056,3,2,7752,24428,5
+school_history,PACE school history,All comparable,2025,38550,36170,2380,0.999419408349461,5,16,11017,25153,21
+school_history,PACE school history,All comparable,2026,41433,38783,2650,0.999278034190238,6,22,11496,27287,28
+school_history,PACE school history,Within 10 of absolute threshold,0,7483,6081,1402,0.989475415227759,13,51,4366,1715,64
+school_history,PACE school history,Within 10 of absolute threshold,2021,1124,950,174,0.982105263157895,3,14,576,374,17
+school_history,PACE school history,Within 10 of absolute threshold,2022,1108,929,179,0.986006458557589,3,10,664,265,13
+school_history,PACE school history,Within 10 of absolute threshold,2023,1028,849,179,1,0,0,652,197,0
+school_history,PACE school history,Within 10 of absolute threshold,2024,1186,933,253,0.997856377277599,1,1,696,237,2
+school_history,PACE school history,Within 10 of absolute threshold,2025,1422,1159,263,0.988783433994823,4,9,839,320,13
+school_history,PACE school history,Within 10 of absolute threshold,2026,1615,1261,354,0.984932593180016,2,17,939,322,19
+school_history,PACE school history,Within 2 rank positions of quota,0,40767,29026,11741,0.997967339626542,11,48,24883,4143,59
+school_history,PACE school history,Within 2 rank positions of quota,2021,5220,4388,832,0.995897903372835,1,17,3956,432,18
+school_history,PACE school history,Within 2 rank positions of quota,2022,5373,3837,1536,0.99687255668491,3,9,3179,658,12
+school_history,PACE school history,Within 2 rank positions of quota,2023,5947,3927,2020,0.998472116119175,4,2,3154,773,6
+school_history,PACE school history,Within 2 rank positions of quota,2024,7338,5002,2336,0.999400239904038,1,2,4210,792,3
+school_history,PACE school history,Within 2 rank positions of quota,2025,8221,5846,2375,0.998460485802258,0,9,5114,732,9
+school_history,PACE school history,Within 2 rank positions of quota,2026,8668,6026,2642,0.998174576833721,2,9,5270,756,11

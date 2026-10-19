@@ -1,0 +1,5 @@
+file,bytes,md5,shared_directory
+graduates_pace_audit.rds,40408343,ca8efcb6f819cb22d6295c3211bb218b,/Users/iriosu/Dropbox/Effect SAE on SUA/data/finalized_design_v1/section3/expanded_score_analysis_2026-10-19
+expanded_score_models_2026-10-19.rds,90766,10a750d2939a1855f8f67465e7355fac,/Users/iriosu/Dropbox/Effect SAE on SUA/data/finalized_design_v1/section3/expanded_score_analysis_2026-10-19
+pace_classification_baseline_v1_2026-10-19.rds,89928352,fc3c446a8ffa3db85ed6c85c1dbf02dc,/Users/iriosu/Dropbox/Effect SAE on SUA/data/finalized_design_v1/section3/expanded_score_analysis_2026-10-19
+pace_lottery_classification_baseline_v1_2026-10-19.rds,2491587,9e323db0453200422a667894b26dfe2c,/Users/iriosu/Dropbox/Effect SAE on SUA/data/finalized_design_v1/section3/expanded_score_analysis_2026-10-19

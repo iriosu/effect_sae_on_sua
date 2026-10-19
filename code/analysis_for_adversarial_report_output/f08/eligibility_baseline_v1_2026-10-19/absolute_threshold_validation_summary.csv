@@ -1,0 +1,3 @@
+scope,n,agreement,false_positive,false_negative,observed_positive,observed_negative
+All observed and reconstructed,1033587,0.998805132030492,399,836,287447,746140
+"PACE schools, within 10 points",7876,0.97270187912646,76,139,4086,3790
