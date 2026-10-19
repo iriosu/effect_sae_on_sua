@@ -1,6 +1,71 @@
-# Handoff to Abhijit: PACE audit and NEM/Ranking reconstruction
+# Handoff: adopted NEM/Ranking baseline, expanded 2SLS and PACE eligibility
 
-Prepared October 19, 2026, for continuing the F08 work with Ignacio. The main unresolved task is to establish whether SAE reduced PACE admission through lower attendance at participating schools, lower academic qualification, or both. We now have official school rosters, an audit of the recorded PACE variables, and reconstructed scores for many graduates without recorded NEM/Ranking. **The Ranking reconstruction remains provisional; full academic eligibility and the corresponding mechanism estimates are not finished.**
+Updated October 19, 2026, following Ignacio's explicit decision to adopt the independent reconstruction and move to the substantive analysis. **The immediate question is how attendance at a sought-after school, instrumented by its SAE lottery offer, changes NEM and Ranking among the expanded student population, including students who did not take the admission exams.** PACE academic eligibility is the next classification/mechanism task. The score reconstruction is an adopted research baseline, not a certified reproduction of official scores. New 2SLS estimates and full PACE eligibility have not yet been produced.
+
+## Adopted decision — start here
+
+Use **baseline v1, October 19**. NEM retains the established independent grade/GPA calculation. Ranking adopts `first_pass_reference_only`: narrow same-school HC–HC–TP–TP contexts, reconciled historical GPAs, rounded cohort/context arithmetic and first-passed records for historical peers. Preserve positive recorded scores and use reconstruction when those are unavailable. Exclude peer-based Ranking calibration from the main baseline; retain it only as a separately labeled sensitivity.
+
+**Perfect score replication is no longer a prerequisite for the analysis.** The next work is the expanded NEM/Ranking 2SLS, outcome-availability checks, and classification accuracy near PACE cutoffs. The historical-mean/precision investigation below is optional refinement unless a substantive result is sensitive to it. This decision supersedes earlier instructions to keep the first-pass candidate separate or prioritize further one-point matching.
+
+The [baseline package and manifest](../code/analysis_for_adversarial_report_output/f08/ranking/baseline_v1_2026-10-19/baseline_readme.md) is the authoritative current export. All statistical construction remains in `code/analysis_for_adversarial_report.Rmd`. Private RDS files are in the ignored `code/analysis_for_adversarial_report_output/input/f08/` directory; code, aggregate checks and manifests are committed. Coauthors need the existing private Dropbox inputs/outputs or must regenerate them; a Git clone alone does not contain individual records.
+
+| Private file | Role |
+|---|---|
+| `score_analysis_baseline_v1_2026-10-19.rds` | 1,286,127 regular-youth graduation records, 2020–2025; key `(MRUN, grad_year)`; observed, reconstructed and combined scores with provenance |
+| `section3_score_baseline_v1_2026-10-19.rds` | **Start the new 2SLS here.** All 304,547 original Section 3 panel rows/columns, expanded score outcomes and explicit availability/source flags |
+| `missing_scores_baseline_v1_2026-10-19.rds` | All originally missing NEM or Ranking cases, including unresolved records |
+
+The original combined score file and the finalized Section 3 panel are preserved. They are historical comparisons, not the newly adopted score export.
+
+**Shared private delivery:** the same three RDS files are also copied to the coauthors' existing data workspace, `Dropbox/Effect SAE on SUA/data/finalized_design_v1/section3/score_baseline_v1_2026-10-19/`. Use that directory after pulling the code. `shared_private_delivery.csv` verifies byte counts and MD5s against the local exports. `SAE_SCORE_BASELINE_EXPORT_DIR` can override the copy destination; a differing existing version is not overwritten. No individual records are committed to Git.
+
+National validation of the independent calculation remains **98.9797% exact NEM** (1,052,561 observed-score comparisons) and **90.7134% exact Ranking / 96.0694% within one point / 98.1098% within five** (1,033,587 comparisons). Among 209,749 originally missing scores, the cohort baseline supplies 185,216 NEM and 178,638 Ranking values; 24,533 and 31,111 remain unresolved. This validation concerns observed-score students and does not directly establish accuracy among nonregistrants.
+
+### Outcomes and sample contract
+
+- Start from `score_analysis_design_sample == TRUE`: **175,869** members of the finalized lottery sample with its original five controls. Do not restrict on exam participation, college application, original score availability, realized destination-school PACE status or graduation. Keep all these rows for availability and denominator checks.
+- Main continuous outcomes are **`NEM_ANALYSIS_Z` and `RANKING_ANALYSIS_Z`**, with `*_ANALYSIS_RAW`, `*_ANALYSIS_YEAR`, `*_ANALYSIS_SOURCE`, `*_ANALYSIS_RECONSTRUCTED` and `HAS_*_ANALYSIS` fields. Each uses the latest positive official score available through admission 2026; when none is available, it uses the linked graduation-cohort baseline. The current outcome extract has priority over the cached registration projection for positive same-process conflicts. Score years/scales travel with the values.
+- Graduation-cohort alternatives are `NEM_BASELINE_Z_BY2025`, `RANKING_BASELINE_Z_BY2025` and the corresponding raw fields. These use a unique 2020–2025 regular-secondary graduation and its next-admission-year scale. Their `_OT` versions additionally require graduation by `YEAR + 4`. The `_RECONSTRUCTED_*` versions apply the independent calculation to observed-score students too. These measure a different score vintage from the latest-registration main outcomes; label comparisons accordingly.
+- SD units for admissions 2021–2026 use **fixed national graduation-cohort moments**, computed from available observed-plus-reconstructed scores, including nonregistrants. Do not restandardize by offer/attendance or only in the outcome estimation sample. `analysis_standardization.csv` gives all moments and reference counts. Earlier official-score processes, if used, have explicitly labeled observed-score reference moments because those graduating cohorts have not been reconstructed. Raw scores must be compared within compatible process scales.
+- Keep unknown scores as `NA`, not zero. A retained panel row need not have a computable score, especially without a supported graduation/history. Report the outcome-specific estimation count and availability effects; an available-score 2SLS is not automatically an unconditional effect for every lottery applicant.
+
+### Verified expanded coverage
+
+In the fixed 175,869-student design population:
+
+| Outcome | Original Table 4 availability | Expanded baseline availability | Newly available students | Still unresolved |
+|---|---:|---:|---:|---:|
+| NEM | 137,480 | **154,620** | 17,208 | 21,249 |
+| Ranking | 137,480 | **154,170** | 16,788 | 21,699 |
+
+The gross newly available count differs from the net increase because **68 NEM and 98 Ranking cases** have an original standardized score but no positive raw value in either available source and no usable reconstruction. Their original standardized columns remain untouched, and `NEM_RAW_SOURCE_UNRESOLVED` / `RANKING_RAW_SOURCE_UNRESOLVED` flag them. Resolve their original source or report the exclusion/sensitivity; do not mix old and new standardized units to fill them. The raw-source audit does not establish that their original score was wrong.
+
+An initial graduation-only merge would also have excluded thousands of already-scored students without a target regular-secondary graduation. The expanded main fields recover their available official values and avoid that graduation restriction. `section3_expanded_coverage.csv` is the main coverage table; `section3_coverage.csv` describes only the narrower graduation-cohort alternatives. Every original panel column is preserved and every row remains present.
+
+### 2SLS specification and required comparisons
+
+Keep the finalized Section 3 design: instrument **`D_OD` with `OFFER`**, with `CHANCE_GROUP` fixed effects, application-year indicators, and `GPA8_Z`, `ES_MUJER`, `PRIORITARIO`, `ALTO`, `ORIGIN_OD`. Use the established heteroskedasticity-robust inference, no clustering in the baseline, `fixef.rm = 'none'`, `ssc(K.adj = FALSE)` for IV, and normal-reference IV p-values. The outcome equation is `Y ~ controls + i(YEAR, ref = 2016) | CHANCE_GROUP | D_OD ~ OFFER`. Reestimate the reduced form and first stage on each outcome's exact estimation sample; do not reuse a first stage from a different sample.
+
+Next analyst should implement these tasks in the central Rmd, export estimates/covariances and update F30:
+
+1. Reproduce the original Table 4 results using the untouched `NEM_Z_LATEST` and `RANK_Z_LATEST` fields. Estimate the new score definition on the common observed sample, then on the expanded sample, so measurement/standardization changes are separated from adding students.
+2. Estimate NEM and Ranking RF/FS/2SLS with `NEM_ANALYSIS_Z` and `RANKING_ANALYSIS_Z`; report raw-score checks by compatible admission process, sample counts by application cohort and offer, non-offered means, SEs, confidence intervals and first stages. Keep the national admission-test outcome unchanged; its missing values are not reconstructed here.
+3. Estimate offer effects on `HAS_NEM_ANALYSIS` and `HAS_RANKING_ANALYSIS` in the **entire fixed design population**, alongside the original availability indicators. Report new/old-only/unresolved cases by offer and cohort, and examine remaining selection rather than treating score missingness as random.
+4. Compare the combined baseline with uniform independent reconstruction where available, the graduation-cohort vintage, and fixed follow-up cohorts. Keep peer-based calibration and cutoff perturbations as sensitivities. Do not condition the main effect on post-offer PACE eligibility or graduating from a particular school.
+5. Only then update the score-results exhibits and interpretation. The continuous-score estimates remain to be run; this handoff freezes data and design choices, not a result.
+
+Baseline checks completed: all **84 R chunks parse**; the four adoption/export chunks run; saved files preserve original panel columns/row counts and recorded positive scores; national and design-sample coverage counts reproduce; all expanded raw outcomes respect their process-specific scales; standardized/raw availability agrees; and private student-level files remain Git-ignored. `artifact_manifest.csv` records input and output fingerprints.
+
+### PACE eligibility work after adoption
+
+Use the year-specific **percentile OR absolute-threshold** academic rule from `f08/pace_rules_2021_2026.csv`, the appropriate full school reference population, and explicit tie/quota/missing-peer handling. Do not rank only exam takers or only lottery applicants. Preserve graduation-cohort score versions for the academic rule/carryover; the main latest-registration score outcome is not automatically the right eligibility vintage.
+
+Validate false positives/negatives and near-cutoff disagreement by cohort and offer; assess sensitivity to plausible score errors and uncertain peer ranks, and whether estimated eligibility effects materially change. School participation/history, required exams and carryover/use conditions remain separate requirements. PACE application, selection and enrollment are not eligibility. The existing 97.27% agreement near the absolute cutoff is encouraging but does not validate the full OR rule. F08.3 stays open for this work; exact-score improvements are not a blocking gate.
+
+## Earlier diagnostic record — preserved for provenance
+
+The following reports describe earlier stages. Where an older section calls a method a separate candidate or names the morning delivery, the adoption instructions above control.
 
 ## Latest test: one-point errors and the shared historical mean
 
@@ -85,7 +150,7 @@ Three directories matter:
 | `code/analysis_for_adversarial_report_output/f08/ranking/` | Score-validation reports, aggregate diagnostics, NEM tables and reusable functions |
 | `code/analysis_for_adversarial_report_output/input/f08/` | **Private student-level records and intermediate caches; excluded from Git** |
 
-For the morning baseline, read the [iterative score report](../code/analysis_for_adversarial_report_output/f08/ranking/ranking_iterative_report_2026-10-19.md) first, then the [broader PACE findings](../code/analysis_for_adversarial_report_output/f08/pace_findings_2026-10-19.md). The [review checklist](adversarial_report_action_checklist_2026-10-17.md) records author decisions and leaves F08.3 open.
+For current work, start with the adopted-baseline instructions above and the [baseline package](../code/analysis_for_adversarial_report_output/f08/ranking/baseline_v1_2026-10-19/baseline_readme.md). The [iterative score report](../code/analysis_for_adversarial_report_output/f08/ranking/ranking_iterative_report_2026-10-19.md) describes the preserved morning delivery; the [broader PACE findings](../code/analysis_for_adversarial_report_output/f08/pace_findings_2026-10-19.md) describe institutional and route-data checks. The [review checklist](adversarial_report_action_checklist_2026-10-17.md) records author decisions and leaves F08.3/F30 open for eligibility and expanded-score estimates.
 
 Local locations on Ignacio's machine:
 
@@ -203,9 +268,9 @@ PACE-school performance is materially worse: **73.34% exact, MAE 3.028**, versus
 
 Independent four-grade NEM reconstruction matches **98.98% of 1,052,561** observed-score complete histories. For admission 2023–2025, the harmonized `promedio_notas` field has only integer precision, so direct table conversion from that field is not a valid check. The upstream cause of that precision loss has not been established.
 
-## 4. Exact outputs for missing NEM and Ranking
+## 4. Archived morning outputs for missing NEM and Ranking
 
-**Use `input/f08/score_reconstruction_records.rds` as the latest combined delivery.** It has one row per `MRUN, grad_year`; `admission_year = grad_year + 1`. Do not merge stacked cohorts/processes on MRUN alone.
+**Historical snapshot only:** `input/f08/score_reconstruction_records.rds` is the preserved morning delivery. Use `score_analysis_baseline_v1_2026-10-19.rds` and the linked Section 3 panel above for new analyses. The national files have one row per `MRUN, grad_year`; `admission_year = grad_year + 1`. Do not merge stacked cohorts/processes on MRUN alone without a documented unique-student/horizon rule.
 
 | Private file under `input/f08/` | Purpose |
 |---|---|
@@ -237,12 +302,12 @@ Recorded scores are preserved. For missing NEM, precise recorded GPA conversion 
 
 There were 209,749 originally missing observations for each score. Counts come from `ranking/score_augmentation_coverage.csv`. Filling a missing score is not evidence that it equals the unavailable official score; validation is among observed-score students and may not transport perfectly to nonregistrants.
 
-### Earlier files that should not be mistaken for the final delivery
+### Other earlier files that should not be mistaken for the adopted baseline
 
 - `ranking_augmented_graduates.rds`: **original** Ranking reconstruction and provisional percentile bounds; not the latest candidate.
 - `ranking_refined_validation_records.rds`: intermediate historical-GPA/broad-modality candidate, before the final cohort-mean/context-rounding changes.
 - `ranking_context_score_rounding_candidates.rds`: contains several final-stage variants; the selected one is `variant == "context_round"`.
-- `ranking_reconstruction_report_2026-10-19.md`, `ranking_validation.html`, and the main generated HTML/Markdown notebook are earlier snapshots. The authoritative latest numerical summary is **`ranking_iterative_report_2026-10-19.md`**. The full notebook has not been reknit after the final iterations; the new chunks were executed directly.
+- `ranking_reconstruction_report_2026-10-19.md`, `ranking_validation.html`, `ranking_iterative_report_2026-10-19.md`, and the main generated HTML/Markdown notebook are earlier snapshots. The authoritative adopted export is now **`ranking/baseline_v1_2026-10-19/`**. The full notebook has not been reknit after the final iterations; the new chunks were executed directly.
 
 Other useful final aggregates are `ranking_iterative_summary.csv`, `ranking_iterative_pace_validation.csv`, `ranking_iterative_clean_validation.csv`, `ranking_iterative_absolute_cutoff_validation.csv`, `ranking_iterative_error_distribution.csv`, `nem_augmentation_validation.csv` and `score_reconstruction_rules_2021_2026.csv`.
 
@@ -262,6 +327,7 @@ Run R from the repository's **`code/` directory**. Named chunks are more stable 
 | `f08-ranking-scale-transformation-audit`, `f08-ranking-remaining-discrepancies` | Scale-anchor checks and remaining-error diagnostics |
 | `f08-ranking-cohort-averaging-audit`, `f08-ranking-context-rounding-audit` | Final cohort averaging and context-score variants |
 | `f08-score-final-records-and-report` | Combined delivery, latest aggregate results/report, exported functions and assertions |
+| `f08-adopted-score-baseline`, `f08-adopted-score-panel`, `f08-adopted-score-expanded-panel`, `f08-adopted-score-manifest` | Adopted national baseline, full Section 3 linkage, retention of available official scores, coverage/normalization/source audits and manifests |
 
 `ranking/score_reconstruction_functions.R` is a generated, sourceable export. **Edit the Rmd function chunk, not the export.** Important functions: `nem_from_gpa()`, `nem_from_history()`, `ranking_reference_by_context()`, `ranking_student_contexts()`, `ranking_context_benchmarks()` and `ranking_from_contexts()`.
 
@@ -276,7 +342,7 @@ tables <- fread(file.path(out, "f08/ranking/nem_tables_used.csv"))
 targets <- readRDS(file.path(out, "input/f08/ranking_targets.rds"))
 nem <- nem_from_history(targets, tables)
 scores <- as.data.table(readRDS(file.path(out,
-  "input/f08/score_reconstruction_records.rds")))
+  "input/f08/score_analysis_baseline_v1_2026-10-19.rds")))
 stopifnot(!anyDuplicated(scores, by = c("MRUN", "grad_year")))
 scores[, .(graduates = .N, nem_filled = sum(nem_is_imputed),
            ranking_filled = sum(ranking_is_imputed)), by = grad_year]
@@ -294,13 +360,12 @@ Checks already run include parsing all 49 R chunks, published 2022/2023 worked e
 
 ## 6. Remaining work, in priority order
 
-1. **Reproduce the delivered counts and validation summary.** Confirm the refined combined file and reconstruction version are being used. Keep the original proxy as a sensitivity comparison.
-2. **Resolve remaining Ranking differences, especially in PACE schools.** Start with one-context students with exact NEM and complete observed historical references. Examine year, modality, transfers and distance to PACE thresholds. Seek official school/context historical means, maxima and small-school pooling assignments; a public bulk benchmark file was not located. Data completeness alone does not establish equality to DEMRE's reference roster or grade versions.
-3. **Resolve the documentation/arithmetic conflict.** Confirm truncation versus rounding, annual-cohort weighting and context-score rounding for each admission year. Do not choose rules separately by student or to produce a desired treatment estimate. A potential extension not yet implemented is using later registration records to recover historical GPAs for students absent from the on-time registration file, with careful provenance and grade-version checks.
-4. **Investigate unresolved NEM cases.** Missing, ambiguous or unsupported histories account for remaining gaps; do not fill them indiscriminately. Clarify the 2023–2025 loss of decimals in the harmonized GPA field.
-5. **Construct complete academic qualification.** Use year-specific percentile OR absolute Ranking thresholds, the correct official reference population and tie/quota rules, while keeping school participation, exams and carryover separate. Preserve unknowns and report sensitivity near cutoffs. The refined proxy's differential error by lottery offer still needs to be checked; earlier offer-group diagnostics used the original proxy.
-6. **Reestimate the mechanisms on the finalized lottery sample.** Compare old/new classifications by cohort, offer and school; show coverage and disagreement reasons. Avoid conditioning the main causal mechanism claim on observed scores or post-offer graduation. Keep 2026 route outcomes unavailable until recovered.
-7. **Update affected manuscript tables and interpretation together after validation.** No estimates based on the final imputed academic-eligibility variable have been inserted into the manuscript. F08.3 remains open.
+1. **Reproduce the adopted baseline and coverage.** Run the four `f08-adopted-score-*` chunks after the shared scoring functions, or verify the exported file hashes. Use the expanded main outcome fields, not the narrower graduation-only fields or the morning export.
+2. **Estimate expanded NEM/Ranking RF/FS/2SLS.** Follow the sample/specification/comparison contract at the top. Start with all 175,869 design students, retain non-exam takers, report outcome availability and the exact estimation sample. Separate normalization/vintage changes from the additional observations. Resolve or bound the 68 NEM/98 Ranking raw-source gaps; preserve original standardized values for comparison.
+3. **Validate PACE academic classification.** Apply the correct percentile OR absolute rule and cohort/score vintage; check errors near both cutoffs and by lottery offer, including uncertain peer ranks and unresolved scores. Keep school history, exams, carryover/use and recorded selection separate. This replaces perfect score replication as the immediate validation target.
+4. **Reestimate mechanism outcomes and assess sensitivity.** Compare eligibility rates and effect estimates across plausible score-error/tie/missingness specifications, with coverage and first stages. Do not condition the main causal effect on realized PACE destination, graduation or eligibility. Keep 2026 route outcomes unavailable until recovered.
+5. **Update manuscript estimates and interpretation after these checks.** No new expanded-score or imputed-eligibility estimate has been inserted yet. F08.3 and F30 remain open.
+6. **Optional further score refinement.** Investigate historical means/rosters, grade versions, remaining NEM discrepancies and the operational arithmetic conflict if classification or effect estimates are sensitive. Keep improvements independently validated and versioned; do not tune rules using individual observed Ranking or desired treatment estimates. These unresolved exact-score issues no longer block proceeding with the author-approved baseline.
 
 ## 7. Draft status and author decisions to preserve
 

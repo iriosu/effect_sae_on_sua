@@ -5702,3 +5702,339 @@ fwrite(data.table(file=basename(op_files),bytes=file.info(op_files)$size,
  md5=unname(tools::md5sum(op_files))),file.path(op_out,'input_manifest.csv'))
 cat('One-point report and checks completed.\n')
 ```
+
+### Adopted NEM/Ranking baseline for the expanded Section 3 analysis
+
+Author decision, October 19: adopt the independent reconstruction as the score
+baseline, include students regardless of exam participation, and shift the next
+analysis to NEM/Ranking 2SLS outcomes and PACE eligibility classification. Further
+exact-score refinements are optional sensitivities. This export does not run new
+2SLS estimates or certify full PACE eligibility.
+
+```{r f08-adopted-score-baseline}
+library(data.table)
+setDTthreads(4)
+sb_input<-'analysis_for_adversarial_report_output/input/f08'
+sb_out<-'analysis_for_adversarial_report_output/f08/ranking/baseline_v1_2026-10-19'
+dir.create(sb_out,recursive=TRUE,showWarnings=FALSE)
+sb_version<-'2026-10-19 baseline v1: observed scores plus independent reconstruction; narrow HHTT and first-pass historical references'
+sb_tables_path<-'analysis_for_adversarial_report_output/f08/ranking/nem_tables_used.csv'
+sb_tables<-fread(sb_tables_path)
+sb_target<-as.data.table(readRDS(file.path(sb_input,'ranking_targets.rds')))
+sb<-nem_from_history(sb_target,sb_tables)
+sb_candidate<-as.data.table(readRDS(file.path(sb_input,'ranking_first_pass_candidates_2026-10-19.rds')))[
+ variant=='first_pass_reference_only',.(MRUN,grad_year,ranking_reconstructed=candidate,
+ candidate_nem=nem_history_proxy)]
+stopifnot(!anyDuplicated(sb,by=c('MRUN','grad_year')),
+ !anyDuplicated(sb_candidate,by=c('MRUN','grad_year')),nrow(sb_candidate)==nrow(sb))
+sb<-merge(sb,sb_candidate,by=c('MRUN','grad_year'),all.x=TRUE)
+stopifnot(all((is.na(sb$candidate_nem)&is.na(sb$nem_history_proxy))|
+ (!is.na(sb$candidate_nem)&!is.na(sb$nem_history_proxy)&sb$candidate_nem==sb$nem_history_proxy)))
+sb[,`:=`(admission_year=grad_year+1L,nem_reconstructed=nem_history_proxy,
+ nem_baseline=nem_augmented,
+ ranking_recorded=fifelse(is.finite(reported_ranking)&reported_ranking>0,as.numeric(reported_ranking),NA_real_))]
+sb[,ranking_baseline:=fcoalesce(ranking_recorded,ranking_reconstructed)]
+sb[,`:=`(ranking_is_imputed=is.na(ranking_recorded)&is.finite(ranking_baseline),
+ nem_is_unresolved=!is.finite(nem_baseline),ranking_is_unresolved=!is.finite(ranking_baseline),
+ reconstruction_version=sb_version)]
+sb[,ranking_source:=fcase(is.finite(ranking_recorded),'Recorded',ranking_is_imputed,
+ 'Independent reconstruction: narrow HHTT and first-pass historical references',default='Unresolved')]
+sb[,ranking_unresolved_reason:=fcase(is.finite(ranking_baseline),'Available',!complete_history,
+ 'Incomplete/ambiguous/unordered passed-grade history',default='Missing, small, or degenerate historical context')]
+# Freeze SD units over the available national graduate population, including
+# reconstructed nonregistrants. Do not standardize within OFFER/D_OD groups or
+# only among exam takers. Use the SAME moments for reconstruction-only checks.
+sb_moments<-sb[,.(graduates=.N,nem_n=sum(is.finite(nem_baseline)),
+ nem_mean=mean(nem_baseline,na.rm=TRUE),nem_sd=sd(nem_baseline,na.rm=TRUE),
+ ranking_n=sum(is.finite(ranking_baseline)),ranking_mean=mean(ranking_baseline,na.rm=TRUE),
+ ranking_sd=sd(ranking_baseline,na.rm=TRUE)),by=admission_year]
+stopifnot(all(sb_moments$nem_sd>0),all(sb_moments$ranking_sd>0))
+sb<-merge(sb,sb_moments[,.(admission_year,nem_mean,nem_sd,ranking_mean,ranking_sd)],by='admission_year',all.x=TRUE)
+for(score in c('nem','ranking')){
+ sb[,(paste0(score,'_baseline_z')):=(get(paste0(score,'_baseline'))-get(paste0(score,'_mean')))/get(paste0(score,'_sd'))]
+ sb[,(paste0(score,'_reconstructed_z')):=(get(paste0(score,'_reconstructed'))-get(paste0(score,'_mean')))/get(paste0(score,'_sd'))]
+}
+sb_columns<-c('MRUN','grad_year','admission_year','RBD','pace12','nem_group','complete_history',
+ 'gpa_from_history','nem_recorded','nem_reconstructed','nem_reported_gpa_proxy','nem_proxy',
+ 'nem_baseline','nem_baseline_z','nem_reconstructed_z','nem_source','nem_is_imputed','nem_is_unresolved',
+ 'nem_unresolved_reason','ranking_recorded','ranking_reconstructed','ranking_baseline',
+ 'ranking_baseline_z','ranking_reconstructed_z','ranking_source','ranking_is_imputed',
+ 'ranking_is_unresolved','ranking_unresolved_reason','reconstruction_version')
+sb_export<-sb[,..sb_columns];setorder(sb_export,MRUN,grad_year)
+sb_coverage<-sb[,.(graduates=.N,nem_recorded=sum(is.finite(nem_recorded)),
+ nem_imputed=sum(nem_is_imputed),nem_unresolved=sum(nem_is_unresolved),
+ ranking_recorded=sum(is.finite(ranking_recorded)),ranking_imputed=sum(ranking_is_imputed),
+ ranking_unresolved=sum(ranking_is_unresolved)),by=admission_year]
+setorder(sb_coverage,admission_year);setorder(sb_moments,admission_year)
+sb_validation<-rbindlist(lapply(c('nem','ranking'),function(score){
+ z<-copy(sb);z[,error:=get(paste0(score,'_reconstructed'))-get(paste0(score,'_recorded'))]
+ rbindlist(list(cbind(data.table(score=score,scope='Overall'),as.data.table(score_metrics(z$error))),
+  z[,cbind(data.table(score=score,scope='Admission year'),as.data.table(score_metrics(error))),by=admission_year],
+  z[,cbind(data.table(score=score,scope='PACE graduation school'),as.data.table(score_metrics(error))),by=pace12]),fill=TRUE)
+}),fill=TRUE)
+sb_original<-as.data.table(readRDS(file.path(sb_input,'score_reconstruction_records.rds')))[,
+ .(MRUN,grad_year,original_nem=nem_augmented)]
+sb_compare<-merge(sb_export,sb_original,by=c('MRUN','grad_year'))
+stopifnot(nrow(sb_export)==1286127L,
+ sb[is.finite(nem_recorded),all(nem_baseline==nem_recorded)],
+ sb[is.finite(ranking_recorded),all(ranking_baseline==ranking_recorded)],
+ all(is.na(sb_compare$nem_baseline)==is.na(sb_compare$original_nem)),
+ sb_compare[is.finite(nem_baseline),all(nem_baseline==original_nem)],
+ sum(sb_coverage$nem_imputed)==185216L,sum(sb_coverage$nem_unresolved)==24533L,
+ sum(sb_coverage$ranking_imputed)==178638L,sum(sb_coverage$ranking_unresolved)==31111L,
+ sb_validation[scope=='Overall'&score=='ranking',n]==1033587L,
+ sb_validation[scope=='Overall'&score=='nem',n]==1052561L,
+ sb[is.finite(ranking_reconstructed),all(ranking_reconstructed>=nem_reconstructed)],
+ all(sb$ranking_baseline<=ifelse(sb$grad_year<=2021,850,1000),na.rm=TRUE),
+ all(sb$nem_baseline<=ifelse(sb$grad_year<=2021,850,1000),na.rm=TRUE))
+sb_baseline_path<-file.path(sb_input,'score_analysis_baseline_v1_2026-10-19.rds')
+saveRDS(sb_export,sb_baseline_path)
+saveRDS(sb_export[is.na(nem_recorded)|is.na(ranking_recorded)],
+ file.path(sb_input,'missing_scores_baseline_v1_2026-10-19.rds'))
+fwrite(sb_coverage,file.path(sb_out,'national_coverage.csv'))
+fwrite(sb_validation,file.path(sb_out,'independent_score_validation.csv'))
+fwrite(sb_moments,file.path(sb_out,'national_standardization.csv'))
+print(sb_coverage)
+```
+
+```{r f08-adopted-score-panel}
+# Link onto the ENTIRE finalized panel, before any outcome availability filter.
+# Five duplicate-MRUN graduate histories in the national target are retained in
+# the cohort-keyed export; ambiguous histories are not selected by their scores.
+sb_manifest<-fread('finalized_design_v1/data_manifest.csv')
+sb_manifest<-sb_manifest[endsWith(path_in_dropbox,'/section3/section3_panel.rds')]
+stopifnot(nrow(sb_manifest)==1L)
+sb_home<-if(nzchar(Sys.getenv('USERPROFILE')))Sys.getenv('USERPROFILE') else path.expand('~')
+sb_override<-Sys.getenv('SAE_ADVERSARIAL_PANEL')
+sb_paths<-if(nzchar(sb_override))path.expand(sb_override) else c(
+ file.path(sb_home,'Dropbox',sb_manifest$path_in_dropbox),
+ 'analysis_for_adversarial_report_output/input/section3_panel.rds')
+sb_paths<-sb_paths[file.exists(sb_paths)&!is.na(file.info(sb_paths)$size)&file.info(sb_paths)$size>0]
+if(!length(sb_paths))stop('No finalized Section 3 panel: set SAE_ADVERSARIAL_PANEL or restore the private cache.')
+sb_panel_path<-sb_paths[1L]
+stopifnot(unname(tools::md5sum(sb_panel_path))==sb_manifest$md5,
+ file.info(sb_panel_path)$size==sb_manifest$bytes)
+sb_panel_original<-as.data.table(readRDS(sb_panel_path))
+sb_counts<-sb_export[,.(score_cohort_records=.N),by=MRUN]
+sb_unique<-sb_export[!MRUN%in%sb_counts[score_cohort_records>1,MRUN]]
+sb_link_cols<-c('MRUN','grad_year','admission_year','nem_baseline','ranking_baseline',
+ 'nem_baseline_z','ranking_baseline_z','nem_reconstructed','ranking_reconstructed',
+ 'nem_reconstructed_z','ranking_reconstructed_z','nem_recorded','ranking_recorded',
+ 'nem_source','ranking_source','nem_is_imputed','ranking_is_imputed')
+sb_unique<-sb_unique[,..sb_link_cols]
+setnames(sb_unique,setdiff(sb_link_cols,'MRUN'),paste0('score_',setdiff(sb_link_cols,'MRUN')))
+sb_panel<-copy(sb_panel_original);sb_panel[,baseline_row:=.I]
+sb_panel<-merge(sb_panel,sb_counts,by='MRUN',all.x=TRUE,sort=FALSE)
+sb_panel[is.na(score_cohort_records),score_cohort_records:=0L]
+sb_panel<-merge(sb_panel,sb_unique,by='MRUN',all.x=TRUE,sort=FALSE)
+setorder(sb_panel,baseline_row)
+sb_controls<-c('GPA8_Z','ES_MUJER','PRIORITARIO','ALTO','ORIGIN_OD')
+sb_panel[,score_analysis_design_sample:=LOTTERY_SAMPLE&complete.cases(.SD),.SDcols=sb_controls]
+sb_panel[,`:=`(score_expected_grad_year=YEAR+4L,score_baseline_version=sb_version)]
+sb_panel[,score_link_status:=fcase(score_cohort_records>1L,'Ambiguous multiple graduation records',
+ score_cohort_records==1L,'Linked unique 2020-2025 graduation',
+ GRAD_EVER==1,'Panel graduate without a target record',default='No target graduation record')]
+sb_panel[,score_on_time_graduate:=!is.na(score_grad_year)&score_grad_year<=score_expected_grad_year]
+for(score in c('nem','ranking')){
+ for(kind in c('baseline','baseline_z','reconstructed','reconstructed_z')){
+  field<-paste0('score_',score,'_',kind)
+  set(sb_panel,j=paste0(toupper(score),'_',toupper(kind),'_BY2025'),value=sb_panel[[field]])
+  set(sb_panel,j=paste0(toupper(score),'_',toupper(kind),'_OT'),
+   value=ifelse(sb_panel$score_on_time_graduate,sb_panel[[field]],NA_real_))
+ }
+}
+sb_panel[,`:=`(HAS_NEM_BASELINE_BY2025=as.integer(is.finite(NEM_BASELINE_BY2025)),
+ HAS_RANKING_BASELINE_BY2025=as.integer(is.finite(RANKING_BASELINE_BY2025)),
+ HAD_NEM_ORIGINAL=as.integer(is.finite(NEM_Z_LATEST)),
+ HAD_RANKING_ORIGINAL=as.integer(is.finite(RANK_Z_LATEST)))]
+stopifnot(nrow(sb_panel)==304547L,!anyDuplicated(sb_panel$MRUN),
+ sum(sb_panel$LOTTERY_SAMPLE)==176321L,sum(sb_panel$score_analysis_design_sample)==175869L,
+ identical(sb_panel[,names(sb_panel_original),with=FALSE],sb_panel_original),
+ sb_panel[score_cohort_records!=1L,all(is.na(NEM_BASELINE_BY2025)&is.na(RANKING_BASELINE_BY2025))])
+sb_panel[,baseline_row:=NULL]
+sb_panel_export<-file.path(sb_input,'section3_score_baseline_v1_2026-10-19.rds')
+saveRDS(sb_panel,sb_panel_export)
+sb_panel_coverage<-rbindlist(lapply(c('Full panel','Lottery sample','Controls-complete lottery sample'),function(scope){
+ z<-switch(scope,'Full panel'=sb_panel,'Lottery sample'=sb_panel[LOTTERY_SAMPLE==TRUE],
+  'Controls-complete lottery sample'=sb_panel[score_analysis_design_sample==TRUE])
+ fun<-function(q)data.table(n=nrow(q),linked=sum(q$score_cohort_records==1L),
+  ambiguous=sum(q$score_cohort_records>1L),nem_original=sum(q$HAD_NEM_ORIGINAL),
+  ranking_original=sum(q$HAD_RANKING_ORIGINAL),nem_baseline=sum(q$HAS_NEM_BASELINE_BY2025),
+  ranking_baseline=sum(q$HAS_RANKING_BASELINE_BY2025),
+  nem_newly_available=sum(q$HAD_NEM_ORIGINAL==0L&q$HAS_NEM_BASELINE_BY2025==1L),
+  ranking_newly_available=sum(q$HAD_RANKING_ORIGINAL==0L&q$HAS_RANKING_BASELINE_BY2025==1L),
+  nem_old_only=sum(q$HAD_NEM_ORIGINAL==1L&q$HAS_NEM_BASELINE_BY2025==0L),
+  ranking_old_only=sum(q$HAD_RANKING_ORIGINAL==1L&q$HAS_RANKING_BASELINE_BY2025==0L),
+  nem_on_time=sum(is.finite(q$NEM_BASELINE_OT)),ranking_on_time=sum(is.finite(q$RANKING_BASELINE_OT)))
+ rbindlist(list(cbind(data.table(scope=scope,breakdown='Overall'),fun(z)),
+  z[,cbind(data.table(scope=scope,breakdown='Year and offer'),fun(.SD)),by=.(YEAR,OFFER)]),fill=TRUE)
+}),fill=TRUE)
+fwrite(sb_panel_coverage,file.path(sb_out,'section3_coverage.csv'))
+fwrite(sb_panel[,.(n=.N),by=.(YEAR,OFFER,score_analysis_design_sample,score_link_status,
+ GRAD_EVER,GRAD_OT)],file.path(sb_out,'section3_linkage_status.csv'))
+print(sb_panel_coverage[breakdown=='Overall'])
+```
+
+```{r f08-adopted-score-expanded-panel}
+# Preserve official outcomes even when a student has no regular-secondary
+# graduation record in the reconstruction target. Do not impose GRAD_EVER==1.
+sb_official_path<-file.path(sb_input,'college_outcomes_2018_2026.rds')
+sb_official<-as.data.table(readRDS(sb_official_path))
+stopifnot(!anyDuplicated(sb_official,by=c('mrun','proc')))
+sb_official<-sb_official[mrun>0&proc<=2026L]
+# Audit the small number of old standardized-score cases with no positive
+# value in the raw outcome extract. The cached registration projection supplies
+# an additional source check; never treat an administrative zero as a score.
+sb_projection_path<-'analysis_for_adversarial_report_output/f08/student_column_projection.json'
+sb_cold<-file.path(sb_input,'student_columns')
+sb_meta_path<-file.path(sb_cold,'metadata.json')
+sb_meta<-jsonlite::fromJSON(sb_meta_path,simplifyVector=FALSE)$value
+sb_projection<-jsonlite::fromJSON(sb_projection_path,simplifyVector=FALSE)
+sb_raw_columns<-c('year','mrun','nem','ranking')
+sb_raw<-as.data.table(setNames(lapply(sb_raw_columns,function(nm){
+ idx<-as.integer(names(sb_projection)[vapply(sb_projection,identical,logical(1),nm)])+1L
+ readBin(file.path(sb_cold,paste0(nm,'.bin')),if(sb_meta[[idx]]$type==14L)'double' else 'integer',
+  n=sb_meta[[idx]]$n,endian='big')
+}),sb_raw_columns))
+sb_raw<-sb_raw[mrun>0&year<=2025]
+stopifnot(!anyDuplicated(sb_raw,by=c('mrun','year')))
+sb_raw_audit<-list()
+for(score in c('nem','ranking')){
+ ids<-unique(sb_official[is.finite(get(score))&get(score)>0,mrun])
+ bad<-sb_panel[get(paste0('HAD_',toupper(score),'_ORIGINAL'))==1L&!MRUN%in%ids&
+  !is.finite(get(paste0(toupper(score),'_BASELINE_BY2025')))]
+ r<-sb_raw[mrun%in%bad$MRUN]
+ sb_raw_audit[[score]]<-r[,.(score=score,students=uniqueN(mrun),positive=sum(get(score)>0,na.rm=TRUE),
+  zero=sum(get(score)==0,na.rm=TRUE),missing=sum(is.na(get(score)))),by=year]
+ print(sb_raw_audit[[score]])
+}
+fwrite(rbindlist(sb_raw_audit),file.path(sb_out,'original_score_source_audit.csv'))
+sb_expanded<-copy(sb_panel);sb_expanded[,expanded_row:=.I]
+sb_normalization<-list();sb_official_checks<-list()
+for(score in c('nem','ranking')){
+ z<-sb_official[is.finite(get(score))&get(score)>0,.(MRUN=mrun,proc,value=as.numeric(get(score)),priority=1L)]
+ extra<-sb_raw[is.finite(get(score))&get(score)>0,
+  .(MRUN=mrun,proc=as.integer(year),value=as.numeric(get(score)),priority=2L)]
+ z<-rbindlist(list(z,extra));setorder(z,MRUN,proc,priority)
+ z<-unique(z,by=c('MRUN','proc'))
+ setorder(z,MRUN,-proc)
+ latest<-z[,.(official_value=value[1],official_year=proc[1]),by=MRUN]
+ setnames(latest,c('official_value','official_year'),paste0('latest_official_',score,c('','_year')))
+ sb_expanded<-merge(sb_expanded,latest,by='MRUN',all.x=TRUE,sort=FALSE)
+ upper<-toupper(score)
+ official_field<-paste0('latest_official_',score)
+ official_year<-paste0(official_field,'_year')
+ base_field<-paste0(upper,'_BASELINE_BY2025')
+ raw_field<-paste0(upper,'_ANALYSIS_RAW')
+ year_field<-paste0(upper,'_ANALYSIS_YEAR')
+ source_field<-paste0(upper,'_ANALYSIS_SOURCE')
+ sb_expanded[,(raw_field):=fcoalesce(get(official_field),get(base_field))]
+ sb_expanded[,(year_field):=fifelse(is.finite(get(official_field)),as.integer(get(official_year)),
+  fifelse(is.finite(get(base_field)),as.integer(score_admission_year),NA_integer_))]
+ sb_expanded[,(source_field):=fcase(is.finite(get(official_field)),'Latest official score through admission 2026',
+  is.finite(get(base_field)),get(paste0('score_',score,'_source')),default='Unresolved')]
+ # Current-process moments use all target graduates with available augmented
+ # scores, not just registrants. If a retained official score predates 2021,
+ # freeze its original-scale moments over that process's observed score pool;
+ # flag the legacy reference explicitly instead of silently dropping the case.
+ moments<-sb_moments[,.(admission_year,reference_n=get(paste0(score,'_n')),
+  reference_mean=get(paste0(score,'_mean')),reference_sd=get(paste0(score,'_sd')))]
+ moments[,reference_population:='2020-2025 national graduates, observed plus reconstructed']
+ legacy<-z[!proc%in%moments$admission_year,.(reference_n=.N,reference_mean=mean(value),
+  reference_sd=sd(value)),by=.(admission_year=proc)]
+ legacy[,reference_population:='Earlier admission process, observed scores only; target cohort not reconstructed']
+ moments<-rbindlist(list(moments,legacy),use.names=TRUE);setorder(moments,admission_year)
+ stopifnot(!anyDuplicated(moments$admission_year),all(moments$reference_sd>0))
+ ix<-match(sb_expanded[[year_field]],moments$admission_year)
+ set(sb_expanded,j=paste0(upper,'_ANALYSIS_Z'),
+  value=(sb_expanded[[raw_field]]-moments$reference_mean[ix])/moments$reference_sd[ix])
+ set(sb_expanded,j=paste0('HAS_',upper,'_ANALYSIS'),value=as.integer(is.finite(sb_expanded[[raw_field]])))
+ set(sb_expanded,j=paste0(upper,'_ANALYSIS_RECONSTRUCTED'),value=as.integer(
+  is.finite(sb_expanded[[raw_field]])&!is.finite(sb_expanded[[official_field]])&
+  sb_expanded[[source_field]]!='Recorded'))
+ set(sb_expanded,j=paste0(upper,'_RAW_SOURCE_UNRESOLVED'),value=as.integer(
+  sb_expanded[[paste0('HAD_',upper,'_ORIGINAL')]]==1L&!is.finite(sb_expanded[[raw_field]])))
+ stopifnot(all(is.finite(sb_expanded[[raw_field]])==is.finite(sb_expanded[[paste0(upper,'_ANALYSIS_Z')]])),
+  sb_expanded[is.finite(get(official_field)),all(get(raw_field)==get(official_field))],
+  all(sb_expanded[[raw_field]]>=ifelse(sb_expanded[[year_field]]<=2022,150,100),na.rm=TRUE),
+  all(sb_expanded[[raw_field]]<=ifelse(sb_expanded[[year_field]]<=2022,850,1000),na.rm=TRUE))
+ sb_official_checks[[score]]<-sb_expanded[is.finite(get(official_field))&is.finite(get(base_field)),
+  .(score=score,n=.N,same_admission_year=sum(get(official_year)==score_admission_year),
+   different_year=sum(get(official_year)!=score_admission_year),
+   raw_difference=sum(get(official_field)!=get(base_field)))]
+ moments[,score:=score];sb_normalization[[score]]<-moments
+}
+setorder(sb_expanded,expanded_row);sb_expanded[,expanded_row:=NULL]
+stopifnot(nrow(sb_expanded)==304547L,
+ identical(sb_expanded[,names(sb_panel_original),with=FALSE],sb_panel_original),
+ sb_expanded[,all(HAS_NEM_ANALYSIS+NEM_RAW_SOURCE_UNRESOLVED>=HAD_NEM_ORIGINAL&
+  HAS_RANKING_ANALYSIS+RANKING_RAW_SOURCE_UNRESOLVED>=HAD_RANKING_ORIGINAL)])
+saveRDS(sb_expanded,sb_panel_export)
+fwrite(rbindlist(sb_normalization),file.path(sb_out,'analysis_standardization.csv'))
+fwrite(rbindlist(sb_official_checks),file.path(sb_out,'official_vs_graduation_vintage.csv'))
+sb_expanded_coverage<-rbindlist(lapply(c('Full panel','Lottery sample','Controls-complete lottery sample'),function(scope){
+ q<-switch(scope,'Full panel'=sb_expanded,'Lottery sample'=sb_expanded[LOTTERY_SAMPLE==TRUE],
+  'Controls-complete lottery sample'=sb_expanded[score_analysis_design_sample==TRUE])
+ fun<-function(x)data.table(n=nrow(x),nem_original=sum(x$HAD_NEM_ORIGINAL),
+  ranking_original=sum(x$HAD_RANKING_ORIGINAL),nem_analysis=sum(x$HAS_NEM_ANALYSIS),
+  ranking_analysis=sum(x$HAS_RANKING_ANALYSIS),nem_added=sum(x$HAS_NEM_ANALYSIS==1L&x$HAD_NEM_ORIGINAL==0L),
+  ranking_added=sum(x$HAS_RANKING_ANALYSIS==1L&x$HAD_RANKING_ORIGINAL==0L),
+  nem_original_raw_unresolved=sum(x$NEM_RAW_SOURCE_UNRESOLVED),
+  ranking_original_raw_unresolved=sum(x$RANKING_RAW_SOURCE_UNRESOLVED),
+  nem_reconstructed=sum(x$NEM_ANALYSIS_RECONSTRUCTED,na.rm=TRUE),
+  ranking_reconstructed=sum(x$RANKING_ANALYSIS_RECONSTRUCTED,na.rm=TRUE),
+  nem_unresolved=sum(x$HAS_NEM_ANALYSIS==0L),ranking_unresolved=sum(x$HAS_RANKING_ANALYSIS==0L))
+ rbindlist(list(cbind(data.table(scope=scope,breakdown='Overall'),fun(q)),
+  q[,cbind(data.table(scope=scope,breakdown='Year and offer'),fun(.SD)),by=.(YEAR,OFFER)]),fill=TRUE)
+}),fill=TRUE)
+fwrite(sb_expanded_coverage,file.path(sb_out,'section3_expanded_coverage.csv'))
+fwrite(sb_expanded[,.(n=.N),by=.(YEAR,OFFER,score_analysis_design_sample,
+ NEM_RAW_SOURCE_UNRESOLVED,RANKING_RAW_SOURCE_UNRESOLVED)],file.path(sb_out,'original_raw_linkage_gaps.csv'))
+print(sb_expanded_coverage[breakdown=='Overall'])
+```
+
+```{r f08-adopted-score-manifest}
+sb_artifacts<-c(file.path(sb_input,c('ranking_targets.rds','ranking_first_pass_candidates_2026-10-19.rds',
+ 'score_reconstruction_records.rds')),sb_tables_path,sb_panel_path,sb_official_path,
+ sb_projection_path,sb_meta_path,file.path(sb_cold,paste0(sb_raw_columns,'.bin')),sb_baseline_path,sb_panel_export,
+ file.path(sb_input,'missing_scores_baseline_v1_2026-10-19.rds'))
+sb_artifact_type<-c(rep('Input',length(sb_artifacts)-3L),rep('Adopted private output',3))
+fwrite(data.table(file=basename(sb_artifacts),type=sb_artifact_type,bytes=file.info(sb_artifacts)$size,
+ md5=unname(tools::md5sum(sb_artifacts))),file.path(sb_out,'artifact_manifest.csv'))
+# Coauthors share the data workspace, whereas a Git clone has no ignored
+# caches. Publish a versioned private copy in the existing shared data tree.
+sb_shared_override<-Sys.getenv('SAE_SCORE_BASELINE_EXPORT_DIR')
+sb_shared_dir<-if(nzchar(sb_shared_override))path.expand(sb_shared_override) else
+ file.path(sb_home,'Dropbox','Effect SAE on SUA','data','finalized_design_v1','section3',
+  'score_baseline_v1_2026-10-19')
+dir.create(sb_shared_dir,recursive=TRUE,showWarnings=FALSE)
+sb_private_files<-tail(sb_artifacts,3L)
+sb_shared_files<-file.path(sb_shared_dir,basename(sb_private_files))
+for(i in seq_along(sb_private_files)){
+ if(file.exists(sb_shared_files[i])){
+  if(unname(tools::md5sum(sb_shared_files[i]))!=unname(tools::md5sum(sb_private_files[i])))
+   stop('Shared baseline differs: choose a new version/export directory rather than overwrite it.')
+ }else stopifnot(file.copy(sb_private_files[i],sb_shared_files[i],overwrite=FALSE))
+}
+stopifnot(identical(unname(tools::md5sum(sb_private_files)),unname(tools::md5sum(sb_shared_files))))
+fwrite(data.table(file=basename(sb_shared_files),bytes=file.info(sb_shared_files)$size,
+ md5=unname(tools::md5sum(sb_shared_files))),file.path(sb_out,'shared_private_delivery.csv'))
+writeLines(c('# Adopted score baseline v1 — October 19, 2026',
+ '', 'Author-approved baseline for the expanded NEM/Ranking 2SLS analysis. See `Reviews/handoff_abhijit_pace_nem_ranking_2026-10-19.md` for the analysis contract and next tasks.',
+ '', paste('Version:',sb_version),
+ '', '- Private cohort-keyed baseline: `input/f08/score_analysis_baseline_v1_2026-10-19.rds`.',
+ '- Private full finalized panel with score links: `input/f08/section3_score_baseline_v1_2026-10-19.rds`.',
+ '- Private originally missing-score extract: `input/f08/missing_scores_baseline_v1_2026-10-19.rds`.',
+ '- The same three RDS files are also placed in the existing shared Dropbox data folder `Effect SAE on SUA/data/finalized_design_v1/section3/score_baseline_v1_2026-10-19/`. `shared_private_delivery.csv` verifies their byte counts and hashes. Override the destination with `SAE_SCORE_BASELINE_EXPORT_DIR` when needed; differing files at a versioned destination are never silently overwritten.',
+ '- Aggregate national coverage, independent validation, standardization moments and Section 3 linkage/coverage are in this folder. Fingerprints cover inputs and new private outputs.',
+ '', 'Observed scores are preserved; missing NEM uses the established GPA/history reconstruction, and missing Ranking uses `first_pass_reference_only` (narrow same-school HHTT contexts and first-passed historical references). The independent reconstruction is also retained for observed students to validate accuracy and support a common-measurement sensitivity. Peer-based corrections are excluded from this baseline.',
+ '', 'The national export covers regular youth graduates in 2020–2025. Its key is `(MRUN, grad_year)`; five students have multiple cohort records. The linked panel retains all 304,547 finalized rows and every original column. It labels ambiguous histories rather than choosing by score. The design sample remains the 175,869 lottery students with the original five controls, before outcome availability filtering.',
+ '', '**Use `NEM_ANALYSIS_Z` and `RANKING_ANALYSIS_Z` for the expanded main score regressions.** Their raw counterparts are `NEM_ANALYSIS_RAW` and `RANKING_ANALYSIS_RAW`; each has `*_ANALYSIS_YEAR`, `*_ANALYSIS_SOURCE` and `HAS_*_ANALYSIS` provenance. They retain the latest valid official score through admission 2026, including already-scored students without a target regular-secondary graduation, and otherwise use the linked cohort baseline. The outcome extract has priority over the registration projection for conflicting positive records in the same process. `section3_expanded_coverage.csv` is the relevant main-outcome coverage table.',
+ '', 'The source audit identifies a small number of old standardized outcomes with no positive raw score in either available source and no usable reconstruction. Their original standardized columns remain unchanged, but `*_RAW_SOURCE_UNRESOLVED` explicitly flags the unavailable new raw/standardized value. Do not mix the old standardized units with new cohort-based units to fill these cases; reconcile their original source or report their exclusion/sensitivity. Counts are in `original_raw_linkage_gaps.csv` and `section3_expanded_coverage.csv`.',
+ '', 'The separate `*_BASELINE_BY2025` fields use a unique linked graduation within 2020–2025, with its following-admission-year scale. `*_BASELINE_OT` additionally requires graduation no later than `YEAR + 4`. They are graduation-cohort comparisons and can be missing even when an official score exists outside the target. `section3_coverage.csv` describes these narrower fields, not the expanded main outcomes. No score is set to zero. The original Table 4 score columns remain unchanged for comparison.',
+ '', 'SD outcomes for admissions 2021–2026 use the frozen national graduation-cohort/admission-year mean and SD of available observed-plus-reconstructed scores, including nonregistrants. Reconstruction-only checks use the same moments. Retained official scores from earlier processes use explicitly labeled process-level observed-score reference moments because earlier graduate cohorts have not been reconstructed. All moments and sample sizes are exported in `analysis_standardization.csv`; missing scores are excluded from moments rather than assigned a value. This differs from the original standardization; report raw-score checks by cohort and separate changes in coverage from changes in measurement/units. `official_vs_graduation_vintage.csv` documents score-vintage differences.',
+ '', 'Run from `code/`: `f08-score-reconstruction-functions`, `f08-adopted-score-baseline`, `f08-adopted-score-panel`, `f08-adopted-score-expanded-panel`, `f08-adopted-score-manifest`. Upstream reconstruction caches must exist; see the handoff for rebuilding them. Private files are excluded from Git and shared through the existing private data workspace.',
+ '', 'Validation checks cover unique cohort/student keys, preservation of recorded scores and all original panel columns, unchanged NEM versus the previous delivery, score bounds, expected national reconstruction/validation counts, finalized-panel checksum, fixed lottery/design counts and unresolved ambiguous joins. No new 2SLS effect or full PACE eligibility indicator is asserted by this export.'),
+ file.path(sb_out,'baseline_readme.md'))
+cat('Adopted score baseline and Section 3 linkage complete.\n')
+```

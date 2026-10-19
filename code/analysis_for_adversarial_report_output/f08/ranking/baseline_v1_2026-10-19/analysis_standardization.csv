@@ -1,0 +1,38 @@
+admission_year,reference_n,reference_mean,reference_sd,reference_population,score
+2004,155238,558.755034205542,101.1996053827,"Earlier admission process, observed scores only; target cohort not reconstructed",nem
+2005,170916,561.766926443399,100.158079462551,"Earlier admission process, observed scores only; target cohort not reconstructed",nem
+2006,177240,558.853893026405,99.8274871122609,"Earlier admission process, observed scores only; target cohort not reconstructed",nem
+2007,229223,544.195124398511,101.08610715397,"Earlier admission process, observed scores only; target cohort not reconstructed",nem
+2008,232004,542.676790055344,100.615081897041,"Earlier admission process, observed scores only; target cohort not reconstructed",nem
+2009,266774,535.414987967343,101.017860874445,"Earlier admission process, observed scores only; target cohort not reconstructed",nem
+2010,275603,531.223890886529,100.42044723962,"Earlier admission process, observed scores only; target cohort not reconstructed",nem
+2011,280158,529.744265735763,100.665031136671,"Earlier admission process, observed scores only; target cohort not reconstructed",nem
+2012,240650,540.999293579888,100.224933828693,"Earlier admission process, observed scores only; target cohort not reconstructed",nem
+2013,243309,539.370220583702,99.972814857213,"Earlier admission process, observed scores only; target cohort not reconstructed",nem
+2014,242444,539.957693322994,100.022221333363,"Earlier admission process, observed scores only; target cohort not reconstructed",nem
+2015,256885,540.020374875917,99.3271399450296,"Earlier admission process, observed scores only; target cohort not reconstructed",nem
+2016,265270,543.465544539526,99.059145823903,"Earlier admission process, observed scores only; target cohort not reconstructed",nem
+2017,270361,545.174958666376,99.1784062490962,"Earlier admission process, observed scores only; target cohort not reconstructed",nem
+2018,275931,549.145159478275,99.3898057264467,"Earlier admission process, observed scores only; target cohort not reconstructed",nem
+2019,279040,554.172405389908,101.990831671391,"Earlier admission process, observed scores only; target cohort not reconstructed",nem
+2020,293610,557.521712475733,105.347578451856,"Earlier admission process, observed scores only; target cohort not reconstructed",nem
+2021,203286,581.23103410958,110.288045280775,"2020-2025 national graduates, observed plus reconstructed",nem
+2022,205070,593.378422002243,120.737863193245,"2020-2025 national graduates, observed plus reconstructed",nem
+2023,208932,686.994524534299,155.439640987748,"2020-2025 national graduates, observed plus reconstructed",nem
+2024,210052,696.228995677261,155.628392379268,"2020-2025 national graduates, observed plus reconstructed",nem
+2025,212844,698.561021217417,150.507909287684,"2020-2025 national graduates, observed plus reconstructed",nem
+2026,221410,703.091752856694,150.176902086023,"2020-2025 national graduates, observed plus reconstructed",nem
+2013,243309,558.024327090243,120.948203940456,"Earlier admission process, observed scores only; target cohort not reconstructed",ranking
+2014,242444,561.186150203758,123.633645651142,"Earlier admission process, observed scores only; target cohort not reconstructed",ranking
+2015,256885,564.176012612648,125.691558354076,"Earlier admission process, observed scores only; target cohort not reconstructed",ranking
+2016,265270,564.463248765409,121.625644898304,"Earlier admission process, observed scores only; target cohort not reconstructed",ranking
+2017,270361,566.047443973058,121.305777387527,"Earlier admission process, observed scores only; target cohort not reconstructed",ranking
+2018,275931,570.435764738286,121.628162572732,"Earlier admission process, observed scores only; target cohort not reconstructed",ranking
+2019,279040,574.814872419725,122.603579569787,"Earlier admission process, observed scores only; target cohort not reconstructed",ranking
+2020,293610,577.250522802357,124.733528293774,"Earlier admission process, observed scores only; target cohort not reconstructed",ranking
+2021,201520,602.669005557759,128.436230608198,"2020-2025 national graduates, observed plus reconstructed",ranking
+2022,202832,613.302984736137,135.979459491646,"2020-2025 national graduates, observed plus reconstructed",ranking
+2023,207824,707.221552852415,171.142537587989,"2020-2025 national graduates, observed plus reconstructed",ranking
+2024,209423,712.220926068292,168.163095481949,"2020-2025 national graduates, observed plus reconstructed",ranking
+2025,212371,711.397601367418,161.159573313323,"2020-2025 national graduates, observed plus reconstructed",ranking
+2026,221046,714.250680853758,159.872504554588,"2020-2025 national graduates, observed plus reconstructed",ranking

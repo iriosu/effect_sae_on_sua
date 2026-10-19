@@ -1,0 +1,16 @@
+file,type,bytes,md5
+ranking_targets.rds,Input,39545122,3d1131fed52c90c4e5204bcf5127f640
+ranking_first_pass_candidates_2026-10-19.rds,Input,26602438,1adc8f48ee2e26930e9a6f30a96d6f42
+score_reconstruction_records.rds,Input,31439695,aaccba05f1edbfdd6a86dc5d04698695
+nem_tables_used.csv,Input,248203,eec5f866c615248fc082b37ab31176c6
+section3_panel.rds,Input,6753877,3390a0487374564a5350a98be299f1a2
+college_outcomes_2018_2026.rds,Input,23678314,28dd1874092a0835bbcb11839ff2e57c
+student_column_projection.json,Input,964,e77f321c5f1d46db7f7b181d9d3e8425
+metadata.json,Input,54521,346d72349006ff7e849a55be0a4a4e01
+year.bin,Input,47884504,2492fb308c1270a2f1f4080df8d81991
+mrun.bin,Input,23942252,1b7962fbc95ca60a2414139d48efce8a
+nem.bin,Input,23942252,38f43113389ee991719a2f62b33703d4
+ranking.bin,Input,23942252,e63e8aa34ed3c22cfd8f8d1adfe742b3
+score_analysis_baseline_v1_2026-10-19.rds,Adopted private output,44275961,553ad253bcd7f5d2b1363f4dd3a501bf
+section3_score_baseline_v1_2026-10-19.rds,Adopted private output,26622685,07a43656157ca8d3a9d5b14669f9a963
+missing_scores_baseline_v1_2026-10-19.rds,Adopted private output,5901093,7e2898bdb09553848b9a7d914b7bde0f
