@@ -1,0 +1,25 @@
+F04.4 entrant-count analysis | October 18, 2026
+Run from code/: R_LIBS_USER=<library containing did 2.1.2> Rscript f04_entrant_counts.R
+Optional SAE_PAPER_ROOT is the manuscript directory containing main.tex and tables/.
+Inputs and source checksums: provenance.csv. Runtime and latest bootstrap archive: session_info.txt.
+
+Unbalanced-panel results (counts per observed positive-entry school-grade-year; shares in pp):
+Total entrants: -0.3978; SE 0.3900; 95% CI [-1.1622, 0.3667].
+Low-income entrants: 0.1206; SE 0.2050; 95% CI [-0.2812, 0.5224].
+Other entrants: -0.5184; SE 0.3272; 95% CI [-1.1597, 0.1229].
+Low-income share (pp): 3.5040; SE 0.9362; 95% CI [1.6691, 5.3388].
+
+Interpretation: the low-income share increases, but the bootstrap intervals for both subgroup counts include zero. The analysis therefore supports changed entrant composition more clearly than increased low-income entrant numbers. No national entrant total, subgroup admission probability, or welfare effect is inferred.
+
+Paired estimator and permutation inference:
+Total entrants: paired effect -0.1067; jackknife SE 0.5272; permutation p=0.8397 (2999 saved schedules).
+Low-income entrants: paired effect 0.2501; jackknife SE 0.1312; permutation p=0.0790 (2999 saved schedules).
+Other entrants: paired effect -0.3568; jackknife SE 0.4783; permutation p=0.6830 (2999 saved schedules).
+Low-income share (pp): paired effect 3.5600; jackknife SE 0.5510; permutation p=0.0004 (9999 saved schedules).
+The paired low-income count p-value is 0.079; it is not a p-value for the unbalanced-panel coefficient. F13-F14 remain open. Table B.7 separates the two estimators.
+
+Scope: the finalized panel contains 1,324,477 entrant records with complete binary PRIO status. It contains 96,676 positive-entry cell-years over 2012-2023. The fitted model uses 72,490 cell-years from 8,819 school-grades, with supported post-adoption entering classes in 2017-2020. The full input has 8,891 school-grades. Missing cell-years cannot be classified as zero-entry, missing, or not operating from this input; none are imputed as zero.
+
+Checks: count additivity holds for cells, group-time estimates, aggregate effects, and aligned bootstrap draws. The share and total-count point estimates reproduce the existing table at published precision. The optimized permutation calculations match the unchanged baseline function on the observed assignment and six saved schedules per outcome. All evaluated permutation statistics are finite. No raw student records are exported.
+
+Manuscript integration: tables/appendix_entrant_counts.tex and tables/entrant_count_macros.tex are generated from results; Section IV and the access appendix discuss the estimates and limitations. Table B.7 and the revised main-text passage were visually inspected after compilation.

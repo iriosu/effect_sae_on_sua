@@ -1,0 +1,13 @@
+grad_year,reference,contexts,small_or_unknown,missing_generation
+2020,exit_school,238561,3280,4394
+2020,same_school,238561,5200,4002
+2022,exit_school,241101,2120,3234
+2021,exit_school,239664,2533,3897
+2022,same_school,241101,4554,2993
+2021,same_school,239664,4883,2943
+2023,exit_school,244509,1883,2244
+2023,same_school,244509,3494,3207
+2024,exit_school,254570,2048,1952
+2024,same_school,254570,3144,3125
+2025,exit_school,264520,1556,1952
+2025,same_school,264520,2783,2830

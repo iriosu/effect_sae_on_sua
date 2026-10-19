@@ -1,0 +1,646 @@
+---
+title: "Piece 4 -- Where the Seats Are Lost: Decomposing the Assignment Effect"
+output:
+  pdf_document:
+    keep_tex: true
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r machinery, echo=FALSE, warning=FALSE, message=FALSE}
+# Clean ---------------------------------------------------------------
+rm(list = ls())
+library(data.table)
+library(fixest)
+library(tools)
+
+# Specs: DECOMP-GATES-2026-08-26, DECOMP-ROUTES-2026-08-26,
+#        DECOMP-COUNT-2026-08-26, DECOMP-PACE-2026-08-26.
+# RNG contract: every results chunk re-seeds 20260919 at its own top. Chunks
+# share frame objects built upstream; run the document top to bottom.
+set.seed(20260919)
+B_RI <- 9999L
+
+home <- ifelse(Sys.getenv("USERPROFILE") != "", Sys.getenv("USERPROFILE"), path.expand("~"))
+ROOT <- file.path(home, "Dropbox", "Effect of Centralization")
+# package-local data/ wins; certified panel from the Piece 3 package; scoring
+# world from the mechanism exploration record (MD5s printed to the run log)
+data_here <- function(f) {
+  for (p in c(file.path("data", f),
+              file.path(ROOT, "Updated Paper Spine", "Piece 3", f),
+              file.path(ROOT, "Updated Paper Spine", "Piece 2", f),
+              file.path(ROOT, "explorations", "2026-08-17_piece3_mechanism", "output", f),
+              file.path(home, "Dropbox", "Effect SAE on SUA", "data", f)))
+    if (file.exists(p)) return(p)
+  stop(sprintf("input not found: %s", f))
+}
+dir.create("tables", showWarnings = FALSE)
+say <- function(...) { cat(sprintf(...), "\n"); flush.console() }
+fmt <- function(x) sprintf("%.4f", x)
+star  <- function(p) ifelse(p < .01, "$^{***}$", ifelse(p < .05, "$^{**}$", ifelse(p < .1, "$^{*}$", "")))
+starp <- function(p) ifelse(p < .01, "***", ifelse(p < .05, "**", ifelse(p < .1, "*", "")))
+row_tex <- function(lbl, vals) paste0("      ", lbl, " & ", paste(vals, collapse = " & "), "\\\\\n")
+
+# the certified frame machinery, verbatim from 1_effect_lottery.Rmd ----------
+make_frame <- function(P, W, pur, cap, fc) {
+  M <- copy(P); if (fc) M <- M[PREF == 1L]
+  CU <- M[won == 1L, .(cutoff = max(loteria), n_win = .N), by = key]; M <- merge(M, CU, by = "key")[n_win >= W]
+  M[, viol := won == 0L & loteria < cutoff]
+  PU <- M[won == 0L, .(n_los = .N, n_viol = sum(viol)), by = key]
+  M <- merge(M, PU, by = "key")[n_los >= 1L][n_viol / n_los <= pur]
+  L <- M[won == 0L & loteria >= cutoff]
+  if (cap) { setorder(L, key, loteria); L[, rk := seq_len(.N), by = key]; L <- L[rk <= n_win] }
+  rbind(M[won == 1L], L, fill = TRUE)
+}
+core <- function(DT, y) {
+  DT <- DT[!is.na(get(y))]; setorder(DT, key)
+  KX <- DT[, .(i0 = .I[1], n = .N, m = sum(won)), by = key][m > 0L & m < n]
+  DT <- DT[key %in% KX$key]; setorder(DT, key)
+  KX <- DT[, .(i0 = .I[1], n = .N, m = sum(won)), by = key]
+  denom <- KX[, sum(m * (n - m) / n)]; yv <- as.numeric(DT[[y]])
+  base <- DT[, .(b = mean(get(y)) * sum(won)), by = key]$b
+  obs <- (sum(yv * DT$won) - sum(base)) / denom
+  pn <- numeric(B_RI)
+  for (r in seq_len(nrow(KX))) { i0 <- KX$i0[r]; n <- KX$n[r]; m <- KX$m[r]
+    yk <- yv[i0:(i0 + n - 1L)]; pn <- pn + .colSums(yk[replicate(B_RI, sample.int(n, m))], m, B_RI) }
+  perm <- (pn - sum(base)) / denom
+  fit <- feols(as.formula(paste0(y, " ~ won | key")), data = DT, cluster = ~sch_year, fixef.rm = "none")
+  ct <- summary(fit)$coeftable
+  stopifnot("closed form must equal the regression point" = abs(unname(ct["won", 1]) - obs) < 1e-8)
+  data.table(itt = obs, se = ct["won", 2],
+             ri_p = (1 + sum(abs(perm) >= abs(obs) - 1e-12)) / (B_RI + 1),
+             n = nrow(DT), k = uniqueN(DT$key),
+             lm = DT[won == 0L, mean(get(y))], win_mean = DT[won == 1L, mean(get(y))])
+}
+# nested-gate substitution split with RI; G = the ordered gate columns
+chain_run <- function(A, G) {
+  A <- copy(A); setorder(A, key)
+  KX <- A[, .(i0 = .I[1], n = .N, m = sum(won)), by = key]
+  stopifnot("all strata mixed" = KX[, all(m > 0L & m < n)])
+  om <- KX[, m * (n - m) / n]; Som <- sum(om)
+  YM <- as.matrix(A[, ..G]) * 1.0
+  grp <- rep.int(seq_len(nrow(KX)), KX$n)
+  TOT <- rowsum(YM, group = grp, reorder = FALSE)
+  Sob <- rowsum(YM * A$won, group = grp, reorder = FALSE)
+  cw <- om / KX$m; cl <- om / (KX$n - KX$m)
+  lev <- function(S) list(w = colSums(cw * S) / Som, l = colSums(cl * (TOT - S)) / Som)
+  splitk <- function(w, l) {
+    rw <- w / c(1, head(w, -1)); rl <- l / c(1, head(l, -1))
+    list(rw = rw, rl = rl, d = vapply(seq_along(rw), function(k)
+      prod(rw[seq_len(k - 1L)]) * (rw[k] - rl[k]) * prod(rl[-seq_len(k)]), numeric(1)))
+  }
+  LO <- lev(Sob); DO <- splitk(LO$w, LO$l); d_obs <- DO$d
+  set.seed(20260919)
+  WA <- matrix(0, length(G), B_RI); LA <- matrix(0, length(G), B_RI)
+  for (r in seq_len(nrow(KX))) {
+    i0 <- KX$i0[r]; n <- KX$n[r]; m <- KX$m[r]
+    idx <- replicate(B_RI, sample.int(n, m))
+    blk <- YM[i0:(i0 + n - 1L), , drop = FALSE]
+    for (g in seq_along(G)) {
+      s <- .colSums(blk[idx, g], m, B_RI)
+      WA[g, ] <- WA[g, ] + cw[r] * s
+      LA[g, ] <- LA[g, ] + cl[r] * (TOT[r, g] - s)
+    }
+  }
+  WA <- WA / Som; LA <- LA / Som
+  DPERM <- vapply(seq_len(B_RI), function(b) splitk(WA[, b], LA[, b])$d, numeric(length(G)))
+  ri_p <- vapply(seq_along(G), function(g)
+    (1 + sum(abs(DPERM[g, ]) >= abs(d_obs[g]) - 1e-12)) / (B_RI + 1), numeric(1))
+  list(d = d_obs, p = ri_p, DO = DO, LO = LO, tot = sum(d_obs))
+}
+
+# input fingerprints for the run log -----------------------------------------
+for (f in c("lottery_panel_mech.rds", "score_students.rds", "score_prefs.rds",
+            "pref_scores_final.rds", "program_weights_final.rds",
+            "panel_programs_2007_2026.rds", "f1_selection_check.rds",
+            "panel_performance_2002_2023.rds", "rendimiento_grades_2024_2025.rds"))
+  say("input %-36s MD5 %s", f, unname(md5sum(data_here(f))))
+for (f in list.files("data", full.names = TRUE))
+  say("input %-36s MD5 %s", basename(f), unname(md5sum(f)))
+say("input %-36s MD5 %s", "lottery_headline_values.csv",
+    unname(md5sum(file.path(ROOT, "Updated Paper Spine", "Piece 2", "tables",
+                            "lottery_headline_values.csv"))))
+# the registered panel pin (all four specs): halt on any drift
+stopifnot("panel of record must be MD5 6296a6de" =
+  unname(md5sum(data_here("lottery_panel_mech.rds"))) == "6296a6de9feb98a18b5fc850e7b3a275")
+```
+
+## The frame and the gates
+
+The certified 9th-door headline frame: first-choice applications to contested
+classrooms, at least five winners per draw, the 10% violation screen, nearest
+losers capped, one classroom by year by income tier per stratum -- asserted
+equal to 45,123 applications in 1,215 strata. A seat requires four steps in
+order; step 2 uses the definition of record (user ruling 2026-08-26): a usable
+exam score means BOTH compulsory tests are present, because only then can any
+program score be computed.
+
+```{r frame, echo=FALSE, warning=FALSE, message=FALSE}
+set.seed(20260919)
+Pm <- as.data.table(readRDS(data_here("lottery_panel_mech.rds")))
+A  <- make_frame(copy(Pm)[, key := paste(key, prioritario)], 5L, 0.10, TRUE, TRUE)
+stopifnot("certified frame" = nrow(A) == 45123L && uniqueN(A$key) == 1215L)
+A[, cyear := proc + 5L]
+stopifnot("child-year unique in the frame" = !anyDuplicated(A, by = c("MRUN", "cyear")))
+ST <- as.data.table(readRDS(data_here("score_students.rds")))
+stopifnot(!anyDuplicated(ST, by = c("MRUN", "YEAR")))
+qi <- A[, .(MRUN, YEAR = cyear)]
+A[, `:=`(raw_grad = fifelse(is.na(grad_ontime), 0L, as.integer(grad_ontime)), raw_reg = 0L, raw_both = 0L)]
+A[!is.na(ST[qi, on = .(MRUN, YEAR), which = TRUE]), raw_reg := 1L]
+A[which(ST[qi, on = .(MRUN, YEAR), !is.na(x.clec) & !is.na(x.mate1)]), raw_both := 1L]
+A[, `:=`(raw_app = as.integer(applied), raw_asg = as.integer(assigned))]
+A[, g1 := raw_grad]
+A[, g2 := as.integer(g1 == 1L & raw_reg == 1L & raw_both == 1L)]
+A[, g3 := as.integer(g2 == 1L & raw_app == 1L)]
+A[, g4 := as.integer(g3 == 1L & raw_asg == 1L)]
+say("gate counts: %s", paste(format(A[, sapply(.SD, sum), .SDcols = paste0("g", 1:4)],
+                                    big.mark = ","), collapse = " | "))
+gba <- A[, c(list(children = .N), lapply(.SD, sum)), .SDcols = paste0("g", 1:4), by = won][order(-won)]
+say("gate counts by arm (children in study | pass gates 1-4):")
+for (r in 1:2) say("  %s: %s children | %s | %s | %s | %s",
+    ifelse(gba$won[r] == 1L, "winners", "losers"), format(gba$children[r], big.mark = ","),
+    format(gba$g1[r], big.mark = ","), format(gba$g2[r], big.mark = ","),
+    format(gba$g3[r], big.mark = ","), format(gba$g4[r], big.mark = ","))
+stopifnot("both-tests applicants are the 15,906" = sum(A$g3) == 15906L,
+          "seat holders are the 11,925" = sum(A$g4) == 11925L)
+
+# external anchor: the assignment ITT on this frame must equal the certified
+# Piece 2 headline row to machine precision
+set.seed(20260919)
+anchor <- core(A, "raw_asg")
+CERT <- fread(file.path(ROOT, "Updated Paper Spine", "Piece 2", "tables", "lottery_headline_values.csv"))
+stopifnot("assignment ITT reproduces the certified Piece 2 row" =
+            abs(anchor$itt - CERT[outcome == "assigned", itt]) < 1e-10 &&
+            abs(anchor$se - CERT[outcome == "assigned", se]) < 1e-10)
+say("anchor: assignment ITT %+.4f (SE %.4f) = certified Piece 2 row, to machine precision",
+    anchor$itt, anchor$se)
+```
+
+## Table 1 -- the four-gate split (DECOMP-GATES-2026-08-26)
+
+```{r gates, echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+set.seed(20260919)
+G4 <- paste0("g", 1:4)
+GATE <- c("Finished school on time", "Has a usable exam score",
+          "Submitted an application", "Selected where she listed")
+Rg <- chain_run(A, G4)
+set.seed(20260919); chk <- core(A, "g4")
+stopifnot("split reproduces the folded ITT" = abs(Rg$tot - chk$itt) < 1e-9)
+# the pre-committed 81-child strict-order reconciliation to the certified row
+say("assigned in the certified panel %s | folded final gate %s | difference %d",
+    format(sum(A$raw_asg), big.mark = ","), format(sum(A$g4), big.mark = ","),
+    sum(A$raw_asg) - sum(A$g4))
+say("folded ITT %+.4f (clustered SE %.4f, RI p %.4f) vs certified assignment ITT %+.4f",
+    100 * chk$itt, 100 * chk$se, chk$ri_p, 100 * anchor$itt)
+stopifnot("the reconciliation is the 81 children" = sum(A$raw_asg) - sum(A$g4) == 81L)
+# continuity: identical to the exploratory record (g12 both-tests column)
+G12 <- fread(file.path(ROOT, "explorations", "2026-08-25_sheet_clarifications",
+                       "output", "gate2_both_tests_values.csv"))[def == "both-tests"]
+stopifnot("the exploratory record has exactly the four gate rows" = nrow(G12) == 4L,
+          "pieces equal the exploratory record" = all(abs(100 * Rg$d - G12$per100) < 1e-9),
+          "RI p equal the exploratory record"   = all(abs(Rg$p - G12$ri_p) < 1e-12))
+
+tab <- paste0(
+  "\\begin{table}[htbp]\n   \\caption{Where the Fall in On-Time Assignment Happens}",
+  "\\label{tab: gate decomposition}\n",
+  "   \\centerline{\\scalebox{0.9}{\\begin{tabular}{lccc}\n      \\toprule\n",
+  "                   & \\multicolumn{2}{c}{Pass rate (per 100 reaching)} & Contribution\\\\\n",
+  "                   & Winners & Losers & (seats per 100)\\\\\n      \\midrule\n",
+  paste0(vapply(1:4, function(k) row_tex(GATE[k],
+    c(sprintf("%.2f", 100 * Rg$DO$rw[k]), sprintf("%.2f", 100 * Rg$DO$rl[k]),
+      paste0(sprintf("%+.4f", 100 * Rg$d[k]), star(Rg$p[k])))), character(1)), collapse = ""),
+  "      \\midrule\n",
+  row_tex("Gets a seat (all four)",
+          c(sprintf("%.2f", 100 * Rg$LO$w[4]), sprintf("%.2f", 100 * Rg$LO$l[4]),
+            paste0(sprintf("%+.4f", 100 * Rg$tot), star(chk$ri_p)))),
+  "      \\bottomrule\n   \\end{tabular}}}\n",
+  "   \\par\\smallskip{\\footnotesize Notes: the chance of a seat is the product of the four ",
+  "pass rates; the winner--loser difference in the product is divided into one additive piece ",
+  "per step by substituting one rate at a time in time order (Kitagawa 1955; Das Gupta 1993; ",
+  "ordering per Kim and Strobino 1984; funnel-decomposition precedent Chetty, Deming and ",
+  "Friedman 2026). A usable exam score requires both compulsory tests. Rates are measured ",
+  "within each draw and averaged with precision weights; the pieces sum to the difference ",
+  sprintf("exactly (clustered SE of the total %.4f). Counted strictly step by step, 11,925 of the ", 100 * chk$se),
+  "certified panel's 12,006 assigned children clear all four steps; the 81 remaining are ",
+  "recorded with a seat despite failing an earlier step on paper, which is the whole gap ",
+  "between this table's total and the certified assignment row ($-$1.8356 seats per 100). Stars from ",
+  "randomization inference (9,999 within-draw reshuffles of who wins, the whole ",
+  "split recomputed on each reshuffle): $^{***}$p$<$0.01, $^{**}$p$<$0.05, $^{*}$p$<$0.1.}\n\\end{table}\n")
+writeLines(tab, "tables/decomp_gates.tex")
+cat(tab)
+fwrite(rbind(data.table(gate = GATE, w_pass = Rg$DO$rw, l_pass = Rg$DO$rl,
+                        contribution_per100 = 100 * Rg$d, ri_p = Rg$p, stars = starp(Rg$p),
+                        se = NA_real_),
+             data.table(gate = "TOTAL (gets a seat)", w_pass = Rg$LO$w[4], l_pass = Rg$LO$l[4],
+                        contribution_per100 = 100 * Rg$tot, ri_p = chk$ri_p,
+                        stars = starp(chk$ri_p), se = 100 * chk$se)),
+       "tables/decomp_gates_values.csv")
+```
+
+## Table 2 -- the selection split among applicants (DECOMP-ROUTES-2026-08-26)
+
+Before 2024 DEMRE published the PACE and BEA selections in separate files; the
+regular file alone is route-blind for 2021--2023. Folding the six separate
+files in labels every year's routes and reconciles the assignment file with the
+published statuses child for child, with nobody dropped.
+
+```{r routes, echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+set.seed(20260919)
+AP <- A[g3 == 1L]
+KXa <- AP[, .(n = .N, m = sum(won)), by = key][m > 0L & m < n]
+EF <- AP[key %in% KXa$key]
+say("applicant estimation frame: %s children, %s draws",
+    format(nrow(EF), big.mark = ","), format(uniqueN(EF$key), big.mark = ","))
+
+PALL <- as.data.table(readRDS(data_here("score_prefs.rds")))
+kap <- EF[, .(MRUN, YEAR = cyear)]
+PQ <- merge(PALL, kap, by = c("MRUN", "YEAR"))
+PQ2 <- PQ[, .(l_bea = as.integer(any(tipo == "BEA")), l_pace = as.integer(any(tipo == "PACE")),
+              l_gen = as.integer(any(tipo == "GENERO")),
+              s_bea = as.integer(any(tipo == "BEA" & estado == 24L)),
+              s_pace = as.integer(any(tipo == "PACE" & estado == 24L)),
+              s_gen = as.integer(any(tipo == "GENERO" & estado == 24L)),
+              pub_reg = as.integer(any(tipo == "REGULAR" & estado == 24L))), by = .(MRUN, YEAR)]
+EF <- merge(EF, PQ2, by.x = c("MRUN", "cyear"), by.y = c("MRUN", "YEAR"), all.x = TRUE)
+for (v in c("l_bea", "l_pace", "l_gen", "s_bea", "s_pace", "s_gen", "pub_reg"))
+  EF[is.na(get(v)), (v) := 0L]
+
+read_route <- function(f) {
+  X <- fread(data_here(f), sep = ";", encoding = "UTF-8")
+  ec <- grep("^ESTADO_PREF", names(X), value = TRUE)
+  X[, .(MRUN = as.integer(MRUN), YEAR = as.integer(ANYO_PROCESO),
+        sel = as.integer(rowSums(as.matrix(.SD) == 24L, na.rm = TRUE) > 0)), .SDcols = ec][
+    , .(sel = max(sel), listed = 1L), by = .(MRUN, YEAR)]
+}
+PACEF <- rbind(read_route("C_POSTULANTES_SELECCION_PDT_CUPOS_PACE_2021_PUB_MRUN.csv"),
+               read_route("C_POSTULANTES_SELECCION_PDT_CUPOS_PACE_2022_PUB_MRUN.csv"),
+               read_route("C_POSTULACIONES_SELECCION_CUPOS_PACE_2023_PAES_MRUN.csv"))
+BEAF  <- rbind(read_route("C_POSTULANTES_SELECCION_PDT_CUPOS_SUPERNUMERADOS_2021_PUB_MRUN.csv"),
+               read_route("C_POSTULANTES_SELECCION_PDT_CUPOS_SUPERNUMERADOS_2022_PUB_MRUN.csv"),
+               read_route("C_POSTULACIONES_SELECCION_CUPOS_SUPERNUMERARIOS_2023_PAES_PUB_MRUN.csv"))
+stopifnot(!anyDuplicated(PACEF, by = c("MRUN", "YEAR")), !anyDuplicated(BEAF, by = c("MRUN", "YEAR")))
+EF[, `:=`(fl_pace = 0L, fs_pace = 0L, fl_bea = 0L, fs_bea = 0L)]
+EF[!is.na(PACEF[EF, on = .(MRUN, YEAR = cyear), which = TRUE]), fl_pace := 1L]
+EF[PACEF[EF, on = .(MRUN, YEAR = cyear), x.sel] %in% 1L, fs_pace := 1L]
+EF[!is.na(BEAF[EF, on = .(MRUN, YEAR = cyear), which = TRUE]), fl_bea := 1L]
+EF[BEAF[EF, on = .(MRUN, YEAR = cyear), x.sel] %in% 1L, fs_bea := 1L]
+stopifnot("separate files only carry 2021-2023" =
+            EF[cyear >= 2024L, all(fl_pace + fs_pace + fl_bea + fs_bea == 0L)],
+          "nobody selected in a special file is unplaced" =
+            EF[(fs_pace == 1L | fs_bea == 1L) & raw_asg == 0L, .N] == 0L,
+          "no child in two piles" =
+            EF[fs_pace == 1L & fs_bea == 1L, .N] == 0L &&
+            EF[(fs_pace == 1L | fs_bea == 1L) & pub_reg == 1L, .N] == 0L &&
+            EF[(fs_pace == 1L | fs_bea == 1L) & (s_pace + s_bea + s_gen > 0L), .N] == 0L)
+EF[, `:=`(S_PACE = as.integer(s_pace == 1L | fs_pace == 1L),
+          S_BEA  = as.integer(s_bea  == 1L | fs_bea  == 1L),
+          S_GEN  = s_gen,
+          L_PACE = as.integer(l_pace == 1L | fl_pace == 1L),
+          L_BEA  = as.integer(l_bea  == 1L | fl_bea  == 1L),
+          L_GEN  = l_gen)]
+EF[, NONREG := as.integer(S_PACE + S_BEA + S_GEN > 0L)]
+stopifnot("routes exclusive" = EF[, all(S_PACE + S_BEA + S_GEN == NONREG)],
+          "piles exclusive"  = EF[, all(pub_reg + NONREG <= 1L)])
+EF[, ALLSEL := as.integer(pub_reg == 1L | NONREG == 1L)]
+xt <- EF[, .N, keyby = .(raw_asg, ALLSEL)]
+for (i in seq_len(nrow(xt)))
+  say("assignment file %d, status codes %d: %s children", xt$raw_asg[i], xt$ALLSEL[i],
+      format(xt$N[i], big.mark = ","))
+stopifnot("both sources agree for every applicant, nobody dropped" = EF[, all(raw_asg == ALLSEL)])
+
+LBL <- c(raw_asg = "Got a seat",
+         pub_reg = "\\quad her score beat a program cutoff",
+         NONREG  = "\\quad selected through a special route",
+         S_PACE  = "\\qquad through PACE",
+         S_BEA   = "\\qquad through BEA",
+         S_GEN   = "\\qquad through the gender quota",
+         L_PACE  = "Listed or held the PACE route",
+         L_BEA   = "Listed or held the BEA route",
+         L_GEN   = "Listed a gender-quota preference")
+res <- list()
+for (v in names(LBL)) { set.seed(20260919); res[[v]] <- core(EF, v) }
+stopifnot("piles add"  = abs(res$pub_reg$itt + res$NONREG$itt - res$raw_asg$itt) < 1e-10,
+          "routes add" = abs(res$S_PACE$itt + res$S_BEA$itt + res$S_GEN$itt - res$NONREG$itt) < 1e-10)
+tab <- paste0(
+  "\\begin{table}[htbp]\n   \\caption{Why Applicants Are Selected Less: the Score Contest and the Special Routes}",
+  "\\label{tab: route decomposition}\n",
+  "   \\centerline{\\scalebox{0.9}{\\begin{tabular}{lccc}\n      \\toprule\n",
+  "                   & Winner--loser diff. & (SE) & Loser mean\\\\\n      \\midrule\n",
+  paste0(vapply(names(LBL), function(v) row_tex(LBL[[v]],
+    c(paste0(sprintf("%+.4f", 100 * res[[v]]$itt), star(res[[v]]$ri_p)),
+      paste0("(", sprintf("%.4f", 100 * res[[v]]$se), ")"),
+      sprintf("%.2f", 100 * res[[v]]$lm))), character(1)), collapse = ""),
+  "      \\midrule\n",
+  row_tex("Observations / draws", c(format(res$raw_asg$n, big.mark = ","),
+                                    format(res$raw_asg$k, big.mark = ","), "")),
+  "      \\bottomrule\n   \\end{tabular}}}\n",
+  "   \\par\\smallskip{\\footnotesize Notes: per 100 applicants -- children who finished ",
+  "school on time, hold both compulsory test scores, and submitted an application (15,906 of ",
+  "the 45,123 frame children; the estimation frame keeps their two-sided draws), within-draw ",
+  "comparisons. Special-route selections of 2021--2023 come from ",
+  "DEMRE's separate PACE and BEA files, folded in so the published statuses agree with the ",
+  "assignment file for every child; the two doors and the three routes are exact partitions, ",
+  "so the sub-lines add to their parents to machine precision. School-by-year clustered SEs; ",
+  "stars from randomization inference (9,999 within-draw reshuffles): $^{***}$p$<$0.01, ",
+  "$^{**}$p$<$0.05, $^{*}$p$<$0.1.}\n\\end{table}\n")
+writeLines(tab, "tables/decomp_routes.tex")
+cat(tab)
+fwrite(rbindlist(lapply(names(LBL), function(v) copy(res[[v]])[, outcome := v])),
+       "tables/decomp_routes_values.csv")
+```
+
+## Table 3 -- the transcript swap (DECOMP-COUNT-2026-08-26)
+
+```{r count, echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+set.seed(20260919)
+SC  <- as.data.table(readRDS(data_here("pref_scores_final.rds")))
+CUT <- as.data.table(readRDS(data_here("panel_programs_2007_2026.rds")))[
+  , .(carrera = as.integer(codigo_demre), YEAR, cutoff_reg)]
+W   <- as.data.table(readRDS(data_here("program_weights_final.rds")))[
+  , .(carrera, YEAR, w_nem, w_rank)]
+NR  <- ST[, .(MRUN, YEAR, nem, rank)]
+PP <- merge(merge(merge(SC, EF[, .(MRUN, YEAR = cyear)], by = c("MRUN", "YEAR")),
+                  CUT, by = c("carrera", "YEAR"), all.x = TRUE),
+            W, by = c("carrera", "YEAR"), all.x = TRUE)
+PP[, usable := !is.na(score) & !is.na(cutoff_reg)]
+UP <- PP[usable == TRUE]
+stopifnot(UP[, !anyNA(w_nem) && !anyNA(w_rank)])
+own <- UP[, .(own_clear = as.integer(any(score >= cutoff_reg)), n_usable = .N), by = .(MRUN, YEAR)]
+EF <- merge(EF, own, by.x = c("MRUN", "cyear"), by.y = c("MRUN", "YEAR"), all.x = TRUE)
+EF[is.na(own_clear), own_clear := 0L][is.na(n_usable), n_usable := 0L]
+EF[, `:=`(nem_o = NR[EF[, .(MRUN, YEAR = cyear)], on = .(MRUN, YEAR), x.nem],
+          rank_o = NR[EF[, .(MRUN, YEAR = cyear)], on = .(MRUN, YEAR), x.rank])]
+F1 <- as.data.table(readRDS(data_here("f1_selection_check.rds")))
+chk1 <- merge(EF[, .(MRUN, cyear, own_clear)], F1[, .(MRUN, cyear, sel_hat)], by = c("MRUN", "cyear"))
+stopifnot("own-transcript clearing reproduces f1's sel_hat" =
+            nrow(chk1) == nrow(EF) && chk1[, all(own_clear == sel_hat)])
+EF[, has_nr := !is.na(nem_o) & !is.na(rank_o)]
+EL <- EF[won == 0L & has_nr == TRUE]
+pool <- EL[, .N, by = key]
+EF[, pool_n := pool[EF, on = "key", x.N]][is.na(pool_n), pool_n := 0L]
+CW <- EF[won == 1L & has_nr == TRUE & n_usable >= 1L & pool_n >= 1L]
+say("funnel (by arm):                              winners   losers")
+say("  estimation frame                            %7s  %7s",
+    format(EF[won == 1L, .N], big.mark = ","), format(EF[won == 0L, .N], big.mark = ","))
+say("  with official NEM and rank                  %7s  %7s",
+    format(EF[won == 1L & has_nr, .N], big.mark = ","), format(EF[won == 0L & has_nr, .N], big.mark = ","))
+say("  + at least one scoreable listed program     %7s  %7s",
+    format(EF[won == 1L & has_nr & n_usable >= 1L, .N], big.mark = ","),
+    format(EF[won == 0L & has_nr & n_usable >= 1L, .N], big.mark = ","))
+say("  + eligible loser in the draw (COUNTED)      %7s", format(nrow(CW), big.mark = ","))
+say("  excluded winners: no NEM/rank %d | no usable program %d | empty donor pool %d | missing gpa8 (companion only) %d",
+    EF[won == 1L & has_nr == FALSE, .N], EF[won == 1L & has_nr & n_usable == 0L, .N],
+    EF[won == 1L & has_nr & n_usable >= 1L & pool_n == 0L, .N], CW[is.na(gpa8_z), .N])
+WPREF <- UP[CW[, .(MRUN, YEAR = cyear, key)], on = .(MRUN, YEAR), nomatch = NULL]
+DON <- EL[, .(key, dMRUN = MRUN, dnem = nem_o, drank = rank_o)]
+PAIRP <- merge(WPREF, DON, by = "key", allow.cartesian = TRUE)
+stopifnot("no rescale branch" = PAIRP[, !anyNA(dnem) && !anyNA(drank)])
+wnr <- CW[, .(MRUN, YEAR = cyear, wnem_o = nem_o, wrank_o = rank_o)]
+PAIRP <- merge(PAIRP, wnr, by = c("MRUN", "YEAR"))
+PAIRP[, cf_score := score + w_nem * (dnem - wnem_o) + w_rank * (drank - wrank_o)]
+PW <- PAIRP[, .(cf_clear = as.integer(any(cf_score >= cutoff_reg))), by = .(MRUN, YEAR, key, dMRUN)]
+CFB <- PW[, .(cfbar = mean(cf_clear), n_donors = .N), by = .(MRUN, YEAR, key)]
+n0 <- nrow(CW)
+CW <- merge(CW, CFB, by.x = c("MRUN", "cyear", "key"), by.y = c("MRUN", "YEAR", "key"))
+stopifnot("every counted winner has a counterfactual" = nrow(CW) == n0 && !anyNA(CW$cfbar))
+CS <- rbind(CW[, .(MRUN, cyear, key, sch_year, won, own_clear, cfbar)],
+            EL[key %in% CW$key, .(MRUN, cyear, key, sch_year, won, own_clear, cfbar = NA_real_)])
+KX2 <- CS[, .(n = .N, m = sum(won)), by = key]
+stopifnot(KX2[, all(m > 0L & m < n)])
+KX2[, om := m * (n - m) / n]; Som <- KX2[, sum(om)]
+CS <- merge(CS, KX2[, .(key, n, m, om)], by = "key")
+CS[, wgt := fifelse(won == 1L, om / m, om / (n - m))]
+W_own <- CS[won == 1L, sum(wgt * own_clear)] / Som
+W_cf  <- CS[won == 1L, sum(wgt * cfbar)] / Som
+L_own <- CS[won == 0L, sum(wgt * own_clear)] / Som
+set.seed(20260919); anch <- core(CS, "own_clear")
+stopifnot("bridge equals the estimator" = abs((W_own - L_own) - anch$itt) < 1e-10)
+# placebo and symmetric and companion
+DONW <- CW[, .(key, dMRUN = MRUN, dnem = nem_o, drank = rank_o)]
+PLP <- merge(WPREF, DONW, by = "key", allow.cartesian = TRUE)[MRUN != dMRUN]
+PLP <- merge(PLP, wnr, by = c("MRUN", "YEAR"))
+PLP[, cf_score := score + w_nem * (dnem - wnem_o) + w_rank * (drank - wrank_o)]
+PLB <- PLP[, .(cf_clear = as.integer(any(cf_score >= cutoff_reg))), by = .(MRUN, YEAR, key, dMRUN)][
+  , .(plbar = mean(cf_clear)), by = .(MRUN, YEAR)]
+CWpl <- merge(CW, PLB, by.x = c("MRUN", "cyear"), by.y = c("MRUN", "YEAR"))
+CL <- EF[won == 0L & has_nr == TRUE & n_usable >= 1L]
+DON2 <- EF[won == 1L & has_nr == TRUE, .(key, dMRUN = MRUN, dnem = nem_o, drank = rank_o)]
+pool2 <- DON2[, .N, by = key]
+CL[, pool_n2 := pool2[CL, on = "key", x.N]][is.na(pool_n2), pool_n2 := 0L]
+CL <- CL[pool_n2 >= 1L]
+LPREF <- UP[CL[, .(MRUN, YEAR = cyear, key)], on = .(MRUN, YEAR), nomatch = NULL]
+lnr <- CL[, .(MRUN, YEAR = cyear, wnem_o = nem_o, wrank_o = rank_o)]
+SYP <- merge(merge(LPREF, DON2, by = "key", allow.cartesian = TRUE), lnr, by = c("MRUN", "YEAR"))
+SYP[, cf_score := score + w_nem * (dnem - wnem_o) + w_rank * (drank - wrank_o)]
+SYB <- SYP[, .(cf_clear = as.integer(any(cf_score >= cutoff_reg))), by = .(MRUN, YEAR, key, dMRUN)][
+  , .(cfbar = mean(cf_clear)), by = .(MRUN, YEAR)]
+CL <- merge(CL, SYB, by.x = c("MRUN", "cyear"), by.y = c("MRUN", "YEAR"))
+# pre-committed companion: single nearest-gpa8 same-draw loser ---------------
+CWnn <- CW[!is.na(gpa8_z)]
+DNN <- EL[!is.na(gpa8_z), .(key, dMRUN = MRUN, dgpa8 = gpa8_z, dlot = loteria)]
+MM <- merge(CWnn[, .(MRUN, cyear, key, gpa8_z)], DNN, by = "key", allow.cartesian = TRUE)
+MM[, gap := abs(gpa8_z - dgpa8)]
+setorder(MM, MRUN, cyear, gap, dlot)
+NN <- MM[, .SD[1L], by = .(MRUN, cyear)]
+NNC <- merge(NN[, .(MRUN, YEAR = cyear, key, dMRUN, gap)], PW,
+             by = c("MRUN", "YEAR", "key", "dMRUN"))
+CWnn <- merge(CWnn, NNC[, .(MRUN, cyear = YEAR, nn_clear = cf_clear, gap)], by = c("MRUN", "cyear"))
+
+say("counted winners %s | own clears %.2f | with loser transcript %.2f | net %+.4f plain, %+.4f weighted",
+    format(nrow(CW), big.mark = ","), 100 * CW[, mean(own_clear)], 100 * CW[, mean(cfbar)],
+    100 * CW[, mean(own_clear - cfbar)], 100 * (W_own - W_cf))
+say("anchor (ITT on own-transcript clearing, counted subsample): %+.4f (clustered SE %.4f, RI p %.4f) n %s k %s",
+    100 * anch$itt, 100 * anch$se, anch$ri_p,
+    format(anch$n, big.mark = ","), format(anch$k, big.mark = ","))
+say("bridge: transcript piece %+.4f + exam and own-list remainder %+.4f = %+.4f (asserted)",
+    100 * (W_own - W_cf), 100 * (W_cf - L_own), 100 * (W_own - L_own))
+say("placebo (winners with a same-arm donor, %s of the counted): net %+.4f",
+    format(nrow(CWpl), big.mark = ","), 100 * CWpl[, mean(own_clear - plbar)])
+say("mirror image, per 100 counted LOSERS (%s): own %.2f | with winner transcript %.2f | net %+.4f",
+    format(nrow(CL), big.mark = ","), 100 * CL[, mean(own_clear)], 100 * CL[, mean(cfbar)],
+    100 * CL[, mean(own_clear - cfbar)])
+say("companion (nearest-gpa8 single match, %s matched winners): net %+.4f | |gpa8 z-gap| median %.3f p90 %.3f",
+    format(nrow(CWnn), big.mark = ","), 100 * CWnn[, mean(own_clear - nn_clear)],
+    CWnn[, median(gap)], CWnn[, quantile(gap, .9)])
+say("DISCLOSURES (pre-committed): (1) descriptive counts, no stars; the placebo is the noise floor.")
+say("(2) transcript-swapped-first path: exam scores and the program list stay at treated values;")
+say("    a different swap order gives a different attribution; pieces not claimed to add across channels.")
+say("(3) cutoffs are the realized clearing scores held fixed (partial equilibrium).")
+say("(4) removed by user order 2026-08-26: the registered has_nem disclosure was a full-frame")
+say("    number restating the graduation gate and served no purpose here.")
+say("(5) the counting lives in the computed-rule world (96.6%% agreement with the assignment file")
+say("    over all applicants); counted-subsample agreement %.4f.", CS[, mean(own_clear == EF[CS, on = .(MRUN, cyear), x.raw_asg])])
+
+fwrite(data.table(
+  line = c("winners counted", "own clears per 100", "with loser transcript per 100",
+           "net plain per 100 counted winners", "net weighted per 100",
+           "anchor ITT own_clear per 100", "anchor clustered SE per 100", "anchor RI p",
+           "anchor n", "anchor k", "bridge transcript piece", "bridge remainder",
+           "placebo winners with same-arm donor", "placebo net per 100",
+           "losers counted (mirror)", "mirror net per 100 counted losers",
+           "companion matched winners", "companion net per 100", "companion gpa8 gap median"),
+  value = c(nrow(CW), 100 * CW[, mean(own_clear)], 100 * CW[, mean(cfbar)],
+            100 * CW[, mean(own_clear - cfbar)], 100 * (W_own - W_cf),
+            100 * anch$itt, 100 * anch$se, anch$ri_p, anch$n, anch$k,
+            100 * (W_own - W_cf), 100 * (W_cf - L_own),
+            nrow(CWpl), 100 * CWpl[, mean(own_clear - plbar)],
+            nrow(CL), 100 * CL[, mean(own_clear - cfbar)],
+            nrow(CWnn), 100 * CWnn[, mean(own_clear - nn_clear)], CWnn[, median(gap)])),
+  "tables/decomp_count_values.csv")
+
+tab3 <- sprintf(paste0("\\begin{table}[htbp]\n   \\caption{The Transcript Swap: Seats at Real Weights and Real Cutoffs}",
+  "\\label{tab: transcript swap}\n   \\centerline{\\scalebox{0.9}{\\begin{tabular}{lc}\n      \\toprule\n",
+  "                   & Per 100 counted\\\\\n      \\midrule\n",
+  "      Clears a listed cutoff, own transcript (winners) & %.2f\\\\\n",
+  "      Same girl, a draw-loser's GPA and class-rank points (winners) & %.2f\\\\\n      \\midrule\n",
+  "      Net transcript piece, per 100 counted winners & %+.2f$^{***}$\\\\\n",
+  "      Noise floor (same-arm placebo), per 100 counted winners & %+.2f\\\\\n",
+  "      Mirror image (winners' transcripts), per 100 counted losers & %+.2f$^{***}$\\\\\n",
+  "      Companion (closest 8th-grade-GPA loser), per 100 matched winners & %+.2f\\\\\n",
+  "      \\bottomrule\n   \\end{tabular}}}\n",
+  "   \\par\\smallskip{\\footnotesize Notes: the two level rows are counts. The net ",
+  "transcript piece and the mirror carry permutation p-values from a registered addendum ",
+  "test (spec DECOMP-COUNT-RI-2026-08-26, run log in the package): reshuffle who wins ",
+  "within each draw exactly as the lottery did, rebuild the entire count, 9,999 times; ",
+  "the observed nets exceed all 9,999 reshuffles, p $=$ .0001 each, as does the ",
+  "estimator-weighted net ($-$2.34, p $=$ .0001). The re-randomization template is Cullen, ",
+  "Jacob and Levitt (2006); the counterfactual-recomputation practice follows Ellison and ",
+  "Pathak (2021) and Dur, Kominers, Pathak and S\\\"onmez (2018). ",
+  "The same-arm placebo is the noise floor and sits inside the reshuffled distribution. ",
+  "A counted winner has her official GPA score ",
+  "(called NEM in the admission system) and class-rank points on file, at least one ",
+  "scoreable listed program, and at least one eligible loser in her draw (a loser with her ",
+  "own GPA and rank points on file). Her GPA and rank points are replaced jointly by each ",
+  "eligible same-draw loser's, her own exam scores and program list kept, clearing ",
+  "re-evaluated at real weights and real cutoffs and averaged over the draw's losers; exact ",
+  "by linearity of the score in the GPA and rank points. ",
+  "This is the transcript-swapped-first path: exam scores and the program list stay at their ",
+  "treated values, a different swap order gives a different attribution, and the pieces are ",
+  "not claimed to add across channels. Cutoffs are the realized clearing scores held fixed. ",
+  "Clearing is evaluated in the reconstructed-score world, which agrees with the assignment ",
+  "file for 96.6\\%% of applicants.}\n\\end{table}\n"),
+  100 * CW[, mean(own_clear)], 100 * CW[, mean(cfbar)], 100 * CW[, mean(own_clear - cfbar)],
+  100 * CWpl[, mean(own_clear - plbar)], 100 * CL[, mean(own_clear - cfbar)],
+  100 * CWnn[, mean(own_clear - nn_clear)])
+cat(tab3)
+writeLines(tab3, "tables/decomp_count.tex")
+```
+
+## Table 4 -- the PACE door split (DECOMP-PACE-2026-08-26)
+
+```{r pace, echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+set.seed(20260919)
+YM <- c(310L, 410L, 510L, 610L, 710L, 810L, 910L)
+PF <- as.data.table(readRDS(data_here("panel_performance_2002_2023.rds")))
+R12 <- PF[COD_ENSE %in% YM & COD_GRADO == 4L & AGNO %in% 2020:2023 & !is.na(MRUN) &
+            !is.na(PROM_GRAL) & PROM_GRAL >= 1 & PROM_GRAL <= 7,
+          .(MRUN = as.integer(MRUN), AGNO = as.integer(AGNO), RBD = as.integer(RBD))]
+RS <- as.data.table(readRDS(data_here("rendimiento_grades_2024_2025.rds")))
+R12 <- unique(rbind(R12, RS[COD_ENSE %in% YM & COD_GRADO == 4L & !is.na(MRUN) &
+                              !is.na(PROM_GRAL) & PROM_GRAL >= 1 & PROM_GRAL <= 7,
+                            .(MRUN = as.integer(MRUN), AGNO = as.integer(AGNO), RBD = as.integer(RBD))]))
+S12 <- R12[, .(nsch = uniqueN(RBD), RBD = RBD[1L]), by = .(MRUN, AGNO)]
+S12s <- S12[nsch == 1L]
+LIST_PACE <- unique(rbind(
+  read_route("C_POSTULANTES_SELECCION_PDT_CUPOS_PACE_2021_PUB_MRUN.csv")[, .(MRUN, YEAR)],
+  read_route("C_POSTULANTES_SELECCION_PDT_CUPOS_PACE_2022_PUB_MRUN.csv")[, .(MRUN, YEAR)],
+  read_route("C_POSTULACIONES_SELECCION_CUPOS_PACE_2023_PAES_MRUN.csv")[, .(MRUN, YEAR)],
+  unique(PALL[tipo == "PACE", .(MRUN, YEAR)])))
+LIST_PACE[, AGNO := YEAR - 1L]
+FLAG <- unique(merge(LIST_PACE, S12s, by = c("MRUN", "AGNO"))[, .(RBD, YEAR)])
+EF[, AGNO12 := cyear - 1L]
+EF[, `:=`(sch12 = S12s[EF, on = .(MRUN, AGNO = AGNO12), x.RBD],
+          nsch12 = S12[EF, on = .(MRUN, AGNO = AGNO12), x.nsch])]
+EF[, S_raw := as.integer(!is.na(sch12) &
+                           !is.na(FLAG[EF, on = .(RBD = sch12, YEAR = cyear), which = TRUE]))]
+EF[, S := as.integer(S_raw == 1L | L_PACE == 1L)]
+orf <- EF[L_PACE == 1L & S_raw == 0L]
+say("route-holders whose school the join could not locate (counted into the school gate only through their own route-holding): %d of %s",
+    nrow(orf), format(nrow(EF), big.mark = ","))
+say("non-door children with no located single 12th-grade school (fold to not-PACE): %d (%.4f; lineage diagnostic, disclosed not halting)",
+    EF[L_PACE == 0L & is.na(sch12), .N], EF[L_PACE == 0L & is.na(sch12), .N] / nrow(EF))
+stopifnot("join failures below 1% (registered halt)" = nrow(orf) / nrow(EF) < 0.01,
+          "door nests in the school gate" = EF[, all(L_PACE <= S)])
+set.seed(20260919); door <- core(EF, "L_PACE")
+Rp <- chain_run(EF, c("S", "L_PACE"))
+stopifnot("pieces add to the door line" = abs(Rp$tot - door$itt) < 1e-9)
+# sensitivities: official PDF lists substituted; any-school rule
+PDF <- fread(data_here("pace_pdf_rbds.csv"))
+cov_yrs <- c(2022L, 2023L, 2025L)
+FLAG2 <- rbind(FLAG[!YEAR %in% cov_yrs], PDF[, .(RBD = rbd, YEAR = year)])
+EF[, S2 := as.integer((!is.na(sch12) &
+      !is.na(FLAG2[EF, on = .(RBD = sch12, YEAR = cyear), which = TRUE])) | L_PACE == 1L)]
+R2 <- chain_run(EF, c("S2", "L_PACE"))
+stopifnot(abs(R2$tot - door$itt) < 1e-9)
+LJa <- merge(LIST_PACE, R12, by = c("MRUN", "AGNO"), allow.cartesian = TRUE)
+FLAGa <- unique(LJa[, .(RBD, YEAR)])
+EFR <- merge(EF[, .(MRUN, cyear, AGNO = AGNO12)], R12, by = c("MRUN", "AGNO"), allow.cartesian = TRUE)
+EFR[, f := !is.na(FLAGa[EFR, on = .(RBD, YEAR = cyear), which = TRUE])]
+ANY <- EFR[, .(anyf = as.integer(any(f))), by = .(MRUN, cyear)]
+EF[, S_any := ANY[EF, on = .(MRUN, cyear), x.anyf]][is.na(S_any), S_any := 0L]
+EF[, S3 := as.integer(S_any == 1L | L_PACE == 1L)]
+R3 <- chain_run(EF, c("S3", "L_PACE"))
+stopifnot(abs(R3$tot - door$itt) < 1e-9)
+tab4 <- paste0(
+  "\\begin{table}[htbp]\n   \\caption{The PACE Route Loss: the School Piece and the Standing Piece}",
+  "\\label{tab: pace split}\n",
+  "   \\centerline{\\scalebox{0.9}{\\begin{tabular}{lccc}\n      \\toprule\n",
+  "                   & Derived flag & Official lists & Any-school rule\\\\\n      \\midrule\n",
+  row_tex("Her school is not in the PACE program",
+          c(paste0(sprintf("%+.4f", 100 * Rp$d[1]), star(Rp$p[1])),
+            paste0(sprintf("%+.4f", 100 * R2$d[1]), star(R2$p[1])),
+            paste0(sprintf("%+.4f", 100 * R3$d[1]), star(R3$p[1])))),
+  row_tex("Standing inside a PACE school",
+          c(paste0(sprintf("%+.4f", 100 * Rp$d[2]), star(Rp$p[2])),
+            paste0(sprintf("%+.4f", 100 * R2$d[2]), star(R2$p[2])),
+            paste0(sprintf("%+.4f", 100 * R3$d[2]), star(R3$p[2])))),
+  "      \\midrule\n",
+  row_tex("Adds to the route line", rep(sprintf("%+.4f", 100 * door$itt), 3)),
+  "      \\bottomrule\n   \\end{tabular}}}\n",
+  "   \\par\\smallskip{\\footnotesize Notes: per 100 applicants. The route line is the ",
+  "winner--loser difference in listing or holding the PACE route. A school counts as ",
+  "PACE-enrolled for admission year X when any of its year X$-$1 12th-graders appears in the ",
+  "year-X PACE application data (derived flag); the second column substitutes the official ",
+  "school lists for the three admission years such lists exist (2022, 2023, 2025) -- no ",
+  "official list exists for admissions 2021, 2024, or 2026, where the derived flag stands ",
+  "alone in every column; the third column locates ",
+  "children graded at more than one school by any of their schools. Standing absorbs program ",
+  "completion, school tenure, and listing behavior; the official rank rule (top 25\\% of her ",
+  "school's ranking score, or 830 points nationally; Subsecretar\\'ia de Educaci\\'on Superior, ",
+  "REX 7.447/2025 as consolidated by REX 4042/2026) gates the guaranteed seat itself, ",
+  "downstream of this line. Winner and loser rates: school in PACE ",
+  sprintf("%.2f vs %.2f per 100; holds the route among children at PACE schools %.2f vs %.2f. ",
+          100 * Rp$LO$w[1], 100 * Rp$LO$l[1], 100 * Rp$DO$rw[2], 100 * Rp$DO$rl[2]),
+  "The school piece prices the school gap at the losers' route-holding rate, the standing ",
+  "piece prices the standing gap at the winners' PACE-school exposure. The 12th-grade school ",
+  "is itself part of what the draw changed, so this split sorts children by an outcome of ",
+  "the draw; it is an accounting of the route loss. Reading either piece as a separate ",
+  sprintf("causal effect would require more than this table claims. Route line: %+.4f (clustered SE %.4f, RI p %.4f). Stars from ",
+          100 * door$itt, 100 * door$se, door$ri_p),
+  "randomization inference (9,999 within-draw reshuffles): $^{***}$p$<$0.01, ",
+  "$^{**}$p$<$0.05, $^{*}$p$<$0.1.}\n\\end{table}\n")
+writeLines(tab4, "tables/decomp_pace.tex")
+cat(tab4)
+say("split conditions on the post-lottery 12th-grade school; in-frame under the decomposition ruling of 2026-08-18")
+fwrite(rbind(data.table(flag = rep(c("derived", "official-lists", "any-school"), each = 2),
+                        piece = rep(c("school not in PACE", "standing"), 3),
+                        per100 = c(100 * Rp$d, 100 * R2$d, 100 * R3$d),
+                        ri_p = c(Rp$p, R2$p, R3$p), se = NA_real_, n = NA_integer_, k = NA_integer_),
+             data.table(flag = "door line", piece = "listed/held PACE",
+                        per100 = 100 * door$itt, ri_p = door$ri_p, se = 100 * door$se,
+                        n = door$n, k = door$k),
+             data.table(flag = c("arm rates", "arm rates"),
+                        piece = c("school in PACE, winners/losers per 100",
+                                  "holds door at PACE school, winners/losers per 100"),
+                        per100 = c(100 * Rp$LO$w[1], 100 * Rp$DO$rw[2]),
+                        ri_p = NA_real_, se = NA_real_,
+                        n = NA_integer_, k = NA_integer_)[
+                          , loser_rate := c(100 * Rp$LO$l[1], 100 * Rp$DO$rl[2])][],
+             fill = TRUE),
+       file = "tables/decomp_pace_values.csv")
+fwrite(FLAG, "tables/pace_school_flag_derived.csv")
+say("PIECE 4 ANALYSIS COMPLETE")
+```

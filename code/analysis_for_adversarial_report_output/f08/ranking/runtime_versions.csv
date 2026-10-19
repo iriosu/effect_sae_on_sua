@@ -1,0 +1,6 @@
+"package","version"
+"R","4.5.1"
+"data.table","1.18.2.1"
+"fixest","0.13.2"
+"xml2","1.4.0"
+"rmarkdown","2.30"

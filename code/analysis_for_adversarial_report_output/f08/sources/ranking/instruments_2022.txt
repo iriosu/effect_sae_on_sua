@@ -1,0 +1,438 @@
+
+--- PAGE 1 ---
+Subsecretaría de
+Educación Superior
+INSTRUMENTOS DE ACCESO
+ESPECIFICACIONES Y
+PROCEDIMIENTOS
+PROCESO DE ADMISIÓN 2022
+JUNIO, 2021
+* En la presente publicación se emplea un lenguaje inclusivo y no discriminador. Sin
+embargo, con el fin de respetar la ley lingüística de la economía expresiva y así facilitar
+la lectura y comprensión del texto, se usará el masculino genérico que se acepta como
+representante de hombres y mujeres en igual medida.
+INSTRUMENTOS DE ACCESO ESPECIFICACIONES Y PROCEDIMIENTOS
+1
+--- PAGE 2 ---
+ÍNDICE
+1. INSTRUMENTOS GENERALES DE ACCESO
+1.1 Notas de Enseñanza Media (NEM)
+1.2 Puntaje Ranking
+1.3 Pruebas de Transición para la Admisión Universitaria
+2. INSTRUMENTOS ESPECÍFICOS DE ACCESO
+3
+4
+4
+11
+14
+--- PAGE 3 ---
+1 INSTRUMENTOS GENERALES DE ACCESO
+Los instrumentos generales de acceso son el conjunto de elementos que se consideran para
+efectos del cálculo del puntaje ponderado de cada postulante para las carreras de su preferencia.
+Los instrumentos generales de acceso obligatorios son tres:
+•
+•
+•
+Las Notas de Enseñanza Media (en adelante NEM);
+El Ranking de Notas y
+Las Pruebas de Transición para la Admisión Universitaria (Matemática, Comprensión Lectora
+y una prueba electiva).
+Sin perjuicio de lo anterior, cada institución podrá desarrollar instrumentos específicos para
+complementar los anteriores, debiendo estar previamente autorizados por el Comité Técnico del
+Subsistema Universitario para su utilización.
+IMPORTANTE
+Cada universidad será responsable de asignar a los puntajes de cada instrumento de acceso las
+ponderaciones que estime convenientes para sus carreras, respetando los siguientes mínimos:
+1. 2. 3. 4. 5. Puntaje de la Prueba de Transición para la Admisión Universitaria de Matemática: ponderación
+mínima de 10%.
+Puntaje de la Prueba de Transición para la Admisión Universitaria de Comprensión Lectora:
+ponderación mínima de 10%.
+Puntaje de alguna de las Pruebas de Transición electivas: ponderación mínima de 10%.
+Puntaje NEM: ponderación mínima de 10%.
+Puntaje Ranking: ponderación mínima de 10%.
+INSTRUMENTOS DE ACCESO ESPECIFICACIONES Y PROCEDIMIENTOS
+3
+--- PAGE 4 ---
+1.1 Notas de Enseñanza Media (NEM)
+Desde el Proceso de Admisión 2016, el MINEDUC ha sido el órgano oficial encargado del registro
+del promedio de notas de cada curso de Enseñanza Media y del cálculo de la nota de egreso de IV
+Medio de los estudiantes.
+La nota de egreso de Enseñanza Media se obtiene promediando las notas finales de cada año
+escolar en que el postulante haya sido promovido al curso superior y aproximando este resultado al
+segundo decimal. Luego, este promedio se transforma a un puntaje estándar, en adelante Puntaje
+NEM, comparable con los de las Pruebas de Transición para la Admisión Universitaria, mediante
+tablas de conversión. Cada modalidad educativa tiene su propia tabla de conversión.
+IMPORTANTE
+El Sistema de Acceso a las universidades continuará con el ajuste a la escala de trasformación de
+las notas de enseñanza media a Puntaje NEM, definido por el anterior Sistema Único de Admisión.
+El ajuste, que se implementará progresivamente en cinco años, comenzó en el Proceso de Admisión
+2019 y se extenderá hasta el Proceso de Admisión 2023.
+Cabe señalar que existen tablas de conversión diferenciadas por cada modalidad educativa:
+Humanista-Científica diurna, vespertina nocturna y Técnico-Profesional. Estas tablas se encuentran
+disponibles en la Plataforma Electrónica Única del Sistema de Acceso.
+En el siguiente enlace podrás acceder la tabla de transformación de los promedios de notas de
+enseñanza media (NEM) según rama educacional para el Proceso de Admisión 2022
+1.2 Puntaje Ranking
+El Puntaje Ranking es un factor de selección que considera el rendimiento académico de un
+estudiante en relación a su contexto educativo. Es un puntaje que busca beneficiar a quienes
+tienen un comportamiento académico destacado en su contexto. Este puntaje es, a lo menos, igual
+al Puntaje NEM. En este documento se explica cómo obtener el Puntaje Ranking de un estudiante
+a partir de su Puntaje NEM. Este último se obtiene a partir del promedio de notas en enseñanza
+media dado en una escala de 4,00 a 7,00. A continuación, se explica cómo obtener el Puntaje
+Ranking, dependiendo si el postulante cursó toda la Enseñanza Media en el mismo establecimiento
+educacional (I), o si aprobó cursos en distintos establecimientos (II), o si su situación corresponde
+a un caso especial (III).
+INSTRUMENTOS DE ACCESO ESPECIFICACIONES Y PROCEDIMIENTOS
+4
+--- PAGE 5 ---
+I) Enseñanza Media cursada en un mismo establecimiento educacional
+Para calcular el Puntaje Ranking es necesario considerar información académica sobre el estudiante
+y sobre su contexto educativo. La información del estudiante es el Promedio Acumulado de notas,
+y la información sobre su contexto es el Promedio Histórico y el Promedio Máximo Histórico. A
+.
+continuación, se explica cómo se obtiene cada uno de estos promedios.
+•
+Promedio Acumulado: corresponde al promedio de las notas con que un estudiante aprobó
+cada curso de la enseñanza media. Por ejemplo, si un estudiante egresó con notas 6,3, 5,7,
+5,9 y 6,6 de I, II, III y IV medio respectivamente, su Promedio Acumulado de notas será:
+•
+•
+El Promedio Acumulado se trunca a dos decimales. No se consideran las notas de reprobación.
+Promedio Histórico: corresponda al promedio de los Promedios Acumulados de tres generaciones
+anteriores a la fecha de egreso del estudiante. Por ejemplo, si un estudiante egresó el año
+2020, las tres generaciones anteriores son aquellas que egresaron los años 2019, 2018 y 2017.
+Promedio Máximo Histórico: para su cálculo, primero se identifica, en cada una de las tres
+generaciones anteriores de la fecha de egreso del estudiante, el Promedio Acumulado máximo.
+Luego, el promedio entre estas tres notas es el Promedio Máximo Histórico. Siguiendo con
+el ejemplo anterior, supóngase que en cada una de las generaciones 2019, 2018 y 2017
+hubo tres egresados. En la generación 2019, los Promedios Acumulados de los estudiantes
+que egresaron fueron 5,53; 6,73 y 6,34, en la generación 2018 fueron 6,81; 6,05 y 6,47 y en la
+generación 2017 fueron 5,57; 5,97 y 6,94. Los máximos de cada una de estas generaciones
+son 6,73 (2019); 6,81 (2018) y 6,94 (2017), el promedio entre estas tres notas es el Promedio
+Máximo Histórico, así en este ejemplo:
+El Promedio Máximo Histórico se expresa en dos decimales truncándolo.
+INSTRUMENTOS DE ACCESO ESPECIFICACIONES Y PROCEDIMIENTOS
+5
+--- PAGE 6 ---
+Puntaje Ranking
+La Figura 1 muestra un esquema de las fuentes de información para calcular el Puntaje Ranking de
+cada estudiante. La información sobre contexto educativo es obtenida desde las tres generaciones
+anteriores, esta información es caracterizada por el Promedio Histórico y Promedio Máximo
+Histórico. La información sobre el estudiante es obtenida desde el estudiante y es caracterizada
+por su Promedio Acumulado. Finalmente, estos tres promedios son utilizados para calcular el
+Puntaje Ranking.
+Figura 1: Puntaje Ranking
+Figura 1: Esquema de la información necesaria para calcular el Puntaje Ranking. De izquierda a
+derecha se observa el orden temporal en que es producida la información.
+El Puntaje Ranking depende de la comparación de la información académica de cada estudiante con
+su contexto educacional. Hay tres posibilidades en esta comparación: a) que el Promedio Acumulado
+del estudiante sea menor o igual que el Promedio Histórico; b) que el Promedio Acumulado sea
+mayor que el Promedio Histórico y menor o igual que el Promedio Máximo Histórico; y c) que el
+Promedio Acumulado sea mayor que el Promedio Máximo.
+Figura 2: Puntaje Ranking versus Promedio Acumulado
+Figura 2: Puntaje Ranking versus Promedio
+Acumulado. Las líneas de color rojo indican el
+Puntaje Ranking y la línea azul punteada indica
+el Puntaje NEM. Cada línea roja representa una
+forma distinta de calcular el Puntaje Ranking
+Histórico. A continuación, se describe como se
+calcula el Puntaje Ranking para cada una de
+estas situaciones.
+Promedio Acumulado
+INSTRUMENTOS DE ACCESO ESPECIFICACIONES Y PROCEDIMIENTOS
+6
+--- PAGE 7 ---
+Promedio Acumulado ≤ Promedio Histórico
+En este escenario el Puntaje Ranking es igual al Puntaje NEM del estudiante. Por ejemplo, si un
+estudiante egresara de un programa humanista-científico diurno con un Promedio Acumulado 6,03 le
+correspondería un Puntaje NEM 632. Además, si la institución hubiese tenido un Promedio Histórico
+6,03 el año en que el estudiante egresó de cuarto medio, el Puntaje Ranking que le correspondería
+al estudiante es 632. Nótese que si el Promedio Acumulado hubiese sido 6,04 sería mayor que el
+Promedio Histórico de la institución, su Puntaje Ranking se calcularía como se explica a continuación.
+Promedio Histórico < Promedio Acumulado ≤ Promedio Máximo Histórico
+En este escenario el Puntaje Ranking es mayor que el Puntaje NEM, aumenta linealmente con el
+Promedio Acumulado hasta 850 puntos. Los 850 puntos se obtienen cuando el Promedio Acumu-
+lado es igual al Promedio Máximo Histórico. La relación entre el Promedio Acumulado y el Puntaje
+Ranking es descrita por la recta
+,
+es decir, basta conocer la pendiente m y el intercepto b para conocer el Puntaje Ranking.
+Ambas cantidades se calculan para cada institución educacional por separado. La Figura 2 muestra
+esta recta, corresponde a la línea “Ranking Lineal”. La pendiente m de una institución dada se
+calcula utilizando el Puntaje Ranking máximo (PRmax) que es 850 para todas las instituciones, el
+Puntaje NEM de un estudiante cuyo Promedio Acumulado es igual al Promedio Histórico (PNhist),
+el Promedio Máximo Histórico (Nhmax) y el Promedio Histórico (Nhist). La pendiente está dada por:
+.
+Una vez que se ha calculado m, el intercepto b se puede calcular así:
+.
+A modo de ejemplo considérese la siguiente situación: un estudiante egresó de enseñanza media con
+un Promedio Acumulado 6,33 desde una institución técnica profesional cuyos Promedios Históricos
+y Promedios Máximos Históricos fueron 6,00 y 6,86 respectivamente. Es decir, el estudiante está en
+el escenario Promedio Histórico < Promedio Acumulado ≤ Promedio Máximo Histórico, por lo que
+hay que calcular la pendiente m e intercepto b para conocer su Puntaje Ranking. Al revisar la tabla
+de conversión de nota a Puntaje NEM se ve que al Promedio Histórico le corresponde un Puntaje
+NEM de 699. Entonces, la pendiente m es:
+INSTRUMENTOS DE ACCESO ESPECIFICACIONES Y PROCEDIMIENTOS
+7
+--- PAGE 8 ---
+y el intercepto b es:
+.
+Con estos valores2 6,33 como sigue:
+se puede calcular el Puntaje Ranking del estudiante con Promedio Acumulado
+.
+Nótese que un estudiante con Promedio Acumulado igual al Promedio Máximo Histórico tendrá
+el máximo Puntaje Ranking posible, esto es 850 puntos. A continuación, se explica cómo obtener
+el Puntaje Ranking de estudiantes que tienen un Promedio Acumulado mayor que el Promedio
+Máximo Histórico.
+Promedio Máximo Histórico < Promedio Acumulado
+Tal como es sugerido por el escenario anterior, un estudiante con Promedio Acumulado mayor al
+Promedio Máximo Histórico de su institución obtendrá 850 en Puntaje Ranking. Por ejemplo, si un
+estudiante egresó con un Promedio Acumulado de 6,86 de una institución cuyo Promedio Histórico
+y Promedio Máximo Histórico son 6,26 y 6,81 su puntaje Ranking será 850.
+La Figura 2 muestra la relación del Puntaje Ranking con el Promedio Acumulado en cada uno de los
+escenarios descritos. Para construir la figura se consideró una institución con Promedio Histórico
+5,12 y Promedio Máximo Histórico 5,75. Para promedios acumulados menores o iguales a 5,12 el
+Puntaje Ranking es igual al Puntaje NEM, para promedios acumulados mayores a 5,12 y menores
+o iguales a 5,75 el Puntaje Ranking es mayor al Puntaje NEM y depende linealmente del Promedio
+Acumulado. Para promedios acumulados mayores a 5,75 el Puntaje Ranking es siempre 8503. Los
+valores escogidos para cada uno de los promedios dados en la Figura 2 son ficticios.
+Todas las formas explicadas de cómo calcular el Puntaje Ranking son válidas para estudiantes
+que realizaron su enseñanza media en la misma institución educacional. En la siguiente sección
+se explica cómo calcular el Puntaje Ranking de estudiantes que realizaron la enseñanza media en
+distintas instituciones.
+2 - Estos valores son utilizados con todos lo decimales, en este ejemplo se utilizaron solo cuatro por claridad de presentación.
+3 - Note que el Puntaje NEM máximo no es 850, para el Proceso de Admisión 2022 el Puntaje NEM máximo es 845.
+INSTRUMENTOS DE ACCESO ESPECIFICACIONES Y PROCEDIMIENTOS
+8
+--- PAGE 9 ---
+II) Enseñanza media cursada en distintos establecimientos educacionales
+Si un estudiante cursó su enseñanza media en distintos establecimientos, la forma de calcular el
+Puntaje Ranking será distinta, pues se debe considerar la información académica de los diversos
+contextos educativos en que el estudiante estuvo. El contexto educativo en que cursó una mayor
+cantidad de cursos tendrá una mayor influencia en el Puntaje Ranking del estudiante. En términos
+generales, se calcula un Puntaje Ranking por institución y luego se calcula el promedio de estos
+puntajes considerando la cantidad de cursos que se aprobaron en cada institución. El Puntaje
+Ranking en cada institución educativa se calcula de la misma manera descrita en el literal I), aunque
+para esto es necesario adecuar el Promedio Acumulado, Promedio Histórico y Promedio Máximo
+Histórico al caso en que un estudiante curse y apruebe solo algunos cursos de la enseñanza media
+en un establecimiento educacional. A continuación, se describe esta adecuación.
+•
+Promedio Acumulado: es el promedio de las notas con que un estudiante aprobó cursos
+consecutivos en una institución. Por ejemplo, un estudiante que realizó I medio en una
+institución y II, III y IV medio en otra institución tendrá dos Promedios Acumulados. Si las
+notas con que aprobó respectivamente cada uno de estos cursos fue 6,6; 6,3; 6,7 y 6,5, el
+Promedio Acumulado en la primera institución será 6,60 y en la segunda institución será:
+•
+•
+.
+Recuérdese que se trunca a dos decimales y no se consideran las notas de reprobación.
+Promedio Histórico: es el promedio de los Promedios Acumulados de las tres generaciones
+anteriores al año en que el estudiante aprobó cursos consecutivos. Continuando con el
+ejemplo anterior, si el estudiante aprobó I medio el año 2017 y en la otra institución aprobó
+IV medio el año 2020 (no reprobó cursos), el Promedio Histórico de la primera institución
+corresponde al promedio de las notas de todas y todos los estudiantes que aprobaron I medio
+en esa institución los años 2016, 2015 y 2014. El Promedio Histórico de la segunda institución
+se calcula de forma similar, pero considerando los Promedios Acumulados de II a IV medio.
+Promedio Máximo Histórico: es el promedio entre los máximos Promedios Acumulados de
+cada una de las tres generaciones anteriores. Siguiendo con el ejemplo anterior, si en la primera
+institución las máximas notas de aprobación en I medio los años 2016, 2015 y 2014 fueron
+6,9; 6,4 y 6,6, el Promedio Máximo Histórico de la primera institución es:
+.
+INSTRUMENTOS DE ACCESO ESPECIFICACIONES Y PROCEDIMIENTOS
+9
+--- PAGE 10 ---
+•
+Recuérdese que se expresa en solo dos decimales, truncándose. El Promedio Máximo Histórico
+del segundo establecimiento se calcula de forma similar, pero considerando los Promedios
+Acumulados entre II y IV medio.
+Longitud de contexto educativo: es la cantidad de cursos consecutivos aprobados por un
+estudiante. En el ejemplo, la primera institución tiene longitud 1 y la segunda institución tiene
+longitud 3. No se consideran los cursos reprobados.
+El Puntaje Ranking de un estudiante, en cada establecimiento que estuvo, se calcula de la misma
+manera descrita en la sección anterior. Es decir, en cada establecimiento, se compara el Promedio
+Acumulado del estudiante con el Promedio Histórico y el Promedio Máximo Histórico para determinar
+la forma de asignar el Puntaje Ranking. Una vez calculados los puntajes ranking de un estudiante
+en cada uno de los establecimientos en que estuvo, se calcula su Puntaje Ranking. Para facilidad
+de escritura llamemos PR1 al Puntaje Ranking obtenido en un establecimiento uno, y de manera
+similar PR2, PR3, etc. Llamemos además L1 a la longitud en el establecimiento uno, y de manera
+similar L2, L3, etc. Así, si quisiéramos calcular el Puntaje Ranking de un estudiante que estuvo en
+tres establecimientos educacionales, su puntaje sería:
+.
+Por ejemplo, un estudiante que aprobó I medio en establecimiento II, III y IV medio en otro, y que
+obtuvo un Puntaje Ranking 670 y 661 respectivamente en cada institución, le corresponde un
+Puntaje Ranking:
+.
+III) Casos Especiales
+Existen casos especiales en que el procedimiento descrito anteriormente para asignar Puntaje
+Ranking es alterado. A continuación, se listan estos casos:
+•
+•
+Si un establecimiento educacional tiene menos de 30 egresados en las últimas tres generaciones,
+se agrupará con establecimientos similares. Luego de ser agrupados, este conjunto de
+establecimientos se trata como uno y se aplica el procedimiento descrito en el literal I) de
+asignación de puntaje. Los criterios para considerar dos o más establecimientos como
+similares son: región, modalidad educativa y dependencia.
+Si algún establecimiento no tiene egresados en una o dos de las tres generaciones anteriores,
+pero hay más de 30 egresados entre la o las generaciones que sí tuvieron egresados, entonces
+se aplica el procedimiento descrito en el literal I) de asignación de Puntaje Ranking considerando
+únicamente la o las generaciones con egresados.
+INSTRUMENTOS DE ACCESO ESPECIFICACIONES Y PROCEDIMIENTOS
+10
+--- PAGE 11 ---
+•
+•
+Si un postulante rindió exámenes libres, su Puntaje Ranking se asignará comparando su
+desempeño académico con un establecimiento humanista científico vespertino.
+Si un postulante cursó parte de la enseñanza media en el extranjero y cuenta con Puntaje
+NEM, se le asignará su Puntaje NEM como Puntaje Ranking en aquellos cursos aprobados en
+el extranjero. Este puntaje será asociado a un contexto educativo. Luego su Puntaje Ranking
+será el promedio ponderado por la cantidad de cursos aprobados en los distintos contextos
+educativos, como fue descrito anteriormente.
+1.3 Pruebas de Transición para la Admisión Universitaria
+Pruebas Obligatorias
+En el nuevo Sistema de Acceso a la Educación Superior, el Comité acordó iniciar desde 2020 un
+camino que terminará con el reemplazo de la PSU, con la gradualidad necesaria y suficiente para
+no afectar a los postulantes que ya se han preparado para esta prueba. En consecuencia, para el
+proceso de admisión 2021 y 2022 se tomarán pruebas de transición que reducirán el número de
+preguntas e incorporarán gradualmente preguntas enfocadas en competencias.
+•
+•
+Prueba de Transición de Matemática: Destinada a medir los conocimientos y competencias
+necesarias para un adecuado desempeño académico, es de carácter obligatorio.
+Prueba de Transición de Comprensión Lectora: Destinada a medir los conocimientos y
+competencias necesarias para un adecuado desempeño académico, es también una prueba
+de carácter obligatorio.
+Pruebas de Transición Electivas
+Las personas inscritas deben rendir al menos una de las siguientes pruebas electivas, teniendo
+la opción de rendir ambas. Para efectos de la postulación y admisión establecidas en este ítem,
+solo se utilizará el puntaje de una de estas dos pruebas:
+•
+•
+Historia y Ciencias Sociales
+Ciencias, en dos versiones:
+•
+Prueba de Ciencias módulo Biología, Física o Química: para los postulantes provenientes
+de establecimientos educacionales Humanista-Científicos.
+•
+Prueba de Ciencias módulo Técnico Profesional (TP): prueba con preguntas de las tres
+asignaturas del área científica (Biología, Física y Química) del currículo de Formación General
+correspondiente a I y II Medio, para los postulantes provenientes de establecimientos
+educacionales de la rama Técnico Profesional.
+INSTRUMENTOS DE ACCESO ESPECIFICACIONES Y PROCEDIMIENTOS
+11
+--- PAGE 12 ---
+•
+Los postulantes que hayan egresado de la rama Técnico Profesional podrán elegir entre la
+prueba de Ciencias módulo Técnico Profesional, o la prueba de Ciencias módulo Biología,
+Física o Química, mientras que los postulantes que hayan egresados de la modalidad Huma-
+nista-Científico solo podrán rendir la prueba de Ciencias módulo Biología, Física o Química.
+IMPORTANTE
+Las personas inscritas deben elegir la(s) prueba(s) electiva(s) a rendir según los requisitos
+establecidos por cada universidad para el ingreso a la(s) carrera(s) de su interés.
+Los requisitos para cada carrera con postulación centralizada de las universidades adscritas al
+sistema estarán disponibles en la Plataforma Electrónica Única del Sistema de Acceso a través de
+la publicación “Nómina Preliminar de Carreras”.
+Contenido de las pruebas
+Para el presente proceso de admisión, las pruebas han sido confeccionadas según lo planificado,
+aumentando la cantidad de ¨preguntas del nuevo tipo¨ en las pruebas obligatorias de Matemática
+y de Comprensión Lectora -que miden competencias- llegando a un 50% de las preguntas totales
+de cada una de las pruebas.
+Con respecto a la prueba electiva de Historia y Ciencias Sociales, se determinó ajustar los temarios,
+reduciéndose el número de temas presentes y con ello el número de preguntas de la prueba, las
+que pasan de 80 a 65.
+Por último, la prueba de Ciencias también tendrá algunas modificaciones y si bien se mantiene con un
+total de 80 preguntas -de las que 54 corresponden al módulo común-, en este último se aumentarán
+las preguntas de habilidades científicas, es decir, aquellas relacionadas con el conocimiento acerca
+de la ciencia y de cómo se hace ciencia.
+Revisa todos los temarios aquí.
+Prueba de Ciencias para estudiantes de establecimientos Técnico Profesionales:
+Es una prueba exclusiva para los postulantes provenientes de establecimientos Técnico-Profesionales,
+compuesta por 80 preguntas correspondientes al Plan de Formación General de I y II Medio, para
+Biología, Física y Química.
+Preguntas de pilotaje:
+Las pruebas de Comprensión Lectora, Matemática, Ciencias e Historia y Ciencias Sociales tienen
+5 preguntas de pilotaje, las que no serán identificadas como tales ni darán lugar a puntaje.
+INSTRUMENTOS DE ACCESO ESPECIFICACIONES Y PROCEDIMIENTOS
+12
+--- PAGE 13 ---
+Normalización de las pruebas:
+La normalización se realiza a partir de los puntajes obtenidos desde la aplicación de cada una
+de las Pruebas de Transición. A los puntajes obtenidos en una prueba de transición (cualquiera)
+antes de la normalización le llamaremos Puntajes Iniciales, y a los puntajes obtenidos después de
+la normalización le llamaremos Puntajes. Estos últimos son los que se entregan a cada persona.
+La normalización es una transformación de los Puntajes Iniciales a una nueva escala, donde el
+orden de las personas que rindieron la prueba respecto a los Puntajes Iniciales se mantiene. Por
+ejemplo, si Mateo e Isabella rindieron una prueba de transición y obtuvieron Puntajes Iniciales 2 y 3
+puntos respectivamente, después de la normalización Isabella seguirá teniendo un puntaje mayor
+que Mateo. El promedio de los Puntajes cada año se fija en 500 puntos y su desviación estándar en
+110 puntos. El Puntaje máximo se fija en 850 puntos y el mínimo en 150 puntos. Para obtener 850
+puntos es suficiente haber tenido el máximo Puntaje Inicial entre quienes rindieron la prueba, y no
+necesariamente haber respondido todas las respuestas correctamente. De igual manera, a quien
+se le asignan 150 puntos es a quien ha tenido el Puntaje Inicial menor entre quienes rindieron la
+prueba. Esto implica que siempre habrá al menos una persona con Puntaje 850 puntos y al menos
+una persona con 150 puntos. Un caso particular al proceso de normalización ocurre con la Prueba
+de Transición de Ciencias. Esta prueba consta de una parte común y cuatro partes específicas:
+Técnico Profesional, Biología, Química y Física. Cada persona que rinde la Prueba de Transición de
+Ciencias, rinde la parte común más una parte específica que escoge. Antes de aplicar el proceso
+de normalización, los Puntajes Iniciales de las cuatro pruebas de ciencias son “enlazados” a una
+escala común.
+Los Puntajes siguen una distribución de probabilidad normal, por eso el nombre normalización
+al cambio de escala. Dado que el promedio y desviación estándar son fijos, esto implica que la
+proporción de personas en cierto rango de Puntajes es la misma año a año. Por ejemplo, todos los
+años la mitad de las personas tendrá 500 puntos o más, y el 2,27% de quienes rindieron la prueba
+tendrá entre 150 y 280 puntos. La Figura 3 muestra el porcentaje de personas en ciertos intervalos
+de Puntajes. Los intervalos escogidos son múltiplos enteros de la desviación estándar (110 puntos).
+El área azul más oscura corresponde a los puntajes que no son ajustados por una normal sino por
+una interpolación lineal4 . La suma de los porcentajes no suma exactamente 100% porque han sido
+aproximados. En la figura se ve que cada año el 68,16% de las personas que rinden una prueba
+obtienen entre 390 y 610 puntos.
+4 - Esto se hace para que los puntajes mínimos y máximos respectivamente sean 150 y 850 puntos.
+INSTRUMENTOS DE ACCESO ESPECIFICACIONES Y PROCEDIMIENTOS
+13
+--- PAGE 14 ---
+Figura 3: Distribución de Puntajes
+150 170 280 390 500
+610
+720 830 850
+Puntaje
+El objetivo de los Puntajes es únicamente ordenar al grupo de personas que rindieron una Prueba
+de Transición, no siendo posible realizar otro tipo de inferencia a partir de ellos, como asociar los
+Puntajes a niveles de logro de algún contenido en particular.
+2 Instrumentos específicos de acceso
+Las universidades podrán desarrollar instrumentos de acceso específicos, complementarios a
+los descritos en el punto 3, los que deberán ser autorizados por el Comité. Estos instrumentos,
+que consistirán en pruebas especiales, deberán aplicarse antes del inicio del periodo de postula-
+ción centralizada, siendo de exclusiva responsabilidad de cada universidad su aplicación y admi-
+nistración. Las fechas de las pruebas especiales son establecidas por cada institución e informa-
+das en la publicación “Oferta Definitiva de Carreras, Vacantes y Ponderaciones”, a publicarse en
+el mes de septiembre en la Plataforma Electrónica Única del Sistema de Acceso.
+Las universidades entregarán a DEMRE como organismo responsable de la ejecución del proceso
+de selección, de acuerdo con lo dispuesto en el inciso final del artículo 12 de la ley N° 21.091, los
+resultados obtenidos por los candidatos luego de la aplicación de los instrumentos de acceso es-
+pecíficos. Lo anterior, deberá ocurrir dentro del plazo estipulado para ello y de acuerdo con las espe-
+cificaciones técnicas requeridas por dicho organismo, a efecto de que procese estas postulaciones
+junto con las correspondientes a las carreras que no exigen instrumentos de acceso específicos.
+INSTRUMENTOS DE ACCESO ESPECIFICACIONES Y PROCEDIMIENTOS
+14
+--- PAGE 15 ---
+IMPORTANTE
+Para cada carrera, los resultados obtenidos en el instrumento de acceso específico podrán uti-
+lizarse en una de las dos siguientes modalidades:
+•
+•
+Modalidad Aprueba/Reprueba: el resultado del instrumento de acceso específico solo in-
+dica si el candidato continúa postulando para obtener una vacante en la carrera o si, por
+el contrario, es inhabilitado para continuar. En la primera situación, el resultado lo habilita
+para postular al programa en cuestión. En caso de reprobación, el postulante no podrá
+alcanzar la calidad de postulante efectivo a la carrera.
+Modalidad con puntaje específico: el resultado del instrumento aplicado se expresa en un
+puntaje –en una escala estándar similar a la usada para el resto de los instrumentos de
+selección- que será ponderado junto con los otros factores de selección, lo que arrojará el
+puntaje ponderado definitivo.
+La universidad que utilice instrumentos de acceso específicos para la postulación y admisión de
+un determinado programa pondrá a disposición del postulante, antes de la fecha de postulación,
+los resultados obtenidos en la aplicación del instrumento.
+INSTRUMENTOS DE ACCESO ESPECIFICACIONES Y PROCEDIMIENTOS
+15
+--- PAGE 16 ---
+INSTRUMENTOS DE ACCESO ESPECIFICACIONES Y PROCEDIMIENTOS
+16

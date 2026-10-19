@@ -1,0 +1,3037 @@
+ 
+1 | 15 
+  
+ 
+ 
+Esquema de Registro PROCESO DE ADMISIÓN AÑO ACADÉMICO 2025 
+INSCRITOS, ESCOLARIDAD Y PUNTAJES  
+Bases Públicas con MRUN 
+ 
+Unidad Responsable: 
+División de Información y Acceso 
+Estandarización: 
+Unidad de Estadísticas 
+Centro de Estudios 
+Ministerio de Educación 
+Fuente de la información: División de Información y Acceso (Subsecretaría Educación Superior) – DEMRE 
+Formato de la base de datos: .CSV con codificación UTF-81.  
+ 
+1.1. Número de observaciones por año 
+Proceso de admisión 
+Inscritos 
+Proceso 
+Dominio 
+Datos 
+2025 
+313.7592 
+Prueba de Acceso a la Educación Superior (PAES) 
+ 
+MINEDUC 
+2024 
+309.350 
+2023 
+296.812 
+2022 
+285.513 
+Prueba de Transición Universitaria (PDT) 
+2021 
+276.059 
+2020 
+308.535 
+Prueba de Selección Universitaria (PSU) 
+DEMRE 
+2019 
+306.052 
+2018 
+306.376 
+2017 
+300.046 
+2016 
+299.891 
+2015 
+290.249 
+2014 
+278.738 
+2013 
+280.507 
+2012 
+280.058 
+2011 
+289.244 
+2010 
+285.325 
+2009 
+277.420 
+2008 
+140.851 
+2007 
+242.155 
+2006 
+182.761 
+2005 
+176.680 
+2004 
+159.249 
+2003 
+187.584 
+Prueba de Aptitud Académica (PAA) 
+2002 
+188.205 
+2001 
+177.936 
+2000 
+171.921 
+ 
+ 
+ 
+ 
+1 Hasta el año 2018 la codificación de la base de datos es entorno local.  
+2 La base de datos original está compuesta de 313.761 registros. Sin embargo, mediante la rutificación enviada por el registro 
+civil apareció la categoría de género “no binario” por primera vez, en el marco del trabajo de bases de datos que realiza el CEM.  
+Dado que solamente dos casos presentaban esta categoría, les hacía fácilmente identificables mediante una combinación de 
+características/variables. No obstante, con el fin de cumplir con la Ley N° 19.628 de protección de datos personales y 
+considerando que la base de datos incluye información sobre estudiantes menores de edad, se decidió temporalmente eliminar 
+ambos registros para así asegurar el cumplimiento de las normativas de privacidad y confidencialidad en el tratamiento de la 
+información. 
+ 
+
+ 
+2 | 15 
+ 
+ 
+1.2. Variables 
+ 
+El listado de variables que contienen las bases de datos se detalla a continuación. 
+Nombre 
+Tipo 
+Descripción 
+Valores 
+MRUN 
+Numérica 
+Identificador del 
+estudiante 
+ 
+ANYIO_PROCESO 
+Numérica 
+Año proceso postulación  
+COD_SEXO 
+Numérica 
+Sexo del postulante 
+1 = Masculino 
+2 = Femenino 
+FECHA_NACIMIENTO 
+Cadena 
+Fecha de Nacimiento del 
+inscrito 
+AAAAMM3 
+RBD 
+Cadena 
+Rol base de datos del 
+establecimiento 
+ 
+CODIGO_ENS 
+Cadena 
+Código de Enseñanza 
+Ver Anexo II 
+LOCAL_EDUCACIONAL 
+Cadena 
+Código numérico que 
+identifica al local 
+educacional (planta física). 
+ 
+UNIDAD_EDUCATIVA 
+Cadena 
+Código numérico que 
+identifica a la Unidad 
+Educativa – Rama 
+Educacional 
+ 
+NOMBRE_UNIDAD_EDUC 
+Cadena 
+Nombre oficial de la 
+Unidad Educativa 
+ 
+RAMA_EDUCACIONAL 
+Cadena 
+Identifica la modalidad 
+educacional. 
+H1: Humanista Científico Diurno 
+H2: Humanista Científico Nocturno 
+H3: Humanista Científico – 
+Validación de estudios 
+H4:  Humanista Científico – 
+Reconocimiento de estudios 
+T1: Técnico Profesional Comercial 
+T2: Técnico Profesional Industrial 
+T3: Técnico Profesional Servicios y 
+Técnica 
+T4: Técnico Profesional Agrícola 
+T5: Técnico Profesional Marítima 
+DEPENDENCIA 
+ 
+Numérica 
+Grupo dependencia. 
+1: Corporación Municipal 
+2: Municipal 
+3: Particular Subvencionado 
+4:Particular Pagado 
+5: Corporación de Administración 
+Delegada 
+6: Servicio Local de Educación  
+(SLE) 
+CODIGO_REGION_EGRESO 
+Numérica 
+Región de egreso 
+Ver Anexo I 
+NOMBRE_REGION_EGRESO 
+Cadena 
+Región de egreso 
+Ver Anexo I 
+CODIGO_PROVINCIA_EGRESO 
+Cadena 
+Provincia de egreso 
+Ver Anexo I 
+NOMBRE_PROVINCIA_EGRESO 
+Cadena 
+Provincia de egreso 
+Ver Anexo I 
+CODIGO_COMUNA_EGRESO 
+Cadena 
+Comuna de egreso 
+Ver Anexo I 
+NOMBRE_COMUNA_EGRESO 
+Cadena 
+Comuna de egreso 
+Ver Anexo I 
+ANYO_DE_EGRESO  
+Numérica 
+ 
+ 
+PROMEDIO_NOTAS  
+Cadena 
+Promedio de las notas de 
+Educación Media (E,dd  = 
+Entero coma decimal 
+decimal).  
+ 
+ 
+ 
+ 
+ 
+ 
+3 Hasta el año 2017 el formato era DDMMAAAA. 
+
+ 
+3 | 15 
+ 
+ 
+Nombre 
+Tipo 
+Descripción 
+Valores 
+PTJE_NEM  
+Numérica 
+Puntaje estándar asignado al 
+promedio general de notas, 
+según el grupo educacional de 
+egreso. 
+ 
+PORC_SUP_NOTAS  
+Numérica 
+Pertenece al Porcentaje 
+Superior Nota – fuente: 
+MINEDUC. 
+Valor de 10 en 10, entre 10 y 
+100, por ende el largo máximo 
+es 3 caracteres‘. 
+PTJE_RANKING 
+Numérica 
+Puntaje estándar asignado al 
+promedio de notas, según 
+la(s) unidad(es) educativa(s) 
+donde cursó la EM.      
+Número. 
+a.- Se calcula según el contexto 
+educativo del estudiante.  
+b.- Si el PJE_RANKING es menor 
+que el puntaje NEM, se 
+reemplaza por el NEM. 
+CLEC_REG_ACTUAL  
+Numérico 
+Puntaje en la Prueba de 
+Competencia Lectora en la 
+rendición regular actual. 
+ 
+MATE1_REG_ACTUAL  
+Numérico 
+Puntaje en la Prueba de 
+Competencia Matemática 
+1 en la rendición regular 
+actual 
+ 
+MATE2_REG_ACTUAL  
+Numérico 
+Puntaje en la Prueba de 
+Competencia Matemática 
+2 en la rendición regular 
+actual 
+ 
+HCSO_REG_ACTUAL  
+Numérico 
+Puntaje en la Prueba de 
+Historia y Ciencias Sociales 
+en la rendición regular 
+actual 
+ 
+CIEN_REG_ACTUAL  
+Numérico 
+Puntaje en la Prueba de 
+Ciencias en la rendición 
+regular actual 
+ 
+CLEC_INV_ACTUAL 
+Numérico 
+Puntaje en la Prueba de 
+Competencia Lectora en la 
+rendición de invierno 
+actual. 
+ 
+MATE_INV_ACTUAL 
+Numérico 
+Puntaje en la Prueba de 
+Matemática en la rendición 
+de invierno actual. 
+ 
+HCSOC_INV_ACTUAL 
+Numérico 
+Puntaje en la Prueba de 
+Historia y Ciencias Sociales 
+en la rendición de invierno 
+actual. 
+ 
+CIEN_INV_ACTUAL 
+Numérico 
+Puntaje en la Prueba de 
+Ciencias en la rendición de 
+invierno actual. 
+ 
+CLEC_REG_ANTERIOR 
+Numérico 
+Puntaje en la Prueba de 
+Comprensión Lectora en la 
+rendición regular anterior. 
+ 
+ 
+MATE_REG_ANTERIOR 
+Numérico 
+Puntaje en la Prueba de 
+Matemática en la rendición 
+regular anterior. 
+ 
+HCSO_REGANTERIOR 
+Numérico 
+Puntaje en la Prueba de 
+Historia y Ciencias Sociales 
+en la rendición regular 
+anterior. 
+ 
+CIEN_REG_ANTERIOR 
+Numérico 
+Puntaje en la Prueba de 
+Ciencias en la rendición 
+regular anterior. 
+ 
+CLEC_INV_ANTERIOR 
+Numérico 
+Puntaje en la Prueba de 
+Competencia Lectora en la 
+rendición de invierno 
+anterior. 
+ 
+
+ 
+4 | 15 
+ 
+ 
+Nombre 
+Tipo 
+Descripción 
+Valores 
+MATE1_INV_ANTERIOR 
+Numérico 
+Puntaje en la Prueba de 
+Matemática1 en la 
+rendición de invierno 
+anterior. 
+ 
+MATE2_INV_ANTERIOR 
+Numérico 
+Puntaje en la Prueba de 
+Matemática2 en la 
+rendición de invierno 
+anterior. 
+ 
+HCSOC_INV_ANTERIOR 
+Numérico 
+Puntaje en la Prueba de 
+Historia y Ciencias Sociales 
+en la rendición de invierno 
+anterior. 
+ 
+CIEN_INV_ANTERIOR 
+Numérico 
+Puntaje en la Prueba de 
+Ciencias en la rendición de 
+invierno anterior. 
+ 
+PROMEDIO_CM_MAX 
+Numérica 
+Máximo puntaje promedio 
+en pruebas obligatorias 
+vigentes 
+ 
+CLEC_MAX 
+Numérica 
+Puntaje máximo de todas 
+las Pruebas de 
+Competencia 
+Lectora/Comprensión 
+Lectora rendidas. 
+ 
+MATE1_MAX 
+Numérica 
+Puntaje máximo de todas 
+las Pruebas de 
+Competencia 
+Matematica1/Matemática 
+rendidas 
+ 
+MATE2_MAX 
+Numérica 
+Puntaje máximo de todas 
+las Pruebas de 
+Competencia Matemática 
+2/Matemática rendidas 
+ 
+HCSOC_MAX 
+Numérica 
+Puntaje máximo de todas 
+las Prueba de Historia y 
+Ciencias Sociales rendidas 
+ 
+CIEN_MAX 
+Numérica 
+Puntaje máximo de todas 
+las Prueba de Ciencias 
+rendidas 
+ 
+RINDIO_PROCESO ANTERIOR 
+Numérica 
+Rindió al menos una 
+prueba del proceso 2022 o 
+se encuentra en el 30% 
+superior notas 
+0: No rindió pruebas en el 
+proceso 2022, ni se 
+encuentra en 30% superior 
+notas 
+1: Regular o se encuentra en 
+el 30% superior notas 
+RINDIO_PROCESO_ACTUAL 
+Numérica 
+Inscribió al menos una 
+Prueba del proceso 2023 
+0: No inscribió pruebas en el 
+proceso 2023 
+1: Regular 
+2: Invierno 
+3: Ambas 
+PRUEBA_REG_CL 
+Cadena 
+Distribución de respuestas 
+prueba Comprensión 
+Lectora Regular 
+Compresión Lectora. 
+FORMA_REG _CL 
+Numérica 
+Código de la Forma.  
+CORRECTAS_REG _CL 
+Numérica 
+Preguntas correctas.   
+ERRADAS_REG _CL 
+Numérica 
+Preguntas erradas.  
+OMITIDAS_REG _CL 
+Numérica 
+Preguntas omitidas. 
+PRUEBA_REG_M1 
+Cadena 
+Distribución de respuestas 
+prueba Matemáticas 1 
+Regular 
+Matemática 1.  
+FORMA_REG_M1 
+Numérica 
+Código de la Forma.  
+CORRECTAS_REG_M1  
+Numérica 
+Preguntas correctas.   
+ERRADA_REG_M1 
+Numérica 
+Preguntas erradas.  
+OMITIDAS_REG_M1 
+Numérica 
+Preguntas omitidas. 
+ 
+
+ 
+5 | 15 
+ 
+ 
+Nombre 
+Tipo 
+Descripción 
+Valores 
+PRUEBA_REG_M2 
+Cadena 
+Distribución de respuestas 
+prueba Matemáticas 2 
+Regular 
+Matemática 2.  
+FORMA_REG_M2 
+Numérica 
+Código de la Forma.  
+CORRECTAS_REG_M2  
+Numérica 
+Preguntas correctas.   
+ERRADA_REG_M2 
+Numérica 
+Preguntas erradas.  
+OMITIDAS_REG_M2 
+Numérica 
+Preguntas omitidas. 
+PRUEBA_REG_HCS 
+Cadena 
+Distribución de respuestas 
+prueba Historia y Ciencias 
+Sociales Regular 
+Historia, y Cs. Sociales. 
+FORMA_REG _HCS  
+Numérica 
+Código de la Forma.  
+CORRECTAS_REG _HCS  
+Numérica 
+Preguntas correctas.   
+ERRADAS_REG _HCS  
+Numérica 
+Preguntas erradas.  
+OMITIDAS_REG _HCS  
+Numérica 
+Preguntas omitidas. 
+PRUEBA_REG _CBIO  
+Cadena 
+Distribución de respuestas 
+prueba Ciencias Biología 
+Regular 
+Ciencias Biología. 
+FORMA_REG _CBIO  
+Numérica 
+Código de la Forma.  
+CORRECTAS_REG _CBIO  
+Numérica 
+Preguntas correctas.   
+ERRADAS_REG _CBIO  
+Numérica 
+Preguntas erradas.  
+OMITIDAS_REG _CBIO  
+Numérica 
+Preguntas omitidas. 
+PRUEBA_REG _CFIS  
+Cadena 
+Distribución de respuestas 
+prueba Ciencias Física 
+Regular  
+Ciencias Física. 
+FORMA_REG _CFIS  
+Numérica 
+Código de la Forma.  
+CORRECTAS_REG _CFIS  
+Numérica 
+Preguntas correctas.   
+ERRADAS_REG _CFIS  
+Numérica 
+Preguntas erradas.  
+OMITIDAS_REG _CFIS  
+Numérica 
+Preguntas omitidas. 
+PRUEBA_REG_CQUI  
+Cadena 
+Distribución de respuestas 
+prueba Ciencias Química 
+Regular 
+Ciencias Química. 
+FORMA_REG _CQUI  
+Numérica 
+Código de la Forma.  
+CORRECTAS_REG _CQUI  
+Numérica 
+Preguntas correctas.   
+ERRADAS_REG _CQUI  
+Numérica 
+Preguntas erradas.  
+OMITIDAS_REG _CQUI  
+Numérica 
+Preguntas omitidas. 
+PRUEBA_REG _CTP  
+Cadena 
+Distribución de respuestas 
+prueba Ciencias Técnico 
+Profesional Regular 
+Ciencias Técnico Profesional. 
+FORMA_REG _CTP  
+Numérica 
+Código de la Forma.  
+CORRECTAS_REG _CTP  
+Numérica 
+Preguntas correctas.   
+ERRADAS_REG _CTP  
+Numérica 
+Preguntas erradas.  
+OMITIDAS_REG _CTP  
+Numérica 
+Preguntas omitidas. 
+PRUEBA_INV_CL 
+Cadena 
+Distribución de respuestas 
+prueba Comprensión 
+Lectora Invierno 
+Compresión Lectora. 
+FORMA_INV _CL 
+Numérica 
+Código de la Forma.  
+CORRECTAS_INV _CL 
+Numérica 
+Preguntas correctas.   
+ERRADAS_INV _CL 
+Numérica 
+Preguntas erradas.  
+OMITIDAS_INV _CL 
+Numérica 
+Preguntas omitidas. 
+PRUEBA_INV_MATE 
+Cadena 
+Distribución de respuesta 
+Prueba Matemáticas 
+Invierno 
+Matemáticas. 
+FORMA_INV _MATE 
+Numérica 
+Código de la Forma.  
+CORRECTAS_INV _MATE 
+Numérica 
+Preguntas correctas.   
+ERRADAS_INV _MATE 
+Numérica 
+Preguntas erradas.  
+OMITIDAS_INV _MATE 
+Numérica 
+Preguntas omitidas. 
+PRUEBA_INV_HCS 
+Cadena 
+Distribución de respuesta 
+Prueba Historia y Ciencias 
+Sociales Invierno 
+Historia y Ciencias Sociales. 
+FORMA_INV _HCS 
+Numérica 
+Código de la Forma.  
+CORRECTAS_INV _HCS 
+Numérica 
+Preguntas correctas.   
+ERRADAS_INV _HCS 
+Numérica 
+Preguntas erradas.  
+OMITIDAS_INV _HCS 
+Numérica 
+Preguntas omitidas. 
+PRUEBA_INV_CBIO 
+Cadena 
+Distribución de respuesta 
+Prueba Ciencias Biología 
+Invierno 
+Ciencias Biología 
+FORMA_INV CBIO 
+Numérica 
+Código de la Forma.  
+CORRECTAS_INV _CBIO 
+Numérica 
+Preguntas correctas.   
+ERRADAS_INV_CBIO 
+Numérica 
+Preguntas erradas.  
+OMITIDAS_INV _CBIO 
+Numérica 
+Preguntas omitidas. 
+PRUEBA_INV_CFIS 
+Cadena 
+Distribución de respuesta 
+Prueba Ciencias Física 
+Invierno 
+Ciencias Física 
+FORMA_INV CFIS 
+Numérica 
+Código de la Forma.  
+CORRECTAS_INV _CFIS 
+Numérica 
+Preguntas correctas.   
+ERRADAS_INV_CFIS 
+Numérica 
+Preguntas erradas.  
+OMITIDAS_INV _CFIS 
+Numérica 
+Preguntas omitidas. 
+
+ 
+6 | 15 
+ 
+ 
+Nombre 
+Tipo 
+Descripción 
+Valores 
+PRUEBA_INV_CQUI 
+Cadena 
+Distribución de respuesta 
+Prueba Ciencias Química 
+Invierno 
+Ciencias Química. 
+FORMA_INV CQUI 
+Numérica 
+Código de la Forma.  
+CORRECTAS_INV _CQUI 
+Numérica 
+Preguntas correctas.   
+ERRADAS_INV_CQUI 
+Numérica 
+Preguntas erradas.  
+OMITIDAS_INV _CQUI 
+Numérica 
+Preguntas omitidas. 
+PRUEBA_INV_CTP 
+Cadena 
+Distribución de respuesta 
+Prueba Ciencias Técnico 
+Profesional Invierno 
+Ciencias Técnico Profesional. 
+FORMA_INV CTP 
+Numérica 
+Código de la Forma.  
+CORRECTAS_INV _CTP 
+Numérica 
+Preguntas correctas.   
+ERRADAS_INV_CTP 
+Numérica 
+Preguntas erradas.  
+OMITIDAS_INV _CTP 
+Numérica 
+Preguntas omitidas. 
+ 
+ 
+ 
+ 
+ 
+  
+  
+ 
+ 
+
+ 
+7 | 15 
+ 
+ 
+ANEXO I 
+PROCESO DE ADMISIÓN 2024 
+CÓDIGO ÚNICO TERRITORIAL - REGIÓN, PROVINCIA Y COMUNA 
+CR 
+REG_ORDEN 
+CPR 
+PRV_NOMBRE 
+COM 
+COM_NOMBRE 
+15 
+REGIÓN DE ARICA Y PARINACOTA 
+151 
+ARICA 
+15101 
+ARICA 
+15 
+REGIÓN DE ARICA Y PARINACOTA 
+151 
+ARICA 
+15102 
+CAMARONES 
+15 
+REGIÓN DE ARICA Y PARINACOTA 
+152 
+PARINACOTA 
+15201 
+PUTRE 
+15 
+REGIÓN DE ARICA Y PARINACOTA 
+152 
+PARINACOTA 
+15202 
+GENERAL LAGOS 
+1 
+REGIÓN DE TARAPACÁ 
+11 
+IQUIQUE 
+1101 
+IQUIQUE 
+1 
+REGIÓN DE TARAPACÁ 
+11 
+IQUIQUE 
+1107 
+ALTO HOSPICIO 
+1 
+REGIÓN DE TARAPACÁ 
+14 
+TAMARUGAL 
+1401 
+POZO ALMONTE 
+1 
+REGIÓN DE TARAPACÁ 
+14 
+TAMARUGAL 
+1402 
+CAMIÑA 
+1 
+REGIÓN DE TARAPACÁ 
+14 
+TAMARUGAL 
+1403 
+COLCHANE 
+1 
+REGIÓN DE TARAPACÁ 
+14 
+TAMARUGAL 
+1404 
+HUARA 
+1 
+REGIÓN DE TARAPACÁ 
+14 
+TAMARUGAL 
+1405 
+PICA 
+2 
+REGIÓN DE ANTOFAGASTA 
+21 
+ANTOFAGASTA 
+2101 
+ANTOFAGASTA 
+2 
+REGIÓN DE ANTOFAGASTA 
+21 
+ANTOFAGASTA 
+2102 
+MEJILLONES 
+2 
+REGIÓN DE ANTOFAGASTA 
+21 
+ANTOFAGASTA 
+2103 
+SIERRA GORDA 
+2 
+REGIÓN DE ANTOFAGASTA 
+21 
+ANTOFAGASTA 
+2104 
+TALTAL 
+2 
+REGIÓN DE ANTOFAGASTA 
+22 
+EL LOA 
+2201 
+CALAMA 
+2 
+REGIÓN DE ANTOFAGASTA 
+22 
+EL LOA 
+2202 
+OLLAGÜE 
+2 
+REGIÓN DE ANTOFAGASTA 
+22 
+EL LOA 
+2203 
+SAN PEDRO DE ATACAMA 
+2 
+REGIÓN DE ANTOFAGASTA 
+23 
+TOCOPILLA 
+2301 
+TOCOPILLA 
+2 
+REGIÓN DE ANTOFAGASTA 
+23 
+TOCOPILLA 
+2302 
+MARÍA ELENA 
+3 
+REGIÓN DE ATACAMA 
+31 
+COPIAPÓ 
+3101 
+COPIAPÓ 
+3 
+REGIÓN DE ATACAMA 
+31 
+COPIAPÓ 
+3102 
+CALDERA 
+3 
+REGIÓN DE ATACAMA 
+31 
+COPIAPÓ 
+3103 
+TIERRA AMARILLA 
+3 
+REGIÓN DE ATACAMA 
+32 
+CHAÑARAL 
+3201 
+CHAÑARAL 
+3 
+REGIÓN DE ATACAMA 
+32 
+CHAÑARAL 
+3202 
+DIEGO DE ALMAGRO 
+3 
+REGIÓN DE ATACAMA 
+33 
+HUASCO 
+3301 
+VALLENAR 
+3 
+REGIÓN DE ATACAMA 
+33 
+HUASCO 
+3302 
+ALTO DEL CARMEN 
+3 
+REGIÓN DE ATACAMA 
+33 
+HUASCO 
+3303 
+FREIRINA 
+3 
+REGIÓN DE ATACAMA 
+33 
+HUASCO 
+3304 
+HUASCO 
+4 
+REGIÓN DE COQUIMBO 
+41 
+ELQUI 
+4101 
+LA SERENA 
+4 
+REGIÓN DE COQUIMBO 
+41 
+ELQUI 
+4102 
+COQUIMBO 
+4 
+REGIÓN DE COQUIMBO 
+41 
+ELQUI 
+4103 
+ANDACOLLO 
+4 
+REGIÓN DE COQUIMBO 
+41 
+ELQUI 
+4104 
+LA HIGUERA 
+4 
+REGIÓN DE COQUIMBO 
+41 
+ELQUI 
+4105 
+PAIHUANO 
+4 
+REGIÓN DE COQUIMBO 
+41 
+ELQUI 
+4106 
+VICUÑA 
+4 
+REGIÓN DE COQUIMBO 
+42 
+CHOAPA 
+4201 
+ILLAPEL 
+4 
+REGIÓN DE COQUIMBO 
+42 
+CHOAPA 
+4202 
+CANELA 
+4 
+REGIÓN DE COQUIMBO 
+42 
+CHOAPA 
+4203 
+LOS VILOS 
+4 
+REGIÓN DE COQUIMBO 
+42 
+CHOAPA 
+4204 
+SALAMANCA 
+4 
+REGIÓN DE COQUIMBO 
+43 
+LIMARÍ 
+4301 
+OVALLE 
+4 
+REGIÓN DE COQUIMBO 
+43 
+LIMARÍ 
+4302 
+COMBARBALÁ 
+4 
+REGIÓN DE COQUIMBO 
+43 
+LIMARÍ 
+4303 
+MONTE PATRIA 
+4 
+REGIÓN DE COQUIMBO 
+43 
+LIMARÍ 
+4304 
+PUNITAQUI 
+4 
+REGIÓN DE COQUIMBO 
+43 
+LIMARÍ 
+4305 
+RÍO HURTADO 
+5 
+REGIÓN DE VALPARAÍSO 
+51 
+VALPARAÍSO 
+5101 
+VALPARAÍSO 
+5 
+REGIÓN DE VALPARAÍSO 
+51 
+VALPARAÍSO 
+5102 
+CASABLANCA 
+5 
+REGIÓN DE VALPARAÍSO 
+51 
+VALPARAÍSO 
+5103 
+CONCÓN 
+5 
+REGIÓN DE VALPARAÍSO 
+51 
+VALPARAÍSO 
+5104 
+JUAN FERNÁNDEZ 
+5 
+REGIÓN DE VALPARAÍSO 
+51 
+VALPARAÍSO 
+5105 
+PUCHUNCAVÍ 
+5 
+REGIÓN DE VALPARAÍSO 
+51 
+VALPARAÍSO 
+5107 
+QUINTERO 
+ 
+
+ 
+8 | 15 
+ 
+ 
+CR 
+REG_ORDEN 
+CPR 
+PRV_NOMBRE 
+COM 
+COM_NOMBRE 
+5 
+REGIÓN DE VALPARAÍSO 
+51 
+VALPARAÍSO 
+5109 
+VIÑA DEL MAR 
+5 
+REGIÓN DE VALPARAÍSO 
+52 
+ISLA DE PASCUA 
+5201 
+ISLA DE PASCUA 
+5 
+REGIÓN DE VALPARAÍSO 
+53 
+LOS ANDES 
+5301 
+LOS ANDES 
+5 
+REGIÓN DE VALPARAÍSO 
+53 
+LOS ANDES 
+5302 
+CALLE LARGA 
+5 
+REGIÓN DE VALPARAÍSO 
+53 
+LOS ANDES 
+5303 
+RINCONADA 
+5 
+REGIÓN DE VALPARAÍSO 
+53 
+LOS ANDES 
+5304 
+SAN ESTEBAN 
+5 
+REGIÓN DE VALPARAÍSO 
+54 
+PETORCA 
+5401 
+LA LIGUA 
+5 
+REGIÓN DE VALPARAÍSO 
+54 
+PETORCA 
+5402 
+CABILDO 
+5 
+REGIÓN DE VALPARAÍSO 
+54 
+PETORCA 
+5403 
+PAPUDO 
+5 
+REGIÓN DE VALPARAÍSO 
+54 
+PETORCA 
+5404 
+PETORCA 
+5 
+REGIÓN DE VALPARAÍSO 
+54 
+PETORCA 
+5405 
+ZAPALLAR 
+5 
+REGIÓN DE VALPARAÍSO 
+55 
+QUILLOTA 
+5501 
+QUILLOTA 
+5 
+REGIÓN DE VALPARAÍSO 
+55 
+QUILLOTA 
+5502 
+CALERA 
+5 
+REGIÓN DE VALPARAÍSO 
+55 
+QUILLOTA 
+5503 
+HIJUELAS 
+5 
+REGIÓN DE VALPARAÍSO 
+55 
+QUILLOTA 
+5504 
+LA CRUZ 
+5 
+REGIÓN DE VALPARAÍSO 
+55 
+QUILLOTA 
+5506 
+NOGALES 
+5 
+REGIÓN DE VALPARAÍSO 
+56 
+SAN ANTONIO 
+5601 
+SAN ANTONIO 
+5 
+REGIÓN DE VALPARAÍSO 
+56 
+SAN ANTONIO 
+5602 
+ALGARROBO 
+5 
+REGIÓN DE VALPARAÍSO 
+56 
+SAN ANTONIO 
+5603 
+CARTAGENA 
+5 
+REGIÓN DE VALPARAÍSO 
+56 
+SAN ANTONIO 
+5604 
+EL QUISCO 
+5 
+REGIÓN DE VALPARAÍSO 
+56 
+SAN ANTONIO 
+5605 
+EL TABO 
+5 
+REGIÓN DE VALPARAÍSO 
+56 
+SAN ANTONIO 
+5606 
+SANTO DOMINGO 
+5 
+REGIÓN DE VALPARAÍSO 
+57 
+SAN FELIPE DE ACONCAGUA 
+5701 
+SAN FELIPE 
+5 
+REGIÓN DE VALPARAÍSO 
+57 
+SAN FELIPE DE ACONCAGUA 
+5702 
+CATEMU 
+5 
+REGIÓN DE VALPARAÍSO 
+57 
+SAN FELIPE DE ACONCAGUA 
+5703 
+LLAILLAY 
+5 
+REGIÓN DE VALPARAÍSO 
+57 
+SAN FELIPE DE ACONCAGUA 
+5704 
+PANQUEHUE 
+5 
+REGIÓN DE VALPARAÍSO 
+57 
+SAN FELIPE DE ACONCAGUA 
+5705 
+PUTAENDO 
+5 
+REGIÓN DE VALPARAÍSO 
+57 
+SAN FELIPE DE ACONCAGUA 
+5706 
+SANTA MARÍA 
+5 
+REGIÓN DE VALPARAÍSO 
+58 
+MARGA MARGA 
+5801 
+QUILPUÉ 
+5 
+REGIÓN DE VALPARAÍSO 
+58 
+MARGA MARGA 
+5802 
+LIMACHE 
+5 
+REGIÓN DE VALPARAÍSO 
+58 
+MARGA MARGA 
+5803 
+OLMUÉ 
+5 
+REGIÓN DE VALPARAÍSO 
+58 
+MARGA MARGA 
+5804 
+VILLA ALEMANA 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+131 
+SANTIAGO 
+13101 
+SANTIAGO 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+131 
+SANTIAGO 
+13102 
+CERRILLOS 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+131 
+SANTIAGO 
+13103 
+CERRO NAVIA 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+131 
+SANTIAGO 
+13104 
+CONCHALÍ 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+131 
+SANTIAGO 
+13105 
+EL BOSQUE 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+131 
+SANTIAGO 
+13106 
+ESTACIÓN CENTRAL 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+131 
+SANTIAGO 
+13107 
+HUECHURABA 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+131 
+SANTIAGO 
+13108 
+INDEPENDENCIA 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+131 
+SANTIAGO 
+13109 
+LA CISTERNA 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+131 
+SANTIAGO 
+13110 
+LA FLORIDA 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+131 
+SANTIAGO 
+13111 
+LA GRANJA 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+131 
+SANTIAGO 
+13112 
+LA PINTANA 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+131 
+SANTIAGO 
+13113 
+LA REINA 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+131 
+SANTIAGO 
+13114 
+LAS CONDES 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+131 
+SANTIAGO 
+13115 
+LO BARNECHEA 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+131 
+SANTIAGO 
+13116 
+LO ESPEJO 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+131 
+SANTIAGO 
+13117 
+LO PRADO 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+131 
+SANTIAGO 
+13118 
+MACUL 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+131 
+SANTIAGO 
+13119 
+MAIPÚ 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+131 
+SANTIAGO 
+13120 
+ÑUÑOA 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+131 
+SANTIAGO 
+13121 
+PEDRO AGUIRRE CERDA 
+
+ 
+9 | 15 
+ 
+ 
+CR 
+REG_ORDEN 
+CPR 
+PRV_NOMBRE 
+COM 
+COM_NOMBRE 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+131 
+SANTIAGO 
+13122 
+PEÑALOLÉN 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+131 
+SANTIAGO 
+13123 
+PROVIDENCIA 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+131 
+SANTIAGO 
+13124 
+PUDAHUEL 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+131 
+SANTIAGO 
+13125 
+QUILICURA 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+131 
+SANTIAGO 
+13126 
+QUINTA NORMAL 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+131 
+SANTIAGO 
+13127 
+RECOLETA 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+131 
+SANTIAGO 
+13128 
+RENCA 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+131 
+SANTIAGO 
+13129 
+SAN JOAQUÍN 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+131 
+SANTIAGO 
+13130 
+SAN MIGUEL 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+131 
+SANTIAGO 
+13131 
+SAN RAMÓN 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+131 
+SANTIAGO 
+13132 
+VITACURA 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+132 
+CORDILLERA 
+13201 
+PUENTE ALTO 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+132 
+CORDILLERA 
+13202 
+PIRQUE 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+132 
+CORDILLERA 
+13203 
+SAN JOSÉ DE MAIPO 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+133 
+CHACABUCO 
+13301 
+COLINA 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+133 
+CHACABUCO 
+13302 
+LAMPA 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+133 
+CHACABUCO 
+13303 
+TILTIL 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+134 
+MAIPO 
+13401 
+SAN BERNARDO 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+134 
+MAIPO 
+13402 
+BUIN 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+134 
+MAIPO 
+13403 
+CALERA DE TANGO 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+134 
+MAIPO 
+13404 
+PAINE 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+135 
+MELIPILLA 
+13501 
+MELIPILLA 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+135 
+MELIPILLA 
+13502 
+ALHUÉ 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+135 
+MELIPILLA 
+13503 
+CURACAVÍ 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+135 
+MELIPILLA 
+13504 
+MARÍA PINTO 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+135 
+MELIPILLA 
+13505 
+SAN PEDRO 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+136 
+TALAGANTE 
+13601 
+TALAGANTE 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+136 
+TALAGANTE 
+13602 
+EL MONTE 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+136 
+TALAGANTE 
+13603 
+ISLA DE MAIPO 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+136 
+TALAGANTE 
+13604 
+PADRE HURTADO 
+13 
+REGIÓN METROPOLITANA DE SANTIAGO 
+136 
+TALAGANTE 
+13605 
+PEÑAFLOR 
+6 
+REGIÓN DEL LIBERTADOR GENERAL 
+BERNARDO O'HIGGINS 
+61 
+CACHAPOAL 
+6101 
+RANCAGUA 
+6 
+REGIÓN DEL LIBERTADOR GENERAL 
+BERNARDO O'HIGGINS 
+61 
+CACHAPOAL 
+6102 
+CODEGUA 
+6 
+REGIÓN DEL LIBERTADOR GENERAL 
+BERNARDO O'HIGGINS 
+61 
+CACHAPOAL 
+6103 
+COINCO 
+6 
+REGIÓN DEL LIBERTADOR GENERAL 
+BERNARDO O'HIGGINS 
+61 
+CACHAPOAL 
+6104 
+COLTAUCO 
+6 
+REGIÓN DEL LIBERTADOR GENERAL 
+BERNARDO O'HIGGINS 
+61 
+CACHAPOAL 
+6105 
+DOÑIHUE 
+6 
+REGIÓN DEL LIBERTADOR GENERAL 
+BERNARDO O'HIGGINS 
+61 
+CACHAPOAL 
+6106 
+GRANEROS 
+6 
+REGIÓN DEL LIBERTADOR GENERAL 
+BERNARDO O'HIGGINS 
+61 
+CACHAPOAL 
+6107 
+LAS CABRAS 
+6 
+REGIÓN DEL LIBERTADOR GENERAL 
+BERNARDO O'HIGGINS 
+61 
+CACHAPOAL 
+6108 
+MACHALÍ 
+6 
+REGIÓN DEL LIBERTADOR GENERAL 
+BERNARDO O'HIGGINS 
+61 
+CACHAPOAL 
+6109 
+MALLOA 
+6 
+REGIÓN DEL LIBERTADOR GENERAL 
+BERNARDO O'HIGGINS 
+61 
+CACHAPOAL 
+6110 
+MOSTAZAL 
+6 
+REGIÓN DEL LIBERTADOR GENERAL 
+BERNARDO O'HIGGINS 
+61 
+CACHAPOAL 
+6111 
+OLIVAR 
+6 
+REGIÓN DEL LIBERTADOR GENERAL 
+BERNARDO O'HIGGINS 
+61 
+CACHAPOAL 
+6112 
+PEUMO 
+
+ 
+10 | 15 
+ 
+ 
+CR 
+REG_ORDEN 
+CPR 
+PRV_NOMBRE 
+COM 
+COM_NOMBRE 
+6 
+REGIÓN DEL LIBERTADOR GENERAL 
+BERNARDO O'HIGGINS 
+61 
+CACHAPOAL 
+6113 
+PICHIDEGUA 
+6 
+REGIÓN DEL LIBERTADOR GENERAL 
+BERNARDO O'HIGGINS 
+61 
+CACHAPOAL 
+6114 
+QUINTA DE TILCOCO 
+6 
+REGIÓN DEL LIBERTADOR GENERAL 
+BERNARDO O'HIGGINS 
+61 
+CACHAPOAL 
+6115 
+RENGO 
+6 
+REGIÓN DEL LIBERTADOR GENERAL 
+BERNARDO O'HIGGINS 
+61 
+CACHAPOAL 
+6116 
+REQUÍNOA 
+6 
+REGIÓN DEL LIBERTADOR GENERAL 
+BERNARDO O'HIGGINS 
+61 
+CACHAPOAL 
+6117 
+SAN VICENTE 
+6 
+REGIÓN DEL LIBERTADOR GENERAL 
+BERNARDO O'HIGGINS 
+62 
+CARDENAL CARO 
+6201 
+PICHILEMU 
+6 
+REGIÓN DEL LIBERTADOR GENERAL 
+BERNARDO O'HIGGINS 
+62 
+CARDENAL CARO 
+6202 
+LA ESTRELLA 
+6 
+REGIÓN DEL LIBERTADOR GENERAL 
+BERNARDO O'HIGGINS 
+62 
+CARDENAL CARO 
+6203 
+LITUECHE 
+6 
+REGIÓN DEL LIBERTADOR GENERAL 
+BERNARDO O'HIGGINS 
+62 
+CARDENAL CARO 
+6204 
+MARCHIHUE 
+6 
+REGIÓN DEL LIBERTADOR GENERAL 
+BERNARDO O'HIGGINS 
+62 
+CARDENAL CARO 
+6205 
+NAVIDAD 
+6 
+REGIÓN DEL LIBERTADOR GENERAL 
+BERNARDO O'HIGGINS 
+62 
+CARDENAL CARO 
+6206 
+PAREDONES 
+6 
+REGIÓN DEL LIBERTADOR GENERAL 
+BERNARDO O'HIGGINS 
+63 
+COLCHAGUA 
+6301 
+SAN FERNANDO 
+6 
+REGIÓN DEL LIBERTADOR GENERAL 
+BERNARDO O'HIGGINS 
+63 
+COLCHAGUA 
+6302 
+CHÉPICA 
+6 
+REGIÓN DEL LIBERTADOR GENERAL 
+BERNARDO O'HIGGINS 
+63 
+COLCHAGUA 
+6303 
+CHIMBARONGO 
+6 
+REGIÓN DEL LIBERTADOR GENERAL 
+BERNARDO O'HIGGINS 
+63 
+COLCHAGUA 
+6304 
+LOLOL 
+6 
+REGIÓN DEL LIBERTADOR GENERAL 
+BERNARDO O'HIGGINS 
+63 
+COLCHAGUA 
+6305 
+NANCAGUA 
+6 
+REGIÓN DEL LIBERTADOR GENERAL 
+BERNARDO O'HIGGINS 
+63 
+COLCHAGUA 
+6306 
+PALMILLA 
+6 
+REGIÓN DEL LIBERTADOR GENERAL 
+BERNARDO O'HIGGINS 
+63 
+COLCHAGUA 
+6307 
+PERALILLO 
+6 
+REGIÓN DEL LIBERTADOR GENERAL 
+BERNARDO O'HIGGINS 
+63 
+COLCHAGUA 
+6308 
+PLACILLA 
+6 
+REGIÓN DEL LIBERTADOR GENERAL 
+BERNARDO O'HIGGINS 
+63 
+COLCHAGUA 
+6309 
+PUMANQUE 
+6 
+REGIÓN DEL LIBERTADOR GENERAL 
+BERNARDO O'HIGGINS 
+63 
+COLCHAGUA 
+6310 
+SANTA CRUZ 
+7 
+REGIÓN DEL MAULE 
+71 
+TALCA 
+7101 
+TALCA 
+7 
+REGIÓN DEL MAULE 
+71 
+TALCA 
+7102 
+CONSTITUCIÓN 
+7 
+REGIÓN DEL MAULE 
+71 
+TALCA 
+7103 
+CUREPTO 
+7 
+REGIÓN DEL MAULE 
+71 
+TALCA 
+7104 
+EMPEDRADO 
+7 
+REGIÓN DEL MAULE 
+71 
+TALCA 
+7105 
+MAULE 
+7 
+REGIÓN DEL MAULE 
+71 
+TALCA 
+7106 
+PELARCO 
+7 
+REGIÓN DEL MAULE 
+71 
+TALCA 
+7107 
+PENCAHUE 
+7 
+REGIÓN DEL MAULE 
+71 
+TALCA 
+7108 
+RÍO CLARO 
+7 
+REGIÓN DEL MAULE 
+71 
+TALCA 
+7109 
+SAN CLEMENTE 
+7 
+REGIÓN DEL MAULE 
+71 
+TALCA 
+7110 
+SAN RAFAEL 
+7 
+REGIÓN DEL MAULE 
+72 
+CAUQUENES 
+7201 
+CAUQUENES 
+7 
+REGIÓN DEL MAULE 
+72 
+CAUQUENES 
+7202 
+CHANCO 
+7 
+REGIÓN DEL MAULE 
+72 
+CAUQUENES 
+7203 
+PELLUHUE 
+7 
+REGIÓN DEL MAULE 
+73 
+CURICÓ 
+7301 
+CURICÓ 
+7 
+REGIÓN DEL MAULE 
+73 
+CURICÓ 
+7302 
+HUALAÑÉ 
+7 
+REGIÓN DEL MAULE 
+73 
+CURICÓ 
+7303 
+LICANTÉN 
+
+ 
+11 | 15 
+ 
+ 
+CR 
+REG_ORDEN 
+CPR 
+PRV_NOMBRE 
+COM 
+COM_NOMBRE 
+7 
+REGIÓN DEL MAULE 
+73 
+CURICÓ 
+7304 
+MOLINA 
+7 
+REGIÓN DEL MAULE 
+73 
+CURICÓ 
+7305 
+RAUCO 
+7 
+REGIÓN DEL MAULE 
+73 
+CURICÓ 
+7306 
+ROMERAL 
+7 
+REGIÓN DEL MAULE 
+73 
+CURICÓ 
+7307 
+SAGRADA FAMILIA 
+7 
+REGIÓN DEL MAULE 
+73 
+CURICÓ 
+7308 
+TENO 
+7 
+REGIÓN DEL MAULE 
+73 
+CURICÓ 
+7309 
+VICHUQUÉN 
+7 
+REGIÓN DEL MAULE 
+74 
+LINARES 
+7401 
+LINARES 
+7 
+REGIÓN DEL MAULE 
+74 
+LINARES 
+7402 
+COLBÚN 
+7 
+REGIÓN DEL MAULE 
+74 
+LINARES 
+7403 
+LONGAVÍ 
+7 
+REGIÓN DEL MAULE 
+74 
+LINARES 
+7404 
+PARRAL 
+7 
+REGIÓN DEL MAULE 
+74 
+LINARES 
+7405 
+RETIRO 
+7 
+REGIÓN DEL MAULE 
+74 
+LINARES 
+7406 
+SAN JAVIER 
+7 
+REGIÓN DEL MAULE 
+74 
+LINARES 
+7407 
+VILLA ALEGRE 
+7 
+REGIÓN DEL MAULE 
+74 
+LINARES 
+7408 
+YERBAS BUENAS 
+16 
+REGIÓN DE ÑUBLE 
+161 
+DIGUILLÍN 
+16101 
+CHILLÁN 
+16 
+REGIÓN DE ÑUBLE 
+161 
+DIGUILLÍN 
+16102 
+BULNES 
+16 
+REGIÓN DE ÑUBLE 
+161 
+DIGUILLÍN 
+16103 
+CHILLÁN VIEJO 
+16 
+REGIÓN DE ÑUBLE 
+161 
+DIGUILLÍN 
+16104 
+EL CARMEN 
+16 
+REGIÓN DE ÑUBLE 
+161 
+DIGUILLÍN 
+16105 
+PEMUCO 
+16 
+REGIÓN DE ÑUBLE 
+161 
+DIGUILLÍN 
+16106 
+PINTO 
+16 
+REGIÓN DE ÑUBLE 
+161 
+DIGUILLÍN 
+16107 
+QUILLÓN 
+16 
+REGIÓN DE ÑUBLE 
+161 
+DIGUILLÍN 
+16108 
+SAN IGNACIO 
+16 
+REGIÓN DE ÑUBLE 
+161 
+DIGUILLÍN 
+16109 
+YUNGAY 
+16 
+REGIÓN DE ÑUBLE 
+162 
+ITATA 
+16201 
+QUIRIHUE 
+16 
+REGIÓN DE ÑUBLE 
+162 
+ITATA 
+16202 
+COBQUECURA 
+16 
+REGIÓN DE ÑUBLE 
+162 
+ITATA 
+16203 
+COELEMU 
+16 
+REGIÓN DE ÑUBLE 
+162 
+ITATA 
+16204 
+NINHUE 
+16 
+REGIÓN DE ÑUBLE 
+162 
+ITATA 
+16205 
+PORTEZUELO 
+16 
+REGIÓN DE ÑUBLE 
+162 
+ITATA 
+16206 
+RÁNQUIL 
+16 
+REGIÓN DE ÑUBLE 
+162 
+ITATA 
+16207 
+TREGUACO 
+16 
+REGIÓN DE ÑUBLE 
+163 
+PUNILLA 
+16301 
+SAN CARLOS 
+16 
+REGIÓN DE ÑUBLE 
+163 
+PUNILLA 
+16302 
+COIHUECO 
+16 
+REGIÓN DE ÑUBLE 
+163 
+PUNILLA 
+16303 
+ÑIQUÉN 
+16 
+REGIÓN DE ÑUBLE 
+163 
+PUNILLA 
+16304 
+SAN FABIÁN 
+16 
+REGIÓN DE ÑUBLE 
+163 
+PUNILLA 
+16305 
+SAN NICOLÁS 
+8 
+REGIÓN DEL BIOBÍO 
+81 
+CONCEPCIÓN 
+8101 
+CONCEPCIÓN 
+8 
+REGIÓN DEL BIOBÍO 
+81 
+CONCEPCIÓN 
+8102 
+CORONEL 
+8 
+REGIÓN DEL BIOBÍO 
+81 
+CONCEPCIÓN 
+8103 
+CHIGUAYANTE 
+8 
+REGIÓN DEL BIOBÍO 
+81 
+CONCEPCIÓN 
+8104 
+FLORIDA 
+8 
+REGIÓN DEL BIOBÍO 
+81 
+CONCEPCIÓN 
+8105 
+HUALQUI 
+8 
+REGIÓN DEL BIOBÍO 
+81 
+CONCEPCIÓN 
+8106 
+LOTA 
+8 
+REGIÓN DEL BIOBÍO 
+81 
+CONCEPCIÓN 
+8107 
+PENCO 
+8 
+REGIÓN DEL BIOBÍO 
+81 
+CONCEPCIÓN 
+8108 
+SAN PEDRO DE LA PAZ 
+8 
+REGIÓN DEL BIOBÍO 
+81 
+CONCEPCIÓN 
+8109 
+SANTA JUANA 
+8 
+REGIÓN DEL BIOBÍO 
+81 
+CONCEPCIÓN 
+8110 
+TALCAHUANO 
+8 
+REGIÓN DEL BIOBÍO 
+81 
+CONCEPCIÓN 
+8111 
+TOMÉ 
+8 
+REGIÓN DEL BIOBÍO 
+81 
+CONCEPCIÓN 
+8112 
+HUALPÉN 
+8 
+REGIÓN DEL BIOBÍO 
+82 
+ARAUCO 
+8201 
+LEBU 
+8 
+REGIÓN DEL BIOBÍO 
+82 
+ARAUCO 
+8202 
+ARAUCO 
+8 
+REGIÓN DEL BIOBÍO 
+82 
+ARAUCO 
+8203 
+CAÑETE 
+8 
+REGIÓN DEL BIOBÍO 
+82 
+ARAUCO 
+8204 
+CONTULMO 
+8 
+REGIÓN DEL BIOBÍO 
+82 
+ARAUCO 
+8205 
+CURANILAHUE 
+8 
+REGIÓN DEL BIOBÍO 
+82 
+ARAUCO 
+8206 
+LOS ÁLAMOS 
+8 
+REGIÓN DEL BIOBÍO 
+82 
+ARAUCO 
+8207 
+TIRÚA 
+8 
+REGIÓN DEL BIOBÍO 
+83 
+BIOBÍO 
+8301 
+LOS ÁNGELES 
+8 
+REGIÓN DEL BIOBÍO 
+83 
+BIOBÍO 
+8302 
+ANTUCO 
+8 
+REGIÓN DEL BIOBÍO 
+83 
+BIOBÍO 
+8303 
+CABRERO 
+8 
+REGIÓN DEL BIOBÍO 
+83 
+BIOBÍO 
+8304 
+LAJA 
+8 
+REGIÓN DEL BIOBÍO 
+83 
+BIOBÍO 
+8305 
+MULCHÉN 
+8 
+REGIÓN DEL BIOBÍO 
+83 
+BIOBÍO 
+8306 
+NACIMIENTO 
+8 
+REGIÓN DEL BIOBÍO 
+83 
+BIOBÍO 
+8307 
+NEGRETE 
+
+ 
+12 | 15 
+ 
+ 
+CR 
+REG_ORDEN 
+CPR 
+PRV_NOMBRE 
+COM 
+COM_NOMBRE 
+8 
+REGIÓN DEL BIOBÍO 
+83 
+BIOBÍO 
+8308 
+QUILACO 
+8 
+REGIÓN DEL BIOBÍO 
+83 
+BIOBÍO 
+8309 
+QUILLECO 
+8 
+REGIÓN DEL BIOBÍO 
+83 
+BIOBÍO 
+8310 
+SAN ROSENDO 
+8 
+REGIÓN DEL BIOBÍO 
+83 
+BIOBÍO 
+8311 
+SANTA BÁRBARA 
+8 
+REGIÓN DEL BIOBÍO 
+83 
+BIOBÍO 
+8312 
+TUCAPEL 
+8 
+REGIÓN DEL BIOBÍO 
+83 
+BIOBÍO 
+8313 
+YUMBEL 
+8 
+REGIÓN DEL BIOBÍO 
+83 
+BIOBÍO 
+8314 
+ALTO BIOBÍO 
+9 
+REGIÓN DE LA ARAUCANÍA 
+91 
+CAUTÍN 
+9101 
+TEMUCO 
+9 
+REGIÓN DE LA ARAUCANÍA 
+91 
+CAUTÍN 
+9102 
+CARAHUE 
+9 
+REGIÓN DE LA ARAUCANÍA 
+91 
+CAUTÍN 
+9103 
+CUNCO 
+9 
+REGIÓN DE LA ARAUCANÍA 
+91 
+CAUTÍN 
+9104 
+CURARREHUE 
+9 
+REGIÓN DE LA ARAUCANÍA 
+91 
+CAUTÍN 
+9105 
+FREIRE 
+9 
+REGIÓN DE LA ARAUCANÍA 
+91 
+CAUTÍN 
+9106 
+GALVARINO 
+9 
+REGIÓN DE LA ARAUCANÍA 
+91 
+CAUTÍN 
+9107 
+GORBEA 
+9 
+REGIÓN DE LA ARAUCANÍA 
+91 
+CAUTÍN 
+9108 
+LAUTARO 
+9 
+REGIÓN DE LA ARAUCANÍA 
+91 
+CAUTÍN 
+9109 
+LONCOCHE 
+9 
+REGIÓN DE LA ARAUCANÍA 
+91 
+CAUTÍN 
+9110 
+MELIPEUCO 
+9 
+REGIÓN DE LA ARAUCANÍA 
+91 
+CAUTÍN 
+9111 
+NUEVA IMPERIAL 
+9 
+REGIÓN DE LA ARAUCANÍA 
+91 
+CAUTÍN 
+9112 
+PADRE LAS CASAS 
+9 
+REGIÓN DE LA ARAUCANÍA 
+91 
+CAUTÍN 
+9113 
+PERQUENCO 
+9 
+REGIÓN DE LA ARAUCANÍA 
+91 
+CAUTÍN 
+9114 
+PITRUFQUÉN 
+9 
+REGIÓN DE LA ARAUCANÍA 
+91 
+CAUTÍN 
+9115 
+PUCÓN 
+9 
+REGIÓN DE LA ARAUCANÍA 
+91 
+CAUTÍN 
+9116 
+SAAVEDRA 
+9 
+REGIÓN DE LA ARAUCANÍA 
+91 
+CAUTÍN 
+9117 
+TEODORO SCHMIDT 
+9 
+REGIÓN DE LA ARAUCANÍA 
+91 
+CAUTÍN 
+9118 
+TOLTÉN 
+9 
+REGIÓN DE LA ARAUCANÍA 
+91 
+CAUTÍN 
+9119 
+VILCÚN 
+9 
+REGIÓN DE LA ARAUCANÍA 
+91 
+CAUTÍN 
+9120 
+VILLARRICA 
+9 
+REGIÓN DE LA ARAUCANÍA 
+91 
+CAUTÍN 
+9121 
+CHOLCHOL 
+9 
+REGIÓN DE LA ARAUCANÍA 
+92 
+MALLECO 
+9201 
+ANGOL 
+9 
+REGIÓN DE LA ARAUCANÍA 
+92 
+MALLECO 
+9202 
+COLLIPULLI 
+9 
+REGIÓN DE LA ARAUCANÍA 
+92 
+MALLECO 
+9203 
+CURACAUTÍN 
+9 
+REGIÓN DE LA ARAUCANÍA 
+92 
+MALLECO 
+9204 
+ERCILLA 
+9 
+REGIÓN DE LA ARAUCANÍA 
+92 
+MALLECO 
+9205 
+LONQUIMAY 
+9 
+REGIÓN DE LA ARAUCANÍA 
+92 
+MALLECO 
+9206 
+LOS SAUCES 
+9 
+REGIÓN DE LA ARAUCANÍA 
+92 
+MALLECO 
+9207 
+LUMACO 
+9 
+REGIÓN DE LA ARAUCANÍA 
+92 
+MALLECO 
+9208 
+PURÉN 
+9 
+REGIÓN DE LA ARAUCANÍA 
+92 
+MALLECO 
+9209 
+RENAICO 
+9 
+REGIÓN DE LA ARAUCANÍA 
+92 
+MALLECO 
+9210 
+TRAIGUÉN 
+9 
+REGIÓN DE LA ARAUCANÍA 
+92 
+MALLECO 
+9211 
+VICTORIA 
+14 
+REGIÓN DE LOS RÍOS 
+141 
+VALDIVIA 
+14101 
+VALDIVIA 
+14 
+REGIÓN DE LOS RÍOS 
+141 
+VALDIVIA 
+14102 
+CORRAL 
+14 
+REGIÓN DE LOS RÍOS 
+141 
+VALDIVIA 
+14103 
+LANCO 
+14 
+REGIÓN DE LOS RÍOS 
+141 
+VALDIVIA 
+14104 
+LOS LAGOS 
+14 
+REGIÓN DE LOS RÍOS 
+141 
+VALDIVIA 
+14105 
+MÁFIL 
+14 
+REGIÓN DE LOS RÍOS 
+141 
+VALDIVIA 
+14106 
+MARIQUINA 
+14 
+REGIÓN DE LOS RÍOS 
+141 
+VALDIVIA 
+14107 
+PAILLACO 
+14 
+REGIÓN DE LOS RÍOS 
+141 
+VALDIVIA 
+14108 
+PANGUIPULLI 
+14 
+REGIÓN DE LOS RÍOS 
+142 
+DEL RANCO 
+14201 
+LA UNIÓN 
+14 
+REGIÓN DE LOS RÍOS 
+142 
+DEL RANCO 
+14202 
+FUTRONO 
+14 
+REGIÓN DE LOS RÍOS 
+142 
+DEL RANCO 
+14203 
+LAGO RANCO 
+14 
+REGIÓN DE LOS RÍOS 
+142 
+DEL RANCO 
+14204 
+RÍO BUENO 
+10 
+REGIÓN DE LOS LAGOS 
+101 
+LLANQUIHUE 
+10101 
+PUERTO MONTT 
+10 
+REGIÓN DE LOS LAGOS 
+101 
+LLANQUIHUE 
+10102 
+CALBUCO 
+10 
+REGIÓN DE LOS LAGOS 
+101 
+LLANQUIHUE 
+10103 
+COCHAMÓ 
+10 
+REGIÓN DE LOS LAGOS 
+101 
+LLANQUIHUE 
+10104 
+FRESIA 
+10 
+REGIÓN DE LOS LAGOS 
+101 
+LLANQUIHUE 
+10105 
+FRUTILLAR 
+10 
+REGIÓN DE LOS LAGOS 
+101 
+LLANQUIHUE 
+10106 
+LOS MUERMOS 
+
+ 
+13 | 15 
+ 
+ 
+CR 
+REG_ORDEN 
+CPR 
+PRV_NOMBRE 
+COM 
+COM_NOMBRE 
+10 
+REGIÓN DE LOS LAGOS 
+101 
+LLANQUIHUE 
+10107 
+LLANQUIHUE 
+10 
+REGIÓN DE LOS LAGOS 
+101 
+LLANQUIHUE 
+10108 
+MAULLÍN 
+10 
+REGIÓN DE LOS LAGOS 
+101 
+LLANQUIHUE 
+10109 
+PUERTO VARAS 
+10 
+REGIÓN DE LOS LAGOS 
+102 
+CHILOÉ 
+10201 
+CASTRO 
+10 
+REGIÓN DE LOS LAGOS 
+102 
+CHILOÉ 
+10202 
+ANCUD 
+10 
+REGIÓN DE LOS LAGOS 
+102 
+CHILOÉ 
+10203 
+CHONCHI 
+10 
+REGIÓN DE LOS LAGOS 
+102 
+CHILOÉ 
+10204 
+CURACO DE VÉLEZ 
+10 
+REGIÓN DE LOS LAGOS 
+102 
+CHILOÉ 
+10205 
+DALCAHUE 
+10 
+REGIÓN DE LOS LAGOS 
+102 
+CHILOÉ 
+10206 
+PUQUELDÓN 
+10 
+REGIÓN DE LOS LAGOS 
+102 
+CHILOÉ 
+10207 
+QUEILEN 
+10 
+REGIÓN DE LOS LAGOS 
+102 
+CHILOÉ 
+10208 
+QUELLÓN 
+10 
+REGIÓN DE LOS LAGOS 
+102 
+CHILOÉ 
+10209 
+QUEMCHI 
+10 
+REGIÓN DE LOS LAGOS 
+102 
+CHILOÉ 
+10210 
+QUINCHAO 
+10 
+REGIÓN DE LOS LAGOS 
+103 
+OSORNO 
+10301 
+OSORNO 
+10 
+REGIÓN DE LOS LAGOS 
+103 
+OSORNO 
+10302 
+PUERTO OCTAY 
+10 
+REGIÓN DE LOS LAGOS 
+103 
+OSORNO 
+10303 
+PURRANQUE 
+10 
+REGIÓN DE LOS LAGOS 
+103 
+OSORNO 
+10304 
+PUYEHUE 
+10 
+REGIÓN DE LOS LAGOS 
+103 
+OSORNO 
+10305 
+RÍO NEGRO 
+10 
+REGIÓN DE LOS LAGOS 
+103 
+OSORNO 
+10306 
+SAN JUAN DE LA COSTA 
+10 
+REGIÓN DE LOS LAGOS 
+103 
+OSORNO 
+10307 
+SAN PABLO 
+10 
+REGIÓN DE LOS LAGOS 
+104 
+PALENA 
+10401 
+CHAITÉN 
+10 
+REGIÓN DE LOS LAGOS 
+104 
+PALENA 
+10402 
+FUTALEUFÚ 
+10 
+REGIÓN DE LOS LAGOS 
+104 
+PALENA 
+10403 
+HUALAIHUÉ 
+10 
+REGIÓN DE LOS LAGOS 
+104 
+PALENA 
+10404 
+PALENA 
+11 
+REGIÓN AYSÉN DEL GENERAL CARLOS 
+IBÁÑEZ DEL CAMPO 
+111 
+COYHAIQUE 
+11101 
+COYHAIQUE 
+11 
+REGIÓN AYSÉN DEL GENERAL CARLOS 
+IBÁÑEZ DEL CAMPO 
+111 
+COYHAIQUE 
+11102 
+LAGO VERDE 
+11 
+REGIÓN AYSÉN DEL GENERAL CARLOS 
+IBÁÑEZ DEL CAMPO 
+112 
+AYSÉN 
+11201 
+AYSÉN 
+11 
+REGIÓN AYSÉN DEL GENERAL CARLOS 
+IBÁÑEZ DEL CAMPO 
+112 
+AYSÉN 
+11202 
+CISNES 
+11 
+REGIÓN AYSÉN DEL GENERAL CARLOS 
+IBÁÑEZ DEL CAMPO 
+112 
+AYSÉN 
+11203 
+GUAITECAS 
+11 
+REGIÓN AYSÉN DEL GENERAL CARLOS 
+IBÁÑEZ DEL CAMPO 
+113 
+CAPITÁN PRAT 
+11301 
+COCHRANE 
+11 
+REGIÓN AYSÉN DEL GENERAL CARLOS 
+IBÁÑEZ DEL CAMPO 
+113 
+CAPITÁN PRAT 
+11302 
+O'HIGGINS 
+11 
+REGIÓN AYSÉN DEL GENERAL CARLOS 
+IBÁÑEZ DEL CAMPO 
+113 
+CAPITÁN PRAT 
+11303 
+TORTEL 
+11 
+REGIÓN AYSÉN DEL GENERAL CARLOS 
+IBÁÑEZ DEL CAMPO 
+114 
+GENERAL CARRERA 
+11401 
+CHILE CHICO 
+11 
+REGIÓN AYSÉN DEL GENERAL CARLOS 
+IBÁÑEZ DEL CAMPO 
+114 
+GENERAL CARRERA 
+11402 
+RÍO IBÁÑEZ 
+12 
+REGIÓN DE MAGALLANES Y DE LA 
+ANTÁRTICA CHILENA 
+121 
+MAGALLANES 
+12101 
+PUNTA ARENAS 
+12 
+REGIÓN DE MAGALLANES Y DE LA 
+ANTÁRTICA CHILENA 
+121 
+MAGALLANES 
+12102 
+LAGUNA BLANCA 
+12 
+REGIÓN DE MAGALLANES Y DE LA 
+ANTÁRTICA CHILENA 
+121 
+MAGALLANES 
+12103 
+RÍO VERDE 
+12 
+REGIÓN DE MAGALLANES Y DE LA 
+ANTÁRTICA CHILENA 
+121 
+MAGALLANES 
+12104 
+SAN GREGORIO 
+12 
+REGIÓN DE MAGALLANES Y DE LA 
+ANTÁRTICA CHILENA 
+122 
+ANTÁRTICA CHILENA 
+12201 
+CABO DE HORNOS (EX 
+NAVARINO) 
+12 
+REGIÓN DE MAGALLANES Y DE LA 
+ANTÁRTICA CHILENA 
+122 
+ANTÁRTICA CHILENA 
+12202 
+ANTÁRTICA 
+
+ 
+14 | 15 
+ 
+ 
+CR 
+REG_ORDEN 
+CPR 
+PRV_NOMBRE 
+COM 
+COM_NOMBRE 
+12 
+REGIÓN DE MAGALLANES Y DE LA 
+ANTÁRTICA CHILENA 
+123 
+TIERRA DEL FUEGO 
+12301 
+PORVENIR 
+12 
+REGIÓN DE MAGALLANES Y DE LA 
+ANTÁRTICA CHILENA 
+123 
+TIERRA DEL FUEGO 
+12302 
+PRIMAVERA 
+12 
+REGIÓN DE MAGALLANES Y DE LA 
+ANTÁRTICA CHILENA 
+123 
+TIERRA DEL FUEGO 
+12303 
+TIMAUKEL 
+12 
+REGIÓN DE MAGALLANES Y DE LA 
+ANTÁRTICA CHILENA 
+124 
+ÚLTIMA ESPERANZA 
+12401 
+NATALES 
+12 
+REGIÓN DE MAGALLANES Y DE LA 
+ANTÁRTICA CHILENA 
+124 
+ÚLTIMA ESPERANZA 
+12402 
+TORRES DEL PAINE 
+ 
+ 
+ 
+
+ 
+15 | 15 
+ 
+ 
+ANEXO II 
+GLOSA - Código de Enseñanza   
+  
+Código 
+Descripción 
+310 
+Enseñanza Media H-C niños y jóvenes 
+360 
+Educación Media H-C adultos vespertino y nocturno (Decreto N° 190/1975) 
+361 
+Educación Media H-C adultos (Decreto N° 12/1987) 
+362 
+Escuelas Cárceles (Media Adultos) 
+363 
+Educación Media H-C Adultos (Decreto N°239/2004) 
+410 
+Enseñanza Media Técnico –Profesional Comercial Niños 
+460 
+Educación Media T-P Comercial Adultos (Decreto N° 152/1989) 
+461 
+Educación Media T-P Comercial Adultos (Decreto N° 152/1989) 
+463 
+Educación Media T-P Comercial Adultos (Decreto N° 239/2004) 
+510 
+Enseñanza Media T-P Industrial Niños 
+560 
+Educación Media T-P Industrial Adultos (Decreto N° 152/1989) 
+561 
+Educación Media T-P Industrial Adultos (Decreto N° 152/1989) 
+563 
+Educación Media T-P Industrial Adultos (Decreto N° 239/2004) 
+610 
+Enseñanza Media T-P Técnica Niños 
+660 
+Educación Media T-P Técnica Adultos (Decreto N° 152/1989) 
+661 
+Educación Media T-P Técnica Adultos (Decreto N° 152/1989) 
+663 
+Educación Media T-P Técnica Adultos (Decreto N° 239/2004) 
+710 
+Enseñanza Media T-P Agrícola Niños 
+760 
+Educación Media T-P Agrícola Adultos (Decreto N° 152/1989) 
+761 
+Educación Media T-P Agrícola Adultos (Decreto N° 152/1989) 
+763 
+Educación Media T-P Agrícola Adultos (Decreto N° 239/2004) 
+810 
+Enseñanza Media T-P Marítima Niños 
+860 
+Enseñanza Media T-P Marítima Adultos (Decreto N° 152/1989) 
+863 
+Enseñanza Media T-P Marítima Adultos (Decreto N° 1000/2009) 
+910 
+Enseñanza Media Artística Niños y Jóvenes 
+963 
+Enseñanza Media Artística Adultos 
+  
+  
+ 

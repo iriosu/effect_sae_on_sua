@@ -10,6 +10,18 @@
 *.rda
 *.RData
 *.csv
+# Aggregate F02.4 diagnostic outputs; student-level input caches remain ignored.
+!code/analysis_for_adversarial_report_output/f02_*.csv
+# Aggregate entrant-count and score-validation diagnostics.
+!code/analysis_for_adversarial_report_output/f04/*.csv
+!code/analysis_for_adversarial_report_output/f08/ranking/*.csv
+# F08 aggregate audit tables and public school rosters.
+!code/analysis_for_adversarial_report_output/f08/*.csv
+!code/analysis_for_adversarial_report_output/f08/sources/schools/official_pace_schools_2019_2025.csv
+!code/analysis_for_adversarial_report_output/f08/sources/schools/ocr_corrections.csv
+!code/analysis_for_adversarial_report_output/f08/sources/schools/roster_ocr_*.csv
+# Private row-level caches include projected binary/text columns as well as RDS.
+/code/analysis_for_adversarial_report_output/input/
 *.dta
 *.xlsx
 *.xls
@@ -244,3 +256,8 @@ __marimo__/
 *.lot
 *.lof
 %OUTDIR%/
+
+# Archived public F08 policy documents and dictionaries (no student records).
+!code/analysis_for_adversarial_report_output/f08/sources/**/*.pdf
+!code/analysis_for_adversarial_report_output/f08/sources/*.pdf
+!code/analysis_for_adversarial_report_output/f08/sources/dictionaries/*.xlsx

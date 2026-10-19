@@ -1,0 +1,3556 @@
+Establecimientos Educacionales PACE
+1
+PROGRAMA DE  
+ACCESO A 
+LA EDUCACIÓN 
+SUPERIOR
+Establecimientos Educacionales PACE
+Región
+Comuna
+RBD
+Nombre del establecimiento
+Institución de Educación Superior PACE
+De Arica y Parinacota  
+Arica
+1
+Liceo Politécnico Arica
+Universidad de Tarapacá
+De Arica y Parinacota  
+Arica
+4
+Liceo Octavio Palma Pérez
+Universidad de Tarapacá
+De Arica y Parinacota  
+Arica
+7
+Liceo Polivalente Antonio Varas de La 
+Barra
+Universidad de Tarapacá
+De Arica y Parinacota  
+Arica
+8
+Colegio Integrado Eduardo Frei 
+Montalva
+Universidad de Tarapacá
+De Arica y Parinacota  
+Arica
+32
+Liceo Agrícola José Abelardo Núñez 
+M.
+Universidad de Tarapacá
+De Arica y Parinacota  
+Camarones
+72
+Liceo Valle de Codpa
+Universidad de Tarapacá
+De Arica y Parinacota  
+Putre
+78
+Liceo Granaderos
+Universidad de Tarapacá
+De Tarapacá            
+Iquique
+108
+Liceo Politécnico José Gutiérrez de La 
+Fuente
+Universidad Arturo Prat
+De Tarapacá            
+Iquique
+109
+Liceo Elena Duvauchelle Cabezón
+Universidad Arturo Prat
+De Tarapacá            
+Iquique
+124
+Liceo Luis Cruz Martínez
+Universidad Arturo Prat
+De Tarapacá            
+Huara
+161
+Liceo de Huara
+Universidad de Tarapacá
+De Tarapacá            
+Colchane
+178
+Liceo Técnico Profesional Colchane
+Universidad Arturo Prat
+De Tarapacá            
+Pozo Almonte
+191
+Liceo Alcalde Sergio González 
+Gutiérrez
+Universidad Arturo Prat
+De Antofagasta         
+Tocopilla
+199
+Liceo Domingo Latrille Lastaunou
+Universidad de Antofagasta
+De Antofagasta         
+Tocopilla
+200
+Liceo Politécnico Diego Portales P.
+Universidad de Antofagasta
+
+Establecimientos Educacionales PACE
+2
+Región
+Comuna
+RBD
+Nombre del establecimiento
+Institución de Educación Superior PACE
+De Antofagasta         
+María Elena
+211
+Liceo HC-TP  María Elena
+Universidad Católica del Norte
+De Antofagasta         
+Antofagasta
+280
+Liceo Comercial Jerardo Muñoz 
+Campo
+Universidad de Antofagasta
+De Antofagasta         
+Antofagasta
+283
+Liceo Técnico de Antofagasta
+Universidad de Antofagasta
+De Antofagasta         
+Antofagasta
+284
+Liceo de Hombres de Antofagasta 
+Mario Bahamonde Silva
+Universidad de Antofagasta
+De Antofagasta         
+Antofagasta
+285
+Liceo Marta Narea Díaz
+Universidad de Antofagasta
+De Antofagasta         
+Antofagasta
+286
+Liceo La Portada
+Universidad de Antofagasta
+De Antofagasta         
+Mejillones
+367
+Complejo Educativo Juan JoséLatorre 
+Benavent
+Universidad Católica del Norte
+De Antofagasta         
+Taltal
+372
+Liceo Politécnico José Miguel Quiroz
+Universidad de Antofagasta
+De Atacama             
+Chañaral
+379
+Liceo Federico Varela
+Universidad de Atacama
+De Atacama             
+Diego De Almagro
+384
+Liceo Manuel Magallanes Medling
+Universidad de Atacama
+De Atacama             
+Copiapó
+399
+Liceo José Antonio Carvajal
+Universidad de Atacama
+De Atacama             
+Caldera
+438
+Liceo Manuel Blanco Encalada
+Universidad de Atacama
+De Atacama             
+Tierra Amarilla
+441
+Escuela de Concentración
+Universidad de Atacama
+De Atacama             
+Vallenar
+448
+Liceo Pedro Troncoso Machuca
+Universidad de Atacama
+De Atacama             
+Vallenar
+449
+Liceo José Santos Ossa
+Universidad de Atacama
+De Atacama             
+Huasco
+486
+Liceo Japón
+Universidad de Atacama
+De Coquimbo           
+La Serena
+516
+Liceo Gabriela Mistral de La Serena
+Universidad de La Serena
+De Coquimbo           
+La Serena
+517
+Liceo Gregorio Cordovez
+Universidad Católica del Norte
+De Coquimbo           
+La Serena
+518
+Liceo Técnico Marta Brunet
+Universidad de La Serena
+De Coquimbo           
+La Serena
+526
+Colegio José Manuel Balmaceda
+Universidad Católica del Norte
+De Coquimbo           
+La Serena
+530
+Colegio Gabriel González Videla
+Universidad Católica del Norte
+De Coquimbo           
+La Serena
+531
+Colegio Pedro Aguirre Cerda
+Universidad de La Serena
+De Coquimbo           
+La Serena
+535
+Colegio José Miguel Carrera
+Universidad Católica del Norte
+De Coquimbo           
+La Serena
+578
+Liceo Ignacio Carrera Pinto
+Universidad Católica del Norte
+
+Establecimientos Educacionales PACE
+3
+Región
+Comuna
+RBD
+Nombre del establecimiento
+Institución de Educación Superior PACE
+De Coquimbo           
+La Higuera
+597
+Escuela Básica Pedro Pablo Muñoz
+Universidad de La Serena
+De Coquimbo           
+Coquimbo
+609
+Instituto Superior de Comercio de 
+Coquimbo
+Universidad Católica del Norte
+De Coquimbo           
+Coquimbo
+610
+Liceo Industrial José Tomás de 
+Urmeneta
+Universidad Católica del Norte
+De Coquimbo           
+Coquimbo
+611
+Liceo Diego Portales
+Universidad de Santiago de Chile
+De Coquimbo           
+Coquimbo
+613
+Colegio de Artes Claudio Arrau
+Universidad Católica del Norte
+De Coquimbo           
+Coquimbo
+629
+Colegio Pablo Neruda
+Universidad de Santiago de Chile
+De Coquimbo           
+Andacollo
+656
+Liceo Pedro Regalado S. Videla O.
+Universidad de La Serena
+De Coquimbo           
+Vicuña
+665
+Liceo Carlos Roberto Mondaca Cortés
+Universidad Católica del Norte
+De Coquimbo           
+Ovalle
+701
+Liceo Estela Ávila de Perry
+Universidad de La Serena
+De Coquimbo           
+Río Hurtado
+774
+Colegio Pichasca
+Universidad Católica del Norte
+De Coquimbo           
+Monte Patria
+799
+Colegio República de Chile
+Universidad Católica del Norte
+De Coquimbo           
+Monte Patria
+802
+Liceo Presidente Eduardo Frei 
+Montalva
+Universidad Católica del Norte
+De Coquimbo           
+Combarbalá
+845
+Liceo Samuel Román Rojas
+Universidad de La Serena
+De Coquimbo           
+Illapel
+967
+Liceo Domingo Ortiz de Rozas
+Universidad de Playa Ancha de Ciencias de la 
+Educación
+De Coquimbo           
+Illapel
+968
+Liceo Politécnico Pablo Rodríguez 
+Caviedes
+Universidad de Playa Ancha de Ciencias de la 
+Educación
+De Coquimbo           
+Illapel
+982
+Escuela Básica Villa Los Naranjos
+Universidad de Playa Ancha de Ciencias de la 
+Educación
+De Coquimbo           
+Salamanca
+1013
+Liceo de Salamanca
+Universidad de La Serena
+De Coquimbo           
+Los Vilos
+1048
+Liceo Nicolas Federico Lohse Vargas
+Universidad de La Serena
+De Valparaíso          
+La Ligua
+1121
+Liceo Pulmahue de La Ligua
+Universidad de Playa Ancha de Ciencias de la 
+Educación
+De Valparaíso          
+La Ligua
+1123
+Escuela Gabriela Mistral
+Universidad de Playa Ancha de Ciencias de la 
+Educación
+
+Establecimientos Educacionales PACE
+4
+Región
+Comuna
+RBD
+Nombre del establecimiento
+Institución de Educación Superior PACE
+De Valparaíso          
+Petorca
+1148
+Liceo José Manuel Borgoño Núñez
+Universidad de Playa Ancha de Ciencias de la 
+Educación
+De Valparaíso          
+Petorca
+1149
+Liceo Cordillera
+Universidad de Playa Ancha de Ciencias de la 
+Educación
+De Valparaíso          
+Cabildo
+1167
+Liceo y Escuela Municipal
+Universidad de Playa Ancha de Ciencias de la 
+Educación
+De Valparaíso          
+Zapallar
+1183
+Liceo de Zapallar
+Universidad de Playa Ancha de Ciencias de la 
+Educación
+De Valparaíso          
+Los Andes
+1196
+Liceo Técnico Amancay
+Universidad de Valparaíso
+De Valparaíso          
+Los Andes
+1199
+Liceo De Hombres América
+Universidad de Valparaíso
+De Valparaíso          
+Rinconada
+1260
+Liceo Parroquial Teresita de Los Andes
+Universidad de Valparaíso
+De Valparaíso          
+San Felipe
+1261
+Liceo Doctor Roberto Humeres O.
+Universidad de Valparaíso
+De Valparaíso          
+San Felipe
+1263
+Liceo de Niñas Corina Urbina
+Universidad de Valparaíso
+De Valparaíso          
+Putaendo
+1301
+Liceo Manuel Marín
+Universidad de Valparaíso
+De Valparaíso          
+Putaendo
+1302
+Liceo   República de Estados Unidos
+Universidad de Valparaíso
+De Valparaíso          
+Santa María
+1318
+Liceo Darío Salas
+Universidad de Valparaíso
+De Valparaíso          
+Llay-Llay
+1335
+Liceo Politécnico Llay Llay
+Universidad de Valparaíso
+De Valparaíso          
+Catemu
+1354
+Liceo Chagres
+Universidad de Valparaíso
+De Valparaíso          
+Quillota
+1363
+Liceo Santiago Escuti Orrego
+Universidad de Playa Ancha de Ciencias de la 
+Educación
+De Valparaíso          
+Quillota
+1366
+Liceo Comercial de Quillota
+Universidad de Playa Ancha de Ciencias de la 
+Educación
+De Valparaíso          
+La Cruz
+1414
+Colegio Leonardo da Vinci
+Universidad de Playa Ancha de Ciencias de la 
+Educación
+De Valparaíso          
+Calera
+1422
+Liceo Pedro de Valdivia
+Universidad de Playa Ancha de Ciencias de la 
+Educación
+De Valparaíso          
+Calera
+1425
+Complejo Educacional Las Acacias de 
+Artificio
+Universidad de Playa Ancha de Ciencias de la 
+Educación
+
+Establecimientos Educacionales PACE
+5
+Región
+Comuna
+RBD
+Nombre del establecimiento
+Institución de Educación Superior PACE
+De Valparaíso          
+Nogales
+1444
+Liceo Municipal Juan Rusque Portal
+Universidad de Playa Ancha de Ciencias de la 
+Educación
+De Valparaíso          
+Hijuelas
+1453
+Liceo Municipal Luis Laborda
+Universidad de Playa Ancha de Ciencias de la 
+Educación
+De Valparaíso          
+Limache
+1464
+Liceo de Limache
+Universidad Técnica Federico Santa María
+De Valparaíso          
+Olmué
+1489
+Liceo de Olmué
+Pontificia Universidad Católica de Valparaíso
+De Valparaíso          
+Olmué
+1490
+Escuela Básica Quebrada de Alvarado
+Pontificia Universidad Católica de Valparaíso
+De Valparaíso          
+Valparaíso
+1504
+Liceo Técnico de Valparaíso
+Universidad Técnica Federico Santa María
+De Valparaíso          
+Valparaíso
+1516
+Liceo Tecnológico Alfredo Nazar Feres
+Universidad Técnica Federico Santa María
+De Valparaíso          
+Valparaíso
+1517
+Liceo Matilde Brandau de Ross
+Universidad Técnica Federico Santa María
+De Valparaíso          
+Valparaíso
+1518
+Liceo María Luisa Bombal
+Pontificia Universidad Católica de Valparaíso
+De Valparaíso          
+Valparaíso
+1521
+Liceo de Niñas María Franck de 
+Macdougal
+Universidad Técnica Federico Santa María
+De Valparaíso          
+Valparaíso
+1522
+Colegio Pedro Montt
+Pontificia Universidad Católica de Valparaíso
+De Valparaíso          
+Valparaíso
+1549
+Escuela República de México
+Universidad Técnica Federico Santa María
+De Valparaíso          
+Viña Del Mar
+1664
+Liceo Industrial Miraflores Alto
+Pontificia Universidad Católica de Valparaíso
+De Valparaíso          
+Viña Del Mar
+1672
+Liceo Jose Francisco Vergara 
+Etchevers
+Pontificia Universidad Católica de Valparaíso
+De Valparaíso          
+Viña Del Mar
+1674
+Liceo Benjamín Vicuña Mackenna
+Universidad Técnica Federico Santa María
+De Valparaíso          
+Viña Del Mar
+1685
+Escuela Dr. Óscar Marín Socias
+Pontificia Universidad Católica de Valparaíso
+De Valparaíso          
+Quintero
+1851
+Liceo Politécnico Quintero
+Universidad de Playa Ancha de Ciencias de la 
+Educación
+De Valparaíso          
+Puchuncaví
+1863
+Colegio General José Velásquez 
+Bórquez
+Universidad de Playa Ancha de Ciencias de la 
+Educación
+De Valparaíso          
+Puchuncaví
+1864
+Complejo Educacional Sargento Aldea
+Universidad de Playa Ancha de Ciencias de la 
+Educación
+De Valparaíso          
+Quilpué
+1880
+Colegio Andrés Bello López
+Universidad Técnica Federico Santa María
+
+Establecimientos Educacionales PACE
+6
+Región
+Comuna
+RBD
+Nombre del establecimiento
+Institución de Educación Superior PACE
+De Valparaíso          
+Quilpué
+1882
+Liceo Guillermo Gronemeyer 
+Zamorano
+Universidad Técnica Federico Santa María
+De Valparaíso          
+Quilpué
+1884
+Liceo Comercial Alejandro Lubet V
+Universidad de Valparaíso
+De Valparaíso          
+Quilpué
+1887
+Escuela Guardiamarina Guillermo 
+Zanartu I.
+Universidad Técnica Federico Santa María
+De Valparaíso          
+Quilpué
+1895
+Liceo Técnico Profesional Mannheim
+Universidad de Valparaíso
+De Valparaíso          
+Villa Alemana
+1958
+Liceo Tecnológico Villa Alemana
+Pontificia Universidad Católica de Valparaíso
+De Valparaíso          
+Villa Alemana
+1959
+Windmill College
+Pontificia Universidad Católica de Valparaíso
+De Valparaíso          
+Villa Alemana
+1967
+Liceo Bicentenario Técnico Profesional 
+Mary Graham
+Pontificia Universidad Católica de Valparaíso
+De Valparaíso          
+Villa Alemana
+1969
+Colegio Charles Darwin
+Pontificia Universidad Católica de Valparaíso
+De Valparaíso          
+Villa Alemana
+1971
+Escuela Manuel Montt
+Pontificia Universidad Católica de Valparaíso
+De Valparaíso          
+Casablanca
+1996
+Liceo Manuel de Salas
+Universidad de Playa Ancha de Ciencias de la 
+Educación
+De Valparaíso          
+Juan Fernández
+2009
+Colegio Insular Robinson Crusoe
+Universidad de Valparaíso
+De Valparaíso          
+San Antonio
+2019
+Escuela España
+Pontificia Universidad Católica de Valparaíso
+De Valparaíso          
+Cartagena
+2064
+Liceo Poeta Vicente Huidobro
+Pontificia Universidad Católica de Valparaíso
+De Valparaíso          
+El Tabo
+2075
+Colegio El Tabo
+Pontificia Universidad Católica de Valparaíso
+De Valparaíso          
+El Quisco
+2078
+Liceo Clara Solovera
+Pontificia Universidad Católica de Valparaíso
+De Valparaíso          
+Algarrobo
+2084
+Colegio Carlos Alessandri Altamirano
+Pontificia Universidad Católica de Valparaíso
+De Valparaíso          
+Santo Domingo
+2091
+Colegio People Help People
+Pontificia Universidad Católica de Valparaíso
+De Valparaíso          
+Santo Domingo
+2099
+Colegio Santo Domingo Helen Lee 
+Lassen
+Pontificia Universidad Católica de Valparaíso
+Del Libertador Bernardo 
+O’Higgins   
+Rancagua
+2103
+Liceo Industrial Presidente Pedro 
+Aguirre
+Universidad de Santiago de Chile
+Del Libertador Bernardo 
+O’Higgins   
+Rancagua
+2104
+Liceo Comercial Diego Portales
+Universidad de O’Higgins
+Del Libertador Bernardo 
+O’Higgins   
+Rancagua
+2105
+Liceo Industrial Ernesto Pinto 
+Lagarrigue
+Universidad de O’Higgins
+
+Establecimientos Educacionales PACE
+7
+Región
+Comuna
+RBD
+Nombre del establecimiento
+Institución de Educación Superior PACE
+Del Libertador Bernardo 
+O’Higgins   
+Rancagua
+2111
+Liceo Municipal José Victorino 
+Lastarria
+Universidad de Santiago de Chile
+Del Libertador Bernardo 
+O’Higgins   
+Rancagua
+2123
+Instituto Tecnológico Minero Bernardo 
+O’Higgins
+Universidad de O’Higgins
+Del Libertador Bernardo 
+O’Higgins   
+Rancagua
+2134
+Liceo Comercial Jorge Alessandri R.
+Universidad de Santiago de Chile
+Del Libertador Bernardo 
+O’Higgins   
+Graneros
+2205
+Liceo Profesor Misael Lobos Monroy
+Universidad de Santiago de Chile
+Del Libertador Bernardo 
+O’Higgins   
+Mostazal
+2222
+Liceo Alberto Hurtado
+Universidad de Santiago de Chile
+Del Libertador Bernardo 
+O’Higgins   
+Mostazal
+2224
+Liceo Elvira Sánchez de Garcés
+Universidad de Santiago de Chile
+Del Libertador Bernardo 
+O’Higgins   
+Rengo
+2283
+Liceo Luis Urbina Flores
+Universidad de O’Higgins
+Del Libertador Bernardo 
+O’Higgins   
+San Vicente
+2329
+Liceo Ignacio Carrera Pinto
+Universidad de O’Higgins
+Del Libertador Bernardo 
+O’Higgins   
+Doñihue
+2411
+Liceo Claudio Arrau León
+Universidad de O’Higgins
+Del Libertador Bernardo 
+O’Higgins   
+Las Cabras
+2422
+Liceo Francisco Antonio Encina 
+Armanet
+Universidad de O’Higgins
+Del Libertador Bernardo 
+O’Higgins   
+San Fernando
+2443
+Liceo Industrial de San Fernando
+Universidad Tecnológica Metropolitana
+Del Libertador Bernardo 
+O’Higgins   
+San Fernando
+2447
+Liceo de Hombres Neandro Schilling
+Universidad de O’Higgins
+Del Libertador Bernardo 
+O’Higgins   
+San Fernando
+2448
+Liceo Eduardo Charme
+Universidad de O’Higgins
+Del Libertador Bernardo 
+O’Higgins   
+Chimbarongo
+2486
+Liceo Municipal Complejo Educacional 
+Chimbarongo
+Universidad Tecnológica Metropolitana
+Del Libertador Bernardo 
+O’Higgins   
+Santa Cruz
+2551
+Liceo Municipal de Santa Cruz
+Universidad de O’Higgins
+Del Libertador Bernardo 
+O’Higgins   
+Santa Cruz
+2552
+Instituto Politécnico
+Universidad de O’Higgins
+
+Establecimientos Educacionales PACE
+8
+Región
+Comuna
+RBD
+Nombre del establecimiento
+Institución de Educación Superior PACE
+Del Libertador Bernardo 
+O’Higgins   
+Pichilemu
+2635
+Liceo Agustín Ross Edwards
+Universidad de O’Higgins
+Del Libertador Bernardo 
+O’Higgins   
+Navidad
+2657
+Liceo Municipal Pablo Neruda
+Universidad de O’Higgins
+Del Libertador Bernardo 
+O’Higgins   
+Litueche
+2681
+Liceo El Rosario de Litueche
+Universidad de O’Higgins
+Del Libertador Bernardo 
+O’Higgins   
+Marchihue
+2701
+Liceo Municipal Instituto Cardenal 
+Caro
+Universidad de O’Higgins
+Del Maule              
+Curicó
+2732
+Liceo Fernando Lazcano
+Universidad Católica del Maule
+Del Maule              
+Curicó
+2737
+Colegio Polivalente Japón
+Universidad Católica del Maule
+Del Maule              
+Teno
+2794
+Liceo Teno
+Universidad Católica del Maule
+Del Maule              
+Molina
+2835
+Liceo Polivalente de Molina
+Universidad Católica del Maule
+Del Maule              
+Molina
+2865
+Escuela Agrícola Superior de Molina
+Universidad Católica del Maule
+Del Maule              
+Hualañé
+2882
+Liceo Hualañé
+Universidad de Talca
+Del Maule              
+Licantén
+2896
+Liceo Augusto Santelices Valenzuela
+Universidad Católica del Maule
+Del Maule              
+Licantén
+2908
+Escuela Alejandro Rojas Sierra
+Universidad Católica del Maule
+Del Maule              
+Vichuquén
+2909
+Liceo Nuevo Horizonte
+Universidad Católica del Maule
+Del Maule              
+Talca
+2934
+Liceo Técnico Amelia Courbis
+Universidad Católica del Maule
+Del Maule              
+Talca
+2937
+Liceo Industrial Superior
+Universidad Católica del Maule
+Del Maule              
+Talca
+2939
+Liceo Diego Portales
+Universidad Católica del Maule
+Del Maule              
+Talca
+2940
+Liceo Carlos Condell
+Universidad Católica del Maule
+Del Maule              
+Talca
+2943
+Liceo Hector Pérez Biott
+Universidad Católica del Maule
+Del Maule              
+Talca
+2974
+Liceo Ignacio Carrera Pinto
+Universidad Católica del Maule
+Del Maule              
+Talca
+2979
+Escuela El Sauce
+Universidad Católica del Maule
+Del Maule              
+Pelarco
+3016
+Liceo de Pelarco
+Universidad Católica del Maule
+Del Maule              
+Río Claro
+3033
+Liceo Agroindustrial Río Claro
+Universidad Católica del Maule
+Del Maule              
+San Clemente
+3055
+Liceo San Clemente Entre Ríos
+Universidad de Talca
+
+Establecimientos Educacionales PACE
+9
+Región
+Comuna
+RBD
+Nombre del establecimiento
+Institución de Educación Superior PACE
+Del Maule              
+Maule
+3127
+Escuela Agrícola San José de Duao
+Universidad Católica del Maule
+Del Maule              
+Empedrado
+3128
+Liceo San Ignacio
+Universidad Católica del Maule
+Del Maule              
+Pencahue
+3138
+Complejo Educacional Pencahue
+Universidad Católica del Maule
+Del Maule              
+Constitución
+3172
+Liceo Rural Putu
+Universidad de Talca
+Del Maule              
+Constitución
+3173
+Liceo Rural Enrique Mac Iver
+Universidad Católica del Maule
+Del Maule              
+Curepto
+3205
+Liceo Luis Edmundo Correa Rojas
+Universidad de Talca
+Del Maule              
+Linares
+3248
+Instituto Comercial
+Universidad Católica del Maule
+Del Maule              
+Linares
+3252
+Liceo Técnico Profesional Diego 
+Portales
+Universidad de Talca
+Del Maule              
+Linares
+3305
+Liceo Politécnico de Linares
+Universidad Católica del Maule
+Del Maule              
+Yerbas Buenas
+3317
+Liceo Juan Gómez Millas
+Universidad de Talca
+Del Maule              
+Yerbas Buenas
+3327
+Escuela Agrícola Marta Martínez Cruz
+Universidad Católica del Maule
+Del Maule              
+Colbún
+3328
+Liceo Capitán Ignacio Carrera Pinto
+Universidad de Talca
+Del Maule              
+Longaví
+3348
+Liceo Arturo Alessandri Palma
+Universidad de Talca
+Del Maule              
+Longaví
+3359
+Liceo Laura Urrutia Benavente
+Universidad de Talca
+Del Maule              
+Parral
+3387
+Liceo Federico Heise Marti
+Universidad de Talca
+Del Maule              
+Retiro
+3434
+Liceo Guillermo Marín Larraín
+Universidad Católica del Maule
+Del Maule              
+Retiro
+3443
+Colegio Robinson Cabrera Beltrán
+Universidad de Talca
+Del Maule              
+Villa Alegre
+3461
+Liceo Francisco Antonio Encina 
+Armanet
+Universidad de Talca
+Del Maule              
+San Javier
+3479
+Liceo Manuel Montt
+Universidad Católica del Maule
+Del Maule              
+Cauquenes
+3540
+Liceo Politécnico Pedro Aguirre Cerda
+Universidad de Talca
+Del Maule              
+Pelluhue
+3609
+Liceo Pelluhue
+Universidad de Talca
+Del Maule              
+Chanco
+3618
+Liceo Federico Albert Faupp
+Universidad de Talca
+De Ñuble
+Chillán
+3639
+Liceo Narciso Tondreau
+Universidad Católica de la Santísima Concepción
+De Ñuble
+Chillán
+3643
+Liceo Martin Ruiz de Gamboa
+Universidad del Biobío
+
+Establecimientos Educacionales PACE
+10
+Región
+Comuna
+RBD
+Nombre del establecimiento
+Institución de Educación Superior PACE
+De Ñuble
+Chillán Viejo
+3656
+Liceo Polivalente Juan Pacheco 
+Altamirano
+Universidad del Biobío
+De Ñuble
+Chillán
+3657
+Esc. Básica General Libertador 
+Bernardo O’Higgins
+Universidad Católica de la Santísima Concepción
+De Ñuble
+San Carlos
+3742
+Liceo Politécnico Capitán Ignacio 
+Carrera Pinto
+Universidad Católica de la Santísima Concepción
+De Ñuble
+San Carlos
+3743
+Liceo Diego Portales Palazuelos
+Universidad Católica de la Santísima Concepción
+De Ñuble
+Ñiquén
+3800
+Liceo Tiuquilemu
+Universidad del Biobío
+De Ñuble
+Ñiquén
+3802
+Liceo San Gregorio
+Universidad Católica de la Santísima Concepción
+De Ñuble
+San Fabián
+3823
+Liceo Jorge Alessandri Rodríguez
+Universidad del Biobío
+De Ñuble
+Pinto
+3871
+Liceo Politécnico José Manuel Pinto 
+Arias
+Universidad Católica de la Santísima Concepción
+De Ñuble
+San Ignacio
+3886
+Liceo Manuel Jesús Ortiz
+Universidad del Biobío
+De Ñuble
+San Ignacio
+3887
+Liceo Pueblo Seco
+Universidad del Biobío
+De Ñuble
+San Ignacio
+3888
+Colegio Politécnico Víctor Jara
+Universidad del Biobío
+De Ñuble
+El Carmen
+3909
+Liceo Juvenal Hernández Jaque
+Universidad del Biobío
+De Ñuble
+Yungay
+3940
+Liceo de Yungay
+Universidad del Biobío
+De Ñuble
+Yungay
+3941
+Liceo Campanario
+Universidad Católica de la Santísima Concepción
+De Ñuble
+Pemuco
+3961
+Liceo Polivalente Tomás Arnaldo 
+Herrera Vega
+Universidad Católica de la Santísima Concepción
+De Ñuble
+Bulnes
+3976
+Liceo Manuel Bulnes
+Universidad del Biobío
+De Ñuble
+Quillón
+3998
+Liceo Luis Cruz Martínez
+Universidad Católica de la Santísima Concepción
+De Ñuble
+Ranquil
+4025
+Liceo Polivalente Virginio Arias
+Universidad del Biobío
+De Ñuble
+Portezuelo
+4032
+Liceo Nibaldo Sepúlveda Fernández
+Universidad del Biobío
+De Ñuble
+Coelemu
+4049
+Liceo Domingo Ortiz de Rozas
+Universidad del Biobío
+De Ñuble
+Cobquecura
+4084
+Liceo Polivalente Diego Missene 
+Burgos
+Universidad del Biobío
+
+Establecimientos Educacionales PACE
+11
+Región
+Comuna
+RBD
+Nombre del establecimiento
+Institución de Educación Superior PACE
+De Ñuble
+Quirihue
+4102
+Liceo Politécnico Carlos Montane 
+Castro
+Universidad del Biobío
+De Ñuble
+Ninhue
+4124
+Liceo Arturo Prat Chacón
+Universidad del Biobío
+De Ñuble
+San Nicolás
+4140
+Liceo Bicentenario de Excelencia 
+Polivalente San Nicolás
+Universidad Católica de la Santísima Concepción
+De Ñuble
+San Nicolás
+4141
+Liceo Técnico Puente Ñuble
+Universidad del Biobío
+Del Biobío            
+Los Ángeles
+4190
+Liceo Santa Fe
+Universidad Católica de la Santísima Concepción
+Del Biobío            
+Los Ángeles
+4195
+Liceo Agroindustrial Llano Blanco
+Universidad Católica de la Santísima Concepción
+Del Biobío            
+Cabrero
+4288
+Liceo Politécnico General Óscar 
+Bonilla Bradanov
+Universidad Católica de la Santísima Concepción
+Del Biobío            
+Tucapel
+4309
+Liceo de Huepil
+Universidad de Concepción
+Del Biobío            
+Antuco
+4324
+Liceo Doctor Víctor Ríos Ruiz
+Universidad de Concepción
+Del Biobío            
+Quilleco
+4331
+Liceo Francisco Bascuñán Guerrero
+Universidad de Concepción
+Del Biobío            
+Quilleco
+4333
+Liceo Isabel Riquelme
+Universidad de Concepción
+Del Biobío            
+Santa Bárbara
+4353
+Liceo Cardenal Antonio Samoré
+Universidad de Concepción
+Del Biobío            
+Quilaco
+4392
+Instituto Valle del Sol Quilaco
+Universidad de Concepción
+Del Biobío            
+Mulchén
+4408
+Liceo Crisol
+Universidad de Concepción
+Del Biobío            
+Negrete
+4446
+Liceo Polivalente La Frontera
+Universidad de Concepción
+Del Biobío            
+Nacimiento
+4451
+Liceo Municipal de Nacimiento
+Universidad de Concepción
+Del Biobío            
+Laja
+4483
+Liceo Politécnico Héroes de La 
+Concepción
+Universidad de Concepción
+Del Biobío            
+San Rosendo
+4500
+Liceo Isidora Aguirre Tupper
+Universidad del Biobío
+Del Biobío            
+Yumbel
+4509
+Liceo Municipal Río Claro
+Universidad del Biobío
+Del Biobío            
+Concepción
+4535
+Liceo Industrial de Concepción
+Universidad de Concepción
+Del Biobío            
+Concepción
+4536
+Liceo Comercial Femenino de 
+Concepción
+Universidad de Concepción
+Del Biobío            
+Concepción
+4559
+Liceo Lorenzo Arenas Olivo
+Universidad de Concepción
+
+Establecimientos Educacionales PACE
+12
+Región
+Comuna
+RBD
+Nombre del establecimiento
+Institución de Educación Superior PACE
+Del Biobío            
+Chiguayante
+4560
+Liceo Chiguayante
+Universidad Católica de la Santísima Concepción
+Del Biobío            
+Concepción
+4561
+Liceo Juan Martínez De Rozas
+Universidad de Concepción
+Del Biobío            
+Concepción
+4577
+Liceo República de Israel
+Universidad de Concepción
+Del Biobío            
+Hualpén
+4706
+Liceo Polivalente Pedro del Río 
+Zañartu
+Universidad de Concepción
+Del Biobío            
+Talcahuano
+4707
+Liceo Comercial Profesor Sergio 
+Moraga Arcil
+Universidad de Concepción
+Del Biobío            
+Talcahuano
+4709
+Liceo Técnico
+Universidad de Concepción
+Del Biobío            
+Hualpén
+4717
+Liceo Comercial Lucila Godoy 
+Alcayaga
+Universidad de Concepción
+Del Biobío            
+Penco
+4805
+Liceo Pencopolitano
+Universidad de Concepción
+Del Biobío            
+Florida
+4870
+Liceo Luis de Alava
+Universidad de Concepción
+Del Biobío            
+Hualqui
+4897
+Liceo San Juan Bautista de Hualqui
+Universidad Católica de la Santísima Concepción
+Del Biobío            
+Santa Juana
+4925
+Liceo Nueva Zelandia
+Universidad de Concepción
+Del Biobío            
+Lota
+4948
+Liceo Politécnico Rosauro Santana 
+Ríos
+Universidad Católica de la Santísima Concepción
+Del Biobío            
+Lota
+4949
+Liceo Comercial Presidente Frei 
+Montalva
+Universidad Católica de la Santísima Concepción
+Del Biobío            
+Coronel
+4975
+Liceo Industrial Fundación Federico 
+Schwager
+Universidad del Biobío
+Del Biobío            
+Coronel
+4977
+Liceo Comercial Andrés Bello López
+Universidad del Biobío
+Del Biobío            
+Coronel
+4983
+Liceo Yobilo de Coronel
+Universidad del Biobío
+Del Biobío            
+Coronel
+5002
+Escuela Juan José Latorre Benavente
+Universidad del Biobío
+Del Biobío            
+Lebu
+5021
+Liceo Técnico Profesional Doctor 
+Rigoberto Iglesias Bastías de Lebu
+Universidad Católica de la Santísima Concepción
+Del Biobío            
+Arauco
+5057
+Liceo Técnico Pesquero Filidor Gaete 
+Monsálvez
+Universidad del Biobío
+Del Biobío            
+Curanilahue
+5084
+Liceo Polivalente Mariano Latorre
+Universidad del Biobío
+Del Biobío            
+Los Álamos
+5105
+Liceo Politécnico Caupolicán
+Universidad Católica de la Santísima Concepción
+
+Establecimientos Educacionales PACE
+13
+Región
+Comuna
+RBD
+Nombre del establecimiento
+Institución de Educación Superior PACE
+Del Biobío            
+Cañete
+5126
+Liceo Humanista Científico José de La 
+Cruz Miranda Correa
+Universidad Católica de la Santísima Concepción
+Del Biobío            
+Contulmo
+5155
+Liceo Polivalente Nahuelbuta
+Universidad Católica de la Santísima Concepción
+De La Araucanía        
+Angol
+5215
+Liceo Industrial B-5 Angol
+Universidad Católica de Temuco
+De La Araucanía        
+Angol
+5216
+Liceo Comercial Armando Bravo Bravo
+Universidad Católica de Temuco
+De La Araucanía        
+Angol
+5219
+Liceo Técnico Juanita Fernández Solar
+Universidad Católica de Temuco
+De La Araucanía        
+Renaico
+5274
+Liceo Agrícola Forestal Manzanares
+Universidad de La Frontera
+De La Araucanía        
+Collipulli
+5282
+Complejo Educacional Collipulli
+Universidad Católica de Temuco
+De La Araucanía        
+Lonquimay
+5323
+Liceo Brigadier Carlos Schalchli V.
+Universidad de La Frontera
+De La Araucanía        
+Curacautín
+5343
+Liceo Politécnico C-12 Curacautín
+Universidad Católica de Temuco
+De La Araucanía        
+Curacautín
+5344
+Liceo Las Araucarias
+Universidad Católica de Temuco
+De La Araucanía        
+Ercilla
+5374
+Liceo Alonso De Ercilla y Zúñiga
+Universidad Católica de Temuco
+De La Araucanía        
+Victoria
+5393
+Liceo Politécnico Manuel Montt
+Universidad Católica de Temuco
+De La Araucanía        
+Victoria
+5394
+Liceo Jorge Alessandri Rodríguez
+Universidad Católica de Temuco
+De La Araucanía        
+Traiguén
+5439
+Complejo Educacional Luis Durand 
+Durand
+Universidad Católica de Temuco
+De La Araucanía        
+Purén
+5507
+Liceo María Aurora Guiñez Ramírez
+Universidad de La Frontera
+De La Araucanía        
+Temuco
+5566
+Liceo Industrial A-27 Temuco
+Universidad Católica de Temuco
+De La Araucanía        
+Temuco
+5567
+Liceo Tecnológico ce La Araucanía
+Universidad Católica de Temuco
+De La Araucanía        
+Temuco
+5568
+Liceo Técnico ce Temuco
+Universidad Católica de Temuco
+De La Araucanía        
+Padre Las Casas
+5574
+Complejo Educacional Padre Las 
+Casas
+Universidad de La Frontera
+De La Araucanía        
+Temuco
+5590
+Complejo Educacional Un Amanecer 
+En La Araucanía
+Universidad de La Frontera
+De La Araucanía        
+Vilcún
+5613
+Complejo Educacional La Granja
+Universidad Católica de Temuco
+De La Araucanía        
+Temuco
+5729
+Centro Educacional Agroturístico 
+Santa Cruz
+Universidad Católica de Temuco
+
+Establecimientos Educacionales PACE
+14
+Región
+Comuna
+RBD
+Nombre del establecimiento
+Institución de Educación Superior PACE
+De La Araucanía        
+Lautaro
+5823
+Liceo H-C Jorge Teillier Sandoval
+Universidad Católica de Temuco
+De La Araucanía        
+Perquenco
+5879
+Liceo Isabel Poblete V.
+Universidad de La Frontera
+De La Araucanía        
+Cunco
+5957
+Liceo Municipal Atenea
+Universidad Católica de Temuco
+De La Araucanía        
+Cunco
+5959
+Liceo Arturo Valenzuela
+Universidad Católica de Temuco
+De La Araucanía        
+Melipeuco
+6007
+Liceo Los Andes
+Universidad de La Frontera
+De La Araucanía        
+Curarrehue
+6027
+Complejo Educacional Monseñor 
+Francisco Valdés S
+Universidad de La Frontera
+De La Araucanía        
+Pucón
+6051
+Liceo de Hotelería Y Turismo
+Universidad Católica de Temuco
+De La Araucanía        
+Villarrica
+6084
+Liceo Bicentenario Araucanía
+Universidad Católica de Temuco
+De La Araucanía        
+Villarrica
+6085
+Liceo Politécnico Villarrica
+Universidad Católica de Temuco
+De La Araucanía        
+Freire
+6163
+Liceo Juan Schleyer
+Universidad Católica de Temuco
+De La Araucanía        
+Pitrufquén
+6230
+Liceo Municipal La Frontera
+Universidad Católica de Temuco
+De La Araucanía        
+Gorbea
+6269
+Complejo Educacional Andrés A. 
+Gorbea
+Universidad Católica de Temuco
+De La Araucanía        
+Gorbea
+6270
+Liceo José Victorino Lastarria
+Universidad Católica de Temuco
+De La Araucanía        
+Loncoche
+6301
+Liceo Politécnico Andrés Bello
+Universidad de La Frontera
+De La Araucanía        
+Toltén
+6348
+Complejo Educacional Martín 
+Kleinknecht
+Universidad de La Frontera
+De La Araucanía        
+Saavedra
+6452
+Liceo Reino de Suecia
+Universidad de La Frontera
+De La Araucanía        
+Carahue
+6497
+Complejo Educacional Claudio Arrau 
+León
+Universidad Católica de Temuco
+De La Araucanía        
+Nueva Imperial
+6584
+Liceo Industrial C-16 Nueva Imperial
+Universidad Católica de Temuco
+De La Araucanía        
+Nueva Imperial
+6585
+Liceo Luis González Vásquez
+Universidad Católica de Temuco
+De La Araucanía        
+Cholchol
+6586
+Liceo James Mundell
+Universidad Católica de Temuco
+De La Araucanía        
+Cholchol
+6641
+Liceo Agrícola Chol
+Universidad Católica de Temuco
+De La Araucanía        
+Cholchol
+6643
+Liceo Intercultural Técnico Profesional 
+Guacolda
+Universidad Católica de Temuco
+
+Establecimientos Educacionales PACE
+15
+Región
+Comuna
+RBD
+Nombre del establecimiento
+Institución de Educación Superior PACE
+De La Araucanía        
+Galvarino
+6708
+Liceo Gregorio Urrutia
+Universidad Católica de Temuco
+De Los Ríos            
+Valdivia
+6752
+Liceo Técnico Valdivia
+Universidad Austral de Chile
+De Los Ríos            
+Valdivia
+6755
+Liceo Industrial Valdivia
+Universidad Austral de Chile
+De Los Ríos            
+Valdivia
+6757
+Liceo Politécnico Benjamín Vicuña 
+Mackenna
+Universidad Austral de Chile
+De Los Ríos            
+Mariquina
+6846
+Liceo San Luis de Alba
+Universidad Austral de Chile
+De Los Ríos            
+Mariquina
+6853
+Liceo Politécnico Pesquero
+Universidad Austral de Chile
+De Los Ríos            
+Lanco
+6897
+Liceo Polivalente Camilo Henríquez G.
+Universidad Austral de Chile
+De Los Ríos            
+Lanco
+6899
+Liceo   República del Brasil
+Universidad Austral de Chile
+De Los Ríos            
+Los Lagos
+6929
+Liceo Alberto Blest Gana
+Universidad Austral de Chile
+De Los Ríos            
+Futrono
+6983
+Escuela Básica José M. Balmaceda F.
+Universidad Austral de Chile
+De Los Ríos            
+Corral
+7015
+Liceo Carlos Haverbeck Richter
+Universidad Austral de Chile
+De Los Ríos            
+Mafil
+7031
+Liceo Gabriela Mistral
+Universidad Austral de Chile
+De Los Ríos            
+Panguipulli
+7049
+Centro Educativo Fernando Santivan
+Universidad Austral de Chile
+De Los Ríos            
+Panguipulli
+7085
+Complejo Educacional Tierra de 
+Esperanza
+Universidad Austral de Chile
+De Los Ríos            
+La Unión
+7135
+Colegio Técnico Profesional N°1 
+Honorio Ojeda Valderas
+Universidad Austral de Chile
+De Los Ríos            
+Paillaco
+7200
+Liceo Rodulfo Amando Philippi
+Universidad Austral de Chile
+De Los Ríos            
+Río Bueno
+7240
+Escuela Rural Crucero
+Universidad Austral de Chile
+De Los Ríos            
+Lago Ranco
+7299
+Liceo Antonio Varas
+Universidad Austral de Chile
+De Los Lagos           
+Osorno
+7326
+Liceo Industrial Osorno
+Universidad de Los Lagos
+De Los Lagos           
+Osorno
+7328
+Liceo Rahue
+Universidad de Los Lagos
+De Los Lagos           
+Osorno
+7329
+Liceo Eleuterio Ramírez
+Universidad de Los Lagos
+De Los Lagos           
+Osorno
+7331
+Instituto Comercial de Osorno
+Universidad de Los Lagos
+De Los Lagos           
+San Pablo
+7441
+Colegio Quilacahuin
+Universidad Austral de Chile
+
+Establecimientos Educacionales PACE
+16
+Región
+Comuna
+RBD
+Nombre del establecimiento
+Institución de Educación Superior PACE
+De Los Lagos           
+Puyehue
+7470
+Liceo Técnico Profesional People Help 
+People Señor Walter Kaufmann Bauer
+Universidad Austral de Chile
+De Los Lagos           
+Purranque
+7505
+Liceo Tomás Burgos
+Universidad Austral de Chile
+De Los Lagos           
+Río Negro
+7542
+Liceo José Toribio Medina
+Universidad Austral de Chile
+De Los Lagos           
+Río Negro
+7544
+Colegio Riachuelo
+Universidad Austral de Chile
+De Los Lagos           
+San Juan De La 
+Costa
+7614
+Colegio Técnico Profesional Misión 
+San Juan de La Costa
+Universidad Austral de Chile
+De Los Lagos           
+Puerto Montt
+7625
+Liceo Industrial Puerto Montt
+Universidad de Los Lagos
+De Los Lagos           
+Puerto Montt
+7626
+Instituto Comercial de Puerto Montt
+Universidad de Los Lagos
+De Los Lagos           
+Puerto Montt
+7629
+Liceo Andrés Bello
+Universidad de Los Lagos
+De Los Lagos           
+Puerto Montt
+7651
+Liceo Rural Piedra Azul
+Universidad de Los Lagos
+De Los Lagos           
+Puerto Varas
+7720
+Liceo Pedro Aguirre Cerda
+Universidad de Los Lagos
+De Los Lagos           
+Puerto Varas
+7722
+Colegio Rosita Novaro de Novaro 
+Puerto Varas
+Universidad de Los Lagos
+De Los Lagos           
+Cochamo
+7753
+Escuela Básica Fronteriza Juan Soler 
+Manfredini
+Universidad de Los Lagos
+De Los Lagos           
+Calbuco
+7772
+Liceo Politécnico Calbuco
+Universidad de Los Lagos
+De Los Lagos           
+Calbuco
+7773
+Escuela Eulogio Goycolea Garay
+Universidad de Los Lagos
+De Los Lagos           
+Calbuco
+7775
+Escuela Rural Pargua
+Universidad de Los Lagos
+De Los Lagos           
+Maullín
+7830
+Liceo Capitán de Fragata Francisco 
+Vidal Gormaz
+Universidad de Los Lagos
+De Los Lagos           
+Fresia
+7941
+Liceo Carlos Ibáñez del Campo
+Universidad de Los Lagos
+De Los Lagos           
+Llanquihue
+7956
+Liceo Politécnico Holanda
+Universidad de Los Lagos
+De Los Lagos           
+Frutillar
+7973
+Liceo Industrial Chileno- Alemán
+Universidad Austral de Chile
+De Los Lagos           
+Ancud
+8044
+Liceo Polivalente de Ancud
+Universidad de Los Lagos
+De Los Lagos           
+Quemchi
+8111
+Liceo Polivalente Quemchi
+Universidad de Los Lagos
+De Los Lagos           
+Curaco de Vélez
+8162
+Liceo Alfredo del Carmen Barria 
+Oyarzún
+Universidad de Los Lagos
+
+Establecimientos Educacionales PACE
+17
+Región
+Comuna
+RBD
+Nombre del establecimiento
+Institución de Educación Superior PACE
+De Los Lagos           
+Quinchao
+8174
+Liceo Insular
+Universidad de Los Lagos
+De Los Lagos           
+Chonchi
+8206
+Liceo Manuel Jesús Andrade Bórquez
+Universidad de Los Lagos
+De Los Lagos           
+Chaitén
+8309
+Escuela Rural Ayacara
+Universidad de Los Lagos
+De Los Lagos           
+Hualaihue
+8310
+Colegio Mauricio Hitchcock
+Universidad de Los Lagos
+De Los Lagos           
+Futaleufú
+8331
+Escuela Futaleufú
+Universidad de Los Lagos
+De Los Lagos           
+Palena
+8339
+Escuela Roberto White Gesell
+Universidad de Los Lagos
+De Aysén del General 
+Carlos Ibáñez del Campo
+Coihaique
+8345
+Liceo Josefina Aguirre Montenegro
+Universidad Austral de Chile
+De Aysén del General 
+Carlos Ibáñez del Campo
+Coihaique
+8352
+Liceo República Argentina
+Universidad de Aysén
+De Aysén del General 
+Carlos Ibáñez del Campo
+Coihaique
+8369
+Escuela Agrícola de La Patagonia
+Universidad de Aysén
+De Aysén del General 
+Carlos Ibáñez del Campo
+Aysén
+8375
+Liceo Politécnico de Aysén
+Universidad Austral de Chile
+De Aysén del General 
+Carlos Ibáñez del Campo
+Cisnes
+8391
+Escuela Eusebio Ibar Schepeler
+Universidad de Aysén
+De Aysén del General 
+Carlos Ibáñez del Campo
+Guaitecas
+8392
+Liceo Melinka
+Universidad Austral de Chile
+De Aysén del General 
+Carlos Ibáñez del Campo
+Chile Chico
+8394
+Liceo Luisa Rabanal de Palma
+Universidad Austral de Chile
+De Aysén del General 
+Carlos Ibáñez del Campo
+Río Ibáñez
+8403
+Liceo Rural Cerro Castillo
+Universidad Austral de Chile
+De Magallanes y de La 
+Antártica Chilena
+Natales
+8411
+Liceo Politécnico Luis Cruz Martínez
+Universidad de Magallanes
+De Magallanes y de La 
+Antártica Chilena
+Punta Arenas
+8425
+Liceo Polivalente María Behety de 
+Menéndez
+Universidad de Magallanes
+De Magallanes y de La 
+Antártica Chilena
+Punta Arenas
+8427
+Liceo Industrial Armando Quezada 
+Acharan
+Universidad de Magallanes
+De Magallanes y de La 
+Antártica Chilena
+Punta Arenas
+8430
+Liceo Polivalente Sara Braun
+Universidad de Magallanes
+
+Establecimientos Educacionales PACE
+18
+Región
+Comuna
+RBD
+Nombre del establecimiento
+Institución de Educación Superior PACE
+De Magallanes y de La 
+Antártica Chilena
+Porvenir
+8474
+Liceo Polivalente Hernando de 
+Magallanes
+Universidad de Magallanes
+De Magallanes y de La 
+Antártica Chilena
+Cabo De Hornos
+8483
+Liceo Almirante Donald Mc-Intyre 
+Griffiths
+Universidad de Magallanes
+Metropolitana de Santiago   Santiago
+8490
+Liceo N° 2 Miguel Luis Amunategui
+Universidad Metropolitana de Ciencias de la 
+Educación
+Metropolitana de Santiago   Independencia
+8497
+Liceo Gabriela Mistral
+Universidad de Chile
+Metropolitana de Santiago   Santiago
+8500
+Liceo Industrial Eliodoro García Zegers
+Universidad de Santiago de Chile
+Metropolitana de Santiago   Santiago
+8501
+Liceo Politémoco Presidente Gabriel 
+González Videla
+Pontificia Universidad Católica de Chile
+Metropolitana de Santiago   Santiago
+8503
+Instituto Superior de  Comercio 
+Eduardo Frei M.
+Universidad Alberto Hurtado
+Metropolitana de Santiago   Santiago
+8505
+Liceo Polivalente A-28 Emilia Toro de 
+Balmaceda
+Universidad Tecnológica Metropolitana
+Metropolitana de Santiago   Santiago
+8506
+Instituto Comercial Eliodoro 
+Domínguez Domínguez
+Universidad de Santiago de Chile
+Metropolitana de Santiago   Santiago
+8507
+Liceo Comercial Joaquín Vera Morales
+Universidad Alberto Hurtado
+Metropolitana de Santiago   Quinta Normal
+8508
+Liceo Polivalente Juan Antonio Ríos
+Universidad Alberto Hurtado
+Metropolitana de Santiago   Estación Central
+8518
+Liceo Estación Central
+Universidad de Santiago de Chile
+Metropolitana de Santiago   Santiago
+8812
+Liceo Industrial de La Construcción 
+Víctor Bezanilla Salinas
+Universidad de Santiago de Chile
+Metropolitana de Santiago   Vitacura
+8825
+Colegio Antártica Chilena
+Universidad Alberto Hurtado
+Metropolitana de Santiago   Providencia
+8928
+Liceo José Victorino Lastarria
+Universidad Metropolitana de Ciencias de la 
+Educación
+Metropolitana de Santiago   La Reina
+9006
+Complejo Educacional La Reina
+Universidad Tecnológica Metropolitana
+Metropolitana de Santiago   Ñuñoa
+9058
+Instituto Superior de Comercio Diego 
+Portales
+Universidad Tecnológica Metropolitana
+Metropolitana de Santiago   Ñuñoa
+9061
+Liceo Politécnico A N° 60 Presidente 
+Manuel Montt
+Universidad Tecnológica Metropolitana
+
+Establecimientos Educacionales PACE
+19
+Región
+Comuna
+RBD
+Nombre del establecimiento
+Institución de Educación Superior PACE
+Metropolitana de Santiago   Macul
+9069
+Liceo Polivalente Mercedes Marín del 
+Solar
+Universidad Metropolitana de Ciencias de la 
+Educación
+Metropolitana de Santiago   Macul
+9075
+Complejo Educacional Joaquín 
+Edwards Bello
+Universidad Metropolitana de Ciencias de la 
+Educación
+Metropolitana de Santiago   Ñuñoa
+9077
+Complejo Educacional Municipal 
+Brígida Walker
+Universidad Metropolitana de Ciencias de la 
+Educación
+Metropolitana de Santiago   Peñalolén
+9087
+Centro Educacional Valle Hermoso
+Universidad de Chile
+Metropolitana de Santiago   Peñalolén
+9088
+Liceo Antonio Hermida Fabres
+Universidad Tecnológica Metropolitana
+Metropolitana de Santiago   Peñalolén
+9105
+Centro Educacional Eduardo de La 
+Barra
+Universidad Tecnológica Metropolitana
+Metropolitana de Santiago   Peñalolén
+9106
+Centro Educación Mariano Egaña
+Universidad Tecnológica Metropolitana
+Metropolitana de Santiago   La Florida
+9285
+Escuela Marcela Paz
+Pontificia Universidad Católica de Chile
+Metropolitana de Santiago   La Florida
+9288
+Liceo Nuevo Amanecer
+Universidad Metropolitana de Ciencias de la 
+Educación
+Metropolitana de Santiago   La Florida
+9292
+Complejo Educ. Municipal Carden. A. 
+Samoré
+Pontificia Universidad Católica de Chile
+Metropolitana de Santiago   La Florida
+9293
+Liceo Polivalente Los Almendros
+Universidad Metropolitana de Ciencias de la 
+Educación
+Metropolitana de Santiago   San Miguel
+9405
+Liceo Betsabe Hormazábal de Alarcón
+Pontificia Universidad Católica de Chile
+Metropolitana de Santiago   San Joaquin
+9408
+Liceo Politécnico de San Joaquin
+Pontificia Universidad Católica de Chile
+Metropolitana de Santiago   San Miguel
+9409
+Liceo Comercial Instituto Superior de 
+Comercio de Chile (Ex A99)
+Universidad Tecnológica Metropolitana
+Metropolitana de Santiago   Pedro Aguirre 
+Cerda
+9410
+Escuela Consolidada Dávila
+Universidad Metropolitana de Ciencias de la 
+Educación
+Metropolitana de Santiago   San Joaquín
+9411
+Centro Educacional Horacio Aravena 
+A.
+Pontificia Universidad Católica de Chile
+Metropolitana de Santiago   San Miguel
+9581
+Liceo Técnico A-100 De San Miguel
+Pontificia Universidad Católica de Chile
+Metropolitana de Santiago   La Granja
+9582
+Liceo Polivalente Francisco Frías V.
+Universidad Tecnológica Metropolitana
+Metropolitana de Santiago   La Pintana
+9583
+Centro Educacional Municipal Mariano 
+Latorre
+Universidad de Chile
+
+Establecimientos Educacionales PACE
+20
+Región
+Comuna
+RBD
+Nombre del establecimiento
+Institución de Educación Superior PACE
+Metropolitana de Santiago   San Ramón
+9584
+Liceo Comercial Vate Vicente 
+Huidobro
+Universidad Metropolitana de Ciencias de la 
+Educación
+Metropolitana de Santiago   La Granja
+9587
+Liceo Malaquías Concha
+Universidad de Chile
+Metropolitana de Santiago   San Ramón
+9599
+Liceo Municipal Purkuyen
+Universidad Metropolitana de Ciencias de la 
+Educación
+Metropolitana de Santiago   San Ramón
+9601
+Centro Educacional Municipal San 
+Ramón
+Universidad Metropolitana de Ciencias de la 
+Educación
+Metropolitana de Santiago   San Ramón
+9608
+Centro Educacional Mirador
+Universidad Metropolitana de Ciencias de la 
+Educación
+Metropolitana de Santiago   El Bosque
+9688
+Liceo Juan Gómez Millas
+Universidad Católica Silva Henríquez 
+Metropolitana de Santiago   Lo Espejo
+9690
+Centro Duc. Cardenal José María Caro
+Universidad Católica Silva Henríquez 
+Metropolitana de Santiago   La Cisterna
+9693
+Liceo Politécnico Ciencia Y Tecnología
+Universidad Metropolitana de Ciencias de la 
+Educación
+Metropolitana de Santiago   Lo Espejo
+9697
+Liceo Polivalente
+Universidad Católica Silva Henríquez 
+Metropolitana de Santiago   La Cisterna
+9701
+Liceo Polivalente Olof Palme
+Universidad Metropolitana de Ciencias de la 
+Educación
+Metropolitana de Santiago   Lo Espejo
+9726
+Liceo Teniente Francisco Mery Aguirre
+Universidad Católica Silva Henríquez 
+Metropolitana de Santiago   Estación Central
+9861
+Centro Educacional Municipal Dr. 
+Amador Nechme R.
+Universidad de Santiago de Chile
+Metropolitana de Santiago   Estación Central
+9862
+Liceo Polivalente A N°71 Guillermo 
+Feliú Cruz
+Universidad de Santiago de Chile
+Metropolitana de Santiago   Maipú
+9863
+Liceo Santiago Bueras y Avaria
+Universidad de Santiago de Chile
+Metropolitana de Santiago   Maipú
+9864
+Liceo José Ignacio Zenteno
+Universidad de Santiago de Chile
+Metropolitana de Santiago   Cerrillos
+9865
+Liceo Polivalente Dr. Luis Vargas 
+Salcedo
+Universidad Católica Silva Henríquez 
+Metropolitana de Santiago   Estación Central
+9866
+Liceo Comercial B-72
+Universidad Tecnológica Metropolitana
+Metropolitana de Santiago   Maipú
+9867
+Centro De Educación  
+TécnicoProfesional Codeduc
+Universidad de Santiago de Chile
+
+Establecimientos Educacionales PACE
+21
+Región
+Comuna
+RBD
+Nombre del establecimiento
+Institución de Educación Superior PACE
+Metropolitana de Santiago   Maipú
+9887
+Escuela El Llano de Maipú
+Universidad de Santiago de Chile
+Metropolitana de Santiago   Maipú
+9889
+Liceo Reino de Dinamarca
+Universidad de Santiago de Chile
+Metropolitana de Santiago   Quinta Normal
+9982
+Liceo Comercial Molina Lavín
+Universidad Alberto Hurtado
+Metropolitana de Santiago   Quinta Normal
+9986
+Liceo Politécnico
+Universidad Alberto Hurtado
+Metropolitana de Santiago   Cerro Navia
+10075
+Liceo Polivalente Los Héroes de La 
+Concepción
+Universidad Alberto Hurtado
+Metropolitana de Santiago   Lo Prado
+10076
+Complejo Educacional Pedro Prado
+Universidad de Santiago de Chile
+Metropolitana de Santiago   Pudahuel
+10077
+Liceo Muninicipal Centro Educacional 
+Pudahuel
+Universidad de Santiago de Chile
+Metropolitana de Santiago   Lo Prado
+10091
+Escuela Profesora Gladys Valenzuela 
+V.
+Universidad de Chile
+Metropolitana de Santiago   Lo Prado
+10106
+Escuela Poeta Pablo Neruda
+Universidad de Santiago de Chile
+Metropolitana de Santiago   Cerro Navia
+10126
+Complejo Educacional Cerro Navia
+Universidad de Santiago de Chile
+Metropolitana de Santiago   Pudahuel
+10130
+Liceo Ciudad de Brasilia
+Universidad de Chile
+Metropolitana de Santiago   Independencia
+10199
+Liceo Polivalente A80 Presidente José 
+Manuel Balmaceda
+Universidad Alberto Hurtado
+Metropolitana de Santiago   Recoleta
+10248
+Liceo Instituto Tecnológico y 
+Comercial Recoleta-Inteco
+Universidad Alberto Hurtado
+Metropolitana de Santiago   Huechuraba
+10250
+Centro Educacional De Huechuraba
+Universidad Alberto Hurtado
+Metropolitana de Santiago   Recoleta
+10254
+Centro Educacional José Miguel 
+Carrera
+Universidad Alberto Hurtado
+Metropolitana de Santiago   Recoleta
+10255
+Complejo Educacional Juanita 
+Fernandez Solar
+Universidad Alberto Hurtado
+Metropolitana de Santiago   Conchalí
+10269
+Liceo Municipal Almirante Galvarino 
+Riveros
+Universidad Alberto Hurtado
+Metropolitana de Santiago   Colina
+10399
+Liceo Polivalente Rigoberto Fontt I.
+Universidad Tecnológica Metropolitana
+Metropolitana de Santiago   Colina
+10405
+Liceo Esmeralda
+Universidad Tecnológica Metropolitana
+Metropolitana de Santiago   Colina
+10408
+Liceo Coronel Enrique Cabrera 
+Jiménez
+Universidad Tecnológica Metropolitana
+
+Establecimientos Educacionales PACE
+22
+Región
+Comuna
+RBD
+Nombre del establecimiento
+Institución de Educación Superior PACE
+Metropolitana de Santiago   Lampa
+10419
+Complejo Educacional de Lampa
+Universidad Católica Silva Henríquez 
+Metropolitana de Santiago   Tiltil
+10432
+Liceo Polivalente Manuel Rodríguez
+Universidad Tecnológica Metropolitana
+Metropolitana de Santiago   Puente Alto
+10452
+Liceo Puente Alto
+Universidad Católica Silva Henríquez 
+Metropolitana de Santiago   Puente Alto
+10453
+Liceo Ind. Municipalizado A N_ 116
+Universidad Católica Silva Henríquez 
+Metropolitana de Santiago   Puente Alto
+10455
+Liceo San Gerónimo
+Universidad Católica Silva Henríquez 
+Metropolitana de Santiago   Puente Alto
+10456
+Liceo Comercial de Puente Alto
+Universidad Católica Silva Henríquez 
+Metropolitana de Santiago   Puente Alto
+10457
+Colegio Maipo
+Universidad Católica Silva Henríquez 
+Metropolitana de Santiago   Pirque
+10516
+Liceo Municipal Técnico Profesional El 
+Llano
+Universidad Católica Silva Henríquez 
+Metropolitana de Santiago   Pirque
+10520
+Liceo El Principal
+Universidad Católica Silva Henríquez 
+Metropolitana de Santiago   San José de Maipo
+10526
+Liceo Polivalente San José de Maipo
+Universidad Católica Silva Henríquez 
+Metropolitana de Santiago   San Bernardo
+10541
+Liceo Comercial de San Bernardo
+Universidad Técnica Federico Santa María
+Metropolitana de Santiago   San Bernardo
+10542
+Centro Educacional Baldomero Lillo
+Universidad Metropolitana de Ciencias de la 
+Educación
+Metropolitana de Santiago   San Bernardo
+10544
+Liceo Elvira Brady Maldonado-San 
+Bernardo
+Universidad Técnica Federico Santa María
+Metropolitana de Santiago   San Bernardo
+10545
+Liceo Industrial Miguel Aylwin Gajardo
+Universidad Metropolitana de Ciencias de la 
+Educación
+Metropolitana de Santiago   San Bernardo
+10551
+Liceo Polivalente Lucila Godoy 
+Alcayaga
+Universidad Metropolitana de Ciencias de la 
+Educación
+Metropolitana de Santiago   El Bosque
+10573
+Centro Educacional Matías Cousino
+Universidad Católica Silva Henríquez 
+Metropolitana de Santiago   Buin
+10638
+Liceo 131
+Universidad Católica Silva Henríquez 
+Metropolitana de Santiago   Buin
+10642
+Liceo Polivalente Los Guindos
+Universidad Católica Silva Henríquez 
+Metropolitana de Santiago   Buin
+10645
+Liceo Francisco Javier Krugger 
+Alvarado
+Universidad Católica Silva Henríquez 
+Metropolitana de Santiago   Paine
+10663
+Centro Educacional Enrique Bernstein 
+Carabante
+Universidad Metropolitana de Ciencias de la 
+Educación
+Metropolitana de Santiago   Paine
+10667
+Liceo María Carvajal Fuenzalida
+Universidad Metropolitana de Ciencias de la 
+Educación
+
+Establecimientos Educacionales PACE
+23
+Región
+Comuna
+RBD
+Nombre del establecimiento
+Institución de Educación Superior PACE
+Metropolitana de Santiago   Paine
+10669
+Escuela Barbara Kast Rist
+Universidad Metropolitana de Ciencias de la 
+Educación
+Metropolitana de Santiago   Calera De Tango
+10686
+Liceo Municipal Poetisa Gabriela 
+Mistral
+Universidad Católica Silva Henríquez 
+Metropolitana de Santiago   Talagante
+10696
+Liceo Polivalente Talagante
+Universidad de Santiago de Chile
+Metropolitana de Santiago   Talagante
+10697
+Liceo Politécnico de Talagante
+Universidad de Santiago de Chile
+Metropolitana de Santiago   Isla De Maipo
+10725
+Centro Educacional Isla de Maipo
+Universidad Católica Silva Henríquez 
+Metropolitana de Santiago   Isla De Maipo
+10727
+Liceo Republica de Italia
+Universidad Católica Silva Henríquez 
+Metropolitana de Santiago   El Monte
+10735
+Liceo Polivalente Luis Humberto 
+Acosta Gay
+Universidad Católica Silva Henríquez 
+Metropolitana de Santiago   Peñaflor
+10746
+Liceo Municipalizado Peñaflor
+Universidad Católica Silva Henríquez 
+Metropolitana de Santiago   Padre Hurtado
+10749
+Liceo Paul Harris
+Universidad Católica Silva Henríquez 
+Metropolitana de Santiago   Peñaflor
+10751
+Liceo Comercial Republica de Brasil
+Universidad Católica Silva Henríquez 
+Metropolitana de Santiago   Melipilla
+10780
+Liceo Polivalente Hermanos 
+Sotomayor Baeza
+Universidad Técnica Federico Santa María
+Metropolitana de Santiago   Melipilla
+10781
+Liceo Politécnico Municipal Melipilla
+Universidad Técnica Federico Santa María
+Metropolitana de Santiago   Melipilla
+10783
+Liceo Gabriela Mistral de Melipilla
+Universidad Técnica Federico Santa María
+Metropolitana de Santiago   Melipilla
+10792
+Liceo Polivalente El Bollenar
+Universidad Técnica Federico Santa María
+Metropolitana de Santiago   Curacaví
+10845
+Liceo Presidente Balmaceda
+Universidad Tecnológica Metropolitana
+Metropolitana de Santiago   San Pedro
+10854
+Liceo Municipal de San Pedro
+Universidad Tecnológica Metropolitana
+Metropolitana de Santiago   Alhué
+10873
+Liceo Municipal Sara Troncoso 
+Troncoso
+Universidad Tecnológica Metropolitana
+De Arica y Parinacota  
+Arica
+10911
+Liceo Pablo Neruda
+Universidad de Tarapacá
+De Tarapacá            
+Alto Hospicio
+10917
+Liceo S.S Juan Pablo Segundo
+Universidad Arturo Prat
+De Antofagasta         
+Calama
+10967
+Liceo Eleuterio Ramírez Molina
+Universidad de Antofagasta
+De Antofagasta         
+Antofagasta
+10968
+Liceo Mayor Gral.(E) Oscar Bonilla
+Universidad de Antofagasta
+De Atacama             
+Tierra Amarilla
+11034
+Liceo Jorge Alessandri Rodríguez
+Universidad de Atacama
+De Atacama             
+Freirina
+11038
+Liceo General Ramón Freire
+Universidad de Atacama
+
+Establecimientos Educacionales PACE
+24
+Región
+Comuna
+RBD
+Nombre del establecimiento
+Institución de Educación Superior PACE
+De Coquimbo           
+Punitaqui
+11111
+Liceo Alberto Gallardo Lorca
+Universidad de La Serena
+De Coquimbo           
+Coquimbo
+11139
+Liceo Fernando Binvignat Marín
+Universidad Católica del Norte
+De Coquimbo           
+La Serena
+11155
+Liceo Jorge Alessandri Rodríguez
+Universidad Católica del Norte
+Del Biobío            
+Tirúa
+11400
+Liceo Trapaqueante
+Universidad Católica de la Santísima Concepción
+De La Araucanía        
+Nueva Imperial
+11527
+Liceo Politécnico Metodista La Granja
+Universidad Católica de Temuco
+De Los Ríos            
+Futrono
+11591
+Liceo Rural Llifen
+Universidad Austral de Chile
+Metropolitana de Santiago   Quinta Normal
+11831
+Liceo Industrial Benjamín Franklin
+Universidad Alberto Hurtado
+Metropolitana de Santiago   María Pinto
+11883
+Liceo Municipal Polivalente Maráa 
+Pinto
+Universidad Tecnológica Metropolitana
+De Ñuble
+San Carlos
+12006
+Liceo Agrícola San Carlos
+Universidad del Biobío
+Del Biobío            
+Laja
+12037
+Liceo Polivalente Hermanas Maestras 
+de La Santa Cruz
+Universidad Católica de la Santísima Concepción
+Del Biobío            
+Santa Bárbara
+12059
+Colegio Agrícola Los Mayos
+Universidad de Concepción
+Metropolitana de Santiago   Quilicura
+12117
+Complejo Educacional José Miguel 
+Carrera
+Universidad Alberto Hurtado
+De Valparaíso          
+Viña Del Mar
+12312
+Colegio Rebeca Fernández
+Universidad Técnica Federico Santa María
+De Valparaíso          
+Concón
+12332
+Liceo Politécnico de Con Con
+Universidad de Playa Ancha de Ciencias de la 
+Educación
+De Tarapacá            
+Pica
+12551
+Liceo Padre Alberto Hurtado Cruchaga
+Universidad Arturo Prat
+De Arica Y Parinacota  
+Arica
+12610
+Liceo Instituto Comercial de Arica
+Universidad de Tarapacá
+De Tarapacá            
+Alto Hospicio
+12749
+Colegio Marista Hermano Fernando
+Universidad Arturo Prat
+De Tarapacá            
+Camiña
+12759
+Liceo Camiña
+Universidad Arturo Prat
+De Antofagasta         
+San Pedro De 
+Atacama
+12842
+Liceo Agropecuario Likan Antai
+Universidad de Antofagasta
+De Atacama             
+Copiapó
+13168
+Liceo El Palomar
+Universidad de Atacama
+De Atacama             
+Vallenar
+13185
+Liceo Politécnico
+Universidad de Atacama
+De Atacama             
+Vallenar
+13202
+Liceo Bicentenario de Vallenar
+Universidad de Atacama
+
+Establecimientos Educacionales PACE
+25
+Región
+Comuna
+RBD
+Nombre del establecimiento
+Institución de Educación Superior PACE
+De Coquimbo           
+Canela
+13352
+Liceo PolivalentePadre José Herde 
+P-Lher
+Universidad Católica del Norte
+De Coquimbo           
+Coquimbo
+13461
+Liceo Carmen Aurora Rodríguez 
+Henríquez
+Universidad Católica del Norte
+De Coquimbo           
+Monte Patria
+13462
+Colegio Cerro Guayaquil
+Universidad Católica del Norte
+De Coquimbo           
+Coquimbo
+13558
+Instituto de Administración y 
+Comercio Estado de Israel
+Universidad Católica del Norte
+De Coquimbo           
+Coquimbo
+13561
+Liceo de Ciencias y Humanidades San 
+Josemaría Escrivá
+Universidad Católica del Norte
+De Coquimbo           
+La Serena
+13576
+Liceo Técnico Profesional Educador 
+Juan Bautista de La Salle
+Universidad Católica del Norte
+De Coquimbo           
+Ovalle
+13590
+Colegio de Administración Y Comercio 
+El Ingenio
+Universidad de La Serena
+De Valparaíso          
+Panquehue
+14202
+Colegio Panquehue
+Universidad de Valparaíso
+De Valparaíso          
+Quillota
+14206
+Liceo Agrícola de Quillota
+Universidad de Playa Ancha de Ciencias de la 
+Educación
+De Valparaíso          
+Quilpué
+14336
+Liceo Técnico Profesional Obispo 
+Rafael Lira Infante
+Universidad Técnica Federico Santa María
+De Valparaíso          
+Quilpué
+14470
+Liceo Politécnico Marga Marga
+Universidad de Valparaíso
+De Valparaíso          
+Quilpué
+14720
+Liceo Gastronomía y Turismo
+Universidad Técnica Federico Santa María
+De Valparaíso          
+San Esteban
+14877
+Liceo San Esteban
+Universidad de Valparaíso
+De Valparaíso          
+Isla de Pascua
+14881
+Liceo Aldea Educativa Rapa Nui
+Universidad de Valparaíso
+Del Libertador Bernardo 
+O’Higgins   
+Machalí
+15759
+Liceo Machalí
+Universidad de O’Higgins
+Del Libertador Bernardo 
+O’Higgins   
+Codegua
+15781
+Liceo Municipal de Codegua
+Universidad de Santiago de Chile
+Del Libertador Bernardo 
+O’Higgins   
+Paredones
+15808
+Liceo Mirella Catalan Urzúa
+Universidad de O’Higgins
+Del Libertador Bernardo 
+O’Higgins   
+Rengo
+15843
+Liceo Industrial de Rengo
+Universidad de O’Higgins
+
+Establecimientos Educacionales PACE
+26
+Región
+Comuna
+RBD
+Nombre del establecimiento
+Institución de Educación Superior PACE
+Del Maule              
+Curicó
+16452
+Liceo Politécnico de Curicó
+Universidad Católica del Maule
+Del Maule              
+Parral
+16469
+Colegio Pablo Neruda
+Universidad de Talca
+Del Maule              
+Rauco
+16551
+Liceo Polivalente de Rauco
+Universidad Católica del Maule
+Del Maule              
+Sagrada Familia
+16587
+Liceo Polivalente Sagrada Familia
+Universidad Católica del Maule
+Del Maule              
+Talca
+16676
+Liceo Complejo Educacional Javiera 
+Carrera
+Universidad Católica del Maule
+Del Maule              
+Romeral
+16754
+Liceo Arturo Alessandri Palma
+Universidad Católica del Maule
+De Ñuble
+Coihueco
+17662
+Liceo Claudio Arrau León
+Universidad del Biobío
+Del Biobío            
+Mulchén
+17790
+Liceo Nuevo Mundo
+Universidad de Concepción
+Del Biobío            
+Tome
+17885
+Liceo Polivalente Tome - Alto
+Universidad de Concepción
+Del Biobío            
+Cañete
+18004
+Liceo Técnico Profesional Alonso de 
+Ercilla y Zúñiga
+Universidad Católica de la Santísima Concepción
+De Ñuble
+San Carlos
+18017
+Liceo Técnico Profesional Violeta 
+Parra Sandoval
+Universidad Católica de la Santísima Concepción
+Del Biobío            
+Alto Biobío
+18037
+Liceo Ralco
+Universidad de Concepción
+Del Biobío            
+Arauco
+18080
+Liceo Politécnico Carampangue
+Universidad del Biobío
+Del Biobío            
+Florida
+18112
+Liceo Inés Enríquez Frodden
+Universidad de Concepción
+Del Biobío            
+San Pedro de La 
+Paz
+18218
+Colegio Nuevos Horizontes
+Universidad Católica de la Santísima Concepción
+De La Araucanía        
+Lautaro
+19906
+Liceo Politécnico Ema Espinoza 
+Correa
+Universidad Católica de Temuco
+De La Araucanía        
+Los Sauces
+19913
+Complejo Educacional Los Sauces
+Universidad de La Frontera
+De La Araucanía        
+Nueva Imperial
+19953
+Escuela Bilingüe Amul Kewun
+Universidad Católica de Temuco
+De La Araucanía        
+Teodoro Schmidt
+20053
+Liceo Técnico Profesional Hualpin
+Universidad de La Frontera
+De La Araucanía        
+Lumaco
+20103
+Liceo Municipal Lumaco
+Universidad de La Frontera
+De La Araucanía        
+Carahue
+20248
+Liceo Municipal Trovolhue
+Universidad Católica de Temuco
+De Los Lagos           
+Los Muermos
+22012
+Liceo Punta de Rieles
+Universidad de Los Lagos
+De Los Lagos           
+Puyehue
+22021
+Liceo Las Américas
+Universidad Austral de Chile
+
+Establecimientos Educacionales PACE
+27
+Región
+Comuna
+RBD
+Nombre del establecimiento
+Institución de Educación Superior PACE
+De Los Lagos           
+Frutillar
+22022
+Liceo Ignacio Carrera Pinto
+Universidad Austral de Chile
+De Los Lagos           
+Hualaihué
+22027
+Liceo Hornopirén
+Universidad de Los Lagos
+De Los Lagos           
+Puerto Octay
+22050
+Liceo Benjamín Muñoz Gamero
+Universidad Austral de Chile
+De Los Lagos           
+San Juan de La 
+Costa
+22084
+Liceo Politécnico Antulafken
+Universidad Austral de Chile
+De Los Lagos           
+Puerto Montt
+22086
+Liceo Rural Las Quemas
+Universidad de Los Lagos
+De Los Lagos           
+San Pablo
+22113
+Liceo Fray Pablo de Royo
+Universidad Austral de Chile
+De Los Lagos           
+Los Muermos
+22309
+Colegio Inglés Mabel Condemarín
+Universidad de Los Lagos
+De Los Ríos            
+Valdivia
+22415
+Instituto Superior de Administración y 
+Turismo
+Universidad Austral de Chile
+De Los Lagos           
+Dalcahue
+22464
+Liceo Polivalente Dalcahue
+Universidad de Los Lagos
+De Los Lagos           
+Castro
+22504
+Liceo Francisco Coloane
+Universidad de Los Lagos
+De Los Lagos           
+Puerto Montt
+22544
+Liceo Científico Humanista Benjamín 
+Vicuña Mackenna
+Universidad de Los Lagos
+De Los Lagos           
+Puerto Montt
+22553
+Liceo Industrial Alerce
+Universidad de Los Lagos
+De Los Lagos           
+Osorno
+22626
+Instituto Politécnico
+Universidad de Los Lagos
+De Los Lagos           
+Maullín
+22655
+Liceo Carelmapu
+Universidad de Los Lagos
+De Los Lagos           
+Queilén
+22674
+Liceo Polivalente de Queilén
+Universidad de Los Lagos
+De Los Ríos            
+Róo Bueno
+22755
+Liceo Técnico Profesional de Río 
+Bueno
+Universidad Austral de Chile
+De Los Ríos            
+Lago Ranco
+22758
+Complejo Educacional Ignacio
+Universidad Austral de Chile
+De Aysén del General 
+Carlos Ibañez del Campo
+Cochrane
+24201
+Liceo Austral Lord Cochrane
+Universidad Austral de Chile
+De Aysén del General 
+Carlos Ibañez del Campo
+Aysén
+24203
+Liceo Raul Broussain Campino
+Universidad de Aysén
+De Aysén del General 
+Carlos Ibañez del Campo
+Cisnes
+24204
+Liceo Arturo Prat Chacón
+Universidad Austral de Chile
+De Aysén del General 
+Carlos Ibañez del Campo
+Coihaique
+24240
+Liceo Bicentenario Altos del Mackay
+Universidad de Aysén
+
+Establecimientos Educacionales PACE
+28
+Región
+Comuna
+RBD
+Nombre del establecimiento
+Institución de Educación Superior PACE
+De Magallanes y de La 
+Antártica Chilena
+Natales
+24300
+Liceo Gabriela Mistral
+Universidad de Magallanes
+Metropolitana de Santiago   La Pintana
+24403
+Colegio Simón Bolívar
+Universidad Metropolitana de Ciencias de la 
+Educación
+Metropolitana de Santiago   Puente Alto
+24443
+Liceo Municipal Chiloé
+Universidad Católica Silva Henríquez 
+Metropolitana de Santiago   San Bernardo
+24444
+Liceo Industrial Hardware
+Universidad Técnica Federico Santa María
+Metropolitana de Santiago   Pudahuel
+24889
+Liceo Monseñor Enrique Alvear
+Universidad de Santiago de Chile
+Metropolitana de Santiago   Buin
+25591
+Liceo Técnico Profesional de Buin
+Universidad Católica Silva Henríquez 
+Metropolitana de Santiago   Colina
+25592
+Centro Educativo La Puerta
+Universidad Tecnológica Metropolitana
+Metropolitana de Santiago   Paine
+25711
+Escuela Básica Municipal Paula 
+Jaraquemada Alqui
+Universidad Metropolitana de Ciencias de la 
+Educación
+Metropolitana de Santiago   San Bernardo
+25960
+Centro Educacional Padre Alberto 
+Hurtado de San Bernardo
+Universidad Técnica Federico Santa María
+Metropolitana de Santiago   Lo Barnechea
+26037
+Colegio Lo Barnechea
+Universidad Alberto Hurtado
+Metropolitana de Santiago   Lampa
+26157
+Liceo Municipal de Batuco
+Universidad Católica Silva Henríquez 
+Metropolitana de Santiago   Renca
+31037
+Liceo Instituto Cumbre de Cóndores
+Universidad de Chile
+De Ñuble
+Treguaco
+31128
+Liceo Polivalente República del 
+Paraguay
+Universidad del Biobío
+Metropolitana de Santiago   Renca
+31153
+Instituto Cumbres de Cóndores 
+Poniente
+Universidad Alberto Hurtado
+Metropolitana de Santiago   Cerro Navia
+31288
+Liceo Bicentenario de Excelencia 
+Nacional de Cerro Navia
+Universidad de Santiago de Chile
+De Antofagasta         
+Antofagasta
+31345
+Liceo Politécnico Los Arenales
+Universidad de Antofagasta
+Del Libertador Bernardo 
+O’Higgins   
+Olivar
+40024
+Liceo Técnico Municipal Juan Hoppe 
+Gantz
+Universidad de O’Higgins
+Del Libertador Bernardo 
+O’Higgins   
+Requínoa
+40025
+Liceo Requínoa
+Universidad de O’Higgins
+De Coquimbo           
+Paiguano
+40029
+Liceo Mistraliano
+Universidad Católica del Norte
+
+Establecimientos Educacionales PACE
+29
+Región
+Comuna
+RBD
+Nombre del establecimiento
+Institución de Educación Superior PACE
+De Valparaíso          
+Papudo
+40099
+Liceo Técnico Profesional Papudo
+Universidad de Playa Ancha de Ciencias de la 
+Educación
+De Coquimbo           
+Ovalle
+40126
+Colegio Raúl Silva Henríquez
+Universidad de La Serena
+De Los Lagos           
+Quellón
+40301
+Liceo Politécnico de Quellón
+Universidad de Los Lagos
+De Atacama             
+Alto del Carmen
+40340
+Liceo de Alto del Carmen
+Universidad de Atacama
+De Valparaíso          
+Calle Larga
+40352
+Liceo Técnico Profesional Pedro 
+Aguirre Cerda
+Universidad de Valparaíso
+Arica y Parinacota
+ARICA                                             
+25
+COLEGIO CENTENARIO DE ARICA
+Universidad de Tarapacá
+Arica y Parinacota
+ARICA                                             
+5
+JOVINA NARANJO FERNANDEZ
+Universidad de Tarapacá
+Tarapacá
+IQUIQUE                                           
+103
+ESCUELA EDUCACIÓN. GENERAL 
+BÁSICA Y DESARROLLO ARTÍSTICO 
+VIOLETA PARRA
+Universidad Arturo Prat
+Tarapacá
+ALTO HOSPICIO             12632
+COLEGIO SIMÓN BOLIVAR
+Universidad Arturo Prat
+Antofagasta
+CALAMA                                           
+219
+LICEO BICENTENARIO POLITÉCNICO 
+CESAREO AGUIRRE GOYENECHEA
+Universidad de Antofagasta
+Antofagasta
+CALAMA                                           
+220
+LICEO MINERO AMÉRICA
+Universidad de Antofagasta
+Antofagasta
+ANTOFAGASTA             279
+LICEO INDUSTRIAL EULOGIO GORDO 
+MONEO
+Universidad del Norte
+Antofagasta
+SIERRA GORDA             371
+ESCUELA CARACOLES
+Universidad Católica del Norte
+Atacama
+COPIAPÓ                      
+13145
+LICEO TECNOLÓGICO DE COPIAPÓ
+Universidad de Atacama
+Atacama
+COPIAPÓ                      
+396
+INSTITUTO COMERCIAL ALEJANDRO 
+RIVERA DÍAZ
+Universidad de Atacama
+Coquimbo
+OVALLE                                            
+705
+LICEO BICENTENARIO DE 
+EXCELENCIA  POLITÉCNICO DE 
+OVALLE
+Universidad  de La Serena
+Coquimbo
+RÍO HURTADO                    11110
+LICEO JORGE IRIBARREN CHARLÍN 
+DE HURTADO
+Universidad de La Serena
+
+Establecimientos Educacionales PACE
+30
+Valparaíso
+SAN ANTONIO                    2012
+PROFESOR JUAN DANTE PARRAGUEZ 
+ARELLANO
+Pontificia Universidad Católica de Valparaíso
+Valparaíso
+VALPARAÍSO                    
+1542
+ESCUELA JOAQUÍN EDWARDS BELLO
+Universidad Técnica Federico Santa María
+Valparaíso
+CARTAGENA                     2066
+LICEO EUGENIA SUBERCASEAUX
+Pontificia Universidad Católica de Valparaíso
+Valparaíso
+VALPARAÍSO                    
+1525
+LICEO BICENTENARIO INSTITUTO 
+TÉCNICO PROFESIONAL MARTÍTIMO 
+DE VALPARAÍSO
+Universidad de Playa Ancha
+Valparaíso
+QUILPUÉ                                           
+1891
+ESCUELA BÁSICA JORGE ROCK LARA
+Universidad de Valparaíso
+Valparaíso
+LIMACHE                      1468
+COLEGIO BRASILIA
+Universidad Técnica Federico Santa María
+Valparaíso
+ZAPALLAR                     
+1184
+COLEGIO TÉCNICO PROFESIONAL 
+MERCEDES MATURANA GALLARDO
+Universidad de Playa Ancha
+Valparaíso
+VALPARAÍSO                    
+1519
+LICEO TÉCNICO PROFESIONAL 
+BARON
+Universidad de Valparaíso
+Metropolitana
+LA GRANJA                     26501
+LICEO TÉCNICO PROFESIONAL 
+PATRICIO AYLWIN AZÓCAR
+Universidad Tecnológica Metropolitana
+Metropolitana
+SAN BERNARDO          10592
+LICEO CLARA SOLOVERA
+Universidad Metropolitana de Ciencias de la 
+Educación
+Metropolitana
+EL MONTE                     
+10737
+ESCUELA BÁSICA  JAVIERA CARRERA 
+VERDUGO 
+Universidad Católica Silva Henríquez
+Metropolitana
+PEDRO AGUIRRE 
+CERDA                               
+9695
+LICEO POLIVALENTE EUGENIO 
+PEREIRA SALAS
+Universidad Alberto Hurtado
+Metropolitana
+PAINE                                             
+10666
+LICEO POLIVALENTE GREGORIO 
+MORALES MIRANDA
+Universidad Metropolitana de Ciencias de la 
+Educación
+Metropolitana
+EL BOSQUE                     9687
+LICEO CHRISTA MC AULIFFE
+Universidad de Chile
+Metropolitana
+SAN BERNARDO          10588
+LICEO CARDENAL ANTONIO SAMORE
+Universidad de Santiago de Chile
+Metropolitana
+TALAGANTE                     10699
+LICEO REPÚBLICA DE GRECIA
+Universidad de Santiago de Chile
+Metropolitana
+PEDRO AGUIRRE 
+CERDA                               
+9419
+LICEO MUNICIPAL ENRIQUE 
+BACKAUSSE
+Universidad Alberto Hurtado
+
+Establecimientos Educacionales PACE
+31
+Metropolitana
+BUIN                                              
+10641
+LICEO ALTO JAHUEL
+Universidad Católica Silva Henríquez
+Metropolitana
+LA FLORIDA                    
+26292
+LICEO POLIVALENTE MUNICIPAL DE 
+LA FLORIDA
+Pontificia Universidad Católica de Chile
+Metropolitana
+PEÑALOLÉN                     9111
+ESCUELA LUIS  ARRIETA CAÑAS
+Universidad Tecnológica Metropolitana
+Metropolitana
+LA FLORIDA                    
+9298
+LICEO INDIRA GANDHI
+Pontificia Universidad Católica de Chile
+Metropolitana
+LAS CONDES                    
+8822
+LICEO JUAN PABLO II DE LAS CONDES
+Universidad de Chile
+Libertador General 
+Bernardo O`Higgins
+PEUMO                                             
+2378
+LICEO JEAN BUCHANAN DE LARRAÍN
+Universidad de O'Higgins
+Libertador General 
+Bernardo O`Higgins
+PALMILLA                     
+2612
+LICEO SAN JOSÉ DEL CARMEN
+Universidad de O'Higgins
+Maule
+VICHUQUÉN                     2910
+ESCUELA ENTRE AGUAS DE LLICO
+Universidad Católica del Maule
+Maule
+RETIRO                                            
+3442
+COLEGIO AJIAL
+Universidad de Talca
+Maule
+PARRAL                                            
+3400
+COLEGIO ALBERTO MOLINA 
+CASTILLO
+Universidad de Talca
+Maule
+MOLINA                                            
+2836
+LICEO JUAN AGUSTÍN MORALES 
+GONZALEZ
+Universidad Católica del Maule
+Ñuble
+CHILLÁN                                          
+17892
+LICEO POLIVALENTE MARTA COLVIN 
+ANDRADE
+Universidad de Concepción
+Ñuble
+CHILLÁN VIEJO             18099
+LICEO TÓMAS LAGO
+Universidad del Bío Bío
+Biobío
+CAÑETE                                            
+5131
+LICEO HOMERO VIGUERAS
+Universidad Católica de la Santísima Concepción
+Biobío
+LOS ÁNGELES                    4165
+LICEO INDUSTRIAL SAMUEL VIVANCO 
+PARADA
+Universidad Católica de la Santísima Concepción
+Biobío
+YUMBEL                                            
+4507
+LICEO TÉCNICO PROFESIONAL 
+GONZALO GUGLIELMI MONTIEL
+Universiadaddel Bío Bío
+Biobío
+TUCAPEL                      4310
+LICEO ANDRÉS ALCÁZAR DE 
+TUCAPEL
+Universidad de Concepción
+La Araucanía
+TEODORO 
+SCHMIDT                                   
+6397
+LICEO MUNICIPAL BARROS ARANA
+Universidad de La Frontera
+
+Establecimientos Educacionales PACE
+32
+La Araucanía
+RENAICO                      
+5270
+LICEO POLITÉCNICO DOMINGO 
+SANTA MARÍA
+Universidad Católica de Temuco
+La Araucanía
+TRAIGUÉN                     
+5440
+LICEO LUCILA GODOY ALCAYAGA
+Universidad Católica de Temuco
+La Araucaniía
+TEODORO 
+SCHMIDT                                   
+6398
+COMPLEJO EDUCACIONAL NUEVA 
+ALBORADA
+Universidad de La Frontera
+Los Ríos
+VALDIVIA                     
+6751
+INSTITUTO COMERCIAL DE VALDIVIA
+Universidad Austral de Chile
+Los Ríos
+VALDIVIA                     
+22540
+INSTITUTO ITALIA DE VALDIVIA
+Universidad Austral de Chile
+Los Lagos
+PUERTO MONTT          20376
+COLEGIO NUEVA ALERCE
+Universidad de Los Lagos
+Los Lagos
+LOS MUERMOS             7872
+COLEGIO BICENTENARIO DE 
+DIFUSIÓN ARTÍSTICA LOS ULMOS
+Universidad de Los Lagos
+Aysén
+AYSÉN                                             
+8380
+LICEO MANIHUALES
+Universidad de Aysén
+Aysén
+O'HIGGINS                     8409
+LICEO PIONEROS DEL SUR
+Universidad de Aysén
+Magallanes
+PUNTA ARENAS          24316
+LICEO POLITÉCNICOCARDENAL RAÚL 
+SILVA HENRÍQUEZ
+Universidad de Magallanes
+Magallanes
+PUNTA ARENAS          8424
+INSTITUTO SUPERIOR DE COMERCIO 
+LICEO BICENTENARIO
+Universidad de Magallanes

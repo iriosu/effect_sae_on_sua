@@ -1,0 +1,31 @@
+\begin{table}[!htbp]
+\singlespacing\renewcommand{\arraystretch}{1.2}
+\centering
+\caption{Entrant Counts and Low-Income Composition}
+\label{tab: entrant counts}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lrrrr@{}}
+\toprule
+\multicolumn{5}{l}{\textit{Panel A. Unbalanced-panel estimates}} \\[3pt]
+Outcome & \makecell{Pre-adoption\\mean} & Effect & SE & 95\% CI \\
+\midrule
+Total entrants & 13.97 & $-0.40$ & 0.39 & $[-1.16, 0.37]$ \\
+Low-income entrants & 5.48 & $0.12$ & 0.21 & $[-0.28, 0.52]$ \\
+Other entrants & 8.49 & $-0.52$ & 0.33 & $[-1.16, 0.12]$ \\
+Low-income share (pp) & 35.53 & $3.50$ & 0.94 & $[1.67, 5.34]$ \\
+\addlinespace[9pt]
+\multicolumn{5}{l}{\textit{Panel B. Paired estimates and regional permutation tests}} \\[3pt]
+Outcome & & Effect & \makecell{Jackknife\\SE} & \makecell{Permutation\\$p$-value} \\
+\midrule
+Total entrants & & $-0.11$ & 0.53 & 0.840 \\
+Low-income entrants & & $0.25$ & 0.13 & 0.079 \\
+Other entrants & & $-0.36$ & 0.48 & 0.683 \\
+Low-income share (pp) & & $3.56$ & 0.55 & $<0.001$ \\
+\bottomrule
+\end{tabular*}
+\par\smallskip
+\begin{minipage}{\textwidth}\footnotesize
+Notes: Counts are entrants per school-grade-year; shares are in percentage points. Low-income status is the entry-year \emph{prioritario} flag; other entrants are those not flagged. Panel A uses the common positive-entry sample and adoption-group weights of the main composition design (8,819 school-grades and 72,490 cell-years). Unobserved school-grade-years are not assigned zero entrants. Pre-adoption means average observed cell-years before adoption. The group-time estimates use not-yet-treated comparisons and a universal $g-1$ base, covering supported entering classes in 2017--2020. Panel A SE use 10,000 region-clustered multiplier-bootstrap draws; intervals are pointwise normal intervals using those SE. Panel B restricts each comparison to cells observed in both years and weights contrasts by their paired treated-cell counts. It reports delete-one-region jackknife SE and studentized permutation tests using 2,999 regional reassignments for counts and 9,999 for the share. These tests concern Panel B estimates; see Appendix~\ref{app: regional inference}. Neither procedure resolves the few-region inference concerns. The estimates do not measure subgroup admission probabilities or national entrant totals.
+\end{minipage}
+\end{table}

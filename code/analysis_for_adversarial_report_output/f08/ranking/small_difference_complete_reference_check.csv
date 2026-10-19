@@ -1,0 +1,3 @@
+own_rounding_identical,n,exact,small_differences,small_difference_share,over_5
+TRUE,63098,32602,26469,0.41949031665029,3334
+FALSE,62447,30633,28430,0.455266065623649,2953

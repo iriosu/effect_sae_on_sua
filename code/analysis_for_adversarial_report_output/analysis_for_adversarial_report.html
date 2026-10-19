@@ -437,8 +437,8 @@ display: none;
 
 
 <h1 class="title toc-ignore">Analyses for the adversarial report</h1>
-<h3 class="subtitle">F20: offer effects, school destinations, and
-simpler choice lists</h3>
+<h3 class="subtitle">F20 lottery diagnostics and F02.4 ninth-grade
+composition and population comparisons</h3>
 
 </div>
 
@@ -459,6 +459,8 @@ school identity and predetermined choice-list restrictions</a></li>
 outcomes appendix</a></li>
 <li><a href="#interpretation-and-decisions-for-discussion" id="toc-interpretation-and-decisions-for-discussion">Interpretation and
 decisions for discussion</a></li>
+<li><a href="#f02.4-ninth-grade-composition-and-the-lottery-population" id="toc-f02.4-ninth-grade-composition-and-the-lottery-population">F02.4:
+ninth-grade composition and the lottery population</a></li>
 <li><a href="#environment" id="toc-environment">Environment</a></li>
 </ul>
 </div>
@@ -470,10 +472,22 @@ using the finalized Section 3 data and specification documented in
 <code>../HANDOFF.md</code> and
 <code>finalized_design_v1/section3/Section3_IV.Rmd</code>. It
 reestimates the corresponding first stages and 2SLS coefficients on
-exactly the same outcome-specific samples. All analysis code is in this
-file. It does not edit or export files to the paper.</p>
+exactly the same outcome-specific samples. The F02.4 extension uses the
+finalized Section 2 entrant panel to estimate ninth-grade composition
+effects and compare entrants, applicants, and complier profiles over the
+available regions and cohorts. All analysis code is in this file. It
+does not edit or export files to the paper.</p>
 <p>From the repository’s <code>code/</code> directory, run:</p>
 <pre class="bash"><code>Rscript -e &#39;rmarkdown::render(&quot;analysis_for_adversarial_report.Rmd&quot;, output_dir = &quot;analysis_for_adversarial_report_output&quot;, envir = new.env())&#39;</code></pre>
+<p>F02.4 requires <code>did</code> 2.1.2, as in the handoff. If an
+isolated library is needed, install that version and its dependencies
+there, then set <code>R_LIBS_USER</code> to that library before starting
+R (so dependencies are loaded consistently).
+<code>SAE_ADVERSARIAL_R_LIB</code> additionally prepends an existing
+library during setup. The preparation run used
+<code>/private/tmp/sae-adversarial-r-library</code>; this temporary
+directory is not an input distributed with the repository. No packages
+are installed by the notebook.</p>
 <p>The notebook first looks for <code>SAE_ADVERSARIAL_PANEL</code>, if
 set, then the shared Dropbox panel, then a downloaded copy at
 <code>analysis_for_adversarial_report_output/input/section3_panel.rds</code>.
@@ -484,6 +498,8 @@ account. No raw records are printed or exported by this notebook. Output
 CSVs contain aggregate results.</p>
 <pre class="r"><code>knitr::opts_chunk$set(error = FALSE, warning = TRUE, message = FALSE,
                      echo = TRUE, cache = FALSE)
+extra_library &lt;- Sys.getenv(&quot;SAE_ADVERSARIAL_R_LIB&quot;)
+if (nzchar(extra_library)) .libPaths(c(path.expand(extra_library), .libPaths()))
 required &lt;- c(&quot;fixest&quot;, &quot;knitr&quot;)
 missing_packages &lt;- required[!vapply(required, requireNamespace, logical(1),
                                     quietly = TRUE)]
@@ -555,7 +571,7 @@ repo/code/analysis_for_adversarial_report_output/input/section3_panel.rds</td>
 </tr>
 <tr class="odd">
 <td align="left">Run time</td>
-<td align="left">2026-10-17 07:47:24 EDT</td>
+<td align="left">2026-10-18 06:06:19 EDT</td>
 </tr>
 </tbody>
 </table>
@@ -2945,6 +2961,951 @@ offer and attendance effects. That discussion remains subject to author
 review. The conditional score results are kept separate. This notebook
 does not edit manuscript prose or appendix inputs.</p>
 </div>
+<div id="f02.4-ninth-grade-composition-and-the-lottery-population" class="section level2">
+<h2>F02.4: ninth-grade composition and the lottery population</h2>
+<p>This extension preserves the finalized composition outcomes,
+school-grade classification, unbalanced-panel estimator, universal base
+period, and not-yet-treated comparisons. Its primary change is to
+restrict the composition sample to ninth grade. Regions first adopt
+ninth grade in entering-class years 2017, 2018, 2019, or 2020.
+Consequently only the first three waves have supported post-adoption
+comparisons, through 2019; the Metropolitan Region is a comparison
+region, not a treated region with an identified post-adoption effect
+here. All ninth grades are entry grades, so a comparison region has not
+yet adopted SAE in any grade under the documented rollout calendar.</p>
+<p>We report pointwise intervals from the handoff’s region-clustered
+multiplier bootstrap with 10,000 draws. These are <strong>not</strong>
+the paper’s permutation-test p-values. No significance stars or new
+rollout-randomization claims are made. The small number of regions and
+uneven adoption waves remain relevant to inference (F13–F14); this
+extension does not resolve those separate concerns. All-grade estimates
+are reestimated as a numerical baseline, not substituted for the paper’s
+saved inference. The notebook does not change manuscript files.</p>
+<div id="composition-inputs-and-specification" class="section level3">
+<h3>Composition inputs and specification</h3>
+<pre class="r"><code>if (!requireNamespace(&quot;did&quot;, quietly = FALSE) || packageVersion(&quot;did&quot;) != &quot;2.1.2&quot;)
+  stop(&quot;F02.4 requires did 2.1.2. Install in an isolated library and set R_LIBS_USER before starting R if needed.&quot;)
+if (getRversion() != &quot;4.5.1&quot;) stop(&quot;F02.4 preserves the handoff&#39;s R 4.5.1 runtime.&quot;)
+s2_manifest &lt;- manifest[endsWith(manifest$path_in_dropbox, &quot;/section2/section2_panel.rds&quot;), ]
+s2_override &lt;- Sys.getenv(&quot;SAE_ADVERSARIAL_COMPOSITION_PANEL&quot;)
+s2_candidates &lt;- if (nzchar(s2_override)) path.expand(s2_override) else c(
+  file.path(task_home, &quot;Dropbox&quot;, s2_manifest$path_in_dropbox),
+  file.path(output_dir, &quot;input&quot;, &quot;section2_panel.rds&quot;))
+s2_available &lt;- s2_candidates[file.exists(s2_candidates) &amp; !is.na(file.info(s2_candidates)$size) &amp; file.info(s2_candidates)$size &gt; 0]
+if (!length(s2_available)) stop(&quot;No readable finalized Section 2 panel.&quot;)
+s2_file &lt;- normalizePath(s2_available[1])
+stopifnot(nrow(s2_manifest) == 1L, identical(unname(tools::md5sum(s2_file)), s2_manifest$md5),
+          file.info(s2_file)$size == s2_manifest$bytes)
+s2 &lt;- data.table::as.data.table(readRDS(s2_file))
+stopifnot(!anyDuplicated(s2, by = c(&quot;MRUN&quot;, &quot;AGNO&quot;)))
+f02_provenance &lt;- data.frame(file = s2_file, bytes = file.info(s2_file)$size,
+  md5 = unname(tools::md5sum(s2_file)), did_version = as.character(packageVersion(&quot;did&quot;)),
+  reference_notebook_md5 = unname(tools::md5sum(&quot;finalized_design_v1/section2/section2_cs_did.Rmd&quot;)),
+  bootstrap_draws = 10000L, seed = 20261018L)
+write.csv(f02_provenance, file.path(output_dir, &quot;f02_provenance.csv&quot;), row.names = FALSE)
+
+composition_cells &lt;- s2[, list(n_ent = .N, n_gpa = sum(!is.na(PRIOR_GPA_Z)),
+  gpa_z = mean(PRIOR_GPA_Z, na.rm = TRUE), sh_prio = mean(PRIO)),
+  by = list(yr = AGNO, rbd = RBD, grade = COD_NIVEL, region = REGION, G = DOOR + 1L)]
+composition_cells[grade &lt; 2L, gpa_z := NA_real_]
+composition_cells[, cell_id := as.integer(factor(paste(rbd, grade, sep = &quot;|&quot;)))]
+stopifnot(data.table::uniqueN(composition_cells$cell_id) == 8891L)
+region_school_map &lt;- unique(s2[COD_NIVEL == 9L, list(RBD, REGION, G = DOOR + 1L)])
+stopifnot(!anyDuplicated(region_school_map$RBD), setequal(region_school_map$RBD, od_schools))
+f02_designs &lt;- list(all_grades = composition_cells, ninth_grade = composition_cells[grade == 9L])</code></pre>
+</div>
+<div id="estimates-support-and-aggregation" class="section level3">
+<h3>Estimates, support, and aggregation</h3>
+<p>The estimator uses observed cells separately in each comparison year,
+following the baseline’s unbalanced-panel convention. We independently
+reconstruct every supported post-adoption contrast from its four cell
+means and verify the aggregation weights against
+<code>did::aggte(type = &quot;simple&quot;)</code>. Support exports report region
+identities, observed cells, entrants, GPA coverage, and the actual
+weight of each post-adoption comparison. Baseline and follow-up
+membership can differ.</p>
+<pre class="r"><code>f02_fits &lt;- f02_results &lt;- f02_support &lt;- f02_events &lt;- f02_checks &lt;- list()
+for (design in names(f02_designs)) for (outcome in c(&quot;gpa_z&quot;, &quot;sh_prio&quot;)) {
+  label &lt;- paste(design, outcome, sep = &quot;_&quot;)
+  cells &lt;- f02_designs[[design]]
+  d &lt;- as.data.frame(cells[is.finite(get(outcome)),
+    list(cell_id, yr, G, region, y = get(outcome))])
+  set.seed(20261018L + match(label, c(&quot;all_grades_gpa_z&quot;, &quot;all_grades_sh_prio&quot;, &quot;ninth_grade_gpa_z&quot;, &quot;ninth_grade_sh_prio&quot;)))
+  fit &lt;- did::att_gt(yname = &quot;y&quot;, tname = &quot;yr&quot;, idname = &quot;cell_id&quot;, gname = &quot;G&quot;,
+    data = d, control_group = &quot;notyettreated&quot;, panel = TRUE, allow_unbalanced_panel = TRUE,
+    base_period = &quot;universal&quot;, anticipation = 0L, bstrap = TRUE, biters = 10000L,
+    clustervars = &quot;region&quot;, cband = FALSE, print_details = FALSE)
+  agg &lt;- did::aggte(fit, type = &quot;simple&quot;, na.rm = TRUE)
+  dyn &lt;- did::aggte(fit, type = &quot;dynamic&quot;, na.rm = TRUE, cband = FALSE)
+  f02_fits[[label]] &lt;- list(fit = fit, aggregate = agg, dynamic = dyn)
+  # Replicate the package&#39;s group-mass construction from its processed data.
+  dp &lt;- fit$DIDparams
+  mass_data &lt;- if (dp$panel) dp$data[dp$data$yr == min(dp$tlist), ] else
+    stats::aggregate(dp$data, list(dp$data$cell_id), mean)[, -1]
+  k &lt;- which(fit$group &lt;= fit$t &amp; is.finite(fit$att))
+  masses &lt;- vapply(fit$group[k], function(g) mean(mass_data$.w * (mass_data$G == g)), numeric(1))
+  weights &lt;- masses / sum(masses)
+  stopifnot(abs(sum(weights) - 1) &lt; 1e-10,
+            abs(sum(weights * fit$att[k]) - agg$overall.att) &lt; 1e-10)
+  for (j in seq_along(k)) {
+    i &lt;- k[j]; g &lt;- fit$group[i]; t &lt;- fit$t[i]; b &lt;- g - 1L
+    tb &lt;- cells[G == g &amp; yr == b &amp; is.finite(get(outcome))]
+    tt &lt;- cells[G == g &amp; yr == t &amp; is.finite(get(outcome))]
+    cb &lt;- cells[G &gt; t &amp; yr == b &amp; is.finite(get(outcome))]
+    ct &lt;- cells[G &gt; t &amp; yr == t &amp; is.finite(get(outcome))]
+    manual &lt;- mean(tt[[outcome]]) - mean(tb[[outcome]]) - mean(ct[[outcome]]) + mean(cb[[outcome]])
+    stopifnot(abs(manual - fit$att[i]) &lt; 1e-8)
+    f02_support[[paste(label,g,t)]] &lt;- data.frame(design, outcome, adoption_year = g,
+      entry_year = t, baseline_year = b, event_time = t - g,
+      treated_regions = paste(sort(unique(c(tb$region,tt$region))), collapse = &quot;,&quot;),
+      control_regions = paste(sort(unique(c(cb$region,ct$region))), collapse = &quot;,&quot;),
+      n_treated_regions = length(unique(c(tb$region,tt$region))),
+      n_control_regions = length(unique(c(cb$region,ct$region))),
+      treated_baseline_cells = nrow(tb), treated_followup_cells = nrow(tt),
+      control_baseline_cells = nrow(cb), control_followup_cells = nrow(ct),
+      treated_baseline_entrants = sum(tb$n_ent), treated_followup_entrants = sum(tt$n_ent),
+      control_baseline_entrants = sum(cb$n_ent), control_followup_entrants = sum(ct$n_ent),
+      treated_followup_missing_gpa = sum(tt$n_ent - tt$n_gpa),
+      control_followup_missing_gpa = sum(ct$n_ent - ct$n_gpa),
+      estimate = fit$att[i], se = fit$se[i], weight = weights[j], reconstruction_error = manual - fit$att[i])
+  }
+  scale &lt;- if (outcome == &quot;sh_prio&quot;) 100 else 1
+  f02_results[[label]] &lt;- data.frame(design, outcome, unit = if (scale == 100) &quot;pp&quot; else &quot;SD&quot;,
+    estimate = scale * agg$overall.att, se = scale * agg$overall.se,
+    lower = scale * (agg$overall.att - qnorm(.975) * agg$overall.se),
+    upper = scale * (agg$overall.att + qnorm(.975) * agg$overall.se),
+    observed_cell_years = nrow(dp$data), schools_or_cells = length(unique(dp$data$cell_id)),
+    last_supported_entry_year = max(fit$t[k]), supported_post_contrasts = length(k))
+  f02_events[[label]] &lt;- data.frame(design, outcome, event_time = dyn$egt,
+    estimate = scale * dyn$att.egt, se = scale * dyn$se.egt,
+    lower = scale * (dyn$att.egt - qnorm(.975) * dyn$se.egt),
+    upper = scale * (dyn$att.egt + qnorm(.975) * dyn$se.egt))
+}
+f02_results &lt;- do.call(rbind, f02_results)
+f02_support &lt;- do.call(rbind, f02_support)
+f02_events &lt;- do.call(rbind, f02_events)
+# Published point estimates are checked at their displayed precision; bootstrap
+# SEs use fresh recorded seeds and are not required to be byte-identical.
+f02_checks &lt;- data.frame(outcome = c(&quot;gpa_z&quot;, &quot;sh_prio&quot;),
+  estimate = f02_results$estimate[f02_results$design == &quot;all_grades&quot;] / c(1,100),
+  manuscript_display = c(-.149, .035))
+f02_checks$matches &lt;- round(f02_checks$estimate, 3) == f02_checks$manuscript_display
+stopifnot(all(f02_checks$matches), all(is.finite(f02_results$se)))
+write.csv(f02_results, file.path(output_dir, &quot;f02_composition_effects.csv&quot;), row.names = FALSE)
+write.csv(f02_support, file.path(output_dir, &quot;f02_composition_support.csv&quot;), row.names = FALSE)
+write.csv(f02_events, file.path(output_dir, &quot;f02_composition_event_times.csv&quot;), row.names = FALSE)
+write.csv(f02_checks, file.path(output_dir, &quot;f02_baseline_reproduction.csv&quot;), row.names = FALSE)
+f02_inference_audit &lt;- f02_support[, c(&quot;design&quot;, &quot;outcome&quot;, &quot;adoption_year&quot;, &quot;entry_year&quot;,
+  &quot;n_treated_regions&quot;, &quot;n_control_regions&quot;, &quot;se&quot;, &quot;weight&quot;)]
+f02_inference_audit$finite_bootstrap_se &lt;- is.finite(f02_inference_audit$se)
+write.csv(f02_inference_audit, file.path(output_dir, &quot;f02_inference_diagnostics.csv&quot;), row.names = FALSE)
+knitr::kable(f02_results, digits = 4)</code></pre>
+<table>
+<colgroup>
+<col width="12%" />
+<col width="7%" />
+<col width="4%" />
+<col width="3%" />
+<col width="5%" />
+<col width="4%" />
+<col width="4%" />
+<col width="4%" />
+<col width="12%" />
+<col width="10%" />
+<col width="15%" />
+<col width="15%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">design</th>
+<th align="left">outcome</th>
+<th align="left">unit</th>
+<th align="right">estimate</th>
+<th align="right">se</th>
+<th align="right">lower</th>
+<th align="right">upper</th>
+<th align="right">observed_cell_years</th>
+<th align="right">schools_or_cells</th>
+<th align="right">last_supported_entry_year</th>
+<th align="right">supported_post_contrasts</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">all_grades_gpa_z</td>
+<td align="left">all_grades</td>
+<td align="left">gpa_z</td>
+<td align="left">SD</td>
+<td align="right">-0.1489</td>
+<td align="right">0.0320</td>
+<td align="right">-0.2116</td>
+<td align="right">-0.0862</td>
+<td align="right">57269</td>
+<td align="right">7054</td>
+<td align="right">2020</td>
+<td align="right">10</td>
+</tr>
+<tr class="even">
+<td align="left">all_grades_sh_prio</td>
+<td align="left">all_grades</td>
+<td align="left">sh_prio</td>
+<td align="left">pp</td>
+<td align="right">3.5040</td>
+<td align="right">0.9157</td>
+<td align="right">1.7092</td>
+<td align="right">5.2987</td>
+<td align="right">72490</td>
+<td align="right">8819</td>
+<td align="right">2020</td>
+<td align="right">10</td>
+</tr>
+<tr class="odd">
+<td align="left">ninth_grade_gpa_z</td>
+<td align="left">ninth_grade</td>
+<td align="left">gpa_z</td>
+<td align="left">SD</td>
+<td align="right">-0.1360</td>
+<td align="right">0.0629</td>
+<td align="right">-0.2592</td>
+<td align="right">-0.0128</td>
+<td align="right">7594</td>
+<td align="right">1025</td>
+<td align="right">2019</td>
+<td align="right">6</td>
+</tr>
+<tr class="even">
+<td align="left">ninth_grade_sh_prio</td>
+<td align="left">ninth_grade</td>
+<td align="left">sh_prio</td>
+<td align="left">pp</td>
+<td align="right">4.4068</td>
+<td align="right">2.3436</td>
+<td align="right">-0.1865</td>
+<td align="right">9.0001</td>
+<td align="right">7607</td>
+<td align="right">1025</td>
+<td align="right">2019</td>
+<td align="right">6</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>knitr::kable(f02_support[f02_support$design == &quot;ninth_grade&quot;,
+  c(&quot;outcome&quot;, &quot;adoption_year&quot;, &quot;entry_year&quot;, &quot;treated_regions&quot;, &quot;control_regions&quot;,
+    &quot;treated_followup_cells&quot;, &quot;control_followup_cells&quot;, &quot;weight&quot;)], digits = 4)</code></pre>
+<table>
+<colgroup>
+<col width="17%" />
+<col width="4%" />
+<col width="7%" />
+<col width="6%" />
+<col width="13%" />
+<col width="20%" />
+<col width="13%" />
+<col width="13%" />
+<col width="3%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">outcome</th>
+<th align="right">adoption_year</th>
+<th align="right">entry_year</th>
+<th align="left">treated_regions</th>
+<th align="left">control_regions</th>
+<th align="right">treated_followup_cells</th>
+<th align="right">control_followup_cells</th>
+<th align="right">weight</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">ninth_grade_gpa_z 2017 2017</td>
+<td align="left">gpa_z</td>
+<td align="right">2017</td>
+<td align="right">2017</td>
+<td align="left">12</td>
+<td align="left">1,2,3,4,5,6,7,8,9,10,11,13,14,15,16</td>
+<td align="right">9</td>
+<td align="right">943</td>
+<td align="right">0.0103</td>
+</tr>
+<tr class="even">
+<td align="left">ninth_grade_gpa_z 2017 2018</td>
+<td align="left">gpa_z</td>
+<td align="right">2017</td>
+<td align="right">2018</td>
+<td align="left">12</td>
+<td align="left">2,3,5,7,8,9,11,13,14,15,16</td>
+<td align="right">9</td>
+<td align="right">769</td>
+<td align="right">0.0103</td>
+</tr>
+<tr class="odd">
+<td align="left">ninth_grade_gpa_z 2017 2019</td>
+<td align="left">gpa_z</td>
+<td align="right">2017</td>
+<td align="right">2019</td>
+<td align="left">12</td>
+<td align="left">13</td>
+<td align="right">9</td>
+<td align="right">349</td>
+<td align="right">0.0103</td>
+</tr>
+<tr class="even">
+<td align="left">ninth_grade_gpa_z 2018 2018</td>
+<td align="left">gpa_z</td>
+<td align="right">2018</td>
+<td align="right">2018</td>
+<td align="left">1,4,6,10</td>
+<td align="left">2,3,5,7,8,9,11,13,14,15,16</td>
+<td align="right">191</td>
+<td align="right">769</td>
+<td align="right">0.2250</td>
+</tr>
+<tr class="odd">
+<td align="left">ninth_grade_gpa_z 2018 2019</td>
+<td align="left">gpa_z</td>
+<td align="right">2018</td>
+<td align="right">2019</td>
+<td align="left">1,4,6,10</td>
+<td align="left">13</td>
+<td align="right">191</td>
+<td align="right">349</td>
+<td align="right">0.2250</td>
+</tr>
+<tr class="even">
+<td align="left">ninth_grade_gpa_z 2019 2019</td>
+<td align="left">gpa_z</td>
+<td align="right">2019</td>
+<td align="right">2019</td>
+<td align="left">2,3,5,7,8,9,11,14,15,16</td>
+<td align="left">13</td>
+<td align="right">435</td>
+<td align="right">349</td>
+<td align="right">0.5189</td>
+</tr>
+<tr class="odd">
+<td align="left">ninth_grade_sh_prio 2017 2017</td>
+<td align="left">sh_prio</td>
+<td align="right">2017</td>
+<td align="right">2017</td>
+<td align="left">12</td>
+<td align="left">1,2,3,4,5,6,7,8,9,10,11,13,14,15,16</td>
+<td align="right">9</td>
+<td align="right">948</td>
+<td align="right">0.0103</td>
+</tr>
+<tr class="even">
+<td align="left">ninth_grade_sh_prio 2017 2018</td>
+<td align="left">sh_prio</td>
+<td align="right">2017</td>
+<td align="right">2018</td>
+<td align="left">12</td>
+<td align="left">2,3,5,7,8,9,11,13,14,15,16</td>
+<td align="right">9</td>
+<td align="right">772</td>
+<td align="right">0.0103</td>
+</tr>
+<tr class="odd">
+<td align="left">ninth_grade_sh_prio 2017 2019</td>
+<td align="left">sh_prio</td>
+<td align="right">2017</td>
+<td align="right">2019</td>
+<td align="left">12</td>
+<td align="left">13</td>
+<td align="right">9</td>
+<td align="right">349</td>
+<td align="right">0.0103</td>
+</tr>
+<tr class="even">
+<td align="left">ninth_grade_sh_prio 2018 2018</td>
+<td align="left">sh_prio</td>
+<td align="right">2018</td>
+<td align="right">2018</td>
+<td align="left">1,4,6,10</td>
+<td align="left">2,3,5,7,8,9,11,13,14,15,16</td>
+<td align="right">191</td>
+<td align="right">772</td>
+<td align="right">0.2250</td>
+</tr>
+<tr class="odd">
+<td align="left">ninth_grade_sh_prio 2018 2019</td>
+<td align="left">sh_prio</td>
+<td align="right">2018</td>
+<td align="right">2019</td>
+<td align="left">1,4,6,10</td>
+<td align="left">13</td>
+<td align="right">191</td>
+<td align="right">349</td>
+<td align="right">0.2250</td>
+</tr>
+<tr class="even">
+<td align="left">ninth_grade_sh_prio 2019 2019</td>
+<td align="left">sh_prio</td>
+<td align="right">2019</td>
+<td align="right">2019</td>
+<td align="left">2,3,5,7,8,9,11,14,15,16</td>
+<td align="left">13</td>
+<td align="right">435</td>
+<td align="right">349</td>
+<td align="right">0.5189</td>
+</tr>
+</tbody>
+</table>
+<p>The support export also flags group-time effects for which the
+bootstrap returns no usable SE. In particular, the 2017 adoption wave
+compared with the 2019 entering class has one treated region and one
+comparison region. Its estimate is retained in the baseline aggregation,
+but we make no separate precision claim for that contrast. The aggregate
+intervals are finite; finite intervals do not remove the few-region
+inference concern.</p>
+</div>
+<div id="comparable-characteristics-and-pre-offer-geographic-support" class="section level3">
+<h3>Comparable characteristics and pre-offer geographic support</h3>
+<p>The two finalized panels use different GPA standardizations. We
+recover the annual affine conversion from students linked to the same
+ninth-grade entry in both panels, require its maximum residual to be
+below 1e-8, and express applicant GPA on the <strong>composition panel’s
+national prior-year GPA scale</strong>. This changes units only; no
+outcome is used to estimate the conversion. We retain separate labels
+for entrant income measured in the entry year and applicant income
+measured in the application year, and export their disagreement rate in
+linked records. Entrants’ descriptive means weight students equally,
+unlike the school-cell and group-time weights of the composition
+ATT.</p>
+<p>To align geographic and cohort coverage without selecting on actual
+attendance, we use all recorded pre-lottery over-demanded choices,
+including automatically added continuity options. An applicant is in the
+supported group if she has at least one such choice and
+<strong>every</strong> such choice is in a region whose treated
+ninth-grade entry cohort contributes to the composition estimates. This
+is a conservative list-based definition, not the applicant’s residence.
+It cannot establish that her access changed because of SAE. Actual
+offers and attendance are not used to define this group.</p>
+<pre class="r"><code>ninth_entrants &lt;- s2[COD_NIVEL == 9L]
+profile_panel &lt;- data.table::as.data.table(data.table::copy(panel))
+profile_panel[, ENTRY_YEAR := YEAR + 1L]
+linked_profiles &lt;- merge(ninth_entrants, profile_panel,
+  by.x = c(&quot;MRUN&quot;, &quot;AGNO&quot;), by.y = c(&quot;MRUN&quot;, &quot;ENTRY_YEAR&quot;))
+stopifnot(all(linked_profiles$RBD == linked_profiles$ENTRY_RBD))
+gpa_conversion &lt;- linked_profiles[complete.cases(PRIOR_GPA_Z, GPA8_Z), {
+  m &lt;- lm(PRIOR_GPA_Z ~ GPA8_Z)
+  list(n_linked = .N, intercept = unname(coef(m)[1]), slope = unname(coef(m)[2]),
+       maximum_residual = max(abs(resid(m))))
+}, by = list(ENTRY_YEAR = AGNO)]
+stopifnot(all(gpa_conversion$maximum_residual &lt; 1e-8), all(gpa_conversion$slope &gt; 0))
+profile_panel &lt;- merge(profile_panel, gpa_conversion, by = &quot;ENTRY_YEAR&quot;, all.x = TRUE, sort = FALSE)
+stopifnot(!anyNA(profile_panel$slope))
+profile_panel[, GPA_COMPOSITION := intercept + slope * GPA8_Z]
+measure_alignment &lt;- linked_profiles[, list(n_linked = .N,
+  income_status_disagreements = sum(PRIO != PRIORITARIO, na.rm = TRUE),
+  entrant_income_mean = mean(PRIO, na.rm = TRUE),
+  applicant_income_mean = mean(PRIORITARIO, na.rm = TRUE)), by = list(ENTRY_YEAR = AGNO)]
+write.csv(gpa_conversion, file.path(output_dir, &quot;f02_gpa_scale_conversion.csv&quot;), row.names = FALSE)
+write.csv(measure_alignment, file.path(output_dir, &quot;f02_income_measure_alignment.csv&quot;), row.names = FALSE)
+
+support_gt &lt;- unique(data.table::as.data.table(f02_support)[design == &quot;ninth_grade&quot;,
+  list(G = adoption_year, ENTRY_YEAR = entry_year)])
+support_region_year &lt;- merge(unique(region_school_map[, list(REGION, G)]), support_gt, by = &quot;G&quot;, allow.cartesian = TRUE)
+stopifnot(!any(support_region_year$REGION == 13L), max(support_region_year$ENTRY_YEAR) == 2019L)
+raw_choices &lt;- readRDS(upstream_paths[1])$c1
+app_keys &lt;- profile_panel[, list(proc = YEAR, mrun = MRUN)]
+raw_choices &lt;- raw_choices[app_keys, on = c(&quot;proc&quot;, &quot;mrun&quot;), nomatch = 0]
+od_choices &lt;- unique(raw_choices[rbd %in% od_schools, list(MRUN = mrun, YEAR = proc, RBD = rbd)])
+od_choices &lt;- merge(od_choices, region_school_map, by = &quot;RBD&quot;, all.x = TRUE)
+od_choices[, ENTRY_YEAR := YEAR + 1L]
+od_choices[, in_supported_region_year := paste(REGION, ENTRY_YEAR) %in%
+  paste(support_region_year$REGION, support_region_year$ENTRY_YEAR)]
+choice_support &lt;- od_choices[, list(n_od_choices_including_continuity = .N,
+  all_choices_supported = all(in_supported_region_year),
+  any_choice_supported = any(in_supported_region_year),
+  n_choice_regions = data.table::uniqueN(REGION)), by = list(MRUN, YEAR)]
+profile_panel &lt;- merge(profile_panel, choice_support, by = c(&quot;MRUN&quot;, &quot;YEAR&quot;), all.x = TRUE, sort = FALSE)
+profile_panel[is.na(all_choices_supported), `:=`(all_choices_supported = FALSE, any_choice_supported = FALSE)]
+lottery_support_audit &lt;- profile_panel[LOTTERY_SAMPLE == TRUE, list(n = .N,
+  supported = sum(all_choices_supported),
+  mixed_support = sum(any_choice_supported &amp; !all_choices_supported),
+  no_supported_choice = sum(!any_choice_supported),
+  missing_od_choice_list = sum(is.na(n_od_choices_including_continuity))), by = ENTRY_YEAR]
+write.csv(lottery_support_audit, file.path(output_dir, &quot;f02_lottery_support_audit.csv&quot;), row.names = FALSE)
+knitr::kable(lottery_support_audit)</code></pre>
+<table style="width:100%;">
+<colgroup>
+<col width="13%" />
+<col width="7%" />
+<col width="11%" />
+<col width="16%" />
+<col width="23%" />
+<col width="27%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="right">ENTRY_YEAR</th>
+<th align="right">n</th>
+<th align="right">supported</th>
+<th align="right">mixed_support</th>
+<th align="right">no_supported_choice</th>
+<th align="right">missing_od_choice_list</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">2017</td>
+<td align="right">260</td>
+<td align="right">260</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">2018</td>
+<td align="right">9833</td>
+<td align="right">9833</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">2019</td>
+<td align="right">31535</td>
+<td align="right">31535</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">2020</td>
+<td align="right">48382</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">48382</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">2021</td>
+<td align="right">42084</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">42084</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">2022</td>
+<td align="right">44227</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">44227</td>
+<td align="right">0</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>rm(raw_choices, od_choices, app_keys, linked_profiles)
+invisible(gc())</code></pre>
+</div>
+<div id="entrant-applicant-and-complier-profiles" class="section level3">
+<h3>Entrant, applicant, and complier profiles</h3>
+<p>Complier characteristics are estimated anew, rather than copied from
+the existing appendix table, whose upstream weighting code is not in the
+handoff. For each sample and characteristic X, let q_s be the observed
+offer frequency within hundredth score group s, and let pi_s be the
+offered-minus-nonoffered attendance difference. We estimate the complier
+mean as</p>
+<p><span class="math display">\[
+\widehat\mu_C(X)=
+\frac{\sum_s n_s\{\overline{DX}_{1s}-\overline{DX}_{0s}\}}
+     {\sum_s n_s\{\overline D_{1s}-\overline D_{0s}\}}.
+\]</span></p>
+<p>This is the score-stratified analogue of the complier-weighting
+argument in <a href="https://economics.mit.edu/sites/default/files/publications/Abdulkadiroglu%20et.%20al.%202017%20-%20Research%20design%20meet.pdf">Abdulkadiroglu
+et al. (2017), p. 1402</a>. It uses population shares and first stages
+rather than weighting each stratum by its instrument variance. It
+requires conditional offer validity and monotone attendance responses;
+it does not identify students individually as compliers. Rounded-score
+conditioning remains an approximation. Characteristics are
+predetermined, and no individual is selected on realized attendance.
+Groups without both offer arms are reported as unsupported and excluded
+from this profile estimator only. We use each characteristic’s observed
+sample.</p>
+<p>The influence-function SE below accounts for estimated within-group
+offer frequencies, conditional means, and empirical group masses;
+observations are independent as in the lottery baseline. A weighted
+fixed-effect IV reconstruction checks the point estimate. The estimator
+and SE are explicitly specified here; these are not a claimed
+reproduction of the existing complier table. Neither these profile
+weights nor the composition weights equal the main covariate- adjusted
+outcome 2SLS weights in general.</p>
+<pre class="r"><code>f02_profile_rows &lt;- list()
+f02_profile_overlap &lt;- list()
+profile_samples &lt;- list(full = profile_panel[LOTTERY_SAMPLE == TRUE],
+                        supported = profile_panel[LOTTERY_SAMPLE == TRUE &amp; all_choices_supported == TRUE])
+for (scope in names(profile_samples)) for (v in c(&quot;GPA_COMPOSITION&quot;, &quot;PRIORITARIO&quot;)) {
+  d &lt;- data.table::copy(profile_samples[[scope]][!is.na(get(v))])
+  d[, X_PROFILE := get(v)]
+  d[, DX := D_OD * X_PROFILE]
+  means &lt;- d[, list(ns = .N, q = mean(OFFER),
+    d1 = mean(D_OD[OFFER == 1]), d0 = mean(D_OD[OFFER == 0]),
+    dx1 = mean(DX[OFFER == 1]), dx0 = mean(DX[OFFER == 0])), by = CHANCE_GROUP]
+  supported_means &lt;- means[q &gt; 0 &amp; q &lt; 1]
+  f02_profile_overlap[[paste(scope,v)]] &lt;- data.frame(scope, characteristic = v,
+    chance_group = means$CHANCE_GROUP, n = means$ns, offer_frequency = means$q,
+    included = means$q &gt; 0 &amp; means$q &lt; 1)
+  keep &lt;- d$CHANCE_GROUP %in% supported_means$CHANCE_GROUP
+  n_dropped &lt;- sum(!keep)
+  d &lt;- merge(d[keep], supported_means, by = &quot;CHANCE_GROUP&quot;, all.x = TRUE, sort = FALSE)
+  first_stage &lt;- sum(supported_means$ns * (supported_means$d1 - supported_means$d0)) / nrow(d)
+  numerator &lt;- sum(supported_means$ns * (supported_means$dx1 - supported_means$dx0)) / nrow(d)
+  stopifnot(first_stage &gt; 0)
+  mu &lt;- numerator / first_stage
+  d[, psi_num := dx1 - dx0 + OFFER / q * (DX - dx1) - (1 - OFFER) / (1 - q) * (DX - dx0)]
+  d[, psi_den := d1 - d0 + OFFER / q * (D_OD - d1) - (1 - OFFER) / (1 - q) * (D_OD - d0)]
+  influence &lt;- (d$psi_num - mu * d$psi_den) / first_stage
+  se_mu &lt;- sqrt(sum(influence^2)) / nrow(d)
+  d[, iv_weight := 1 / (q * (1 - q))]
+  check_iv &lt;- feols(DX ~ 1 | CHANCE_GROUP | D_OD ~ OFFER, d,
+    weights = ~iv_weight, vcov = &quot;hetero&quot;, ssc = iv_ssc, fixef.rm = &quot;none&quot;)
+  stopifnot(abs(unname(coef(check_iv)[1]) - mu) &lt; 1e-8, abs(mean(influence)) &lt; 1e-8)
+  scale &lt;- if (v == &quot;PRIORITARIO&quot;) 100 else 1
+  f02_profile_rows[[paste(scope,v,&quot;applicants&quot;)]] &lt;- data.frame(scope, population = &quot;Lottery applicants&quot;,
+    characteristic = v, n = nrow(d), excluded_no_offer_overlap = n_dropped,
+    mean = scale * mean(d$X_PROFILE), se = NA_real_, lower = NA_real_, upper = NA_real_,
+    implied_complier_share = first_stage)
+  f02_profile_rows[[paste(scope,v,&quot;compliers&quot;)]] &lt;- data.frame(scope, population = &quot;Estimated complier profile&quot;,
+    characteristic = v, n = nrow(d), excluded_no_offer_overlap = n_dropped,
+    mean = scale * mu, se = scale * se_mu,
+    lower = scale * (mu - qnorm(.975) * se_mu), upper = scale * (mu + qnorm(.975) * se_mu),
+    implied_complier_share = first_stage)
+}
+entrant_sets &lt;- list(
+  full = ninth_entrants[AGNO &gt;= DOOR + 1L &amp; AGNO &lt;= 2022L],
+  supported = ninth_entrants[paste(REGION, AGNO) %in% paste(support_region_year$REGION, support_region_year$ENTRY_YEAR)])
+for (scope in names(entrant_sets)) for (v in c(&quot;PRIOR_GPA_Z&quot;, &quot;PRIO&quot;)) {
+  x &lt;- entrant_sets[[scope]][[v]]; x &lt;- x[!is.na(x)]
+  f02_profile_rows[[paste(scope,v,&quot;entrants&quot;)]] &lt;- data.frame(scope, population = &quot;Ninth-grade entrants&quot;,
+    characteristic = if (v == &quot;PRIO&quot;) &quot;PRIORITARIO&quot; else &quot;GPA_COMPOSITION&quot;, n = length(x),
+    excluded_no_offer_overlap = NA_integer_, mean = mean(x) * if (v == &quot;PRIO&quot;) 100 else 1,
+    se = NA_real_, lower = NA_real_, upper = NA_real_, implied_complier_share = NA_real_)
+}
+f02_profiles &lt;- do.call(rbind, f02_profile_rows)
+write.csv(f02_profiles, file.path(output_dir, &quot;f02_population_profiles.csv&quot;), row.names = FALSE)
+write.csv(do.call(rbind, f02_profile_overlap), file.path(output_dir, &quot;f02_profile_score_support.csv&quot;), row.names = FALSE)
+knitr::kable(f02_profiles, digits = 4)</code></pre>
+<table>
+<colgroup>
+<col width="20%" />
+<col width="5%" />
+<col width="15%" />
+<col width="9%" />
+<col width="3%" />
+<col width="14%" />
+<col width="4%" />
+<col width="3%" />
+<col width="4%" />
+<col width="4%" />
+<col width="12%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">scope</th>
+<th align="left">population</th>
+<th align="left">characteristic</th>
+<th align="right">n</th>
+<th align="right">excluded_no_offer_overlap</th>
+<th align="right">mean</th>
+<th align="right">se</th>
+<th align="right">lower</th>
+<th align="right">upper</th>
+<th align="right">implied_complier_share</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">full GPA_COMPOSITION applicants</td>
+<td align="left">full</td>
+<td align="left">Lottery applicants</td>
+<td align="left">GPA_COMPOSITION</td>
+<td align="right">175869</td>
+<td align="right">0</td>
+<td align="right">-0.1006</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">0.6078</td>
+</tr>
+<tr class="even">
+<td align="left">full GPA_COMPOSITION compliers</td>
+<td align="left">full</td>
+<td align="left">Estimated complier profile</td>
+<td align="left">GPA_COMPOSITION</td>
+<td align="right">175869</td>
+<td align="right">0</td>
+<td align="right">-0.0999</td>
+<td align="right">0.0192</td>
+<td align="right">-0.1376</td>
+<td align="right">-0.0622</td>
+<td align="right">0.6078</td>
+</tr>
+<tr class="odd">
+<td align="left">full PRIORITARIO applicants</td>
+<td align="left">full</td>
+<td align="left">Lottery applicants</td>
+<td align="left">PRIORITARIO</td>
+<td align="right">176321</td>
+<td align="right">0</td>
+<td align="right">56.9671</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">0.6074</td>
+</tr>
+<tr class="even">
+<td align="left">full PRIORITARIO compliers</td>
+<td align="left">full</td>
+<td align="left">Estimated complier profile</td>
+<td align="left">PRIORITARIO</td>
+<td align="right">176321</td>
+<td align="right">0</td>
+<td align="right">58.9094</td>
+<td align="right">1.2229</td>
+<td align="right">56.5125</td>
+<td align="right">61.3063</td>
+<td align="right">0.6074</td>
+</tr>
+<tr class="odd">
+<td align="left">supported GPA_COMPOSITION applicants</td>
+<td align="left">supported</td>
+<td align="left">Lottery applicants</td>
+<td align="left">GPA_COMPOSITION</td>
+<td align="right">41062</td>
+<td align="right">477</td>
+<td align="right">-0.0165</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">0.5953</td>
+</tr>
+<tr class="even">
+<td align="left">supported GPA_COMPOSITION compliers</td>
+<td align="left">supported</td>
+<td align="left">Estimated complier profile</td>
+<td align="left">GPA_COMPOSITION</td>
+<td align="right">41062</td>
+<td align="right">477</td>
+<td align="right">-0.1118</td>
+<td align="right">0.0160</td>
+<td align="right">-0.1431</td>
+<td align="right">-0.0804</td>
+<td align="right">0.5953</td>
+</tr>
+<tr class="odd">
+<td align="left">supported PRIORITARIO applicants</td>
+<td align="left">supported</td>
+<td align="left">Lottery applicants</td>
+<td align="left">PRIORITARIO</td>
+<td align="right">41147</td>
+<td align="right">481</td>
+<td align="right">57.3408</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">0.5954</td>
+</tr>
+<tr class="even">
+<td align="left">supported PRIORITARIO compliers</td>
+<td align="left">supported</td>
+<td align="left">Estimated complier profile</td>
+<td align="left">PRIORITARIO</td>
+<td align="right">41147</td>
+<td align="right">481</td>
+<td align="right">62.4876</td>
+<td align="right">1.0453</td>
+<td align="right">60.4388</td>
+<td align="right">64.5363</td>
+<td align="right">0.5954</td>
+</tr>
+<tr class="odd">
+<td align="left">full PRIOR_GPA_Z entrants</td>
+<td align="left">full</td>
+<td align="left">Ninth-grade entrants</td>
+<td align="left">GPA_COMPOSITION</td>
+<td align="right">104535</td>
+<td align="right">NA</td>
+<td align="right">-0.0439</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+</tr>
+<tr class="even">
+<td align="left">full PRIO entrants</td>
+<td align="left">full</td>
+<td align="left">Ninth-grade entrants</td>
+<td align="left">PRIORITARIO</td>
+<td align="right">106627</td>
+<td align="right">NA</td>
+<td align="right">53.4958</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+</tr>
+<tr class="odd">
+<td align="left">supported PRIOR_GPA_Z entrants</td>
+<td align="left">supported</td>
+<td align="left">Ninth-grade entrants</td>
+<td align="left">GPA_COMPOSITION</td>
+<td align="right">26064</td>
+<td align="right">NA</td>
+<td align="right">0.0375</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+</tr>
+<tr class="even">
+<td align="left">supported PRIO entrants</td>
+<td align="left">supported</td>
+<td align="left">Ninth-grade entrants</td>
+<td align="left">PRIORITARIO</td>
+<td align="right">26581</td>
+<td align="right">NA</td>
+<td align="right">53.3238</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+</tr>
+</tbody>
+</table>
+<p>The supported entrant cohort includes all entrants, whereas lottery
+applicants must satisfy the original eighth-grade enrollment and
+application-history rules and have nondeterministic offers. Complier
+profiles are inferred under the lottery assumptions. The composition
+design still measures a change in the composition of entrants, not a
+change in each subgroup’s admission probability. Similarities between
+entrant changes and complier characteristics are descriptive
+connections, not evidence that the students gaining access under SAE are
+lottery compliers. No composition estimate is multiplied by an
+attendance LATE.</p>
+</div>
+<div id="results-and-proposed-interpretation" class="section level3">
+<h3>Results and proposed interpretation</h3>
+<p>The ninth-grade composition effect is <strong>-0.136 SD</strong> for
+prior GPA, with a pointwise 95% interval of [-0.259, -0.013], and
+<strong>4.41 pp</strong> for the low-income share, with an interval of
+[-0.19, 9.00]. Both point estimates have the same direction as the
+all-grade baseline. The low-income interval includes zero; the
+restricted analysis does not reproduce the baseline’s precision. It also
+changes the supported regions, entry years, and aggregation weights.</p>
+<p>There are 41,628 lottery applicants in the supported region-cohort
+window before profile-specific missingness and overlap restrictions,
+compared with 26,581 observed ninth-grade entrants. On the common GPA
+scale, the entrant mean is 0.037 SD, the lottery-applicant mean is
+-0.017 SD, and the estimated complier mean is -0.112 SD. The respective
+low-income shares are 53.32%, 57.34%, and 62.49%. Applicant and complier
+means use the same characteristic-specific overlap sample; the
+score-support CSV identifies every omitted group. Income dates differ as
+documented above.</p>
+<p>These results connect the direction of the composition changes with
+the observable characteristics of the lottery population. They neither
+identify the reform’s marginal entrants nor transport the attendance
+effect to them. The author approved appendix tables reporting the
+ninth-grade estimates and aligned profiles. The chunk below generates
+these tables for inclusion in the access appendix. A main-text reference
+after the composition robustness discussion remains under author review;
+no new estimand table or rollout regression on college outcomes is
+proposed.</p>
+</div>
+<div id="standalone-appendix-tables" class="section level3">
+<h3>Standalone appendix tables</h3>
+<p>The following exports contain complete table environments and follow
+the manuscript’s booktabs, spacing, and notes conventions. They are
+written here; copying them into the manuscript is a separate,
+author-authorized step. The main-text paragraph remains under
+discussion.</p>
+<pre class="r"><code>f02_num &lt;- function(x, digits) sprintf(paste0(&quot;%.&quot;, digits, &quot;f&quot;), x)
+f02_int &lt;- function(x) format(x, big.mark = &quot;,&quot;, scientific = FALSE, trim = TRUE)
+f02_row &lt;- function(label, cells) paste0(label, &quot; &amp; &quot;, paste(cells, collapse = &quot; &amp; &quot;), &quot; \\\\\n&quot;)
+f02_float &lt;- function(caption, label, alignment, body, note) paste0(
+  &quot;% Generated by analysis_for_adversarial_report.Rmd; do not edit numerical cells.\n&quot;,
+  &quot;\\begin{table}[!htbp]\n\\singlespacing\\renewcommand{\\arraystretch}{1.2}\n\\centering\n&quot;,
+  &quot;\\caption{&quot;, caption, &quot;}\\label{&quot;, label, &quot;}\n\\small\n&quot;,
+  &quot;\\begin{tabular*}{\\textwidth}{@{\\extracolsep{\\fill}}&quot;, alignment, &quot;@{}}\n&quot;,
+  &quot;\\toprule\n&quot;, body, &quot;\\bottomrule\n\\end{tabular*}\n\\par\\smallskip\n&quot;,
+  &quot;\\begin{minipage}{\\textwidth}\\footnotesize\nNotes: &quot;, note,
+  &quot;\n\\end{minipage}\n\\end{table}&quot;)
+composition_body &lt;- paste0(
+  f02_row(&quot;Specification&quot;, c(&quot;\\shortstack{Prior-year GPA\\\\(SD)}&quot;, &quot;\\shortstack{Low-income share\\\\(pp)}&quot;)),
+  f02_row(&quot;&quot;, c(&quot;(1)&quot;, &quot;(2)&quot;)), &quot;\\midrule\n&quot;)
+for (design in c(&quot;all_grades&quot;, &quot;ninth_grade&quot;)) {
+  r &lt;- f02_results[f02_results$design == design, ]
+  r &lt;- r[match(c(&quot;gpa_z&quot;, &quot;sh_prio&quot;), r$outcome), ]
+  digits &lt;- c(3L, 2L)
+  cells &lt;- function(column) mapply(f02_num, r[[column]], digits, USE.NAMES = FALSE)
+  composition_body &lt;- paste0(composition_body,
+    f02_row(if (design == &quot;all_grades&quot;) &quot;All grades&quot; else &quot;Ninth grade&quot;, cells(&quot;estimate&quot;)),
+    f02_row(&quot;&quot;, paste0(&quot;(&quot;, cells(&quot;se&quot;), &quot;)&quot;)),
+    f02_row(&quot;95\\% confidence interval&quot;, paste0(&quot;[&quot;, cells(&quot;lower&quot;), &quot;, &quot;, cells(&quot;upper&quot;), &quot;]&quot;)),
+    f02_row(&quot;School-grade-years&quot;, f02_int(r$observed_cell_years)),
+    if (design == &quot;all_grades&quot;) &quot;\\midrule\n&quot; else &quot;&quot;)
+}
+composition_note &lt;- paste0(
+  &quot;The outcomes and estimator follow Table~\\ref{tab: alloc headline}. &quot;,
+  &quot;The ninth-grade specification restricts the sample to ninth-grade entrants. &quot;,
+  &quot;Both specifications use not-yet-treated school-grades, a universal pre-adoption base period, &quot;,
+  &quot;no additional covariates, and the unbalanced-panel estimator described in Appendix~\\ref{app:access}. &quot;,
+  &quot;Within comparisons, school-grade cells receive equal weight; group-time effects are aggregated by adoption-group size. &quot;,
+  &quot;The all-grade and ninth-grade estimates cover supported post-adoption entering classes in 2017--2020 and 2017--2019, respectively. &quot;,
+  &quot;For ninth grade, the Metropolitan Region supplies comparisons but has no identified post-adoption effect. &quot;,
+  &quot;Observation counts include pre-adoption years from 2012. Region-clustered SE from 10,000 multiplier-bootstrap draws &quot;,
+  &quot;are in parentheses; brackets report pointwise 95\\% intervals. All-grade point estimates reproduce the main table; &quot;,
+  &quot;SE are recomputed with fresh draws. No permutation-test significance stars are reported. &quot;,
+  &quot;The small number of regions remains a limitation for inference.&quot;)
+writeLines(f02_float(&quot;Entering-Class Composition at Ninth-Grade Entry&quot;, &quot;tab: ninth grade composition&quot;,
+  &quot;p{0.46\\textwidth}cc&quot;, composition_body, composition_note),
+  file.path(output_dir, &quot;appendix_ninth_grade_composition.tex&quot;))
+
+profile_order &lt;- c(&quot;Estimated complier profile&quot;, &quot;Lottery applicants&quot;, &quot;Ninth-grade entrants&quot;)
+profile_body &lt;- paste0(f02_row(&quot;&quot;, c(&quot;\\shortstack{Students whose\\\\attendance depends\\\\on the offer}&quot;,
+  &quot;\\shortstack{Lottery\\\\applicants}&quot;, &quot;\\shortstack{Ninth-grade\\\\entrants}&quot;)),
+  f02_row(&quot;&quot;, c(&quot;(1)&quot;, &quot;(2)&quot;, &quot;(3)&quot;)), &quot;\\midrule\n&quot;)
+for (v in c(&quot;GPA_COMPOSITION&quot;, &quot;PRIORITARIO&quot;)) {
+  r &lt;- f02_profiles[f02_profiles$scope == &quot;supported&quot; &amp; f02_profiles$characteristic == v, ]
+  r &lt;- r[match(profile_order, r$population), ]
+  digits &lt;- if (v == &quot;GPA_COMPOSITION&quot;) 3L else 2L
+  profile_body &lt;- paste0(profile_body,
+    f02_row(if (v == &quot;GPA_COMPOSITION&quot;) &quot;Prior-year GPA (SD)&quot; else &quot;Low-income (\\%)&quot;, f02_num(r$mean, digits)),
+    f02_row(&quot;&quot;, c(paste0(&quot;(&quot;, f02_num(r$se[1], digits), &quot;)&quot;), &quot;&quot;, &quot;&quot;)))
+}
+profile_body &lt;- paste0(profile_body, &quot;\\midrule\n&quot;)
+for (v in c(&quot;GPA_COMPOSITION&quot;, &quot;PRIORITARIO&quot;)) {
+  r &lt;- f02_profiles[f02_profiles$scope == &quot;supported&quot; &amp; f02_profiles$characteristic == v, ]
+  r &lt;- r[match(profile_order, r$population), ]
+  profile_body &lt;- paste0(profile_body, f02_row(if (v == &quot;GPA_COMPOSITION&quot;) &quot;$N$, GPA&quot; else &quot;$N$, low-income&quot;, f02_int(r$n)))
+}
+excluded_profile &lt;- function(v) f02_profiles$excluded_no_offer_overlap[
+  f02_profiles$scope == &quot;supported&quot; &amp; f02_profiles$population == &quot;Lottery applicants&quot; &amp; f02_profiles$characteristic == v]
+profile_note &lt;- paste0(
+  &quot;The samples cover the regions and 2017--2019 entering cohorts contributing treated observations to &quot;,
+  &quot;Table~\\ref{tab: ninth grade composition}. Lottery applicants are retained when every over-demanded school &quot;,
+  &quot;on their pre-lottery list, including automatic continuity options, belongs to a supported region-cohort. &quot;,
+  &quot;No restriction uses the realized offer or school attended. Columns (1) and (2) use the same observed-characteristic &quot;,
+  &quot;sample and retain hundredth propensity-score groups containing both offer arms; this excludes &quot;,
+  f02_int(excluded_profile(&quot;GPA_COMPOSITION&quot;)), &quot; applicants for GPA and &quot;,
+  f02_int(excluded_profile(&quot;PRIORITARIO&quot;)), &quot; for income after removing missing characteristics. &quot;,
+  &quot;Column (1) uses the complier-profile estimator described in Appendix~\\ref{app:ninth-grade-composition}; &quot;,
+  &quot;heteroskedasticity-robust influence-function SE are in parentheses. Its $N$ is the estimation sample size, &quot;,
+  &quot;not a count of identified compliers. Columns (2) and (3) are student-weighted means. &quot;,
+  &quot;GPA is on the composition analysis&#39;s national prior-year scale; the lottery measure is converted using exact &quot;,
+  &quot;year-specific affine relationships in linked records. Low-income status is measured in the application year &quot;,
+  &quot;for applicants and compliers, and the entry year for entrants. &quot;,
+  &quot;These profiles describe different populations and do not identify the students whose access changed under SAE.&quot;)
+writeLines(f02_float(&quot;Entrants and Lottery Compliers in the Supported Ninth-Grade Cohorts&quot;,
+  &quot;tab: ninth grade profiles&quot;, &quot;p{0.30\\textwidth}ccc&quot;, profile_body, profile_note),
+  file.path(output_dir, &quot;appendix_ninth_grade_profiles.tex&quot;))</code></pre>
+</div>
+</div>
 <div id="environment" class="section level2">
 <h2>Environment</h2>
 <p>The local package versions need not match the handoff’s Windows
@@ -2952,9 +3913,9 @@ environment. The numerical reproduction checks above establish whether
 the existing results match at the precision reported in the current
 tables.</p>
 <pre class="r"><code>recorded &lt;- read.csv(&quot;finalized_design_v1/environment/package_versions.csv&quot;, stringsAsFactors = FALSE)
-runtime_versions &lt;- data.frame(package = c(&quot;R&quot;, &quot;fixest&quot;, &quot;knitr&quot;, &quot;rmarkdown&quot;, &quot;data.table&quot;),
+runtime_versions &lt;- data.frame(package = c(&quot;R&quot;, &quot;fixest&quot;, &quot;knitr&quot;, &quot;rmarkdown&quot;, &quot;data.table&quot;, &quot;did&quot;, &quot;DRDID&quot;),
                               version = c(as.character(getRversion()),
-                                          vapply(c(&quot;fixest&quot;, &quot;knitr&quot;, &quot;rmarkdown&quot;, &quot;data.table&quot;),
+                                          vapply(c(&quot;fixest&quot;, &quot;knitr&quot;, &quot;rmarkdown&quot;, &quot;data.table&quot;, &quot;did&quot;, &quot;DRDID&quot;),
                                                  function(p) as.character(packageVersion(p)), character(1))))
 runtime_versions$handoff_version &lt;- recorded$Version[match(runtime_versions$package, recorded$Package)]
 write.csv(runtime_versions, file.path(output_dir, &quot;runtime_versions.csv&quot;), row.names = FALSE)
@@ -2999,6 +3960,18 @@ knitr::kable(runtime_versions)</code></pre>
 <td align="left">1.18.2.1</td>
 <td align="left">1.18.4</td>
 </tr>
+<tr class="even">
+<td align="left">did</td>
+<td align="left">did</td>
+<td align="left">2.1.2</td>
+<td align="left">2.1.2</td>
+</tr>
+<tr class="odd">
+<td align="left">DRDID</td>
+<td align="left">DRDID</td>
+<td align="left">1.2.3</td>
+<td align="left">1.3.0</td>
+</tr>
 </tbody>
 </table>
 <pre class="r"><code>sessionInfo()</code></pre>
@@ -3023,16 +3996,39 @@ knitr::kable(runtime_versions)</code></pre>
 ## [1] fixest_0.13.2
 ## 
 ## loaded via a namespace (and not attached):
-##  [1] stringmagic_1.2.0   nlme_3.1-168        cli_3.6.5          
-##  [4] knitr_1.50          rlang_1.1.6         xfun_0.52          
-##  [7] Formula_1.2-5       jsonlite_2.0.0      data.table_1.18.2.1
-## [10] zoo_1.8-14          htmltools_0.5.8.1   sass_0.4.10        
-## [13] rmarkdown_2.30      grid_4.5.1          evaluate_1.0.4     
-## [16] jquerylib_0.1.4     fastmap_1.2.0       yaml_2.3.10        
-## [19] lifecycle_1.0.4     numDeriv_2016.8-1.1 compiler_4.5.1     
-## [22] sandwich_3.1-1      Rcpp_1.1.0          dreamerr_1.5.0     
-## [25] lattice_0.22-7      digest_0.6.37       R6_2.6.1           
-## [28] bslib_0.9.0         tools_4.5.1         cachem_1.1.0</code></pre>
+##  [1] tidyselect_1.2.1     timeDate_4051.111    dplyr_1.2.1         
+##  [4] farver_2.1.2         S7_0.2.1             fastmap_1.2.0       
+##  [7] pROC_1.19.0.1        DRDID_1.2.3          caret_7.0-1         
+## [10] digest_0.6.37        rpart_4.1.24         timechange_0.4.0    
+## [13] lifecycle_1.0.5      dreamerr_1.5.0       survival_3.8-3      
+## [16] magrittr_2.0.3       compiler_4.5.1       rlang_1.3.0         
+## [19] sass_0.4.10          tools_4.5.1          yaml_2.3.10         
+## [22] data.table_1.18.2.1  knitr_1.50           ggsignif_0.6.4      
+## [25] plyr_1.8.9           RColorBrewer_1.1-3   abind_1.4-8         
+## [28] withr_3.0.2          purrr_1.1.0          numDeriv_2016.8-1.1 
+## [31] nnet_7.3-20          grid_4.5.1           stats4_4.5.1        
+## [34] ggpubr_1.0.0         future_1.70.0        ggplot2_4.0.1       
+## [37] BMisc_1.4.8          globals_0.19.1       scales_1.4.0        
+## [40] iterators_1.0.14     MASS_7.3-65          cli_3.6.5           
+## [43] rmarkdown_2.30       generics_0.1.4       bigmemory.sri_0.1.8 
+## [46] future.apply_1.20.2  reshape2_1.4.5       cachem_1.1.0        
+## [49] stringr_1.5.1        splines_4.5.1        parallel_4.5.1      
+## [52] fastglm_0.0.4        stringmagic_1.2.0    vctrs_0.7.3         
+## [55] hardhat_1.4.3        Matrix_1.7-3         sandwich_3.1-1      
+## [58] carData_3.0-5        jsonlite_2.0.0       car_3.1-3           
+## [61] did_2.1.2            rstatix_1.1.0        Formula_1.2-5       
+## [64] listenv_0.10.1       trust_0.1-9          foreach_1.5.2       
+## [67] gower_1.0.2          jquerylib_0.1.4      tidyr_1.3.2         
+## [70] recipes_1.3.2        bigmemory_4.6.4      glue_1.8.0          
+## [73] parallelly_1.46.1    codetools_0.2-20     lubridate_1.9.5     
+## [76] stringi_1.8.7        gtable_0.3.6         tibble_3.3.0        
+## [79] pillar_1.11.1        htmltools_0.5.8.1    ipred_0.9-15        
+## [82] lava_1.9.0           R6_2.6.1             evaluate_1.0.4      
+## [85] lattice_0.22-7       backports_1.5.0      broom_1.0.11        
+## [88] bslib_0.9.0          class_7.3-23         uuid_1.2-2          
+## [91] Rcpp_1.1.0           nlme_3.1-168         prodlim_2026.03.11  
+## [94] xfun_0.52            zoo_1.8-14           pkgconfig_2.0.3     
+## [97] ModelMetrics_1.2.2.2</code></pre>
 </div>
 
 

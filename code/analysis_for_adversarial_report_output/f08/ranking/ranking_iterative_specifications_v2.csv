@@ -1,0 +1,11 @@
+variant,own,historical,benchmark_precision,conversion,final_rounding,population,formula
+School and teaching type,trunc,trunc,trunc,context,round,exit_context,linear_grade
+Same-context reference,trunc,trunc,trunc,context,round,same_context,linear_grade
+Graduation modality table,trunc,trunc,trunc,graduation,round,exit_context,linear_grade
+Round own average,round,trunc,trunc,context,round,exit_context,linear_grade
+Round historical student averages,trunc,round,trunc,context,round,exit_context,linear_grade
+Full historical student averages,trunc,full,trunc,context,round,exit_context,linear_grade
+Round historical benchmarks,trunc,trunc,round,context,round,exit_context,linear_grade
+Equal cohort means,trunc,equal,trunc,context,round,exit_context,linear_grade
+Truncate final score,trunc,trunc,trunc,context,trunc,exit_context,linear_grade
+Linear in converted NEM scores,trunc,trunc,trunc,context,round,exit_context,linear_score

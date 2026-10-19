@@ -1,0 +1,23 @@
+school_year,page,ocr_code,verified_code,reason
+2019,9,12527,11527,Correct OCR against rendered official PDF
+2019,10,1753,7753,Correct OCR against rendered official PDF
+2019,11,1722,7722,Correct OCR against rendered official PDF
+2019,11,22574,22674,Correct OCR against rendered official PDF
+2019,2,,4,"Restore omitted/merged OCR cell, verified in official PDF"
+2019,2,,7,"Restore omitted/merged OCR cell, verified in official PDF"
+2020,14,3,,"Remove page number, not school code"
+2020,2,,1,"Restore omitted/merged OCR cell, verified in official PDF"
+2020,2,,72,"Restore omitted/merged OCR cell, verified in official PDF"
+2020,3,,611,"Restore omitted/merged OCR cell, verified in official PDF"
+2020,3,,613,"Restore omitted/merged OCR cell, verified in official PDF"
+2020,3,,1048,"Restore omitted/merged OCR cell, verified in official PDF"
+2020,14,,8394,"Restore omitted/merged OCR cell, verified in official PDF"
+2020,13,,22655,"Restore omitted/merged OCR cell, verified in official PDF"
+2021,2,,7,"Restore omitted/merged OCR cell, verified in official PDF"
+2021,11,,2105,"Restore omitted/merged OCR cell, verified in official PDF"
+2021,16,,5057,"Restore omitted/merged OCR cell, verified in official PDF"
+2021,20,,8345,"Restore omitted/merged OCR cell, verified in official PDF"
+2021,8,,9861,"Restore omitted/merged OCR cell, verified in official PDF"
+2021,9,,10399,"Restore omitted/merged OCR cell, verified in official PDF"
+2021,6,,12332,"Restore omitted/merged OCR cell, verified in official PDF"
+2021,13,,16469,"Restore omitted/merged OCR cell, verified in official PDF"

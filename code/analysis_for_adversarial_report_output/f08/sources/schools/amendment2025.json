@@ -1,0 +1,1606 @@
+[
+  {
+    "lines" : [
+      {
+        "confidence" : 1,
+        "height" : 0.015988371375576182,
+        "text" : "4",
+        "width" : 0.018433178547632711,
+        "x" : 0.97235023114093011,
+        "y" : 0.98401162810581655
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.017580872011251802,
+        "text" : "SUBSECRETARÍA DE, EDUCACIÓN SUPERIOR",
+        "width" : 0.37096773315565779,
+        "x" : 0.42165899288357667,
+        "y" : 0.92580871979270318
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.008720929780254516,
+        "text" : "Subsecretaria",
+        "width" : 0.082949303464347285,
+        "x" : 0.2096774206180568,
+        "y" : 0.92587209320095798
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.0088538087370023666,
+        "text" : "de Educación",
+        "width" : 0.082949303464347313,
+        "x" : 0.20967742338303369,
+        "y" : 0.91701828410855124
+      },
+      {
+        "confidence" : 0.5,
+        "height" : 0.0088436526420583306,
+        "text" : "Superior",
+        "width" : 0.053045810797275661,
+        "x" : 0.2119563581571417,
+        "y" : 0.90836887140388511
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.0073839662447257037,
+        "text" : "Gobierno de Chile",
+        "width" : 0.085253457161893781,
+        "x" : 0.21198156528426051,
+        "y" : 0.84880450076570413
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.020941328566453254,
+        "text" : "MODIFICA RESOLUCIÓN EXENTA Nº331, DE",
+        "width" : 0.41984260414489272,
+        "x" : 0.42142748257196871,
+        "y" : 0.87605201903783092
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.016174402250351605,
+        "text" : "2024, DE LA SUBSECRETARIA DE EDUCACIÓN",
+        "width" : 0.41935483322228612,
+        "x" : 0.41935484509392601,
+        "y" : 0.86322081544444473
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.016174402250351605,
+        "text" : "SUPERIOR, QUE DESIGNÓ ESTABLECIMIENTOS",
+        "width" : 0.42165896140346293,
+        "x" : 0.41935485139504269,
+        "y" : 0.84880450053558842
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.014534883190643333,
+        "text" : "EDUCACIONALES QUE PARTICIPARÁN EN EL",
+        "width" : 0.42165896140346293,
+        "x" : 0.41935485394688599,
+        "y" : 0.83575581440031788
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.016174402250351605,
+        "text" : "PROGRAMA DE ACCESO A LA EDUCACIÓN",
+        "width" : 0.417050671019283,
+        "x" : 0.42165900086708646,
+        "y" : 0.81962025331762156
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.014563503479991136,
+        "text" : "SUPERIOR \"PACE\" DESDE EL AÑO 2024.",
+        "width" : 0.34101382864757523,
+        "x" : 0.41935484023842429,
+        "y" : 0.80520393811533053
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.019062980485532566,
+        "text" : "MINISTERIO DE EDUCACION",
+        "width" : 0.22350230477459587,
+        "x" : 0.1612903238607819,
+        "y" : 0.78762306630833001
+      },
+      {
+        "confidence" : 0.5,
+        "height" : 0.016782271711132113,
+        "text" : "Solicitud Nº 3",
+        "width" : 0.12237481635018205,
+        "x" : 0.41922733899338932,
+        "y" : 0.77285886463558895
+      },
+      {
+        "confidence" : 0.5,
+        "height" : 0.019036405029511427,
+        "text" : "08 ENE 2025",
+        "width" : 0.12211981425715929,
+        "x" : 0.21658986320552176,
+        "y" : 0.75421940920621156
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.014534883190643222,
+        "text" : "SANTIAGO,",
+        "width" : 0.10599078090161645,
+        "x" : 0.41705069161524405,
+        "y" : 0.74127906998413573
+      },
+      {
+        "confidence" : 0.5,
+        "height" : 0.019009828902833426,
+        "text" : "BÒCUMENTO TOTALMENTE TRAMITADO !",
+        "width" : 0.23271888554295572,
+        "x" : 0.16359447594149118,
+        "y" : 0.72081575268996323
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.016174402250351716,
+        "text" : "RESOLUCIÓN EXENTA N°",
+        "width" : 0.2142857069953229,
+        "x" : 0.41935484196316808,
+        "y" : 0.70921237690661953
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.026371308016877704,
+        "text" : "0030 0&01.2025",
+        "width" : 0.23271888554295572,
+        "x" : 0.55529954460508568,
+        "y" : 0.68600562622188743
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.014534883190643333,
+        "text" : "VISTO:",
+        "width" : 0.059907834532534676,
+        "x" : 0.42165898665078339,
+        "y" : 0.67441860473462012
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.014767932489451518,
+        "text" : "Lo dispuesto en la ley N° 18.575, orgánica constitucional de bases generales de la",
+        "width" : 0.74654379071732158,
+        "x" : 0.12211981717590123,
+        "y" : 0.64381153315484529
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013081395005710372,
+        "text" : "Administración del Estado, cuyo texto refundido, coordinado y sistematizado fue",
+        "width" : 0.73963130410831246,
+        "x" : 0.12903228654031337,
+        "y" : 0.62936046531206724
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013361462728551321,
+        "text" : "fijado por el decreto con fuerza de ley N° 1\/19.653, de 2000, del Ministerio Secretaría",
+        "width" : 0.73963130410831246,
+        "x" : 0.12672811761750299,
+        "y" : 0.61322081593157551
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013081395005710261,
+        "text" : "General de la Presidencia; en la ley N° 18.956, que reestructura el Ministerio de",
+        "width" : 0.73963130410831246,
+        "x" : 0.12903228654031337,
+        "y" : 0.59593023275392776
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013361462728551432,
+        "text" : "Educación y sus modificaciones; en la ley N° 19.880, de bases de los procedimientos",
+        "width" : 0.74193546631131546,
+        "x" : 0.12672812865309777,
+        "y" : 0.5798171586841081
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013097749648382506,
+        "text" : "administrativos que rigen los actos de los órganos de la Administración del Estado;",
+        "width" : 0.74193546631131557,
+        "x" : 0.12672811010471113,
+        "y" : 0.5625000001170577
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013179520849772586,
+        "text" : "en la ley N°21.091, sobre Educación Superior; en la ley Nº 21.640, de presupuestos",
+        "width" : 0.74193546631131557,
+        "x" : 0.12672810701331347,
+        "y" : 0.54641350216180351
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013124325104403645,
+        "text" : "del sector público correspondiente al año 2024; en la ley N° 21.722, de presupuestos",
+        "width" : 0.73963130410831246,
+        "x" : 0.12903228345851631,
+        "y" : 0.52906976766792968
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.014983788153625555,
+        "text" : "del sector público correspondiente al año 2025; en las resoluciones exentas N° 680,",
+        "width" : 0.73977222251254193,
+        "x" : 0.12896248489981735,
+        "y" : 0.51151007991178532
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013150901231081757,
+        "text" : "de 2015, y N° 1.107, de 2018, ambas de la Subsecretaría de Educación, que",
+        "width" : 0.73963130410831246,
+        "x" : 0.1267281175022956,
+        "y" : 0.49563953503711566
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013126369267073335,
+        "text" : "establece el Programa de Acceso a la Educación Superior PACE; en la resolución",
+        "width" : 0.73963130410831246,
+        "x" : 0.1267281175022956,
+        "y" : 0.47960618864639237
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.014583945777345786,
+        "text" : "exenta N° 5954, de 2023, de la Subsecretaría de Educación Superior, que formalizó",
+        "width" : 0.73963130410831235,
+        "x" : 0.12672811718547547,
+        "y" : 0.4622093028329729
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013099793811052307,
+        "text" : "el cambio de coordinación del PACE a la División de Información y Acceso; en la",
+        "width" : 0.73963130410831246,
+        "x" : 0.12672813270966848,
+        "y" : 0.44620253143526212
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.015247362407786347,
+        "text" : "resolución exenta N° 331, de 2024, de la Subsecretaría de Educación Superior, que",
+        "width" : 0.73978093210005569,
+        "x" : 0.12665490229120829,
+        "y" : 0.42863097062519062
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013081395005710372,
+        "text" : "designó establecimientos educacionales que participarán en el Programa de",
+        "width" : 0.73732720994896184,
+        "x" : 0.12903225370447446,
+        "y" : 0.41279069790654399
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013183609175111966,
+        "text" : "Acceso a la Educación Superior \"PACE\", desde el año 2024; en el memorándum N°",
+        "width" : 0.73963130410831246,
+        "x" : 0.12903228160943805,
+        "y" : 0.39680232585470299
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013081395005710261,
+        "text" : "06\/1294, de fecha 16 de diciembre de 2024, de la División de Información y Acceso",
+        "width" : 0.73963130410831246,
+        "x" : 0.12672813661711838,
+        "y" : 0.37936046506981935
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.014767932489451518,
+        "text" : "de la Subsecretaría de Educación Superior; y, en la resolución N° 7, de 2019, de la",
+        "width" : 0.73963130410831246,
+        "x" : 0.12672811935137385,
+        "y" : 0.361814345884508
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013081395005710372,
+        "text" : "Contraloría General de la República, que fija normas sobre Exención del Trámite de",
+        "width" : 0.73963130410831246,
+        "x" : 0.12672811457410837,
+        "y" : 0.34738372131981921
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.011954992967651235,
+        "text" : "Toma de Razón; y,",
+        "width" : 0.1658986069286946,
+        "x" : 0.12442396566007677,
+        "y" : 0.33122362852041964
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013081395005710372,
+        "text" : "CONSIDERANDO:",
+        "width" : 0.15668202616033483,
+        "x" : 0.41244239575239788,
+        "y" : 0.28633720941332697
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013175431853775899,
+        "text" : "1. Que, de acuerdo con lo dispuesto en la ley N° 18.956, el Ministerio de Educación",
+        "width" : 0.73271888554295572,
+        "x" : 0.13364056160640214,
+        "y" : 0.25281293984966069
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.011627906820777412,
+        "text" : "es la Secretaría de Estado responsable de fomentar el desarrollo de la",
+        "width" : 0.70276498103487328,
+        "x" : 0.1635944750355586,
+        "y" : 0.23837209315937868
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.016343975871927152,
+        "text" : "educación en todos sus niveles y modalidades, propendiendo a asegurar la",
+        "width" : 0.70297020069067029,
+        "x" : 0.16349840957785314,
+        "y" : 0.21918026249758471
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.014561459317321335,
+        "text" : "calidad y la equidad del sistema educativo.",
+        "width" : 0.39861750948256336,
+        "x" : 0.16129032852484723,
+        "y" : 0.20203488380438783
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.016383095967954064,
+        "text" : "2. Que, la Subsecretaría de Educación Superior, creada por la ley N° 21.091, forma",
+        "width" : 0.73294118415551834,
+        "x" : 0.13352842424108768,
+        "y" : 0.16977468727820211
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.014767932489451518,
+        "text" : "parte de la organización del Ministerio de Educación, según lo establecido en",
+        "width" : 0.70276498103487317,
+        "x" : 0.16359446417726398,
+        "y" : 0.15400843898465466
+      },
+      {
+        "confidence" : 0.5,
+        "height" : 0.013114103620397777,
+        "text" : "la letra d) del artículo 3º de la mencionada ley N° 18.956.",
+        "width" : 0.51382487115253972,
+        "x" : 0.16129033796443645,
+        "y" : 0.13808139549617582
+      },
+      {
+        "confidence" : 0.30000001192092896,
+        "height" : 0.0072674415953216664,
+        "text" : "-",
+        "width" : 0.016129031229178636,
+        "x" : 0.25345622198141682,
+        "y" : 0.094476744391292722
+      }
+    ],
+    "page" : 1
+  },
+  {
+    "lines" : [
+      {
+        "confidence" : 1,
+        "height" : 0.013087545026340686,
+        "text" : "3. Que, en virtud de lo dispuesto en la ley N° 20.798, de Presupuestos para el Sector",
+        "width" : 0.73793102932082633,
+        "x" : 0.1333333451384372,
+        "y" : 0.92877291975342746
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.01316134717804085,
+        "text" : "Público para el año 2015, nació el Programa de Acceso a la Educación",
+        "width" : 0.70114942059469076,
+        "x" : 0.16551723524863196,
+        "y" : 0.91279069822895287
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013155196718503848,
+        "text" : "Superior, en adelante \"PACE\", con la finalidad de garantizar el acceso a una",
+        "width" : 0.70344827539280241,
+        "x" : 0.16321838224612781,
+        "y" : 0.89527503539411313
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013093695485877688,
+        "text" : "educación de calidad, reducirla segregación, aumentar la equidad e inclusión",
+        "width" : 0.70344827539280241,
+        "x" : 0.16551725333808115,
+        "y" : 0.8793604655315207
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.019383946998499324,
+        "text" : "que asegure la participación y aprendizaje en todos los niveles educativos, a",
+        "width" : 0.70377012186890331,
+        "x" : 0.1653445714245306,
+        "y" : 0.85883273745305644
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013101895201861891,
+        "text" : "fin de propender a un país más integrado social y culturalmente. Es del caso",
+        "width" : 0.70574713019091417,
+        "x" : 0.16321840068998311,
+        "y" : 0.8459097323383229
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013190047529083371,
+        "text" : "agregar que, a la fecha, las sucesivas leyes de presupuesto del sector público",
+        "width" : 0.70344827539280252,
+        "x" : 0.16551725040704682,
+        "y" : 0.8284883725385459
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.014579984802116863,
+        "text" : "han contemplado al referido programa de acceso a la educación superior.",
+        "width" : 0.68505743700790822,
+        "x" : 0.16321841935045156,
+        "y" : 0.81100141013853522
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013399153737658653,
+        "text" : "4. Que, en el contexto de lo indicado en el considerando anterior, la resolución",
+        "width" : 0.73333331972460281,
+        "x" : 0.13333334747103173,
+        "y" : 0.77891396318454853
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013116246049932112,
+        "text" : "exenta N° 680, de 2015, de la Subsecretaría de Educación, estableció el referido",
+        "width" : 0.70344827539280241,
+        "x" : 0.16321838224612781,
+        "y" : 0.76304654416588247
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013175697353562166,
+        "text" : "Programa de Acceso a la Educación Superior, PACE. Dicha resolución exenta",
+        "width" : 0.70344827539280241,
+        "x" : 0.16321839282084022,
+        "y" : 0.74563953511122028
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013183897742095163,
+        "text" : "fue modificada por la resolución exenta N° 1.107, de 2018, de la Subsecretaría",
+        "width" : 0.70574713019091417,
+        "x" : 0.16321840068998311,
+        "y" : 0.72954866003064767
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.011654557226743245,
+        "text" : "de Educación, radicando la coordinación nacional del PACE en el entonces",
+        "width" : 0.70804598498902593,
+        "x" : 0.16321839861659779,
+        "y" : 0.71366279116842213
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.014809590973201781,
+        "text" : "Departamento de Fortalecimiento Institucional. Con posterioridad, la",
+        "width" : 0.70574713019091428,
+        "x" : 0.16321839946392949,
+        "y" : 0.69464033830961047
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013130596225453317,
+        "text" : "mencionada resolución exenta N° 680, de 2015, fue nuevamente modificada",
+        "width" : 0.70574713019091417,
+        "x" : 0.16321839774937025,
+        "y" : 0.68018335689007059
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.014614835612696497,
+        "text" : "por la resolución exenta N° 5954, de 2023, de la Subsecretaría de Educación",
+        "width" : 0.70804598498902593,
+        "x" : 0.16091954509169376,
+        "y" : 0.66133720969839827
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.014608685153159495,
+        "text" : "Superior, radicando la coordinación nacional del PACE en la División de",
+        "width" : 0.71034483978713769,
+        "x" : 0.15862069243401719,
+        "y" : 0.64527503545367482
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.015015954527431208,
+        "text" : "Información y Acceso, de la referida Subsecretaría.",
+        "width" : 0.46231153949580195,
+        "x" : 0.16311477334935451,
+        "y" : 0.62932118273195337
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013101895201861891,
+        "text" : "5. Que, por su parte, el objetivo del PACE es asegurar la preparación de",
+        "width" : 0.73333331972460281,
+        "x" : 0.13333334485034215,
+        "y" : 0.59590973209607478
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013146997002519645,
+        "text" : "estudiantes de sectores vulnerables de tercero (3°) y cuarto (4°) año de",
+        "width" : 0.70344827539280241,
+        "x" : 0.16321838400474836,
+        "y" : 0.57994186078345855
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013212598765686701,
+        "text" : "educación media de los establecimientos designados para participar del",
+        "width" : 0.70344827539280241,
+        "x" : 0.16321838552198972,
+        "y" : 0.5638222846950407
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013081394566803684,
+        "text" : "Programa, el acceso y acompañamiento de los estudiantes PACE que resulten",
+        "width" : 0.70344827539280241,
+        "x" : 0.1632183994683494,
+        "y" : 0.54651162807997022
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013200297846612585,
+        "text" : "habilitados y que se matriculen en alguna de las instituciones de educación",
+        "width" : 0.70574713019091417,
+        "x" : 0.16321840068998311,
+        "y" : 0.53052325622919505
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013116246049932112,
+        "text" : "superior en convenio, con miras a lograr su titulación.",
+        "width" : 0.48045976823787628,
+        "x" : 0.16091954917608073,
+        "y" : 0.51304654423250073
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013183897742095163,
+        "text" : "6. Que, la ley N° 21.640 de presupuestos del sector público correspondiente al año",
+        "width" : 0.73333331972460281,
+        "x" : 0.13333334753233442,
+        "y" : 0.47954865978839956
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.014534883001459331,
+        "text" : "2024, en la Partida 09, Capítulo 90, Programa 03, Subtítulo 24, Ítem 03,",
+        "width" : 0.70114942059469065,
+        "x" : 0.16321840230801835,
+        "y" : 0.46366279129965793
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013185947671091269,
+        "text" : "Asignación 052, Glosa 10, contempló recursos para el \"Programa de Acceso a",
+        "width" : 0.70344827539280241,
+        "x" : 0.16321839807371361,
+        "y" : 0.44767441903927252
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.014541033460996333,
+        "text" : "la Educación Superior\". Por su parte, la ley Nº21.722, de presupuestos del sector",
+        "width" : 0.71264369458524945,
+        "x" : 0.15862068856944417,
+        "y" : 0.4287729197257798
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.016491124592984074,
+        "text" : "público correspondiente al año 2025, en la Partida 09, Capítulo 90, Programa",
+        "width" : 0.70363131281789992,
+        "x" : 0.16313528677938496,
+        "y" : 0.41191503252797157
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.01480959097320167,
+        "text" : "03, Subtítulo 24, Item 03, Asignación 052, Glosa 09, contempla recursos para el",
+        "width" : 0.70574713019091406,
+        "x" : 0.16091952953097985,
+        "y" : 0.39668547255398068
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.014534883001459331,
+        "text" : "\"Programa de Acceso a la Educación Superior\".",
+        "width" : 0.43678159511740522,
+        "x" : 0.16091955454857684,
+        "y" : 0.38081395379965788
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013144946400974633,
+        "text" : "7. Que, la resolución exenta N°331, de 2024, de la Subsecretaría de Educación",
+        "width" : 0.73563217452271457,
+        "x" : 0.1310344751907504,
+        "y" : 0.34732016941440402
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013103945803406902,
+        "text" : "Superior designó los establecimientos educacionales que participan en el PACE",
+        "width" : 0.70804598498902593,
+        "x" : 0.16091954214150225,
+        "y" : 0.33139534928878811
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.011802160857594668,
+        "text" : "a partir del año 2024. El párrato segundo del artículo único de dicha resolución,",
+        "width" : 0.70574713019091417,
+        "x" : 0.16321839774937025,
+        "y" : 0.31523272244103739
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.018923801158479914,
+        "text" : "establece que \"en caso de haber algún cambio en relación con [la nómina de",
+        "width" : 0.70602284307065211,
+        "x" : 0.16308794414409056,
+        "y" : 0.29550364235428961
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013157246647499843,
+        "text" : "establecimientos que participan del PACE], asociado a fusiones o cierre de",
+        "width" : 0.70574713019091417,
+        "x" : 0.16321837777810658,
+        "y" : 0.2819767447950865
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013159296576495949,
+        "text" : "establecimientos, incorporación o exclusión de establecimientos del programa,",
+        "width" : 0.70574713019091406,
+        "x" : 0.16321839877427435,
+        "y" : 0.2644569818842315
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.011636107193229939,
+        "text" : "se dictará el correspondiente acto administrativo que actualice la información",
+        "width" : 0.70574713019091406,
+        "x" : 0.16091952953097985,
+        "y" : 0.24999999967707487
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013210548164141689,
+        "text" : "particular de él o los establecimientos involucrados. En razón de lo anterior,",
+        "width" : 0.70574713019091417,
+        "x" : 0.16321839774937025,
+        "y" : 0.23255813990773189
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013105995059854103,
+        "text" : "estos establecimientos gozan de la calidad de participantes del PACE, mientras",
+        "width" : 0.70574713019091417,
+        "x" : 0.1632183980079909,
+        "y" : 0.21509167874971058
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.011689408037322879,
+        "text" : "no se determine lo contrario.\".",
+        "width" : 0.27356321064790623,
+        "x" : 0.16321839809558705,
+        "y" : 0.20058139577113532
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013081394566803684,
+        "text" : "8. Que, para el año 2025 se contempla incorporar 13 nuevos establecimientos al",
+        "width" : 0.73563217452271457,
+        "x" : 0.13333334722140111,
+        "y" : 0.16569767490046439
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.011785760753077468,
+        "text" : "Programa PACE, correspondientes a comunas en las que, a la fecha, no había",
+        "width" : 0.70344827539280241,
+        "x" : 0.16321838224612781,
+        "y" : 0.14970930271154237
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.011709908672381197,
+        "text" : "establecimientos acompañados por el PACE.",
+        "width" : 0.40689655078560472,
+        "x" : 0.16321839636007104,
+        "y" : 0.13363892815096012
+      }
+    ],
+    "page" : 2
+  },
+  {
+    "lines" : [
+      {
+        "confidence" : 1,
+        "height" : 0.013166293386503547,
+        "text" : "9. Que, mediante memorándum N°6\/1294, de fecha 16 de diciembre de 2024, el",
+        "width" : 0.73333331972460292,
+        "x" : 0.13333332791547672,
+        "y" : 0.89534883707582402
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.01308548676976018,
+        "text" : "jete de la División de Información y Acceso de la Subsecretaría de Educación",
+        "width" : 0.70804598498902604,
+        "x" : 0.15862067386564074,
+        "y" : 0.87790288540829187
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013169361788315403,
+        "text" : "Superior, a fin de mejorar la cobertura territorial solicita incorporar 13",
+        "width" : 0.70344827539280241,
+        "x" : 0.16321839690129986,
+        "y" : 0.86191860460247127
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.011674958161280946,
+        "text" : "establecimientos al listado de aquellos que participan del PACE indicado en la",
+        "width" : 0.70344827539280241,
+        "x" : 0.16321837931509345,
+        "y" : 0.84588318082570835
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.01317243019012726,
+        "text" : "mencionada resolución exenta N° 331, de 2024, de esta Subsecretaría.",
+        "width" : 0.63218391273864261,
+        "x" : 0.1655172469352762,
+        "y" : 0.8284883719656011
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.011668822028786274,
+        "text" : "10. Que, en virtud de lo expuesto, corresponde a la Subsecretaría de Educación",
+        "width" : 0.73333331972460281,
+        "x" : 0.133333349304365,
+        "y" : 0.77902885259783972
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.014788594739190475,
+        "text" : "Superior dictar el acto administrativo que modifique la resolución exenta N°331,",
+        "width" : 0.70818084750818699,
+        "x" : 0.1608573132015447,
+        "y" : 0.7601513705468651
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013081395567344334,
+        "text" : "de 2024, de la Subsecretaría de Educación Superior, incorporando nuevos",
+        "width" : 0.70574713019091417,
+        "x" : 0.16321840068998311,
+        "y" : 0.74418604647504871
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013181636066691871,
+        "text" : "establecimientos educacionales que participarán del PACE.",
+        "width" : 0.53793103612519166,
+        "x" : 0.16321838325924345,
+        "y" : 0.72819767425484527
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013081395567344334,
+        "text" : "RESUELVO:",
+        "width" : 0.096551722906106308,
+        "x" : 0.42068965693775145,
+        "y" : 0.67732558112257779
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.016185784658691027,
+        "text" : "ARTÍCULO PRIMERO: Modifíquese la tabla de establecimientos indicada en el",
+        "width" : 0.74252873891704985,
+        "x" : 0.12643678739204964,
+        "y" : 0.6365235746630642
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.015988372061807921,
+        "text" : "artículo único de la resolución exenta Nº331, de 2024, de la Subsecretaría de",
+        "width" : 0.74252873891704985,
+        "x" : 0.1241379219667625,
+        "y" : 0.6191860464545611
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.017593244194229363,
+        "text" : "Educación Superior, incorporando los siguiente trece nuevos establecimientos",
+        "width" : 0.74252873891704985,
+        "x" : 0.12413793001273937,
+        "y" : 0.60028149170147371
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.017441860309039714,
+        "text" : "educacionales que participarán en el Programa de Acceso a la Educación",
+        "width" : 0.74022988411893809,
+        "x" : 0.12643678244627804,
+        "y" : 0.58575581420594525
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.011773153730549546,
+        "text" : "Superior PACE:",
+        "width" : 0.13563217792489723,
+        "x" : 0.12643678595709157,
+        "y" : 0.57267441846203671
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.010174418401751595,
+        "text" : "639",
+        "width" : 0.032183907635368769,
+        "x" : 0.12873563271105121,
+        "y" : 0.5247093024997056
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.010253179081722852,
+        "text" : "DEL LIBERTADOR",
+        "width" : 0.13103447683413025,
+        "x" : 0.15862069097948664,
+        "y" : 0.52463054172889123
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.010236812929801831,
+        "text" : "BERNARDO O'HIGGINS",
+        "width" : 0.16781609406572251,
+        "x" : 0.16781608810123844,
+        "y" : 0.51301900084956231
+      },
+      {
+        "confidence" : 0.5,
+        "height" : 0.010204081632653073,
+        "text" : "640 |DEL LIBERTADOR",
+        "width" : 0.15632183708607683,
+        "x" : 0.13333333589374313,
+        "y" : 0.49999999983855958
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.011673936031805887,
+        "text" : "BERNARDO O'HIGGINS",
+        "width" : 0.17011493185292123,
+        "x" : 0.16551724459078085,
+        "y" : 0.48691860440680423
+      },
+      {
+        "confidence" : 0.5,
+        "height" : 0.011736330224291547,
+        "text" : "641 DEL LIBERTADOR",
+        "width" : 0.15862069188418859,
+        "x" : 0.13103448296595166,
+        "y" : 0.47383720920331585
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.01196340605207602,
+        "text" : "BERNARDO O'HIGGINS",
+        "width" : 0.17011493185292115,
+        "x" : 0.16551724815399915,
+        "y" : 0.46059113267228546
+      },
+      {
+        "confidence" : 0.5,
+        "height" : 0.0087209301545199125,
+        "text" : "642|",
+        "width" : 0.036781608726135728,
+        "x" : 0.13333333418099341,
+        "y" : 0.45203488380839896
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.010174418401751706,
+        "text" : "DEL LIBERTADOR",
+        "width" : 0.1195402283599411,
+        "x" : 0.17011494398094895,
+        "y" : 0.45058139528071328
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.011759856651569311,
+        "text" : "BERNARDO O'HIGGINS",
+        "width" : 0.17011493185292123,
+        "x" : 0.16551724459078085,
+        "y" : 0.4373680504241847
+      },
+      {
+        "confidence" : 0.5,
+        "height" : 0.010290002252416386,
+        "text" : "643 |DEL LIBERTADOR",
+        "width" : 0.15632183708607686,
+        "x" : 0.1333333369358887,
+        "y" : 0.42575650934671538
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.010273636436059719,
+        "text" : "BERNARDO O'HIGGINS",
+        "width" : 0.16781609406572254,
+        "x" : 0.16781609257633409,
+        "y" : 0.41414496818632773
+      },
+      {
+        "confidence" : 0.5,
+        "height" : 0.0088037820369067932,
+        "text" : "644 DEL LIBERTADOR",
+        "width" : 0.1540229822879651,
+        "x" : 0.13333333632728187,
+        "y" : 0.40253342723290775
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.010204081632653073,
+        "text" : "BERNARDO O'HIGGINS",
+        "width" : 0.16781609406572257,
+        "x" : 0.16781608880047211,
+        "y" : 0.38951442641353728
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.01162790732011254,
+        "text" : "645",
+        "width" : 0.02988505708998529,
+        "x" : 0.1310344827481108,
+        "y" : 0.37645348834575776
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.010246019141930796,
+        "text" : "DEL LIBERTADOR",
+        "width" : 0.12413792945070809,
+        "x" : 0.16551724092981837,
+        "y" : 0.37645348840086834
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.01171587354108361,
+        "text" : "BERNARDO O'HIGGINS",
+        "width" : 0.17011493185292118,
+        "x" : 0.16551724501606815,
+        "y" : 0.36337209279343208
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.010174418401751706,
+        "text" : "646",
+        "width" : 0.02758620654460181,
+        "x" : 0.13103448281965313,
+        "y" : 0.35174418619035464
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.010278750439079443,
+        "text" : "DEL LIBERTADOR",
+        "width" : 0.11954022835994116,
+        "x" : 0.1678160908008724,
+        "y" : 0.35319767468962804
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.014745184772875342,
+        "text" : "BERNARDO O'HIGGINS",
+        "width" : 0.1706831473836399,
+        "x" : 0.16524978934914239,
+        "y" : 0.33710399931902646
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.011627907320112429,
+        "text" : "647",
+        "width" : 0.032183907635368769,
+        "x" : 0.12873563244668343,
+        "y" : 0.32703488369459488
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013187772870315473,
+        "text" : "IDEL LIBERTADOR",
+        "width" : 0.13103447683413028,
+        "x" : 0.15862069130707285,
+        "y" : 0.32547501789300792
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.014578866925061718,
+        "text" : "BERNARDO O'HIGGINS",
+        "width" : 0.17011493185292118,
+        "x" : 0.16551724614250493,
+        "y" : 0.31245601666100553
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.01162790732011254,
+        "text" : "648",
+        "width" : 0.032183907635368769,
+        "x" : 0.12873563198691335,
+        "y" : 0.30232558115099017
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.011701552990370456,
+        "text" : "DEL LIBERTADOR",
+        "width" : 0.13103447683413025,
+        "x" : 0.15862069097948664,
+        "y" : 0.30225193548073226
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.011685187509578365,
+        "text" : "BERNARDO O'HIGGINS",
+        "width" : 0.17011493185292123,
+        "x" : 0.16551724459078085,
+        "y" : 0.29064039398478014
+      },
+      {
+        "confidence" : 0.5,
+        "height" : 0.010365721711300346,
+        "text" : "649 DEL LIBERTADOR",
+        "width" : 0.15865127750596608,
+        "x" : 0.13101918685074304,
+        "y" : 0.27897411579530162
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.017441860309039825,
+        "text" : "BERNARDO O'HIGGINS",
+        "width" : 0.17241378665103299,
+        "x" : 0.16551724559402373,
+        "y" : 0.26453488397338709
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.014534883814576127,
+        "text" : "650|DE ANTOFAGASTA",
+        "width" : 0.17241378665103294,
+        "x" : 0.13103448605379389,
+        "y" : 0.25290697684271213
+      },
+      {
+        "confidence" : 0.5,
+        "height" : 0.019183138069512551,
+        "text" : "651 DE LOS LAGOS",
+        "width" : 0.14991241421056298,
+        "x" : 0.13079091983680666,
+        "y" : 0.22732703574691204
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.011627907320112429,
+        "text" : "40080",
+        "width" : 0.048275861453053126,
+        "x" : 0.39080459740565732,
+        "y" : 0.52325581370912988
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.014534883814576238,
+        "text" : "LICEO FERMIN DEL REAL CASTILLO",
+        "width" : 0.24827585890141618,
+        "x" : 0.44367815939986671,
+        "y" : 0.52180232546189798
+      },
+      {
+        "confidence" : 0.5,
+        "height" : 0.014534883814576127,
+        "text" : "|CHÉPICA",
+        "width" : 0.073563217452271457,
+        "x" : 0.74022988460719763,
+        "y" : 0.52180232549823524
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.0087209301545199125,
+        "text" : "2406",
+        "width" : 0.036781608726135728,
+        "x" : 0.40229885126911602,
+        "y" : 0.50000000011169343
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.014534883814576127,
+        "text" : "TLICEO MUNICIPAL LUIS GREGORIO",
+        "width" : 0.25977011588106186,
+        "x" : 0.4367816054790094,
+        "y" : 0.49709302313631665
+      },
+      {
+        "confidence" : 0.5,
+        "height" : 0.016202199131900574,
+        "text" : "COINCO",
+        "width" : 0.071384442689825467,
+        "x" : 0.74476754886481333,
+        "y" : 0.49698610986989777
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013127424279037792,
+        "text" : "VALENZUELA LAVIN",
+        "width" : 0.14252873381377601,
+        "x" : 0.44597701382874416,
+        "y" : 0.48546511624249067
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.014597278678190717,
+        "text" : "11287 |LICEO BERTA ZAMORANO LIZANA",
+        "width" : 0.29655172460719764,
+        "x" : 0.39310345174812528,
+        "y" : 0.47238372091974679
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.017160261289742906,
+        "text" : "COLTAUCO",
+        "width" : 0.092449677296173927,
+        "x" : 0.74457975847585356,
+        "y" : 0.47179777625747543
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.014778325123152802,
+        "text" : "2694| ESCUELA PROF. MONICA SILVA GOMEZ",
+        "width" : 0.33333333333333337,
+        "x" : 0.40000000238095235,
+        "y" : 0.44757213251956518
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.016517594865641971,
+        "text" : "TLA ESTRELLA",
+        "width" : 0.10365101485746753,
+        "x" : 0.7332319629743691,
+        "y" : 0.4474098071533672
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.011627907320112429,
+        "text" : "2583",
+        "width" : 0.041379309816902687,
+        "x" : 0.39770114917200849,
+        "y" : 0.42441860440680423
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.015080500957749488,
+        "text" : "LICEO DE LOLOL",
+        "width" : 0.12429586727350717,
+        "x" : 0.44359919155963823,
+        "y" : 0.42269230756799314
+      },
+      {
+        "confidence" : 0.5,
+        "height" : 0.017441860309039825,
+        "text" : "LOLOL",
+        "width" : 0.0574712636345871,
+        "x" : 0.74022988502178699,
+        "y" : 0.42296511650245683
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.01162790732011254,
+        "text" : "15720",
+        "width" : 0.048275861453053126,
+        "x" : 0.3908045986125539,
+        "y" : 0.39970930222657175
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.016571879806357548,
+        "text" : "LICEO MUNICIPAL ZOILA ROSA",
+        "width" : 0.22566294590366331,
+        "x" : 0.4435205813617592,
+        "y" : 0.39817267546606683
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.011456409698636705,
+        "text" : "MALLOA",
+        "width" : 0.069413311638295228,
+        "x" : 0.74230483774776213,
+        "y" : 0.39906830669308169
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.010745143152139036,
+        "text" : "CARRENO",
+        "width" : 0.073756674061650818,
+        "x" : 0.44817913497053136,
+        "y" : 0.38779603314204725
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.01162790732011254,
+        "text" : "2530",
+        "width" : 0.041379309816902687,
+        "x" : 0.39770115020649116,
+        "y" : 0.37499999990099031
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.010246019141930796,
+        "text" : "LICEO MUNICIPAL JUAN PABLO II",
+        "width" : 0.23908045671988226,
+        "x" : 0.44597701062856471,
+        "y" : 0.37645348840086834
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.012649702572805732,
+        "text" : "NANCAGUA",
+        "width" : 0.096848461274452236,
+        "x" : 0.74238036585526934,
+        "y" : 0.37303561377000494
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.01162790732011254,
+        "text" : "2625",
+        "width" : 0.041379309816902687,
+        "x" : 0.39770114917200849,
+        "y" : 0.35029069743006003
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.017593244194229474,
+        "text" : "LICEO BICENTENARIO VICTOR JARA",
+        "width" : 0.2597701158810618,
+        "x" : 0.44367815812268752,
+        "y" : 0.34869809999157375
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.015988372061807921,
+        "text" : "PERALILLO",
+        "width" : 0.082758619633805486,
+        "x" : 0.74252873681144971,
+        "y" : 0.34738372081260371
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013948882154643183,
+        "text" : "MARTINEZ",
+        "width" : 0.078515204830446106,
+        "x" : 0.44350101749092147,
+        "y" : 0.33677555885871024
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.017593244194229363,
+        "text" : "2375 LICEO BICENTENARIO",
+        "width" : 0.20689654057905699,
+        "x" : 0.39770115292886238,
+        "y" : 0.32406755837629542
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.01675604834345179,
+        "text" : "PICHIDEGUA",
+        "width" : 0.099156195769208977,
+        "x" : 0.74237592547931897,
+        "y" : 0.32374406896866159
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013125378677829924,
+        "text" : "LATINOAMERICANO DE PICHIDEGU\/",
+        "width" : 0.25517240628483828,
+        "x" : 0.45057471467367294,
+        "y" : 0.31245601664944689
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.014534883814576127,
+        "text" : "2518",
+        "width" : 0.043678160362286167,
+        "x" : 0.39770114933992973,
+        "y" : 0.30087209290375838
+      },
+      {
+        "confidence" : 0.5,
+        "height" : 0.013109012525908792,
+        "text" : "LICEO SAN FRANCISC",
+        "width" : 0.16781609406572251,
+        "x" : 0.44367816196139154,
+        "y" : 0.30084447600994357
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.015988372061808032,
+        "text" : "PLACILLA",
+        "width" : 0.075862063744926655,
+        "x" : 0.74252873761029536,
+        "y" : 0.29941860460620839
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.019051847115609921,
+        "text" : "2319 |LICEO REPUBLICA DE ITALIA",
+        "width" : 0.24827585890141618,
+        "x" : 0.39770114945733787,
+        "y" : 0.2761627907563845
+      },
+      {
+        "confidence" : 0.5,
+        "height" : 0.017691239767054445,
+        "text" : "QUINTA DE",
+        "width" : 0.087480883135843346,
+        "x" : 0.74476530604440006,
+        "y" : 0.27603810112606741
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.010978858459171903,
+        "text" : "TILCOCO",
+        "width" : 0.071542703719973733,
+        "x" : 0.74238956678701062,
+        "y" : 0.26558615208501024
+      },
+      {
+        "confidence" : 0.5,
+        "height" : 0.020348836803503412,
+        "text" : "268 ESC. BASICA RURAL SAN ANTONIO DE",
+        "width" : 0.31724138376837729,
+        "x" : 0.4068965517611316,
+        "y" : 0.25000000026519198
+      },
+      {
+        "confidence" : 0.30000001192092896,
+        "height" : 0.01162790732011254,
+        "text" : "IOLLAGÜE",
+        "width" : 0.080459764835693615,
+        "x" : 0.73563218574307265,
+        "y" : 0.25290697651436245
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.01567202466713713,
+        "text" : "PADUA",
+        "width" : 0.062716685011235396,
+        "x" : 0.44105545136834035,
+        "y" : 0.23780352267340921
+      },
+      {
+        "confidence" : 0.5,
+        "height" : 0.019038550036629687,
+        "text" : "8195 ESCUELA PUQUELDON",
+        "width" : 0.21379310497339227,
+        "x" : 0.39770114928341876,
+        "y" : 0.2266009848955759
+      },
+      {
+        "confidence" : 0.5,
+        "height" : 0.017441860309039714,
+        "text" : "[PUQUELDÓN",
+        "width" : 0.10114942399687332,
+        "x" : 0.74022988620845998,
+        "y" : 0.22674418629896842
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.017441860309039825,
+        "text" : "ARTÍCULO SEGUNDO: Instrúyase a la División de Información y Acceso a notificar a",
+        "width" : 0.7402298841189382,
+        "x" : 0.12413792533516713,
+        "y" : 0.17587209302861961
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.016185784658691027,
+        "text" : "los establecimientos señalados en el artículo primero.",
+        "width" : 0.48275862303598804,
+        "x" : 0.11954023244752311,
+        "y" : 0.15974665714008951
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.017613701548566341,
+        "text" : "ARTÍCULO TERCERO: En todo lo no modificado, continúa vigente la resolución",
+        "width" : 0.74022988411893809,
+        "x" : 0.12413793679110555,
+        "y" : 0.11046511639863632
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.017593244194229474,
+        "text" : "exenta Nº331, de 2024, de la Subsecretaría de Educación Superior.",
+        "width" : 0.59770115881061869,
+        "x" : 0.12413793231882847,
+        "y" : 0.092892329390208861
+      }
+    ],
+    "page" : 3
+  },
+  {
+    "lines" : [
+      {
+        "confidence" : 1,
+        "height" : 0.018458103265414971,
+        "text" : "ARTÍCULO CUARTO: Archívese copia del",
+        "width" : 0.43455276234661777,
+        "x" : 0.12680666996450848,
+        "y" : 0.90780118186525427
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.012629423488755842,
+        "text" : "presente",
+        "width" : 0.1018938737133056,
+        "x" : 0.56106230271565993,
+        "y" : 0.90938296280284203
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.010174418029998966,
+        "text" : "acto",
+        "width" : 0.064665122875514958,
+        "x" : 0.66281755511343565,
+        "y" : 0.9113372097107757
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.016624569558963631,
+        "text" : "administrativo,",
+        "width" : 0.1433629427391111,
+        "x" : 0.72508527084708085,
+        "y" : 0.90665864541583874
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.017441860434054046,
+        "text" : "conjuntamente con la resolución exenta Nº331, de 2024, de la Subsecretaría de",
+        "width" : 0.73903003391354982,
+        "x" : 0.12702078154207036,
+        "y" : 0.88953488351843812
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.014705882352941235,
+        "text" : "Educación Superior.",
+        "width" : 0.18244803389399683,
+        "x" : 0.12471131640558054,
+        "y" : 0.87640056016694634
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.020348837395676056,
+        "text" : "ANÓTESE, NOTIFÍQUESE, ARCHÍVESE Y PUBLÍQUESE EN EL PORTAL",
+        "width" : 0.56120091524219617,
+        "x" : 0.21709006974610756,
+        "y" : 0.80668604621495266
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.016122727834877781,
+        "text" : "DE TRANSPARENCIA ACTIVA",
+        "width" : 0.25404155930634731,
+        "x" : 0.36951501870132974,
+        "y" : 0.79201680670862351
+      },
+      {
+        "confidence" : 0.30000001192092896,
+        "height" : 0.032037815126050528,
+        "text" : "Доантяо ое сурсасот ни",
+        "width" : 0.15704388135797587,
+        "x" : 0.34642032063740935,
+        "y" : 0.68750000044424731
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.016106442577030755,
+        "text" : "VICTOR ORELLANA CALDERÓN",
+        "width" : 0.27020784745094373,
+        "x" : 0.36027713897660663,
+        "y" : 0.63655462154268894
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.011660477694343085,
+        "text" : "SUBSECRETARIO DE EDUCACIÓN SUPERIOR",
+        "width" : 0.37182447456809647,
+        "x" : 0.30946882971941586,
+        "y" : 0.62209302356145557
+      },
+      {
+        "confidence" : 0.5,
+        "height" : 0.015103647354938077,
+        "text" : "Distribución:",
+        "width" : 0.094904567561504977,
+        "x" : 0.12460314371998765,
+        "y" : 0.55494817642485872
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.011904761904761973,
+        "text" : "- División de Información y Acceso.",
+        "width" : 0.23094688135471703,
+        "x" : 0.12240185089308019,
+        "y" : 0.53186274497906494
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.014732816306148977,
+        "text" : "- División Jurídica, SUBESUP",
+        "width" : 0.17556071891402772,
+        "x" : 0.12469077364516326,
+        "y" : 0.51879638261892391
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.013081395659460204,
+        "text" : "- Oficina de Partes.",
+        "width" : 0.12933025423756428,
+        "x" : 0.12240184586043266,
+        "y" : 0.50726744161431059
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.011713405951064404,
+        "text" : "- Establecimientos educacionales indicados en el artículo primero.",
+        "width" : 0.43187064403156283,
+        "x" : 0.12471133465280973,
+        "y" : 0.49563953518936255
+      },
+      {
+        "confidence" : 1,
+        "height" : 0.0088552864325814884,
+        "text" : "SGD 60.637-2024",
+        "width" : 0.12471131355531755,
+        "x" : 0.12471131573966233,
+        "y" : 0.44912790688761051
+      }
+    ],
+    "page" : 4
+  }
+]

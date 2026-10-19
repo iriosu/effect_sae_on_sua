@@ -1,0 +1,6 @@
+item,path,md5
+panel,/Users/iriosu/Dropbox/Effect SAE on SUA - repo/code/analysis_for_adversarial_report_output/input/section2_panel.rds,3104b4b2b1b6998941311667fa0ab785
+intake,/Users/iriosu/Dropbox/Effect SAE on SUA - repo/code/analysis_for_adversarial_report_output/input/intake_count.rds,18d6e5bce437c6874ba43f408334c97d
+headline,/Users/iriosu/Dropbox/Effect SAE on SUA - repo/code/analysis_for_adversarial_report_output/input/headline.rds,8fba99598b055af2420780f23eb437a2
+reference_notebook,finalized_design_v1/section2/section2_cs_did.Rmd,ec42ca71d37a9380886dfac01edceba2
+analysis_script,f04_entrant_counts.R,cfe9ff1dc18719c1e7a66383e6a59615
