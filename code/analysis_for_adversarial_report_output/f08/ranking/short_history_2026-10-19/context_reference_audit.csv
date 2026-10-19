@@ -1,0 +1,31 @@
+admission_year,history_status,contexts,students,missing_directory,small_modality,small_school
+2021,"Three cohorts, over 30 records",239559,196875,0,6263,592
+2023,"Three cohorts, over 30 records",242561,203278,0,5804,455
+2022,"Three cohorts, over 30 records",241667,199213,0,6588,653
+2024,"Three cohorts, over 30 records",246433,204326,0,6214,393
+2025,"Three cohorts, over 30 records",258401,206135,0,8989,564
+2026,"Three cohorts, over 30 records",268677,213177,0,10103,525
+2022,"One/two cohorts, over 30 records",3745,3635,0,872,343
+2021,"One/two cohorts, over 30 records",3529,3433,0,752,436
+2022,Fewer than 30 context records,1810,1787,0,1718,1246
+2021,Fewer than 30 context records,2011,1988,0,1941,1516
+2025,Fewer than 30 context records,1705,1670,0,1419,1148
+2026,Fewer than 30 context records,1516,1492,0,1394,1047
+2024,Fewer than 30 context records,1451,1433,0,1307,1089
+2023,Fewer than 30 context records,1969,1921,0,1820,1349
+2025,Exactly 30 context records,74,74,0,19,14
+2023,Exactly 30 context records,98,98,0,38,36
+2022,No usable context reference,4542,4500,8,4206,1199
+2024,"One/two cohorts, over 30 records",3370,3147,0,1472,323
+2023,No usable context reference,2617,2602,19,2548,665
+2024,No usable context reference,2294,2271,5,2185,711
+2025,"One/two cohorts, over 30 records",2602,2542,0,1472,289
+2026,"One/two cohorts, over 30 records",2712,2639,0,1450,343
+2021,No usable context reference,3821,3776,9,3780,1552
+2023,"One/two cohorts, over 30 records",3819,3751,0,1393,297
+2022,Exactly 30 context records,115,115,0,26,25
+2021,Exactly 30 context records,104,104,0,16,15
+2026,Exactly 30 context records,112,112,0,14,12
+2025,No usable context reference,1661,1647,2,1635,564
+2026,No usable context reference,554,546,0,552,334
+2024,Exactly 30 context records,166,166,0,20,17

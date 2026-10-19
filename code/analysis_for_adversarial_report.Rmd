@@ -4089,3 +4089,389 @@ report<-c('# Annual Ranking calculation test — October 19, 2026',
 writeLines(report,file.path(ay_out,'annual_ranking_test_2026-10-19.md'))
 cat('Annual report and assertions completed successfully.\n')
 ```
+
+## Short historical records: official rules and pooling diagnostics
+
+The October 19 search of DEMRE and MINEDUC confirms that one or two available
+historical cohorts suffice when the relevant school has more than 30 graduates;
+small schools instead require grouping by region, educational modality and
+administrative dependency. The public sources specify these criteria but do not
+provide the operational school-group assignments. Pooling below is therefore a
+sensitivity, not a replacement official score. Preserve the accepted narrow HHTT
+context candidate and all recorded scores throughout.
+
+```{r f08-ranking-short-history-setup}
+library(data.table)
+setDTthreads(4)
+sh_input<-'analysis_for_adversarial_report_output/input/f08'
+sh_out<-'analysis_for_adversarial_report_output/f08/ranking/short_history_2026-10-19'
+dir.create(sh_out,recursive=TRUE,showWarnings=FALSE)
+sh_files<-c('ranking_targets.rds','ranking_reference_historical_gpa_v5.rds',
+ 'ranking_context_hypothesis_2026-10-19.rds','score_reconstruction_records.rds')
+fwrite(data.table(input=sh_files,md5=unname(tools::md5sum(file.path(sh_input,sh_files)))),
+ file.path(sh_out,'input_provenance.csv'))
+sh_tables<-fread('analysis_for_adversarial_report_output/f08/ranking/nem_tables_used.csv')
+sh_t<-nem_from_history(as.data.table(readRDS(file.path(sh_input,'ranking_targets.rds'))),sh_tables)
+sh_prev<-as.data.table(readRDS(file.path(sh_input,'ranking_context_hypothesis_2026-10-19.rds')))
+sh_t<-merge(sh_t,sh_prev[,.(MRUN,grad_year,baseline=targeted_candidate,target_transition)],
+ by=c('MRUN','grad_year'),all.x=TRUE)
+for(j in 1:4)set(sh_t,j=paste0('teaching_',j),value=ifelse(sh_t[[paste0('teaching_',j)]]==310,310L,410L))
+sh_r<-as.data.table(readRDS(file.path(sh_input,'ranking_reference_historical_gpa_v5.rds')))
+sh_r[,teaching:=ifelse(teaching==310,310L,410L)]
+sh_r<-sh_r[population=='exit_context',.(n=sum(n),sum_trunc=sum(sum_trunc),sum_round=sum(sum_round),
+ sum_full=sum(sum_full),max_trunc=max(max_trunc),max_round=max(max_round),max_full=max(max_full)),
+ by=.(rbd,teaching,exit_year,first,last,population)]
+sh_c<-rbindlist(list(ranking_student_contexts(sh_t[target_transition!=TRUE|is.na(target_transition)]),
+ ranking_student_contexts(sh_t[target_transition==TRUE],split_teaching=FALSE)),use.names=TRUE)
+sh_c<-ranking_context_benchmarks(sh_c,sh_r)
+sh_c[,h_round_raw:=h_equal_rounded_cohort_raw]
+sh_check<-ranking_from_contexts(sh_c,sh_tables,own='round',historical='round',
+ benchmark_precision='round',context_rounding='round')
+sh_check<-merge(sh_t[,.(MRUN,grad_year,baseline,nem_history_proxy)],sh_check,
+ by=c('MRUN','grad_year'),all.x=TRUE)
+sh_check[,check:=pmax(ranking_calculated,nem_history_proxy)]
+stopifnot(sh_check[,all(is.na(baseline)==is.na(check))],
+ sh_check[is.finite(baseline),all(check==baseline)])
+# Count observed fourth-grade graduates independently of the length of the
+# student's context. These remain extract counts, not an official DEMRE roster.
+sh_gr<-sh_r[first==4L&last==4L,.(rbd,teaching,exit_year,n)]
+sh_lags<-rbindlist(lapply(1:3,function(lag){z<-copy(sh_gr);z[,exit_year:=exit_year+lag];z}))
+sh_mod<-sh_lags[,.(modality_graduates=sum(n),modality_cohorts=.N),by=.(rbd,teaching,exit_year)]
+sh_all<-sh_lags[,.(school_graduates=sum(n)),by=.(rbd,exit_year)]
+sh_c<-merge(sh_c,sh_mod,by=c('rbd','teaching','exit_year'),all.x=TRUE)
+sh_c<-merge(sh_c,sh_all[,.(rbd,exit_year,school_graduates)],by=c('rbd','exit_year'),all.x=TRUE)
+# Directory classifications are taken at the student's context-exit year.
+# Original regional codes avoid retrospectively moving historical schools to Nuble.
+sh_directory_path<-'/Users/iriosu/Dropbox/Effect SAE on SUA/data/panel_ee_2004_2025_homogenized.rds'
+sh_d<-as.data.table(readRDS(sh_directory_path))[,.(rbd,exit_year=year,
+ region=cod_reg_rbd_original,dependency=cod_depe)]
+stopifnot(!anyDuplicated(sh_d,by=c('rbd','exit_year')))
+sh_c<-merge(sh_c,sh_d,by=c('rbd','exit_year'),all.x=TRUE)
+sh_c[,context_id:=.I]
+sh_c[,history_status:=fcase(is.na(reference_n),'No usable context reference',
+ reference_n<30L,'Fewer than 30 context records',reference_n==30L,'Exactly 30 context records',
+ reference_generations<3L,'One/two cohorts, over 30 records',default='Three cohorts, over 30 records')]
+sh_student_status<-sh_c[,.(any_no_reference=any(is.na(reference_n)),
+ any_small=any(reference_n<30L,na.rm=TRUE),any_exact30=any(reference_n==30L,na.rm=TRUE),
+ any_short=any(reference_generations<3L,na.rm=TRUE),
+ any_small_modality=any(is.na(modality_graduates)|modality_graduates<30L),
+ any_small_school=any(is.na(school_graduates)|school_graduates<30L)),by=.(MRUN,grad_year)]
+sh_t<-merge(sh_t,sh_student_status,by=c('MRUN','grad_year'),all.x=TRUE)
+sh_t[,history_status:=fcase(!complete_history,'Incomplete own history',
+ any_no_reference,'No usable context reference',any_small,'Fewer than 30 context records',
+ any_exact30,'Exactly 30 context records',any_short,'One/two cohorts, over 30 records',
+ default='Three cohorts, over 30 records')]
+fwrite(sh_c[,.(contexts=.N,students=uniqueN(paste(MRUN,grad_year)),
+ missing_directory=sum(is.na(region)|is.na(dependency)),
+ small_modality=sum(is.na(modality_graduates)|modality_graduates<30L),
+ small_school=sum(is.na(school_graduates)|school_graduates<30L)),
+ by=.(admission_year=grad_year+1L,history_status)],file.path(sh_out,'context_reference_audit.csv'))
+fwrite(sh_t[,.(graduates=.N,recorded=sum(is.finite(reported_ranking)),
+ available=sum(is.finite(baseline)),validated=sum(is.finite(baseline)&is.finite(reported_ranking)),
+ mismatches=sum(is.finite(baseline)&is.finite(reported_ranking)&baseline!=reported_ranking),
+ absolute_error=sum(abs(baseline-reported_ranking),na.rm=TRUE)),
+ by=.(admission_year=grad_year+1L,pace12,history_status)],file.path(sh_out,'baseline_history_audit.csv'))
+saveRDS(sh_c,file.path(sh_input,'ranking_short_history_contexts_2026-10-19.rds'))
+```
+
+```{r f08-ranking-short-history-candidates}
+# Pooling definitions are fixed before examining scores. No student gets a
+# bespoke rule selected by agreement with the observed outcome.
+sh_specs<-CJ(gate=c('modality','school'),pool=c('none','small_only','all_similar'))
+sh_specs[,variant:=paste(gate,pool,sep='_')]
+fwrite(sh_specs,file.path(sh_out,'specifications.csv'))
+sh_scores<-list();sh_pool_audit<-list()
+sh_calc<-function(z){
+ # Reference count used for eligibility is a separate quantity; never replace
+ # the actual number underlying a mean/max in the saved context diagnostics.
+ g<-z$g_round;h<-score_round(z$h_round_raw,2L);m<-score_round(z$m_round_raw,2L)
+ ng<-nem_from_gpa(g,z$grad_year+1L,z$context_group,sh_tables)
+ nh<-nem_from_gpa(h,z$grad_year+1L,z$context_group,sh_tables)
+ cap<-ifelse(z$grad_year<=2021,850,1000)
+ s<-ifelse(g<=h,ng,ifelse(g>=m,cap,nh+(cap-nh)*(g-h)/(m-h)))
+ s[!is.finite(s)|m<=h|is.na(z$eligibility_n)|z$eligibility_n<30L]<-NA_real_
+ z[,score:=score_round(s)]
+ ans<-z[,.(candidate=score_round(sum(score*length)/4)),by=.(MRUN,grad_year)]
+ ans<-merge(sh_t,ans,by=c('MRUN','grad_year'),all.x=TRUE)
+ ans[,candidate:=pmax(candidate,nem_history_proxy)]
+ ans
+}
+# Independence check: the local scorer matches the established function exactly.
+z<-copy(sh_c);z[,eligibility_n:=reference_n]
+a<-sh_calc(z);stopifnot(a[,all(is.na(candidate)==is.na(baseline))],
+ a[is.finite(baseline),all(candidate==baseline)])
+# Expand annual context summaries into their eligible three-year windows.
+sh_lr<-rbindlist(lapply(1:3,function(lag){z<-copy(sh_r);
+ z[,`:=`(reference_year=exit_year,exit_year=exit_year+lag)];z}))
+sh_lr<-merge(sh_lr,sh_d,by=c('rbd','exit_year'),all.x=TRUE)
+sh_lr<-merge(sh_lr,sh_mod,by=c('rbd','teaching','exit_year'),all.x=TRUE)
+sh_lr<-merge(sh_lr,sh_all[,.(rbd,exit_year,school_graduates)],by=c('rbd','exit_year'),all.x=TRUE)
+stopifnot(sh_lr[,all(reference_year<exit_year & exit_year-reference_year<=3L)])
+for(k in seq_len(nrow(sh_specs))){
+ spec<-sh_specs[k];cat('Short-history candidate:',spec$variant,'\n')
+ z<-copy(sh_c);gate_col<-paste0(spec$gate,'_graduates')
+ z[,eligibility_n:=get(gate_col)]
+ # A missing graduation-count cell is treated as insufficient *observed*
+ # history, not proof that the school had no actual graduates.
+ need<-is.na(z$eligibility_n)|z$eligibility_n<30L
+ if(spec$pool!='none'){
+  d<-sh_lr[!is.na(region)&!is.na(dependency)]
+  if(spec$pool=='small_only')d<-d[is.na(get(gate_col))|get(gate_col)<30L]
+  # Treat pooled schools as one school within each historical year, then
+  # apply the retained equal-cohort-mean / mean-of-maxima convention.
+  p<-d[,.(n=sum(n),sum_round=sum(sum_round),max_round=max(max_round),schools=uniqueN(rbd)),
+   by=.(region,dependency,teaching,exit_year,first,last,reference_year)]
+  p<-p[,.(pool_n=sum(n),pool_cohorts=.N,
+   pool_h=mean(score_round(sum_round/n,2L)),pool_m=mean(max_round),
+   min_schools=min(schools)),by=.(region,dependency,teaching,exit_year,first,last)]
+  z<-merge(z,p,by=c('region','dependency','teaching','exit_year','first','last'),all.x=TRUE)
+  setorder(z,context_id);need<-is.na(z$eligibility_n)|z$eligibility_n<30L
+  z[need,`:=`(h_round_raw=pool_h,m_round_raw=pool_m,eligibility_n=pool_n)]
+  z[,variant:=spec$variant]
+  sh_pool_audit[[k]]<-z[need,.(contexts=.N,with_pool=sum(is.finite(pool_h)&pool_n>=30L,na.rm=TRUE),
+   one_school_pool=sum(min_schools==1L,na.rm=TRUE),unknown_metadata=sum(is.na(region)|is.na(dependency))),
+   by=.(variant,admission_year=grad_year+1L)]
+ }
+ a<-sh_calc(z);a[,variant:=spec$variant]
+ stopifnot(!anyDuplicated(a,by=c('MRUN','grad_year')),
+  a[is.finite(candidate),all(candidate>=nem_history_proxy & candidate<=ifelse(grad_year<=2021,850,1000))])
+ sh_scores[[k]]<-a[,.(MRUN,grad_year,variant,candidate)]
+}
+sh_scores<-rbindlist(sh_scores,use.names=TRUE)
+saveRDS(sh_scores,file.path(sh_input,'ranking_short_history_candidates_2026-10-19.rds'))
+fwrite(rbindlist(sh_pool_audit,use.names=TRUE),file.path(sh_out,'pooling_coverage.csv'))
+sh_v<-merge(sh_scores,sh_t[,.(MRUN,grad_year,reported_ranking,baseline,nem_history_proxy,
+ nem_recorded,pace12,history_status,any_small_modality,any_small_school)],by=c('MRUN','grad_year'),all.x=TRUE)
+sh_v[,`:=`(error=candidate-reported_ranking,baseline_error=baseline-reported_ranking)]
+sh_metrics<-list()
+for(scope in c('common','newly_available','lost','all_available')){
+ q<-switch(scope,common=sh_v[is.finite(candidate)&is.finite(baseline)],
+ newly_available=sh_v[is.finite(candidate)&!is.finite(baseline)],
+ lost=sh_v[!is.finite(candidate)&is.finite(baseline)],all_available=sh_v[is.finite(candidate)])
+ sh_metrics[[scope]]<-q[,c(list(scope=scope,graduates=.N),score_metrics(error),
+ list(baseline_n=sum(is.finite(baseline_error)),
+ baseline_exact=mean(baseline_error==0,na.rm=TRUE),baseline_mae=mean(abs(baseline_error),na.rm=TRUE),
+ resolved=sum(error==0&baseline_error!=0,na.rm=TRUE),introduced=sum(error!=0&baseline_error==0,na.rm=TRUE))),
+ by=.(variant,admission_year=grad_year+1L,pace12,history_status)]
+}
+sh_metrics<-rbindlist(sh_metrics,use.names=TRUE)
+fwrite(sh_metrics,file.path(sh_out,'candidate_validation.csv'))
+sh_summary<-sh_metrics[n>0,.(n=sum(n),exact=weighted.mean(exact,n),mae=weighted.mean(mae,n),
+ baseline_exact=if(all(is.finite(baseline_exact)))weighted.mean(baseline_exact,baseline_n) else NA_real_,
+ baseline_mae=if(all(is.finite(baseline_mae)))weighted.mean(baseline_mae,baseline_n) else NA_real_,
+ resolved=sum(resolved),introduced=sum(introduced)),by=.(variant,scope)]
+fwrite(sh_summary,file.path(sh_out,'candidate_summary.csv'));print(sh_summary)
+fwrite(sh_v[,.(graduates=.N,baseline=sum(is.finite(baseline)),candidate=sum(is.finite(candidate)),
+ gained=sum(is.finite(candidate)&!is.finite(baseline)),lost=sum(!is.finite(candidate)&is.finite(baseline)),
+ changed=sum(is.finite(candidate)&is.finite(baseline)&candidate!=baseline)),
+ by=.(variant,admission_year=grad_year+1L,pace12)],file.path(sh_out,'candidate_coverage.csv'))
+sh_hash<-fread(file.path(sh_out,'input_provenance.csv'))
+stopifnot(identical(unname(tools::md5sum(file.path(sh_input,sh_hash$input))),sh_hash$md5))
+```
+
+```{r f08-ranking-first-pass-history}
+# MINEDUC NEM rules, Case 1, and the 2018 manual specify the first passed
+# instance of a repeated grade. Resolve distinct years only; earliest-year
+# conflicts need within-year enrollment dates and remain unknown.
+library(data.table)
+setDTthreads(4)
+fp_input<-'analysis_for_adversarial_report_output/input/f08'
+fp_out<-'analysis_for_adversarial_report_output/f08/ranking/short_history_2026-10-19'
+fp_tables<-fread('analysis_for_adversarial_report_output/f08/ranking/nem_tables_used.csv')
+x<-rbindlist(list(readRDS(file.path(fp_input,'ranking_grade_records_2010_2023.rds')),
+ as.data.table(readRDS(file.path(fp_input,'rendimiento_grades_2024_2025.rds')))[
+ COD_ENSE %in% c(310L,410L,510L,610L,710L,810L,910L)&COD_GRADO %in% 1:4]),use.names=TRUE)
+x<-unique(x[SIT_FIN_R=='P' & MRUN>0 & RBD>0 & between(PROM_GRAL,1,7),
+ .(MRUN,grade=COD_GRADO,year=AGNO,rbd=RBD,teaching=COD_ENSE,gpa=PROM_GRAL)])
+x[,`:=`(first_year=min(year),records=.N),by=.(MRUN,grade)]
+x<-x[year==first_year]
+x[,earliest_records:=.N,by=.(MRUN,grade)]
+fwrite(x[,.(records=.N,ambiguous_first_year=sum(earliest_records>1L),
+ recovered=sum(records>1L & earliest_records==1L)),by=.(year,grade)],
+ file.path(fp_out,'first_pass_record_audit.csv'))
+x<-x[earliest_records==1L]
+stopifnot(x[,all(year==first_year)],!anyDuplicated(x,by=c('MRUN','grade')))
+fp_w<-dcast(x[,.(MRUN,grade,year,rbd,teaching,gpa)],MRUN~grade,
+ value.var=c('year','rbd','teaching','gpa'));rm(x);gc()
+saveRDS(fp_w,file.path(fp_input,'ranking_first_pass_histories_2026-10-19.rds'))
+fp_old<-as.data.table(readRDS(file.path(fp_input,'ranking_targets.rds')))
+fp_base<-as.data.table(readRDS(file.path(fp_input,'ranking_context_hypothesis_2026-10-19.rds')))
+fp_old<-merge(fp_old,fp_base[,.(MRUN,grad_year,baseline=targeted_candidate)],by=c('MRUN','grad_year'),all.x=TRUE)
+fp_meta<-fp_old[,setdiff(names(fp_old),c(grep('^(year|rbd|teaching|gpa)_[1-4]$',names(fp_old),value=TRUE),
+ 'complete_history','gpa_round','gpa_trunc','nem_group','one_school')),with=FALSE]
+fp_new<-merge(fp_meta,fp_w,by='MRUN',all.x=TRUE)
+fp_new[,complete_history:=!is.na(gpa_1+gpa_2+gpa_3+gpa_4)&
+ year_1<year_2&year_2<year_3&year_3<year_4&year_4==grad_year]
+fp_new[is.na(complete_history),complete_history:=FALSE]
+fp_new[,`:=`(gpa_round=score_round((gpa_1+gpa_2+gpa_3+gpa_4)/4,2L),
+ gpa_trunc=score_trunc((gpa_1+gpa_2+gpa_3+gpa_4)/4,2L),
+ nem_group=fifelse(teaching_4==310L,'A','C'),one_school=rbd_1==rbd_2&rbd_2==rbd_3&rbd_3==rbd_4)]
+fp_new<-nem_from_history(fp_new,fp_tables);fp_old<-nem_from_history(fp_old,fp_tables)
+# Scores on previously complete histories must not change just from recovery.
+qa<-merge(fp_old[,.(MRUN,grad_year,old_nem=nem_history_proxy)],
+ fp_new[,.(MRUN,grad_year,new_nem=nem_history_proxy)],by=c('MRUN','grad_year'))
+stopifnot(qa[is.finite(old_nem),all(new_nem==old_nem)])
+fp_ref<-ranking_reference_by_context(fp_w)[population=='exit_context']
+# Keep the previous historical official-GPA reconciliation, now allowing new
+# grade histories to supply their independently calculated cumulative GPA.
+hg<-as.data.table(readRDS(file.path(fp_input,'historical_official_gpa.rds')))
+hg[admission_year<2016L,official_gpa:=NA_real_]
+w<-fp_w[!is.na(year_4)&between(year_4,2010,2024)]
+w[,grade_gpa:=score_round(rowMeans(.SD),2L),.SDcols=paste0('gpa_',1:4)]
+w[is.na(year_1<year_2&year_2<year_3&year_3<year_4)|
+ !(year_1<year_2&year_2<year_3&year_3<year_4),grade_gpa:=NA_real_]
+w<-merge(w,hg[,.(MRUN,year_4=grad_year,official_gpa)],by=c('MRUN','year_4'),all.x=TRUE)
+w[,historical_gpa:=fcoalesce(official_gpa,grade_gpa)]
+r<-w[is.finite(historical_gpa),.(n=.N,sum_trunc=sum(historical_gpa),sum_round=sum(historical_gpa),
+ sum_full=sum(historical_gpa),max_trunc=max(historical_gpa),max_round=max(historical_gpa),
+ max_full=max(historical_gpa)),by=.(rbd=rbd_4,teaching=teaching_4,exit_year=year_4)]
+r[,`:=`(first=1L,last=4L,population='exit_context')]
+fp_ref<-rbindlist(list(fp_ref[!(first==1L&last==4L)],r),use.names=TRUE)
+saveRDS(fp_ref,file.path(fp_input,'ranking_first_pass_reference_2026-10-19.rds'))
+saveRDS(fp_new,file.path(fp_input,'ranking_first_pass_targets_2026-10-19.rds'))
+rm(fp_w,w,r,hg);gc()
+```
+
+```{r f08-ranking-first-pass-validation}
+library(data.table)
+setDTthreads(4)
+fp_input<-'analysis_for_adversarial_report_output/input/f08'
+fp_out<-'analysis_for_adversarial_report_output/f08/ranking/short_history_2026-10-19'
+fp_tables<-fread('analysis_for_adversarial_report_output/f08/ranking/nem_tables_used.csv')
+fp_old<-nem_from_history(as.data.table(readRDS(file.path(fp_input,'ranking_targets.rds'))),fp_tables)
+fp_new<-as.data.table(readRDS(file.path(fp_input,'ranking_first_pass_targets_2026-10-19.rds')))
+fp_base<-as.data.table(readRDS(file.path(fp_input,'ranking_context_hypothesis_2026-10-19.rds')))
+fp_old<-merge(fp_old,fp_base[,.(MRUN,grad_year,baseline=targeted_candidate)],by=c('MRUN','grad_year'),all.x=TRUE)
+fp_specs<-data.table(variant=c('first_pass_own_only','first_pass_reference_only','first_pass_both'),
+ own=c(TRUE,FALSE,TRUE),reference=c(FALSE,TRUE,TRUE))
+fp_results<-list()
+for(k in seq_len(nrow(fp_specs))){
+ spec<-fp_specs[k];cat('First-pass candidate:',spec$variant,'\n')
+ t<-copy(if(spec$own)fp_new else fp_old)
+ r<-as.data.table(readRDS(file.path(fp_input,if(spec$reference)
+ 'ranking_first_pass_reference_2026-10-19.rds' else 'ranking_reference_historical_gpa_v5.rds')))
+ for(j in 1:4)set(t,j=paste0('teaching_',j),value=ifelse(t[[paste0('teaching_',j)]]==310,310L,410L))
+ t[,target_transition:=one_school==TRUE & teaching_1==310L & teaching_2==310L &
+ teaching_3==410L & teaching_4==410L]
+ r[,teaching:=ifelse(teaching==310L,310L,410L)]
+ r<-r[population=='exit_context',.(n=sum(n),sum_trunc=sum(sum_trunc),sum_round=sum(sum_round),
+ sum_full=sum(sum_full),max_trunc=max(max_trunc),max_round=max(max_round),max_full=max(max_full)),
+ by=.(rbd,teaching,exit_year,first,last,population)]
+ c<-rbindlist(list(ranking_student_contexts(t[target_transition!=TRUE|is.na(target_transition)]),
+ ranking_student_contexts(t[target_transition==TRUE],split_teaching=FALSE)),use.names=TRUE)
+ c<-ranking_context_benchmarks(c,r);c[,h_round_raw:=h_equal_rounded_cohort_raw]
+ a<-ranking_from_contexts(c,fp_tables,own='round',historical='round',
+ benchmark_precision='round',context_rounding='round')
+ a<-merge(t,a,by=c('MRUN','grad_year'),all.x=TRUE)
+ a[,candidate:=pmax(ranking_calculated,nem_history_proxy)]
+ a[,variant:=spec$variant]
+ fp_results[[k]]<-a[,.(MRUN,grad_year,variant,candidate,nem_history_proxy)]
+}
+fp_results<-rbindlist(fp_results,use.names=TRUE)
+saveRDS(fp_results,file.path(fp_input,'ranking_first_pass_candidates_2026-10-19.rds'))
+v<-merge(fp_results,fp_old[,.(MRUN,grad_year,baseline,reported_ranking,nem_recorded,
+ old_nem=nem_history_proxy,pace12)],by=c('MRUN','grad_year'),all.x=TRUE)
+v[,`:=`(error=candidate-reported_ranking,baseline_error=baseline-reported_ranking,
+ nem_error=nem_history_proxy-nem_recorded)]
+v[,scope:=fcase(is.finite(candidate)&is.finite(baseline),'common',
+ is.finite(candidate)&!is.finite(baseline),'newly_available',
+ !is.finite(candidate)&is.finite(baseline),'lost',default='unavailable')]
+m<-v[,c(list(graduates=.N),score_metrics(error),list(
+ baseline_n=sum(is.finite(baseline_error)),baseline_exact=mean(baseline_error==0,na.rm=TRUE),
+ baseline_mae=mean(abs(baseline_error),na.rm=TRUE),resolved=sum(error==0&baseline_error!=0,na.rm=TRUE),
+ introduced=sum(error!=0&baseline_error==0,na.rm=TRUE))),
+ by=.(variant,scope,admission_year=grad_year+1L,pace12)]
+fwrite(m,file.path(fp_out,'first_pass_validation.csv'))
+fwrite(m[n>0,.(n=sum(n),exact=weighted.mean(exact,n),mae=weighted.mean(mae,n),
+ baseline_exact=if(all(is.finite(baseline_exact)))weighted.mean(baseline_exact,baseline_n) else NA_real_,
+ baseline_mae=if(all(is.finite(baseline_mae)))weighted.mean(baseline_mae,baseline_n) else NA_real_,
+ resolved=sum(resolved),introduced=sum(introduced)),by=.(variant,scope)],
+ file.path(fp_out,'first_pass_summary.csv'))
+fwrite(v[variant=='first_pass_both',c(list(graduates=.N),score_metrics(nem_error)),
+ by=.(admission_year=grad_year+1L,nem_previously_available=is.finite(old_nem),pace12)],
+ file.path(fp_out,'first_pass_nem_validation.csv'))
+fwrite(v[,.(graduates=.N,available=sum(is.finite(candidate)),
+ missing_recorded_filled=sum(is.finite(candidate)&!is.finite(reported_ranking)),
+ changed=sum(is.finite(candidate)&is.finite(baseline)&candidate!=baseline)),
+ by=.(variant,scope,admission_year=grad_year+1L,pace12)],file.path(fp_out,'first_pass_coverage.csv'))
+stopifnot(!anyDuplicated(v,by=c('MRUN','grad_year','variant')),
+ v[is.finite(candidate),all(candidate>=nem_history_proxy&candidate<=ifelse(grad_year<=2021,850,1000))],
+ v[variant=='first_pass_own_only'&is.finite(baseline),all(candidate==baseline)])
+print(fread(file.path(fp_out,'first_pass_summary.csv')))
+```
+
+```{r f08-ranking-short-history-report}
+library(data.table)
+sh_input<-'analysis_for_adversarial_report_output/input/f08'
+sh_out<-'analysis_for_adversarial_report_output/f08/ranking/short_history_2026-10-19'
+b<-fread(file.path(sh_out,'baseline_history_audit.csv'))
+b<-b[,.(graduates=sum(graduates),validated=sum(validated),mismatches=sum(mismatches),
+ absolute_error=sum(absolute_error)),by=history_status]
+s<-fread(file.path(sh_out,'candidate_summary.csv'))
+f<-fread(file.path(sh_out,'first_pass_summary.csv'))
+nem<-fread(file.path(sh_out,'first_pass_nem_validation.csv'))
+fc<-fread(file.path(sh_out,'first_pass_coverage.csv'))
+cv<-fread(file.path(sh_out,'candidate_coverage.csv'))
+fmt<-function(x)format(x,big.mark=',',scientific=FALSE,trim=TRUE)
+tab<-function(x)vapply(seq_len(nrow(x)),function(i)sprintf('| %s | %s | %.2f%% | %.3f | %s | %s |',
+ x$variant[i],fmt(x$n[i]),100*x$exact[i],x$mae[i],fmt(x$resolved[i]),fmt(x$introduced[i])),character(1))
+short<-b[history_status=='One/two cohorts, over 30 records']
+report<-c('# Short historical records and first-passed-grade audit — October 19, 2026',
+ '', '## Official-source findings',
+ '', 'The [source review](../../sources/ranking/short_history_2026-10-19/source_review.md) records the DEMRE/MINEDUC URLs, relevant provisions, historical applicability, and unresolved operational choices.',
+ '', '- For the study years, fewer than 30 school graduates across the previous three generations triggers pooling with schools similar in region, modality and dependency. One or two cohorts with more than 30 graduates suffice without pooling. Our current code already averages the available historical cohorts; it does not require all three.',
+ '- The public provisions reviewed do not supply exact pre-2028 pool assignments. They also do not explicitly settle equality at 30. The diagnostics retain the existing >=30 convention, audit equality separately and distinguish school-wide graduates from context-reference records.',
+ '- The MINEDUC September 2025 committee annex provides a more detailed 93-student/commune-to-province-to-region pooling rule **from admission 2028**. It is not applicable to the 2021–2026 sample. The same annex describes context-based scoring through 2027.',
+ '- A separate MINEDUC rule, also documented in its 2018 manual, says to use the first passed instance when a grade was passed in different years. Our earlier cache discarded all such multiple records. This was tested separately as a potential loss of students and historical peers. Earliest-year conflicts remain unknown because we lack within-year enrollment dates.',
+ '', '## Size of the short-history problem',
+ '', sprintf('Among %s validated students with one/two usable context cohorts and more than 30 records, the accepted context candidate matches %.2f%% exactly. They account for %s remaining mismatches (%.2f%% of all mismatches), but %.2f%% of remaining absolute error. Most remaining mismatches therefore occur with all three observed cohorts.',
+ fmt(short$validated),100*(1-short$mismatches/short$validated),fmt(short$mismatches),
+ 100*short$mismatches/sum(b$mismatches),100*short$absolute_error/sum(b$absolute_error)),
+ '', sprintf('Among complete own histories, %s students have at least one context with fewer than 30 usable records and %s have no usable reference for at least one context. These categories concern the observed extract; they do not establish true absence in DEMRE’s administrative records. A further %s have incomplete own histories.',
+ fmt(b[history_status=='Fewer than 30 context records',graduates]),
+ fmt(b[history_status=='No usable context reference',graduates]),fmt(b[history_status=='Incomplete own history',graduates])),
+ '', '## Pooling and threshold experiments',
+ '', 'All specifications preserve the accepted narrow same-school HHTT convention, the existing score formula and rounding, and the independent NEM floor. The two threshold units are whole-school graduates and school-modality graduates, observed from passed fourth-grade records. Directory region and exact dependency codes refer to the student’s context-exit year. Within each matching group, tests either pool only small schools or all comparable schools. Each historical year is aggregated first, then the existing mean-of-cohort-means and mean-of-cohort-maxima convention is applied. These are declared approximations, not verified official pools.',
+ '', '| Candidate, common observed-score sample | N | Exact | MAE | Resolved | Introduced |',
+ '|---|---:|---:|---:|---:|---:|',tab(s[scope=='common']),
+ '', 'The `none` variants do not improve any existing prediction: their apparent aggregate gains reflect dropping difficult observations. All pooling variants introduce more errors than they resolve. Newly available cases must be assessed separately:',
+ '', '| Candidate, newly available observed-score sample | N | Exact | MAE | Resolved | Introduced |',
+ '|---|---:|---:|---:|---:|---:|',tab(s[scope=='newly_available']),
+ '', 'No pooling or threshold variant is adopted. Coverage tables include lost cases and graduates without observed scores; comparison metrics never treat missing predictions as matches.',
+ '', '## First-passed-grade experiment',
+ '', 'The implementation selects the earliest year with a unique passed record for each student/grade. A unique later record is not substituted for conflicts in the first year. Only regular youth-secondary teaching codes are included. Complete target histories must be chronological and end in the target graduation year. Reference cohorts always precede the relevant context-exit year; the available raw grade window remains 2010–2025. Historical graduation-GPA reconciliation is retained, and the new grades never use current observed Ranking to choose a record.',
+ '', 'Three fixed variants separate recovery of the student’s own history from recovery of historical peers. Previously complete own histories and their independent NEM remain unchanged.',
+ '', '| First-pass candidate, common observed-score sample | N | Exact | MAE | Resolved | Introduced |',
+ '|---|---:|---:|---:|---:|---:|',tab(f[scope=='common']),
+ '', '| First-pass candidate, newly available observed-score sample | N | Exact | MAE | Resolved | Introduced |',
+ '|---|---:|---:|---:|---:|---:|',tab(f[scope=='newly_available']),
+ '', sprintf('Independent NEM for newly reconstructible observed-score histories matches %.2f%% exactly over %s cases; MAE is %.3f points. These are recovered-history cases, not a same-sample gain in accuracy over previously complete histories.',
+ 100*nem[nem_previously_available==FALSE & n>0,weighted.mean(exact,n)],
+ fmt(nem[nem_previously_available==FALSE,sum(n)]),nem[nem_previously_available==FALSE & n>0,weighted.mean(mae,n)]),
+ '', sprintf('**Decision:** the reference-only first-pass variant is a small promising refinement: exact agreement changes from %.4f%% to %.4f%% on the same %s cases, resolving %s errors and introducing %s (net %s). Keep it as a separate provisional candidate. The own-history recovery is not adopted: low validation accuracy suggests that repeated passed entries in these extracts can represent unresolved record revisions or other cases beyond genuine repeat completions; that explanation is a hypothesis, not established by the test.',
+ 100*f[variant=='first_pass_reference_only'&scope=='common',baseline_exact],
+ 100*f[variant=='first_pass_reference_only'&scope=='common',exact],
+ fmt(f[variant=='first_pass_reference_only'&scope=='common',n]),
+ fmt(f[variant=='first_pass_reference_only'&scope=='common',resolved]),
+ fmt(f[variant=='first_pass_reference_only'&scope=='common',introduced]),
+ fmt(f[variant=='first_pass_reference_only'&scope=='common',resolved-introduced])),
+ '', 'The private candidates and original deliveries remain separate. The full-year/PACE breakdown, gained/lost counts and error metrics are in the accompanying CSVs. Exact agreement for the reference-only first-pass variant improves in every admission year, but these are exploratory in-sample checks, not a held-out validation. This refinement does not recover the official school pools or establish full PACE qualification.',
+ '', '## Checks, files and reproduction',
+ '', '- Baseline reconstruction reproduces the accepted narrow HHTT candidate exactly, including its missingness. The local diagnostic scorer separately reproduces that baseline. Checks also cover earliest-year uniqueness, unchanged NEM on previously complete histories, score bounds, unique graduate/variant keys and preservation of prior score-delivery hashes.',
+ '- Statistical code is exclusively in `code/analysis_for_adversarial_report.Rmd`. From `code/`, run `f08-score-reconstruction-functions`, `f08-ranking-short-history-setup`, `f08-ranking-short-history-candidates`, `f08-ranking-first-pass-history`, `f08-ranking-first-pass-validation`, then `f08-ranking-short-history-report`. The first-pass history chunk rebuilds its versioned caches; the validation and report chunks may be run against saved outputs.',
+ '- Besides the private inputs named in the chunks, pooling uses the local `panel_ee_2004_2025_homogenized.rds` school directory. Edit `sh_directory_path` on another machine. Its current hash is recorded below. No student-level records are committed to Git.',
+ '- New private files are `ranking_short_history_contexts_2026-10-19.rds`, `ranking_short_history_candidates_2026-10-19.rds`, `ranking_first_pass_histories_2026-10-19.rds`, `ranking_first_pass_targets_2026-10-19.rds`, `ranking_first_pass_reference_2026-10-19.rds`, and `ranking_first_pass_candidates_2026-10-19.rds` under `input/f08/`.',
+ '- F08.3 remains open: official reference populations/pools, exact arithmetic, adult/foreign/free-exam histories, full PACE percentile/tie/carryover rules and resulting mechanism estimates are unresolved. No manuscript estimates are changed.')
+writeLines(report,file.path(sh_out,'short_history_report_2026-10-19.md'))
+p<-fread(file.path(sh_out,'input_provenance.csv'))
+stopifnot(identical(unname(tools::md5sum(file.path(sh_input,p$input))),p$md5))
+extra<-c('ranking_grade_records_2010_2023.rds','rendimiento_grades_2024_2025.rds','historical_official_gpa.rds')
+fwrite(data.table(input=extra,md5=unname(tools::md5sum(file.path(sh_input,extra)))),
+ file.path(sh_out,'first_pass_input_provenance.csv'))
+fwrite(data.table(input='panel_ee_2004_2025_homogenized.rds',
+ md5=unname(tools::md5sum('/Users/iriosu/Dropbox/Effect SAE on SUA/data/panel_ee_2004_2025_homogenized.rds'))),
+ file.path(sh_out,'school_directory_provenance.csv'))
+fwrite(data.table(package=c('R','data.table'),version=c(as.character(getRversion()),
+ as.character(packageVersion('data.table')))),file.path(sh_out,'runtime_versions.csv'))
+cat('Short-history report written; original scores unchanged.\n')
+```

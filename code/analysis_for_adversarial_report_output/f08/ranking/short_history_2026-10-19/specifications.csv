@@ -1,0 +1,7 @@
+gate,pool,variant
+modality,all_similar,modality_all_similar
+modality,none,modality_none
+modality,small_only,modality_small_only
+school,all_similar,school_all_similar
+school,none,school_none
+school,small_only,school_small_only

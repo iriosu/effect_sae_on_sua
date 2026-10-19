@@ -1,0 +1,109 @@
+admission_year,pace12,history_status,graduates,recorded,available,validated,mismatches,absolute_error
+2021,0,"Three cohorts, over 30 records",147088,120980,147087,120980,7078,29993
+2024,1,"Three cohorts, over 30 records",47390,38910,47378,38903,5994,25695
+2023,0,"Three cohorts, over 30 records",151656,135701,151646,135698,10890,55014
+2026,0,"Three cohorts, over 30 records",156205,144192,156203,144191,13632,42901
+2022,0,"Three cohorts, over 30 records",149365,121673,149364,121673,8421,39289
+2024,0,"Three cohorts, over 30 records",149682,136627,149667,136615,11685,56669
+2025,0,"Three cohorts, over 30 records",152062,140267,152060,140265,11090,38151
+2026,0,Fewer than 30 context records,1026,817,0,0,0,0
+2021,0,Fewer than 30 context records,1436,1025,0,0,0,0
+2024,1,Fewer than 30 context records,324,271,0,0,0,0
+2026,1,"Three cohorts, over 30 records",51193,43916,51189,43914,7368,21012
+2022,0,"One/two cohorts, over 30 records",3003,2329,3003,2329,246,1672
+2025,1,"Three cohorts, over 30 records",47223,40274,47221,40273,6238,20629
+2026,,"Three cohorts, over 30 records",2872,2396,2869,2393,318,1149
+2022,1,"Three cohorts, over 30 records",42254,25395,42251,25395,3062,13431
+2023,1,"Three cohorts, over 30 records",43389,34158,43386,34156,4020,18102
+2023,0,Fewer than 30 context records,1375,1102,0,0,0,0
+2021,1,"Three cohorts, over 30 records",43122,25749,43122,25749,2481,10337
+2022,,"Three cohorts, over 30 records",884,622,882,620,50,218
+2022,0,No usable context reference,2739,1783,0,0,0,0
+2026,0,No usable context reference,343,312,0,0,0,0
+2025,0,No usable context reference,735,662,0,0,0,0
+2022,1,No usable context reference,1686,1086,0,0,0,0
+2024,1,No usable context reference,428,364,0,0,0,0
+2023,,"Three cohorts, over 30 records",2648,2083,2648,2083,219,1168
+2024,,"Three cohorts, over 30 records",2450,1958,2450,1958,232,1399
+2025,0,Incomplete own history,5762,3120,0,0,0,0
+2023,0,No usable context reference,1940,1383,0,0,0,0
+2024,0,Fewer than 30 context records,977,804,0,0,0,0
+2024,0,No usable context reference,1768,1482,0,0,0,0
+2024,,No usable context reference,75,55,0,0,0,0
+2024,0,Incomplete own history,4740,2455,0,0,0,0
+2023,0,Incomplete own history,4046,2138,0,0,0,0
+2026,0,"One/two cohorts, over 30 records",1852,1611,1852,1611,346,5690
+2025,0,"One/two cohorts, over 30 records",1708,1478,1707,1477,319,5570
+2025,,"One/two cohorts, over 30 records",112,88,112,88,30,1075
+2025,1,"One/two cohorts, over 30 records",630,566,629,565,195,4976
+2023,0,"One/two cohorts, over 30 records",2662,2336,2661,2335,460,13761
+2026,1,"One/two cohorts, over 30 records",663,585,663,585,200,4433
+2024,0,"One/two cohorts, over 30 records",2335,2071,2334,2071,442,8219
+2026,,"One/two cohorts, over 30 records",92,74,92,74,19,437
+2023,1,No usable context reference,578,420,0,0,0,0
+2021,0,No usable context reference,2733,1932,0,0,0,0
+2021,0,"One/two cohorts, over 30 records",2969,2387,2969,2387,215,706
+2025,,"Three cohorts, over 30 records",2776,2253,2774,2252,242,833
+2024,1,"One/two cohorts, over 30 records",602,527,602,527,159,5136
+2024,,Incomplete own history,166,70,0,0,0,0
+2022,0,Fewer than 30 context records,1212,792,0,0,0,0
+2026,0,Incomplete own history,6800,3854,0,0,0,0
+2022,0,Incomplete own history,4266,1993,0,0,0,0
+2021,0,Incomplete own history,4127,2116,0,0,0,0
+2024,1,Incomplete own history,2945,1130,0,0,0,0
+2021,1,No usable context reference,820,515,0,0,0,0
+2026,1,Exactly 30 context records,19,19,19,19,1,53
+2022,1,"One/two cohorts, over 30 records",425,255,425,255,35,579
+2025,,Fewer than 30 context records,109,70,0,0,0,0
+2025,1,No usable context reference,853,779,0,0,0,0
+2022,,"One/two cohorts, over 30 records",41,26,41,26,6,21
+2022,1,Incomplete own history,2224,721,0,0,0,0
+2021,,"Three cohorts, over 30 records",867,627,867,627,62,307
+2024,,Fewer than 30 context records,99,75,0,0,0,0
+2021,1,Fewer than 30 context records,479,301,0,0,0,0
+2025,0,Fewer than 30 context records,1148,940,0,0,0,0
+2026,1,Incomplete own history,4479,2430,0,0,0,0
+2025,1,Incomplete own history,3708,1743,0,0,0,0
+2023,1,Incomplete own history,2081,849,0,0,0,0
+2026,1,Fewer than 30 context records,311,272,0,0,0,0
+2021,,Incomplete own history,66,30,0,0,0,0
+2023,,No usable context reference,84,58,0,0,0,0
+2023,1,"One/two cohorts, over 30 records",732,564,732,564,166,3891
+2024,0,Exactly 30 context records,73,65,73,65,14,98
+2022,0,Exactly 30 context records,67,36,67,36,8,101
+2022,1,Fewer than 30 context records,481,271,0,0,0,0
+2026,1,No usable context reference,170,139,0,0,0,0
+2026,,Fewer than 30 context records,131,90,0,0,0,0
+2025,1,Fewer than 30 context records,407,344,0,0,0,0
+2024,1,Exactly 30 context records,82,74,82,74,9,27
+2021,1,"One/two cohorts, over 30 records",383,216,383,216,33,99
+2026,,Incomplete own history,264,128,0,0,0,0
+2023,0,Exactly 30 context records,78,65,78,65,13,385
+2021,,"One/two cohorts, over 30 records",22,15,22,15,3,4
+2026,0,Exactly 30 context records,84,66,83,65,3,16
+2021,1,Incomplete own history,2242,847,0,0,0,0
+2025,0,Exactly 30 context records,60,50,60,50,10,21
+2023,1,Fewer than 30 context records,390,337,0,0,0,0
+2021,,No usable context reference,223,165,0,0,0,0
+2023,,Fewer than 30 context records,141,108,0,0,0,0
+2024,,"One/two cohorts, over 30 records",107,80,107,80,29,961
+2022,,No usable context reference,75,51,0,0,0,0
+2025,,Incomplete own history,199,86,0,0,0,0
+2021,,Fewer than 30 context records,48,36,0,0,0,0
+2023,,Incomplete own history,174,79,0,0,0,0
+2025,,No usable context reference,59,45,0,0,0,0
+2023,,"One/two cohorts, over 30 records",174,125,174,125,38,740
+2021,1,Exactly 30 context records,29,17,29,17,0,0
+2023,1,Exactly 30 context records,15,14,15,14,4,26
+2022,,Fewer than 30 context records,50,25,0,0,0,0
+2026,,No usable context reference,33,23,0,0,0,0
+2022,1,Exactly 30 context records,45,27,45,27,5,46
+2022,,Incomplete own history,60,28,0,0,0,0
+2025,1,Exactly 30 context records,12,9,12,9,3,3
+2021,0,Exactly 30 context records,69,59,69,59,11,21
+2026,,Exactly 30 context records,4,2,4,2,0,0
+2021,,Exactly 30 context records,5,3,5,3,1,1
+2024,,Exactly 30 context records,5,3,5,3,0,0
+2022,,Exactly 30 context records,2,0,2,0,0,0
+2023,,Exactly 30 context records,4,3,4,3,1,1
+2025,,Exactly 30 context records,1,1,1,1,0,0
