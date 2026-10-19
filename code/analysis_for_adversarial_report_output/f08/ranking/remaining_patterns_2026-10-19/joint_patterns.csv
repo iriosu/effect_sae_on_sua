@@ -1,0 +1,1059 @@
+admission_year,nem_status,school_pool_flag,modality_pool_flag,cohorts_min,latest_contexts,complex_history,pace12,n,mismatches,mismatch_rate,abs_error,mae,large,one_point,two_to_five
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,0,95580,3618,0.0378531073446328,9889,0.103463067587358,340,2682,596
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,"Same school, modality changes",1,10435,1746,0.167321514135122,5980,0.573071394345949,240,1079,427
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,0,105115,6141,0.0584217285829806,20550,0.195500166484296,800,3619,1722
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,0,105042,6887,0.0655642504902801,14347,0.136583461853349,339,5418,1130
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,"Same school, modality changes",0,7915,455,0.0574857864813645,2255,0.284902084649398,108,268,79
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,0,95998,4617,0.0480947519739995,13118,0.136648680180833,472,3191,954
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,0,1776,216,0.121621621621622,592,0.333333333333334,25,127,64
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,0,103106,5467,0.0530231024382674,12702,0.123193606579626,411,3835,1221
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,0,103512,5855,0.0565634902233558,14939,0.144321431331646,556,3948,1351
+2023,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,0,860,828,0.962790697674419,13219,15.3709302325581,794,0,34
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,1,20420,2723,0.133349657198825,7908,0.387267384916743,301,1904,518
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,"Same school, modality changes",1,11835,2094,0.176932826362484,5615,0.474440219687359,155,1405,534
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,Changed school,0,539,65,0.120593692022263,201,0.372912801484228,2,42,21
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,"Same school, modality changes",1,10556,1780,0.168624478969307,4857,0.460117468738156,196,1110,474
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,,842,104,0.123515439429929,349,0.414489311163895,17,66,21
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,0,15586,1916,0.122930835365071,4114,0.263954831258826,129,1326,461
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,0,1576,166,0.105329949238579,419,0.265862944162437,20,104,42
+2022,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,0,1339,1294,0.9663928304705,13625,10.1755041075429,1000,0,294
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,1,14818,1460,0.0985288163044945,4189,0.282696720205161,163,1021,276
+2022,NEM matches,All contexts at least 30 graduates,Unknown count,3,3,Changed school,1,423,55,0.130023640661939,143,0.33806146572104,6,34,15
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,1,18956,1818,0.0959063093479637,7261,0.383044946191181,284,1135,399
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,0,2866,321,0.112002791346825,757,0.264131193300768,31,215,75
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,0,12576,1440,0.114503816793893,4801,0.381758905852417,187,873,380
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,"Same school, modality changes",0,13466,1804,0.133967028070697,4771,0.354299717807817,115,1105,584
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,1,2898,417,0.143892339544513,1453,0.501380262249829,69,232,116
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,"Same school, modality changes",0,8650,735,0.084971098265896,4400,0.508670520231214,235,381,119
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,1,15350,1206,0.0785667752442997,4419,0.287882736156352,200,740,266
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,0,2530,299,0.118181818181818,714,0.282213438735178,28,194,77
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,1,21996,3265,0.148436079287143,7426,0.337606837606847,203,2438,624
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,0,11211,949,0.0846490054410847,2533,0.225938810097223,111,616,222
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,1,19995,2678,0.133933483370843,7168,0.358489622405594,220,1907,551
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,,318,19,0.059748427672956,61,0.191823899371069,2,13,4
+2025,NEM matches,All contexts at least 30 graduates,Unknown count,3,3,Changed school,1,1055,203,0.192417061611374,471,0.446445497630332,25,136,42
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,0,14637,1654,0.113001298080208,4322,0.295279087244654,167,1051,436
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,"Same school, modality changes",1,9316,1243,0.133426363246028,3552,0.381279519106913,168,728,347
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,"Same school, modality changes",0,13431,2126,0.158290521926886,7796,0.580448216811855,378,1150,598
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,0,11460,1263,0.11020942408377,4236,0.369633507853403,191,718,354
+2026,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,0,1421,1406,0.989444053483462,14149,9.95707248416608,1289,0,117
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,1,4882,743,0.152191724702991,2148,0.43998361327325,89,435,219
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,3,2,Changed school,0,1945,357,0.183547557840617,823,0.423136246786632,32,250,75
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,"Same school, modality changes",0,13204,1861,0.140942138745835,4004,0.303241441987281,111,1294,456
+2024,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,2,Changed school,0,61,16,0.262295081967213,99,1.62295081967213,5,10,1
+2023,NEM matches,All contexts at least 30 graduates,Unknown count,3,3,Changed school,,149,13,0.087248322147651,71,0.476510067114094,3,5,5
+2026,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,2,Changed school,0,47,17,0.361702127659575,34,0.723404255319149,2,13,2
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,0,1623,164,0.101047443006778,365,0.224892174984597,10,104,50
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,,905,96,0.106077348066298,320,0.353591160220995,12,56,28
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,4,Changed school,0,146,21,0.143835616438356,34,0.232876712328767,1,16,4
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,"Same school, modality changes",0,879,55,0.0625711035267349,170,0.193401592718999,8,33,14
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,1,3173,370,0.116608887488182,1035,0.326189725811535,47,227,96
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,"Same school, modality changes",0,846,108,0.127659574468085,215,0.254137115839243,0,64,44
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,3,3,Changed school,1,1294,231,0.178516228748068,509,0.393353941267389,18,151,62
+2025,NEM matches,All contexts at least 30 graduates,Unknown count,3,2,Changed school,1,909,208,0.228822882288229,765,0.841584158415842,32,109,67
+2026,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,"Same school, modality changes",0,69,66,0.956521739130435,964,13.9710144927536,64,0,2
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,0,10841,974,0.089844110321926,2704,0.249423484918364,105,587,282
+2025,NEM matches,All contexts at least 30 graduates,Unknown count,3,2,Changed school,0,1784,333,0.186659192825112,1002,0.561659192825109,41,186,106
+2021,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,0,1253,1224,0.976855546687949,11695,9.33359936153232,964,0,260
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,"Same school, modality changes",1,5347,771,0.144193005423602,2796,0.522910043014774,117,503,151
+2025,NEM matches,All contexts at least 30 graduates,Unknown count,3,3,Changed school,0,1672,242,0.144736842105263,567,0.339114832535886,18,142,82
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,"Same school, modality changes",0,12950,1817,0.14030888030888,10670,0.823938223938231,495,794,528
+2026,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,0,215,213,0.990697674418605,2260,10.5116279069767,207,0,6
+2026,NEM differs,Unknown count,Unknown count,3,2,Changed school,1,3,3,1,53,17.6666666666667,3,0,0
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,1,Same school and modality,0,154,5,0.0324675324675325,5,0.0324675324675324,0,5,0
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,"Same school, modality changes",1,4617,489,0.105912930474334,2423,0.524799653454618,106,287,96
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,"Same school, modality changes",1,766,82,0.107049608355091,243,0.317232375979113,9,55,18
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,1,4368,635,0.145375457875458,2058,0.471153846153847,104,365,166
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,1,Same school and modality,0,282,44,0.156028368794326,78,0.276595744680851,0,16,28
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,1,1277,176,0.137823022709475,451,0.35317149569303,15,102,59
+2022,NEM matches,All contexts at least 30 graduates,Unknown count,3,2,Changed school,1,356,73,0.205056179775281,283,0.79494382022472,14,30,29
+2025,NEM matches,All contexts at least 30 graduates,Unknown count,1,3,Changed school,,22,9,0.409090909090909,374,17,7,2,0
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,2,Changed school,0,44,8,0.181818181818182,556,12.6363636363636,8,0,0
+2022,NEM matches,All contexts at least 30 graduates,Below 30 graduates,1,2,Changed school,0,54,0,0,0,0,0,0,0
+2023,NEM matches,All contexts at least 30 graduates,Unknown count,3,3,Changed school,0,967,127,0.131334022750776,526,0.543950361944157,25,68,34
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,1,4816,797,0.165490033222591,2186,0.45390365448505,91,488,218
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,1,Same school and modality,0,620,78,0.125806451612903,2999,4.83709677419355,52,13,13
+2023,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,0,121,119,0.983471074380165,2131,17.6115702479339,117,0,2
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,1,2668,292,0.109445277361319,838,0.314092953523238,42,164,86
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,1,Same school and modality,1,50,8,0.16,8,0.16,0,8,0
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,1,"Same school, modality changes",0,137,23,0.167883211678832,144,1.05109489051095,12,8,3
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,4,Changed school,,56,7,0.125,25,0.446428571428572,2,3,2
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,"Same school, modality changes",0,325,61,0.187692307692308,100,0.307692307692308,0,36,25
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,3,2,Changed school,1,880,187,0.2125,538,0.611363636363637,23,113,51
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,"Same school, modality changes",1,567,42,0.0740740740740741,148,0.261022927689594,4,26,12
+2022,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,1,34,33,0.970588235294118,552,16.2352941176471,28,0,5
+2024,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,0,1316,1269,0.964285714285714,20962,15.9285714285714,1193,0,76
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,2,4,Changed school,,10,0,0,0,0,0,0,0
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,1,Same school and modality,0,521,60,0.115163147792706,114,0.218809980806142,1,31,28
+2024,NEM matches,All contexts at least 30 graduates,Unknown count,3,2,Changed school,0,1302,224,0.172043010752688,777,0.596774193548387,38,123,63
+2021,NEM matches,All contexts at least 30 graduates,Unknown count,3,2,Changed school,1,443,55,0.124153498871332,229,0.516930022573364,10,34,11
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,"Same school, modality changes",0,148,20,0.135135135135135,20,0.135135135135135,0,20,0
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,2,3,Changed school,1,93,28,0.301075268817204,142,1.52688172043011,6,18,4
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,1,Same school and modality,0,20,6,0.3,6,0.3,0,6,0
+2023,NEM matches,All contexts at least 30 graduates,Unknown count,3,3,Changed school,1,541,95,0.175600739371534,380,0.702402957486137,22,46,27
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,,531,54,0.101694915254237,166,0.312617702448211,7,27,20
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,0,1695,204,0.120353982300885,544,0.32094395280236,24,130,50
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,1,1430,247,0.172727272727273,518,0.362237762237763,21,167,59
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,,940,74,0.0787234042553192,234,0.248936170212766,10,48,16
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,,278,20,0.0719424460431655,30,0.107913669064748,0,13,7
+2024,NEM matches,All contexts at least 30 graduates,Unknown count,2,3,Changed school,1,104,35,0.336538461538462,407,3.91346153846154,23,5,7
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,"Same school, modality changes",1,835,87,0.104191616766467,254,0.304191616766467,11,58,18
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,1,Same school and modality,0,391,49,0.125319693094629,165,0.421994884910486,5,31,13
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,"Same school, modality changes",0,1049,83,0.0791229742612011,197,0.187797902764538,7,57,19
+2022,NEM matches,All contexts at least 30 graduates,Unknown count,3,2,Changed school,0,794,89,0.112090680100756,319,0.401763224181361,14,52,23
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,1,862,114,0.132250580046404,312,0.361948955916473,17,70,27
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,3,3,Changed school,,214,41,0.191588785046729,81,0.378504672897196,2,35,4
+2025,NEM matches,Unknown count,Unknown count,2,2,Changed school,1,26,3,0.115384615384615,3,0.115384615384615,0,3,0
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,"Same school, modality changes",1,931,163,0.175080558539205,358,0.38453276047261,9,119,35
+2021,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,"Same school, modality changes",0,32,31,0.96875,339,10.59375,27,0,4
+2022,NEM matches,Below 30 graduates,Below 30 graduates,3,2,Changed school,0,132,14,0.106060606060606,21,0.159090909090909,0,9,5
+2023,NEM matches,All contexts at least 30 graduates,Unknown count,3,2,Changed school,1,413,75,0.181598062953995,377,0.912832929782081,22,34,19
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,"Same school, modality changes",,57,8,0.140350877192982,38,0.666666666666667,3,3,2
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,1,Same school and modality,1,4,1,0.25,45,11.25,1,0,0
+2024,NEM matches,Below 30 graduates,Below 30 graduates,3,3,Changed school,0,29,6,0.206896551724138,7,0.241379310344828,0,5,1
+2025,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,2,"Same school, modality changes",0,21,0,0,0,0,0,0,0
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,1,Same school and modality,1,70,14,0.2,2768,39.5428571428571,14,0,0
+2022,NEM matches,All contexts at least 30 graduates,Unknown count,3,3,Changed school,0,753,74,0.098273572377158,239,0.317397078353254,10,41,23
+2025,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,1,182,181,0.994505494505495,2359,12.9615384615385,176,0,5
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,,991,96,0.0968718466195762,378,0.381432896064581,18,54,24
+2023,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,"Same school, modality changes",0,94,86,0.914893617021277,1473,15.6702127659574,82,1,3
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,3,Changed school,0,64,19,0.296875,385,6.015625,11,4,4
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,1,Same school and modality,0,253,22,0.0869565217391304,28,0.110671936758893,0,16,6
+2026,NEM matches,Below 30 graduates,Unknown count,3,2,Changed school,0,18,5,0.277777777777778,5,0.277777777777778,0,5,0
+2021,NEM matches,All contexts at least 30 graduates,Unknown count,2,2,Changed school,0,30,6,0.2,96,3.2,1,4,1
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,2,3,Changed school,0,201,72,0.358208955223881,881,4.38308457711443,37,14,21
+2025,NEM matches,All contexts at least 30 graduates,Unknown count,3,3,Changed school,,149,27,0.181208053691275,45,0.302013422818792,0,18,9
+2023,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,3,Changed school,0,36,6,0.166666666666667,38,1.05555555555556,2,1,3
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,,73,3,0.0410958904109589,4,0.0547945205479452,0,2,1
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,Changed school,0,344,65,0.188953488372093,701,2.03779069767442,17,19,29
+2024,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,3,Changed school,0,24,4,0.166666666666667,7,0.291666666666667,0,2,2
+2021,NEM matches,All contexts at least 30 graduates,Unknown count,3,3,Changed school,1,403,56,0.138957816377171,151,0.37468982630273,9,34,13
+2021,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,3,Changed school,1,39,5,0.128205128205128,9,0.230769230769231,0,2,3
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,,278,27,0.0971223021582734,146,0.525179856115108,4,15,8
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,"Same school, modality changes",1,682,49,0.0718475073313783,209,0.306451612903226,7,37,5
+2024,NEM matches,All contexts at least 30 graduates,Unknown count,3,3,Changed school,1,559,103,0.184257602862254,358,0.640429338103756,16,57,30
+2023,NEM matches,All contexts at least 30 graduates,Unknown count,3,4,Changed school,1,31,4,0.129032258064516,15,0.483870967741935,1,0,3
+2021,NEM matches,Below 30 graduates,Below 30 graduates,3,2,Changed school,0,107,13,0.121495327102804,33,0.308411214953271,1,8,4
+2021,NEM matches,All contexts at least 30 graduates,Unknown count,3,2,Changed school,0,828,82,0.0990338164251208,290,0.35024154589372,14,43,25
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,3,Changed school,1,20,6,0.3,190,9.5,4,1,1
+2022,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,0,195,189,0.969230769230769,2211,11.3384615384615,163,0,26
+2024,NEM matches,All contexts at least 30 graduates,Unknown count,1,3,Changed school,0,118,49,0.415254237288136,931,7.88983050847458,31,8,10
+2025,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,0,120,118,0.983333333333333,1357,11.3083333333333,109,1,8
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,"Same school, modality changes",1,632,61,0.0965189873417722,134,0.212025316455696,3,35,23
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,"Same school, modality changes",1,148,33,0.222972972972973,65,0.439189189189189,0,15,18
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,"Same school, modality changes",1,162,26,0.160493827160494,76,0.469135802469136,2,8,16
+2025,NEM matches,All contexts at least 30 graduates,Unknown count,2,3,Changed school,1,87,36,0.413793103448276,485,5.57471264367816,24,5,7
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,,147,16,0.108843537414966,28,0.19047619047619,1,14,1
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,"Same school, modality changes",0,950,74,0.0778947368421053,165,0.173684210526316,9,51,14
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,3,3,Changed school,0,1997,322,0.161241862794191,539,0.269904857285928,16,248,58
+2025,NEM matches,Below 30 graduates,Below 30 graduates,3,2,Changed school,1,74,18,0.243243243243243,117,1.58108108108108,4,10,4
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,4,Changed school,,160,17,0.10625,34,0.2125,2,12,3
+2025,NEM matches,Below 30 graduates,Below 30 graduates,3,2,Changed school,0,136,18,0.132352941176471,110,0.808823529411765,7,8,3
+2025,NEM matches,All contexts at least 30 graduates,Unknown count,1,3,Changed school,0,163,58,0.355828220858896,1758,10.7852760736196,45,7,6
+2021,NEM matches,All contexts at least 30 graduates,Unknown count,3,3,Changed school,0,774,90,0.116279069767442,193,0.249354005167959,4,51,35
+2023,NEM matches,All contexts at least 30 graduates,Unknown count,3,2,Changed school,0,892,145,0.162556053811659,967,1.08408071748878,42,52,51
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,"Same school, modality changes",0,821,64,0.0779537149817296,155,0.188794153471376,8,46,10
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,1,"Same school, modality changes",0,44,3,0.0681818181818182,3,0.0681818181818182,0,3,0
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,1,Same school and modality,0,199,0,0,0,0,0,0,0
+2024,NEM matches,All contexts at least 30 graduates,Unknown count,3,3,Changed school,0,944,133,0.140889830508475,342,0.36228813559322,11,68,54
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,1,Same school and modality,0,869,42,0.048331415420023,176,0.20253164556962,3,26,13
+2025,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,0,929,904,0.973089343379978,10856,11.6856835306781,845,0,59
+2022,NEM matches,All contexts at least 30 graduates,Unknown count,1,3,Changed school,1,46,15,0.326086956521739,260,5.65217391304348,12,2,1
+2024,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,2,Changed school,1,51,10,0.196078431372549,64,1.25490196078431,5,3,2
+2024,NEM matches,All contexts at least 30 graduates,Unknown count,2,2,Changed school,0,173,41,0.236994219653179,723,4.17919075144509,24,8,9
+2021,NEM matches,Unknown count,Unknown count,2,2,Changed school,0,107,7,0.0654205607476636,11,0.102803738317757,0,5,2
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,1,"Same school, modality changes",0,191,0,0,0,0,0,0,0
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,1,Same school and modality,0,535,40,0.0747663551401869,75,0.14018691588785,0,20,20
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,,688,81,0.117732558139535,169,0.245639534883721,6,55,20
+2023,NEM matches,All contexts at least 30 graduates,Below 30 graduates,2,3,Changed school,1,10,6,0.6,15,1.5,0,2,4
+2022,NEM matches,All contexts at least 30 graduates,Unknown count,1,3,Changed school,0,133,33,0.24812030075188,721,5.42105263157895,17,9,7
+2022,NEM matches,Unknown count,Unknown count,1,2,Changed school,0,37,4,0.108108108108108,9,0.243243243243243,1,3,0
+2024,NEM matches,Unknown count,Unknown count,1,2,Changed school,0,22,1,0.0454545454545455,2,0.0909090909090909,0,0,1
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,4,Changed school,,74,9,0.121621621621622,25,0.337837837837838,1,6,2
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,1,738,96,0.130081300813008,420,0.56910569105691,13,55,28
+2026,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,1,204,201,0.985294117647059,2336,11.4509803921569,195,0,6
+2023,NEM matches,All contexts at least 30 graduates,Unknown count,1,2,Changed school,0,119,29,0.243697478991597,966,8.11764705882353,21,5,3
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,,582,65,0.111683848797251,184,0.316151202749141,12,40,13
+2022,NEM matches,Below 30 graduates,Below 30 graduates,3,2,Changed school,1,37,1,0.027027027027027,1,0.027027027027027,0,1,0
+2024,NEM matches,All contexts at least 30 graduates,Unknown count,2,2,Changed school,1,75,23,0.306666666666667,333,4.44,14,6,3
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,"Same school, modality changes",0,252,13,0.0515873015873016,13,0.0515873015873016,0,13,0
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,4,"Same school, modality changes",1,2,0,0,0,0,0,0,0
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,"Same school, modality changes",,6,0,0,0,0,0,0,0
+2024,NEM matches,All contexts at least 30 graduates,Unknown count,3,2,Changed school,1,741,156,0.210526315789474,557,0.751686909581646,23,92,41
+2024,NEM matches,All contexts at least 30 graduates,Unknown count,3,3,"Same school, modality changes",1,48,5,0.104166666666667,9,0.1875,0,4,1
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,2,Changed school,0,280,12,0.0428571428571429,13,0.0464285714285714,0,11,1
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,3,Changed school,1,9,5,0.555555555555556,50,5.55555555555556,1,4,0
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,,344,32,0.0930232558139535,89,0.258720930232558,2,22,8
+2024,NEM matches,All contexts at least 30 graduates,Unknown count,2,3,Changed school,0,118,37,0.313559322033898,698,5.91525423728814,22,9,6
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,,439,44,0.100227790432802,121,0.275626423690205,5,29,10
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,1,"Same school, modality changes",0,231,0,0,0,0,0,0,0
+2024,NEM matches,All contexts at least 30 graduates,Unknown count,3,3,Changed school,,181,29,0.160220994475138,79,0.43646408839779,4,18,7
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,3,"Same school, modality changes",0,1,1,1,52,52,1,0,0
+2023,NEM matches,All contexts at least 30 graduates,Unknown count,2,2,Changed school,0,84,26,0.30952380952381,801,9.53571428571428,17,4,5
+2023,NEM matches,All contexts at least 30 graduates,Unknown count,1,3,Changed school,0,132,39,0.295454545454545,1405,10.6439393939394,32,2,5
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,1,Same school and modality,0,134,29,0.216417910447761,48,0.358208955223881,0,14,15
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,"Same school, modality changes",1,117,12,0.102564102564103,53,0.452991452991453,2,6,4
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,"Same school, modality changes",0,1053,106,0.100664767331434,146,0.138651471984806,2,93,11
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,1,672,69,0.102678571428571,160,0.238095238095238,5,43,21
+2021,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,3,Changed school,0,24,3,0.125,12,0.5,1,2,0
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,"Same school, modality changes",0,110,13,0.118181818181818,26,0.236363636363636,1,10,2
+2024,NEM matches,Unknown count,Unknown count,1,2,Changed school,1,3,0,0,0,0,0,0,0
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,2,Changed school,0,482,25,0.0518672199170125,29,0.0601659751037345,0,24,1
+2025,NEM matches,All contexts at least 30 graduates,Unknown count,2,3,Changed school,,19,6,0.315789473684211,241,12.6842105263158,5,1,0
+2022,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,"Same school, modality changes",0,23,23,1,156,6.78260869565217,19,0,4
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,"Same school, modality changes",1,159,32,0.20125786163522,106,0.666666666666666,5,11,16
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,"Same school, modality changes",0,40,1,0.025,3,0.075,0,0,1
+2023,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,2,Changed school,0,72,12,0.166666666666667,55,0.763888888888889,4,5,3
+2024,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,"Same school, modality changes",1,140,136,0.971428571428571,1716,12.2571428571429,132,0,4
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,4,Changed school,,16,2,0.125,2,0.125,0,2,0
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,1,Same school and modality,1,23,13,0.565217391304348,39,1.69565217391304,2,10,1
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,4,Changed school,0,77,6,0.0779220779220779,38,0.493506493506493,1,3,2
+2022,NEM matches,All contexts at least 30 graduates,Unknown count,3,3,Changed school,,29,0,0,0,0,0,0,0
+2024,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,0,148,142,0.959459459459459,2607,17.6148648648649,134,0,8
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,4,Changed school,,113,8,0.0707964601769912,20,0.176991150442478,1,6,1
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,1,639,87,0.136150234741784,289,0.45226917057903,15,48,24
+2022,NEM matches,All contexts at least 30 graduates,Unknown count,3,3,"Same school, modality changes",1,69,3,0.0434782608695652,3,0.0434782608695652,0,3,0
+2025,NEM matches,All contexts at least 30 graduates,Unknown count,2,3,Changed school,0,125,39,0.312,409,3.272,18,8,13
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,4,Changed school,1,63,10,0.158730158730159,13,0.206349206349206,0,8,2
+2023,NEM matches,All contexts at least 30 graduates,Unknown count,1,3,Changed school,1,146,56,0.383561643835616,1161,7.95205479452055,37,8,11
+2022,NEM matches,Unknown count,Unknown count,2,2,Changed school,0,67,8,0.119402985074627,34,0.507462686567164,2,2,4
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,1,3,Changed school,0,83,27,0.325301204819277,811,9.77108433734939,17,3,7
+2023,NEM matches,All contexts at least 30 graduates,Unknown count,3,4,Changed school,0,30,2,0.0666666666666667,27,0.9,2,0,0
+2025,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,2,Changed school,1,45,10,0.222222222222222,33,0.733333333333333,2,7,1
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,3,Changed school,,1,1,1,2,2,0,0,1
+2025,NEM matches,All contexts at least 30 graduates,Unknown count,3,4,Changed school,1,23,0,0,0,0,0,0,0
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,,247,20,0.0809716599190283,62,0.251012145748988,3,12,5
+2025,NEM matches,All contexts at least 30 graduates,Unknown count,2,2,Changed school,0,151,49,0.324503311258278,698,4.62251655629139,24,12,13
+2022,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,0,40,39,0.975,411,10.275,34,0,5
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,4,Changed school,0,143,24,0.167832167832168,51,0.356643356643357,3,15,6
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,Changed school,0,396,101,0.255050505050505,565,1.42676767676768,16,38,47
+2024,NEM matches,Unknown count,Unknown count,2,2,Changed school,1,31,5,0.161290322580645,18,0.580645161290323,1,2,2
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,"Same school, modality changes",0,138,18,0.130434782608696,23,0.166666666666667,1,17,0
+2021,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,2,Changed school,0,51,10,0.196078431372549,55,1.07843137254902,4,3,3
+2025,NEM matches,Unknown count,Unknown count,1,4,Changed school,0,1,0,0,0,0,0,0,0
+2025,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,"Same school, modality changes",1,30,28,0.933333333333333,675,22.5,27,0,1
+2022,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,2,1,"Same school, modality changes",0,6,6,1,107,17.8333333333333,6,0,0
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,Changed school,0,170,16,0.0941176470588235,42,0.247058823529412,2,9,5
+2025,NEM matches,All contexts at least 30 graduates,Unknown count,1,2,Changed school,0,143,44,0.307692307692308,1173,8.2027972027972,24,11,9
+2022,NEM matches,Below 30 graduates,Unknown count,2,3,Changed school,0,4,0,0,0,0,0,0,0
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,3,Changed school,0,41,0,0,0,0,0,0,0
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,3,Changed school,0,15,5,0.333333333333333,6,0.4,0,4,1
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,1,"Same school, modality changes",0,102,37,0.362745098039216,45,0.441176470588235,0,31,6
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,"Same school, modality changes",,39,1,0.0256410256410256,3,0.0769230769230769,0,0,1
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,2,"Same school, modality changes",0,38,0,0,0,0,0,0,0
+2022,NEM matches,Unknown count,Unknown count,3,2,Changed school,1,15,3,0.2,24,1.6,2,0,1
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,2,Changed school,0,287,73,0.254355400696864,5524,19.2473867595819,65,8,0
+2023,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,,8,8,1,85,10.625,8,0,0
+2026,NEM matches,Below 30 graduates,Unknown count,3,3,Changed school,0,32,9,0.28125,21,0.65625,1,4,4
+2025,NEM matches,Unknown count,Unknown count,3,4,Changed school,,1,1,1,1,1,0,1,0
+2022,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,1,128,125,0.9765625,2874,22.453125,100,0,25
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,3,4,Changed school,0,82,11,0.134146341463415,19,0.231707317073171,0,6,5
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,,154,18,0.116883116883117,50,0.324675324675325,4,9,5
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,Changed school,0,146,31,0.212328767123288,358,2.45205479452055,11,12,8
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,1,2,Changed school,0,101,41,0.405940594059406,1957,19.3762376237624,31,5,5
+2024,NEM matches,All contexts at least 30 graduates,Unknown count,3,4,Changed school,0,42,8,0.19047619047619,12,0.285714285714286,0,7,1
+2022,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,"Same school, modality changes",1,63,61,0.968253968253968,932,14.7936507936508,52,0,9
+2022,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,2,Changed school,0,36,6,0.166666666666667,16,0.444444444444444,1,3,2
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,1,3,Changed school,1,117,64,0.547008547008547,1935,16.5384615384615,48,6,10
+2026,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,0,28,28,1,259,9.25,26,0,2
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,3,Changed school,0,19,2,0.105263157894737,40,2.10526315789474,2,0,0
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,3,"Same school, modality changes",1,29,2,0.0689655172413793,5,0.172413793103448,0,1,1
+2025,NEM matches,All contexts at least 30 graduates,Unknown count,3,4,Changed school,,62,10,0.161290322580645,27,0.435483870967742,1,6,3
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,Changed school,0,123,19,0.154471544715447,212,1.72357723577236,8,6,5
+2023,NEM matches,All contexts at least 30 graduates,Unknown count,2,3,Changed school,0,124,26,0.209677419354839,533,4.29838709677419,17,5,4
+2021,NEM matches,Below 30 graduates,Below 30 graduates,3,2,Changed school,1,37,5,0.135135135135135,10,0.27027027027027,0,2,3
+2023,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,0,18,18,1,169,9.38888888888889,18,0,0
+2023,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,"Same school, modality changes",1,2,2,1,53,26.5,2,0,0
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,"Same school, modality changes",1,90,10,0.111111111111111,62,0.688888888888889,2,7,1
+2021,NEM matches,Below 30 graduates,Unknown count,3,3,Changed school,0,23,2,0.0869565217391304,2,0.0869565217391305,0,2,0
+2021,NEM matches,Unknown count,Unknown count,3,2,Changed school,0,50,8,0.16,32,0.64,1,3,4
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,"Same school, modality changes",,42,3,0.0714285714285714,21,0.5,1,2,0
+2022,NEM matches,All contexts at least 30 graduates,Unknown count,1,2,Changed school,0,42,3,0.0714285714285714,79,1.88095238095238,2,0,1
+2021,NEM matches,Below 30 graduates,Below 30 graduates,3,3,Changed school,0,34,6,0.176470588235294,22,0.647058823529412,2,2,2
+2025,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,2,1,Same school and modality,1,37,36,0.972972972972973,831,22.4594594594595,35,0,1
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,4,Changed school,,1,1,1,30,30,1,0,0
+2023,NEM differs,Unknown count,Unknown count,2,2,Changed school,0,3,3,1,29,9.66666666666667,2,0,1
+2022,NEM matches,Unknown count,Unknown count,1,2,Changed school,1,15,0,0,0,0,0,0,0
+2021,NEM matches,Below 30 graduates,Unknown count,3,2,Changed school,1,5,0,0,0,0,0,0,0
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,1,Same school and modality,1,54,18,0.333333333333333,1604,29.7037037037037,15,1,2
+2023,NEM matches,Unknown count,Unknown count,2,2,Changed school,1,17,2,0.117647058823529,11,0.647058823529412,1,1,0
+2021,NEM matches,Unknown count,Unknown count,2,2,Changed school,1,33,4,0.121212121212121,12,0.363636363636364,1,2,1
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,,184,15,0.0815217391304348,54,0.293478260869565,3,7,5
+2026,NEM matches,Unknown count,Unknown count,2,2,Changed school,0,71,13,0.183098591549296,32,0.450704225352113,2,7,4
+2024,NEM matches,All contexts at least 30 graduates,Unknown count,1,3,"Same school, modality changes",0,112,89,0.794642857142857,3464,30.9285714285714,81,2,6
+2024,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,1,170,167,0.98235294117647,4508,26.5176470588235,159,0,8
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,Changed school,1,37,11,0.297297297297297,325,8.78378378378378,6,4,1
+2022,NEM differs,All contexts at least 30 graduates,Unknown count,1,3,Changed school,1,1,1,1,6,6,1,0,0
+2021,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,"Same school, modality changes",1,63,61,0.968253968253968,917,14.5555555555556,54,0,7
+2025,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,3,Changed school,1,28,6,0.214285714285714,11,0.392857142857143,0,4,2
+2021,NEM matches,Unknown count,Unknown count,2,3,Changed school,0,43,1,0.0232558139534884,1,0.0232558139534884,0,1,0
+2021,NEM matches,All contexts at least 30 graduates,Unknown count,2,2,"Same school, modality changes",0,9,0,0,0,0,0,0,0
+2025,NEM matches,All contexts at least 30 graduates,Unknown count,2,2,Changed school,1,59,23,0.389830508474576,382,6.47457627118644,14,3,6
+2023,NEM matches,Unknown count,Unknown count,2,3,Changed school,0,32,1,0.03125,1,0.03125,0,1,0
+2025,NEM matches,Below 30 graduates,Below 30 graduates,3,4,Changed school,1,2,1,0.5,1,0.5,0,1,0
+2026,NEM matches,Below 30 graduates,Below 30 graduates,2,2,Changed school,0,29,11,0.379310344827586,292,10.0689655172414,8,1,2
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,4,Changed school,1,28,2,0.0714285714285714,6,0.214285714285714,0,0,2
+2021,NEM matches,All contexts at least 30 graduates,Unknown count,2,2,"Same school, modality changes",1,1,0,0,0,0,0,0,0
+2022,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,2,Changed school,1,35,8,0.228571428571429,52,1.48571428571429,2,3,3
+2024,NEM matches,Unknown count,Unknown count,1,3,Changed school,0,14,0,0,0,0,0,0,0
+2021,NEM matches,Below 30 graduates,Below 30 graduates,1,3,Changed school,0,2,1,0.5,1,0.5,0,1,0
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,4,Changed school,0,68,8,0.117647058823529,19,0.279411764705882,1,4,3
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,1,"Same school, modality changes",1,40,0,0,0,0,0,0,0
+2026,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,3,Changed school,0,36,5,0.138888888888889,7,0.194444444444444,0,3,2
+2024,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,"Same school, modality changes",0,86,81,0.941860465116279,2430,28.2558139534884,79,0,2
+2022,NEM matches,All contexts at least 30 graduates,Unknown count,3,4,Changed school,0,21,4,0.19047619047619,6,0.285714285714286,0,2,2
+2024,NEM matches,Below 30 graduates,Below 30 graduates,3,2,Changed school,0,108,16,0.148148148148148,35,0.324074074074074,1,11,4
+2022,NEM matches,Unknown count,Unknown count,3,2,Changed school,0,69,7,0.101449275362319,24,0.347826086956522,1,4,2
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,4,Changed school,0,82,13,0.158536585365854,31,0.378048780487805,2,8,3
+2024,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,,8,7,0.875,280,35,7,0,0
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,1,"Same school, modality changes",0,23,0,0,0,0,0,0,0
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,3,Changed school,0,38,6,0.157894736842105,26,0.68421052631579,1,3,2
+2026,NEM matches,Below 30 graduates,Below 30 graduates,3,2,Changed school,1,44,8,0.181818181818182,9,0.204545454545455,0,7,1
+2025,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,2,Changed school,0,75,9,0.12,28,0.373333333333333,2,3,4
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,1,3,Changed school,,9,5,0.555555555555556,351,39,5,0,0
+2025,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,"Same school, modality changes",,1,1,1,20,20,1,0,0
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,1,"Same school, modality changes",0,53,27,0.509433962264151,191,3.60377358490566,7,5,15
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,3,4,Changed school,,92,9,0.0978260869565217,32,0.347826086956522,2,4,3
+2021,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,1,38,37,0.973684210526316,324,8.52631578947369,26,0,11
+2024,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,3,Changed school,1,40,9,0.225,17,0.425,1,7,1
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,3,3,"Same school, modality changes",1,42,0,0,0,0,0,0,0
+2023,NEM matches,All contexts at least 30 graduates,Unknown count,1,3,"Same school, modality changes",1,13,8,0.615384615384615,129,9.92307692307692,5,2,1
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,"Same school, modality changes",1,119,24,0.201680672268908,38,0.319327731092437,0,17,7
+2025,NEM matches,Unknown count,Unknown count,1,3,Changed school,0,15,1,0.0666666666666667,1,0.0666666666666667,0,1,0
+2026,NEM matches,Unknown count,Unknown count,2,3,Changed school,1,18,1,0.0555555555555556,16,0.888888888888889,1,0,0
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,1,4,Changed school,1,5,2,0.4,11,2.2,1,0,1
+2022,NEM differs,All contexts at least 30 graduates,Unknown count,3,2,Changed school,1,3,3,1,57,19,3,0,0
+2024,NEM matches,Unknown count,Unknown count,2,2,Changed school,0,70,8,0.114285714285714,12,0.171428571428571,0,7,1
+2026,NEM matches,Unknown count,Unknown count,1,3,Changed school,0,23,5,0.217391304347826,12,0.521739130434783,1,4,0
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,1,"Same school, modality changes",0,47,0,0,0,0,0,0,0
+2023,NEM matches,Below 30 graduates,Below 30 graduates,3,3,Changed school,1,13,5,0.384615384615385,9,0.692307692307692,0,3,2
+2023,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,1,118,112,0.949152542372881,2796,23.6949152542373,107,0,5
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,1,Same school and modality,0,109,0,0,0,0,0,0,0
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,3,"Same school, modality changes",1,29,3,0.103448275862069,3,0.103448275862069,0,3,0
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,3,Changed school,1,25,3,0.12,5,0.2,0,2,1
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,3,Changed school,,6,3,0.5,13,2.16666666666667,1,1,1
+2023,NEM matches,Unknown count,Unknown count,1,2,Changed school,0,30,3,0.1,10,0.333333333333333,1,2,0
+2022,NEM matches,Unknown count,Unknown count,3,3,Changed school,1,11,2,0.181818181818182,2,0.181818181818182,0,2,0
+2024,NEM matches,Unknown count,Unknown count,2,3,Changed school,0,32,4,0.125,37,1.15625,1,1,2
+2022,NEM matches,Below 30 graduates,Unknown count,3,3,Changed school,1,9,0,0,0,0,0,0,0
+2021,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,1,2,Changed school,0,13,13,1,78,6,8,0,5
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,Changed school,,13,2,0.153846153846154,3,0.230769230769231,0,1,1
+2023,NEM matches,Below 30 graduates,Unknown count,3,2,Changed school,0,12,1,0.0833333333333333,4,0.333333333333333,0,0,1
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,2,Changed school,1,31,2,0.0645161290322581,2,0.0645161290322581,0,2,0
+2022,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,"Same school, modality changes",0,69,67,0.971014492753623,1063,15.4057971014493,56,0,11
+2025,NEM matches,All contexts at least 30 graduates,Unknown count,3,3,"Same school, modality changes",1,35,1,0.0285714285714286,1,0.0285714285714286,0,1,0
+2021,NEM matches,All contexts at least 30 graduates,Unknown count,3,4,Changed school,0,22,4,0.181818181818182,17,0.772727272727273,1,1,2
+2022,NEM matches,All contexts at least 30 graduates,Unknown count,1,2,Changed school,1,48,2,0.0416666666666667,150,3.125,2,0,0
+2023,NEM matches,All contexts at least 30 graduates,Unknown count,2,2,Changed school,1,30,9,0.3,175,5.83333333333333,5,3,1
+2021,NEM matches,Unknown count,Unknown count,2,3,Changed school,1,12,2,0.166666666666667,2,0.166666666666667,0,2,0
+2022,NEM matches,Unknown count,Unknown count,3,4,Changed school,0,2,0,0,0,0,0,0,0
+2025,NEM matches,All contexts at least 30 graduates,Unknown count,1,4,Changed school,0,11,5,0.454545454545455,28,2.54545454545455,2,2,1
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,4,Changed school,1,50,9,0.18,22,0.44,1,6,2
+2021,NEM matches,All contexts at least 30 graduates,Unknown count,2,3,"Same school, modality changes",0,25,0,0,0,0,0,0,0
+2024,NEM matches,Below 30 graduates,Below 30 graduates,2,2,Changed school,0,26,2,0.0769230769230769,25,0.961538461538461,1,0,1
+2025,NEM matches,Unknown count,Unknown count,3,2,Changed school,1,20,3,0.15,3,0.15,0,3,0
+2026,NEM matches,Unknown count,Unknown count,3,2,Changed school,0,30,3,0.1,5,0.166666666666667,0,1,2
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,3,"Same school, modality changes",0,3,0,0,0,0,0,0,0
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,1,Same school and modality,,1,0,0,0,0,0,0,0
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,3,Changed school,1,7,1,0.142857142857143,1,0.142857142857143,0,1,0
+2021,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,0,140,138,0.985714285714286,1279,9.13571428571429,118,0,20
+2023,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,1,16,16,1,426,26.625,16,0,0
+2021,NEM differs,All contexts at least 30 graduates,Unknown count,3,2,Changed school,0,7,7,1,75,10.7142857142857,7,0,0
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,4,Changed school,1,27,5,0.185185185185185,16,0.592592592592593,1,1,3
+2021,NEM matches,Unknown count,Unknown count,1,2,Changed school,0,27,3,0.111111111111111,8,0.296296296296296,1,2,0
+2023,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,3,Changed school,1,32,7,0.21875,23,0.71875,1,4,2
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,3,"Same school, modality changes",0,14,2,0.142857142857143,2,0.142857142857143,0,2,0
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,"Same school, modality changes",,60,14,0.233333333333333,39,0.65,1,9,4
+2025,NEM matches,Below 30 graduates,Unknown count,3,2,Changed school,0,16,2,0.125,13,0.8125,1,0,1
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,Changed school,1,24,4,0.166666666666667,129,5.375,2,2,0
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,"Same school, modality changes",0,154,8,0.051948051948052,8,0.0519480519480519,0,8,0
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,3,Changed school,0,45,14,0.311111111111111,430,9.55555555555556,11,2,1
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,1,"Same school, modality changes",1,25,0,0,0,0,0,0,0
+2023,NEM matches,Unknown count,Unknown count,2,2,Changed school,0,78,12,0.153846153846154,42,0.538461538461539,1,5,6
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,1,"Same school, modality changes",1,24,5,0.208333333333333,6,0.25,0,4,1
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,"Same school, modality changes",0,27,5,0.185185185185185,5,0.185185185185185,0,5,0
+2026,NEM matches,Unknown count,Unknown count,3,2,Changed school,1,12,1,0.0833333333333333,1,0.0833333333333333,0,1,0
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,2,2,Changed school,1,48,17,0.354166666666667,214,4.45833333333333,7,6,4
+2025,NEM matches,Unknown count,Unknown count,3,3,Changed school,0,24,2,0.0833333333333333,11,0.458333333333333,1,1,0
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,2,2,Changed school,0,121,41,0.338842975206612,552,4.56198347107438,16,10,15
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,3,"Same school, modality changes",1,4,0,0,0,0,0,0,0
+2025,NEM matches,All contexts at least 30 graduates,Unknown count,1,3,Changed school,1,64,24,0.375,553,8.640625,19,3,2
+2024,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,1,40,40,1,990,24.75,40,0,0
+2025,NEM matches,Below 30 graduates,Below 30 graduates,2,2,Changed school,0,23,3,0.130434782608696,17,0.739130434782609,1,1,1
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,2,Changed school,0,46,6,0.130434782608696,98,2.1304347826087,3,2,1
+2025,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,3,Changed school,0,39,12,0.307692307692308,19,0.487179487179487,1,10,1
+2025,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,2,3,Changed school,0,3,3,1,108,36,3,0,0
+2025,NEM matches,All contexts at least 30 graduates,Unknown count,3,4,Changed school,0,63,8,0.126984126984127,12,0.19047619047619,0,6,2
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,3,Changed school,0,33,6,0.181818181818182,8,0.242424242424242,0,5,1
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,"Same school, modality changes",1,28,24,0.857142857142857,1095,39.1071428571429,22,0,2
+2023,NEM matches,All contexts at least 30 graduates,Unknown count,1,2,Changed school,1,43,22,0.511627906976744,1224,28.4651162790698,18,2,2
+2023,NEM matches,All contexts at least 30 graduates,Unknown count,1,3,Changed school,,23,9,0.391304347826087,300,13.0434782608696,8,1,0
+2021,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,2,1,Same school and modality,0,8,7,0.875,66,8.25,6,0,1
+2023,NEM matches,Unknown count,Unknown count,3,2,Changed school,1,16,1,0.0625,9,0.5625,1,0,0
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,4,Changed school,,2,1,0.5,6,3,1,0,0
+2025,NEM matches,Unknown count,Unknown count,1,2,Changed school,0,29,1,0.0344827586206897,1,0.0344827586206897,0,1,0
+2023,NEM matches,Below 30 graduates,Unknown count,3,2,Changed school,1,8,0,0,0,0,0,0,0
+2024,NEM matches,All contexts at least 30 graduates,Unknown count,3,4,Changed school,,29,4,0.137931034482759,8,0.275862068965517,0,3,1
+2025,NEM matches,All contexts at least 30 graduates,Unknown count,1,2,Changed school,1,66,12,0.181818181818182,335,5.07575757575757,6,1,5
+2021,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,2,Changed school,1,44,4,0.0909090909090909,10,0.227272727272727,0,2,2
+2025,NEM matches,All contexts at least 30 graduates,Unknown count,3,3,"Same school, modality changes",0,37,0,0,0,0,0,0,0
+2021,NEM matches,All contexts at least 30 graduates,Unknown count,3,4,Changed school,1,11,0,0,0,0,0,0,0
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,4,Changed school,0,84,9,0.107142857142857,13,0.154761904761905,0,8,1
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,1,2,Changed school,1,59,14,0.23728813559322,455,7.71186440677966,8,4,2
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,2,Changed school,0,39,10,0.256410256410256,221,5.66666666666667,5,5,0
+2023,NEM matches,All contexts at least 30 graduates,Unknown count,2,3,Changed school,1,98,36,0.36734693877551,293,2.98979591836735,16,18,2
+2023,NEM matches,Unknown count,Unknown count,3,3,Changed school,0,17,1,0.0588235294117647,13,0.764705882352941,1,0,0
+2025,NEM matches,Below 30 graduates,Unknown count,3,3,Changed school,1,7,1,0.142857142857143,1,0.142857142857143,0,1,0
+2023,NEM matches,Unknown count,Unknown count,3,2,Changed school,0,43,3,0.0697674418604651,12,0.279069767441861,1,2,0
+2023,NEM matches,Below 30 graduates,Below 30 graduates,3,3,Changed school,,9,0,0,0,0,0,0,0
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,1,"Same school, modality changes",1,33,0,0,0,0,0,0,0
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,2,Changed school,1,31,12,0.387096774193548,12,0.387096774193548,0,12,0
+2024,NEM matches,All contexts at least 30 graduates,Unknown count,1,2,Changed school,0,80,26,0.325,578,7.225,16,5,5
+2021,NEM matches,All contexts at least 30 graduates,Unknown count,2,3,Changed school,1,24,2,0.0833333333333333,2,0.0833333333333333,0,2,0
+2021,NEM matches,All contexts at least 30 graduates,Unknown count,2,3,"Same school, modality changes",1,23,1,0.0434782608695652,10,0.434782608695652,1,0,0
+2023,NEM matches,Below 30 graduates,Unknown count,3,3,Changed school,0,18,3,0.166666666666667,3,0.166666666666667,0,3,0
+2023,NEM matches,All contexts at least 30 graduates,Unknown count,3,4,Changed school,,40,2,0.05,2,0.05,0,2,0
+2024,NEM matches,All contexts at least 30 graduates,Below 30 graduates,2,2,"Same school, modality changes",0,22,0,0,0,0,0,0,0
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,,66,5,0.0757575757575758,40,0.606060606060606,2,2,1
+2023,NEM matches,All contexts at least 30 graduates,Unknown count,3,3,"Same school, modality changes",1,58,1,0.0172413793103448,1,0.0172413793103448,0,1,0
+2023,NEM matches,Below 30 graduates,Below 30 graduates,3,2,Changed school,0,121,17,0.140495867768595,97,0.801652892561984,4,7,6
+2025,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,,7,7,1,78,11.1428571428571,7,0,0
+2026,NEM matches,Unknown count,Unknown count,3,3,Changed school,0,18,2,0.111111111111111,2,0.111111111111111,0,2,0
+2022,NEM matches,All contexts at least 30 graduates,Unknown count,2,2,Changed school,1,3,0,0,0,0,0,0,0
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,1,"Same school, modality changes",0,19,4,0.210526315789474,12,0.631578947368421,0,0,4
+2024,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,1,2,Changed school,0,1,1,1,65,65,1,0,0
+2026,NEM matches,Unknown count,Unknown count,2,3,Changed school,0,34,3,0.0882352941176471,3,0.0882352941176471,0,3,0
+2023,NEM differs,All contexts at least 30 graduates,Unknown count,3,3,Changed school,0,7,7,1,203,29,7,0,0
+2024,NEM matches,Unknown count,Unknown count,3,3,Changed school,0,15,3,0.2,4,0.266666666666667,0,2,1
+2024,NEM matches,All contexts at least 30 graduates,Unknown count,1,3,Changed school,1,63,32,0.507936507936508,666,10.5714285714286,21,2,9
+2026,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,2,Changed school,1,29,7,0.241379310344828,9,0.310344827586207,0,6,1
+2023,NEM matches,Below 30 graduates,Below 30 graduates,2,2,Changed school,0,6,0,0,0,0,0,0,0
+2024,NEM matches,Below 30 graduates,Below 30 graduates,3,2,Changed school,1,41,5,0.121951219512195,14,0.341463414634146,1,1,3
+2022,NEM differs,Unknown count,Unknown count,1,3,Changed school,1,2,2,1,13,6.5,2,0,0
+2024,NEM matches,Below 30 graduates,Below 30 graduates,2,3,Changed school,1,4,0,0,0,0,0,0,0
+2026,NEM matches,Below 30 graduates,Below 30 graduates,3,2,Changed school,0,134,19,0.141791044776119,39,0.291044776119403,1,11,7
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,3,Changed school,,7,1,0.142857142857143,1,0.142857142857143,0,1,0
+2022,NEM matches,Unknown count,Unknown count,2,2,Changed school,1,19,2,0.105263157894737,5,0.263157894736842,0,1,1
+2024,NEM matches,Unknown count,Unknown count,3,2,Changed school,0,28,1,0.0357142857142857,8,0.285714285714286,1,0,0
+2023,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,"Same school, modality changes",1,20,19,0.95,594,29.7,19,0,0
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,3,3,"Same school, modality changes",0,33,3,0.0909090909090909,3,0.0909090909090909,0,3,0
+2023,NEM matches,Below 30 graduates,Below 30 graduates,3,2,Changed school,1,29,7,0.241379310344828,11,0.379310344827586,0,4,3
+2021,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,"Same school, modality changes",0,40,40,1,357,8.925,37,0,3
+2025,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,0,27,27,1,405,15,26,0,1
+2026,NEM matches,Unknown count,Unknown count,1,2,Changed school,0,45,6,0.133333333333333,47,1.04444444444444,1,4,1
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,2,4,Changed school,0,11,3,0.272727272727273,3,0.272727272727273,0,3,0
+2024,NEM matches,All contexts at least 30 graduates,Unknown count,1,2,Changed school,1,26,15,0.576923076923077,332,12.7692307692308,7,5,3
+2021,NEM matches,Below 30 graduates,Below 30 graduates,3,3,Changed school,,3,0,0,0,0,0,0,0
+2026,NEM matches,Unknown count,Unknown count,2,2,Changed school,1,24,4,0.166666666666667,15,0.625,1,3,0
+2022,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,3,Changed school,1,30,6,0.2,15,0.5,1,3,2
+2025,NEM matches,Below 30 graduates,Unknown count,3,3,Changed school,0,26,4,0.153846153846154,7,0.269230769230769,0,2,2
+2021,NEM matches,All contexts at least 30 graduates,Below 30 graduates,1,2,Changed school,0,29,0,0,0,0,0,0,0
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,"Same school, modality changes",0,7,0,0,0,0,0,0,0
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,"Same school, modality changes",,5,0,0,0,0,0,0,0
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,"Same school, modality changes",1,7,0,0,0,0,0,0,0
+2021,NEM matches,Below 30 graduates,Below 30 graduates,1,2,Changed school,0,4,1,0.25,2,0.5,0,0,1
+2026,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,3,"Same school, modality changes",1,2,0,0,0,0,0,0,0
+2021,NEM matches,All contexts at least 30 graduates,Unknown count,2,3,Changed school,0,25,3,0.12,3,0.12,0,3,0
+2025,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,"Same school, modality changes",0,44,44,1,749,17.0227272727273,43,0,1
+2021,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,,3,3,1,49,16.3333333333333,3,0,0
+2023,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,2,Changed school,1,40,7,0.175,42,1.05,3,2,2
+2021,NEM matches,Below 30 graduates,Unknown count,2,2,Changed school,0,1,1,1,7,7,1,0,0
+2024,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,0,22,22,1,627,28.5,20,0,2
+2026,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,"Same school, modality changes",1,35,32,0.914285714285714,488,13.9428571428571,32,0,0
+2023,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,1,3,3,1,28,9.33333333333333,3,0,0
+2024,NEM matches,All contexts at least 30 graduates,Unknown count,3,4,Changed school,1,17,6,0.352941176470588,32,1.88235294117647,1,4,1
+2021,NEM matches,All contexts at least 30 graduates,Unknown count,3,3,"Same school, modality changes",0,7,0,0,0,0,0,0,0
+2022,NEM matches,All contexts at least 30 graduates,Unknown count,3,3,"Same school, modality changes",0,31,0,0,0,0,0,0,0
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,4,Changed school,1,21,2,0.0952380952380952,5,0.238095238095238,0,1,1
+2025,NEM matches,Unknown count,Unknown count,3,2,Changed school,0,44,4,0.0909090909090909,16,0.363636363636364,1,2,1
+2021,NEM matches,Unknown count,Unknown count,3,3,Changed school,0,21,2,0.0952380952380952,21,1,1,0,1
+2024,NEM matches,Unknown count,Unknown count,3,3,Changed school,1,13,1,0.0769230769230769,1,0.0769230769230769,0,1,0
+2024,NEM matches,Below 30 graduates,Below 30 graduates,3,3,Changed school,1,19,5,0.263157894736842,30,1.57894736842105,1,4,0
+2025,NEM matches,Unknown count,Unknown count,2,2,Changed school,0,47,3,0.0638297872340426,6,0.127659574468085,0,2,1
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,Changed school,,5,1,0.2,1,0.2,0,1,0
+2021,NEM matches,Below 30 graduates,Below 30 graduates,3,3,Changed school,1,16,2,0.125,10,0.625,1,0,1
+2026,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,3,Changed school,1,16,0,0,0,0,0,0,0
+2021,NEM matches,All contexts at least 30 graduates,Below 30 graduates,2,3,Changed school,0,1,0,0,0,0,0,0,0
+2021,NEM matches,Unknown count,Unknown count,1,3,Changed school,1,7,2,0.285714285714286,3,0.428571428571429,0,1,1
+2023,NEM matches,All contexts at least 30 graduates,Unknown count,3,3,"Same school, modality changes",0,47,0,0,0,0,0,0,0
+2024,NEM matches,Below 30 graduates,Below 30 graduates,2,3,Changed school,0,7,1,0.142857142857143,1,0.142857142857143,0,1,0
+2023,NEM matches,Unknown count,Unknown count,1,3,Changed school,1,6,2,0.333333333333333,2,0.333333333333333,0,2,0
+2023,NEM matches,All contexts at least 30 graduates,Unknown count,1,3,"Same school, modality changes",0,5,0,0,0,0,0,0,0
+2021,NEM matches,All contexts at least 30 graduates,Unknown count,3,3,Changed school,,18,0,0,0,0,0,0,0
+2022,NEM matches,Below 30 graduates,Below 30 graduates,3,3,Changed school,0,40,2,0.05,2,0.05,0,2,0
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,3,"Same school, modality changes",0,2,0,0,0,0,0,0,0
+2021,NEM matches,All contexts at least 30 graduates,Unknown count,3,2,Changed school,,3,0,0,0,0,0,0,0
+2023,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,3,Changed school,,12,6,0.5,27,2.25,2,2,2
+2025,NEM differs,All contexts at least 30 graduates,Unknown count,2,2,Changed school,0,1,1,1,14,14,1,0,0
+2022,NEM matches,All contexts at least 30 graduates,Unknown count,2,2,Changed school,0,24,7,0.291666666666667,235,9.79166666666667,3,1,3
+2026,NEM matches,Below 30 graduates,Below 30 graduates,3,3,Changed school,0,46,5,0.108695652173913,5,0.108695652173913,0,5,0
+2026,NEM matches,Below 30 graduates,Below 30 graduates,2,2,Changed school,1,5,1,0.2,74,14.8,1,0,0
+2022,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,3,Changed school,0,22,4,0.181818181818182,20,0.909090909090909,2,1,1
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,Changed school,1,31,6,0.193548387096774,55,1.7741935483871,1,3,2
+2021,NEM matches,All contexts at least 30 graduates,Unknown count,3,4,Changed school,,5,0,0,0,0,0,0,0
+2023,NEM matches,Unknown count,Unknown count,2,3,Changed school,1,14,0,0,0,0,0,0,0
+2025,NEM matches,Below 30 graduates,Below 30 graduates,3,3,Changed school,,5,0,0,0,0,0,0,0
+2026,NEM differs,All contexts at least 30 graduates,Unknown count,3,3,Changed school,1,4,4,1,33,8.25,4,0,0
+2022,NEM matches,Below 30 graduates,Unknown count,3,2,Changed school,1,9,1,0.111111111111111,1,0.111111111111111,0,1,0
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,4,Changed school,1,38,5,0.131578947368421,10,0.263157894736842,0,2,3
+2024,NEM matches,Below 30 graduates,Below 30 graduates,2,2,Changed school,,4,3,0.75,7,1.75,0,1,2
+2021,NEM matches,Below 30 graduates,Unknown count,3,2,Changed school,0,16,1,0.0625,1,0.0625,0,1,0
+2024,NEM matches,All contexts at least 30 graduates,Unknown count,2,3,Changed school,,17,9,0.529411764705882,338,19.8823529411765,7,1,1
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,Changed school,1,47,0,0,0,0,0,0,0
+2021,NEM matches,Unknown count,Unknown count,3,2,Changed school,1,13,2,0.153846153846154,3,0.230769230769231,0,1,1
+2025,NEM matches,Below 30 graduates,Below 30 graduates,3,3,Changed school,0,34,5,0.147058823529412,9,0.264705882352941,0,2,3
+2025,NEM matches,Unknown count,Unknown count,1,2,Changed school,1,11,1,0.0909090909090909,6,0.545454545454546,1,0,0
+2023,NEM matches,Unknown count,Unknown count,1,3,Changed school,0,24,2,0.0833333333333333,2,0.0833333333333333,0,2,0
+2024,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,3,Changed school,,8,2,0.25,5,0.625,0,1,1
+2026,NEM differs,All contexts at least 30 graduates,Unknown count,3,2,Changed school,0,11,11,1,126,11.4545454545455,11,0,0
+2022,NEM differs,All contexts at least 30 graduates,Unknown count,3,2,Changed school,0,11,11,1,104,9.45454545454546,10,0,1
+2022,NEM differs,All contexts at least 30 graduates,Unknown count,3,3,Changed school,0,9,9,1,162,18,8,0,1
+2024,NEM matches,Below 30 graduates,Unknown count,3,2,Changed school,1,6,0,0,0,0,0,0,0
+2024,NEM matches,Below 30 graduates,Unknown count,3,3,Changed school,1,9,3,0.333333333333333,13,1.44444444444444,1,1,1
+2024,NEM matches,Unknown count,Unknown count,1,3,Changed school,1,4,0,0,0,0,0,0,0
+2022,NEM matches,All contexts at least 30 graduates,Unknown count,3,4,Changed school,1,12,1,0.0833333333333333,1,0.0833333333333333,0,1,0
+2023,NEM matches,All contexts at least 30 graduates,Unknown count,1,2,"Same school, modality changes",0,18,0,0,0,0,0,0,0
+2021,NEM matches,All contexts at least 30 graduates,Unknown count,1,3,Changed school,,2,0,0,0,0,0,0,0
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,3,Changed school,0,18,3,0.166666666666667,4,0.222222222222222,0,2,1
+2024,NEM matches,Below 30 graduates,Below 30 graduates,3,4,Changed school,0,2,0,0,0,0,0,0,0
+2026,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,,11,11,1,77,7,8,0,3
+2021,NEM matches,Unknown count,Unknown count,1,3,Changed school,0,25,8,0.32,39,1.56,2,5,1
+2025,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,3,Changed school,,11,3,0.272727272727273,4,0.363636363636364,0,2,1
+2023,NEM matches,All contexts at least 30 graduates,Unknown count,2,3,Changed school,,22,6,0.272727272727273,81,3.68181818181818,3,1,2
+2026,NEM matches,Below 30 graduates,Unknown count,3,2,Changed school,1,10,3,0.3,7,0.7,0,2,1
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,4,Changed school,,23,0,0,0,0,0,0,0
+2021,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,1,5,5,1,121,24.2,5,0,0
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,3,"Same school, modality changes",0,1,1,1,5,5,0,0,1
+2023,NEM matches,All contexts at least 30 graduates,Unknown count,1,4,Changed school,1,4,1,0.25,1,0.25,0,1,0
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,3,Changed school,0,33,2,0.0606060606060606,9,0.272727272727273,1,1,0
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,3,2,Changed school,,13,4,0.307692307692308,8,0.615384615384615,0,2,2
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,3,4,Changed school,1,36,9,0.25,10,0.277777777777778,0,8,1
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,"Same school, modality changes",1,9,0,0,0,0,0,0,0
+2023,NEM matches,Unknown count,Unknown count,3,3,Changed school,1,5,1,0.2,1,0.2,0,1,0
+2021,NEM matches,Below 30 graduates,Below 30 graduates,2,2,Changed school,0,8,2,0.25,2,0.25,0,2,0
+2024,NEM matches,Unknown count,Unknown count,1,4,Changed school,,1,0,0,0,0,0,0,0
+2022,NEM matches,All contexts at least 30 graduates,Unknown count,1,3,"Same school, modality changes",1,3,1,0.333333333333333,23,7.66666666666667,1,0,0
+2023,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,,7,7,1,147,21,7,0,0
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,1,Same school and modality,1,9,6,0.666666666666667,236,26.2222222222222,6,0,0
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,2,3,Changed school,,16,3,0.1875,18,1.125,2,1,0
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,4,Changed school,1,2,0,0,0,0,0,0,0
+2025,NEM matches,Below 30 graduates,Below 30 graduates,3,3,Changed school,1,25,5,0.2,5,0.2,0,5,0
+2023,NEM differs,All contexts at least 30 graduates,Below 30 graduates,3,3,Changed school,1,1,1,1,157,157,1,0,0
+2021,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,4,Changed school,0,1,0,0,0,0,0,0,0
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,1,Same school and modality,,2,1,0.5,1,0.5,0,1,0
+2022,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,4,Changed school,,1,1,1,5,5,0,0,1
+2022,NEM matches,Below 30 graduates,Unknown count,1,3,Changed school,0,3,1,0.333333333333333,2,0.666666666666667,0,0,1
+2026,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,,5,5,1,103,20.6,5,0,0
+2025,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,1,3,3,1,61,20.3333333333333,3,0,0
+2025,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,1,42,41,0.976190476190476,583,13.8809523809524,38,2,1
+2024,NEM matches,All contexts at least 30 graduates,Unknown count,3,3,"Same school, modality changes",0,35,0,0,0,0,0,0,0
+2026,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,1,7,7,1,68,9.71428571428571,7,0,0
+2024,NEM matches,All contexts at least 30 graduates,Unknown count,3,2,Changed school,,9,2,0.222222222222222,9,1,1,1,0
+2024,NEM matches,All contexts at least 30 graduates,Unknown count,2,4,Changed school,0,9,2,0.222222222222222,6,0.666666666666667,0,0,2
+2025,NEM differs,Unknown count,Unknown count,2,2,Changed school,1,7,7,1,114,16.2857142857143,7,0,0
+2023,NEM matches,Below 30 graduates,Below 30 graduates,2,4,Changed school,0,2,0,0,0,0,0,0,0
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,3,Changed school,,1,0,0,0,0,0,0,0
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,4,Changed school,0,4,1,0.25,32,8,1,0,0
+2025,NEM matches,All contexts at least 30 graduates,Unknown count,1,3,"Same school, modality changes",0,6,1,0.166666666666667,29,4.83333333333333,1,0,0
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,Changed school,,24,2,0.0833333333333333,4,0.166666666666667,0,0,2
+2023,NEM matches,Below 30 graduates,Below 30 graduates,3,4,Changed school,0,4,1,0.25,1,0.25,0,1,0
+2021,NEM matches,All contexts at least 30 graduates,Unknown count,1,3,Changed school,0,6,0,0,0,0,0,0,0
+2024,NEM matches,Unknown count,Unknown count,2,3,Changed school,1,7,1,0.142857142857143,1,0.142857142857143,0,1,0
+2025,NEM matches,Unknown count,Unknown count,3,3,Changed school,1,18,6,0.333333333333333,7,0.388888888888889,0,5,1
+2021,NEM matches,All contexts at least 30 graduates,Unknown count,2,2,Changed school,1,15,2,0.133333333333333,3,0.2,0,1,1
+2024,NEM differs,All contexts at least 30 graduates,Unknown count,3,3,Changed school,,1,1,1,17,17,1,0,0
+2025,NEM matches,All contexts at least 30 graduates,Unknown count,1,3,"Same school, modality changes",1,14,3,0.214285714285714,3,0.214285714285714,0,3,0
+2024,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,"Same school, modality changes",0,7,7,1,198,28.2857142857143,7,0,0
+2022,NEM matches,All contexts at least 30 graduates,Unknown count,2,3,Changed school,0,12,4,0.333333333333333,22,1.83333333333333,1,2,1
+2021,NEM matches,Below 30 graduates,Unknown count,3,3,Changed school,1,7,0,0,0,0,0,0,0
+2026,NEM matches,Unknown count,Unknown count,1,3,Changed school,1,4,1,0.25,1,0.25,0,1,0
+2024,NEM matches,All contexts at least 30 graduates,Below 30 graduates,1,2,Changed school,1,3,2,0.666666666666667,2,0.666666666666667,0,2,0
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,3,Changed school,1,5,1,0.2,1,0.2,0,1,0
+2021,NEM matches,All contexts at least 30 graduates,Unknown count,1,2,Changed school,1,5,1,0.2,1,0.2,0,1,0
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,4,Changed school,1,2,1,0.5,1,0.5,0,1,0
+2026,NEM matches,All contexts at least 30 graduates,Below 30 graduates,2,2,Changed school,0,1,0,0,0,0,0,0,0
+2022,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,3,"Same school, modality changes",1,1,0,0,0,0,0,0,0
+2022,NEM matches,Unknown count,Unknown count,3,3,Changed school,0,20,3,0.15,9,0.45,1,2,0
+2023,NEM matches,All contexts at least 30 graduates,Below 30 graduates,2,2,Changed school,1,1,0,0,0,0,0,0,0
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,1,4,Changed school,,3,0,0,0,0,0,0,0
+2022,NEM matches,All contexts at least 30 graduates,Unknown count,1,3,Changed school,,4,1,0.25,6,1.5,1,0,0
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,"Same school, modality changes",,3,1,0.333333333333333,1,0.333333333333333,0,1,0
+2023,NEM matches,Below 30 graduates,Below 30 graduates,3,4,Changed school,,4,0,0,0,0,0,0,0
+2025,NEM matches,All contexts at least 30 graduates,Unknown count,2,4,Changed school,0,10,4,0.4,77,7.7,3,1,0
+2026,NEM differs,All contexts at least 30 graduates,Unknown count,3,3,Changed school,0,15,15,1,164,10.9333333333333,14,0,1
+2023,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,3,"Same school, modality changes",0,1,1,1,25,25,1,0,0
+2023,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,1,2,Changed school,0,3,3,1,91,30.3333333333333,3,0,0
+2023,NEM matches,Below 30 graduates,Unknown count,3,3,Changed school,1,13,3,0.230769230769231,7,0.538461538461539,0,2,1
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,Changed school,,9,3,0.333333333333333,37,4.11111111111111,1,1,1
+2025,NEM matches,All contexts at least 30 graduates,Unknown count,3,2,Changed school,,14,1,0.0714285714285714,1,0.0714285714285714,0,1,0
+2022,NEM matches,Below 30 graduates,Below 30 graduates,3,3,Changed school,1,14,1,0.0714285714285714,1,0.0714285714285715,0,1,0
+2024,NEM matches,All contexts at least 30 graduates,Unknown count,1,3,Changed school,,14,7,0.5,403,28.7857142857143,6,1,0
+2023,NEM differs,All contexts at least 30 graduates,Unknown count,1,4,Changed school,,1,1,1,24,24,1,0,0
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,3,Changed school,0,25,4,0.16,39,1.56,2,0,2
+2022,NEM matches,Below 30 graduates,Unknown count,1,3,Changed school,1,2,0,0,0,0,0,0,0
+2023,NEM matches,Below 30 graduates,Below 30 graduates,3,3,Changed school,0,25,7,0.28,16,0.64,0,3,4
+2022,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,1,2,Changed school,0,1,0,0,0,0,0,0,0
+2023,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,1,3,Changed school,,1,1,1,48,48,1,0,0
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,3,Changed school,1,6,1,0.166666666666667,1,0.166666666666667,0,1,0
+2022,NEM matches,Unknown count,Unknown count,2,3,Changed school,0,18,3,0.166666666666667,8,0.444444444444444,0,1,2
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,3,"Same school, modality changes",1,1,0,0,0,0,0,0,0
+2024,NEM matches,All contexts at least 30 graduates,Below 30 graduates,1,2,Changed school,0,6,0,0,0,0,0,0,0
+2022,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,4,Changed school,0,4,0,0,0,0,0,0,0
+2021,NEM matches,All contexts at least 30 graduates,Unknown count,3,2,"Same school, modality changes",1,1,0,0,0,0,0,0,0
+2025,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,,3,3,1,20,6.66666666666667,2,0,1
+2021,NEM matches,Unknown count,Unknown count,3,3,Changed school,1,9,1,0.111111111111111,5,0.555555555555556,0,0,1
+2024,NEM matches,All contexts at least 30 graduates,Unknown count,1,4,Changed school,,6,3,0.5,141,23.5,3,0,0
+2025,NEM differs,Below 30 graduates,Below 30 graduates,3,2,Changed school,0,1,1,1,5,5,0,0,1
+2026,NEM matches,Unknown count,Unknown count,3,3,Changed school,1,6,2,0.333333333333333,2,0.333333333333333,0,2,0
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,3,Changed school,1,6,0,0,0,0,0,0,0
+2022,NEM matches,Below 30 graduates,Below 30 graduates,2,3,Changed school,0,4,1,0.25,4,1,0,0,1
+2024,NEM matches,Below 30 graduates,Unknown count,3,3,Changed school,0,8,2,0.25,7,0.875,1,1,0
+2023,NEM matches,Unknown count,Unknown count,3,3,Changed school,,4,0,0,0,0,0,0,0
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,"Same school, modality changes",1,6,0,0,0,0,0,0,0
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,Changed school,,9,3,0.333333333333333,9,1,1,1,1
+2025,NEM matches,Below 30 graduates,Unknown count,2,3,Changed school,1,3,0,0,0,0,0,0,0
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,1,Same school and modality,1,28,0,0,0,0,0,0,0
+2022,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,,5,5,1,38,7.6,4,0,1
+2026,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,1,30,30,1,396,13.2,29,0,1
+2023,NEM matches,All contexts at least 30 graduates,Below 30 graduates,1,3,Changed school,0,8,2,0.25,2,0.25,0,2,0
+2026,NEM matches,Unknown count,Unknown count,3,3,Changed school,,2,0,0,0,0,0,0,0
+2024,NEM matches,All contexts at least 30 graduates,Below 30 graduates,2,3,Changed school,1,1,0,0,0,0,0,0,0
+2026,NEM matches,Below 30 graduates,Below 30 graduates,3,3,Changed school,1,21,1,0.0476190476190476,1,0.0476190476190476,0,1,0
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,3,"Same school, modality changes",0,3,0,0,0,0,0,0,0
+2024,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,,10,10,1,221,22.1,10,0,0
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,4,Changed school,1,2,1,0.5,2,1,0,0,1
+2026,NEM matches,Below 30 graduates,Below 30 graduates,2,3,Changed school,1,2,0,0,0,0,0,0,0
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,2,Changed school,1,18,8,0.444444444444444,299,16.6111111111111,6,0,2
+2025,NEM differs,All contexts at least 30 graduates,Unknown count,3,2,Changed school,0,5,5,1,78,15.6,5,0,0
+2021,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,4,Changed school,1,2,0,0,0,0,0,0,0
+2024,NEM differs,All contexts at least 30 graduates,Unknown count,3,3,Changed school,0,6,6,1,87,14.5,6,0,0
+2024,NEM matches,All contexts at least 30 graduates,Unknown count,1,4,Changed school,0,3,2,0.666666666666667,15,5,1,0,1
+2022,NEM differs,All contexts at least 30 graduates,Unknown count,3,3,Changed school,1,7,7,1,88,12.5714285714286,7,0,0
+2023,NEM matches,Below 30 graduates,Below 30 graduates,2,3,Changed school,0,6,0,0,0,0,0,0,0
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,2,Changed school,,2,0,0,0,0,0,0,0
+2025,NEM matches,All contexts at least 30 graduates,Unknown count,2,3,"Same school, modality changes",1,1,1,1,4,4,0,0,1
+2022,NEM matches,All contexts at least 30 graduates,Below 30 graduates,1,2,Changed school,1,4,2,0.5,12,3,2,0,0
+2022,NEM matches,Below 30 graduates,Unknown count,3,2,Changed school,0,8,2,0.25,2,0.25,0,2,0
+2023,NEM matches,Below 30 graduates,Below 30 graduates,2,3,Changed school,1,2,0,0,0,0,0,0,0
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,1,"Same school, modality changes",1,24,0,0,0,0,0,0,0
+2023,NEM matches,All contexts at least 30 graduates,Below 30 graduates,1,3,Changed school,1,1,0,0,0,0,0,0,0
+2025,NEM differs,Below 30 graduates,Below 30 graduates,3,3,Changed school,0,1,1,1,8,8,1,0,0
+2024,NEM differs,Unknown count,Unknown count,3,2,Changed school,0,1,1,1,21,21,1,0,0
+2025,NEM matches,Unknown count,Unknown count,2,3,Changed school,0,22,2,0.0909090909090909,2,0.0909090909090909,0,2,0
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,1,Same school and modality,,1,0,0,0,0,0,0,0
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,"Same school, modality changes",0,3,0,0,0,0,0,0,0
+2022,NEM matches,Unknown count,Unknown count,2,3,Changed school,1,6,1,0.166666666666667,1,0.166666666666667,0,1,0
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,4,Changed school,1,1,1,1,1,1,0,1,0
+2021,NEM matches,All contexts at least 30 graduates,Below 30 graduates,1,3,Changed school,0,3,1,0.333333333333333,1,0.333333333333333,0,1,0
+2026,NEM matches,Unknown count,Unknown count,2,4,Changed school,0,4,0,0,0,0,0,0,0
+2021,NEM matches,Below 30 graduates,Below 30 graduates,3,4,Changed school,0,1,0,0,0,0,0,0,0
+2024,NEM matches,Unknown count,Unknown count,3,4,Changed school,,2,1,0.5,2,1,0,0,1
+2025,NEM differs,All contexts at least 30 graduates,Unknown count,1,4,Changed school,,1,1,1,16,16,1,0,0
+2025,NEM matches,All contexts at least 30 graduates,Unknown count,2,4,Changed school,1,3,0,0,0,0,0,0,0
+2026,NEM differs,Below 30 graduates,Below 30 graduates,3,2,Changed school,1,3,3,1,32,10.6666666666667,3,0,0
+2023,NEM matches,Unknown count,Unknown count,2,2,Changed school,,1,1,1,1,1,0,1,0
+2025,NEM matches,Below 30 graduates,Unknown count,3,4,Changed school,,1,0,0,0,0,0,0,0
+2023,NEM matches,Below 30 graduates,Below 30 graduates,1,2,Changed school,0,3,0,0,0,0,0,0,0
+2026,NEM differs,Below 30 graduates,Below 30 graduates,2,3,Changed school,,1,1,1,26,26,1,0,0
+2026,NEM matches,Unknown count,Unknown count,3,4,Changed school,0,1,0,0,0,0,0,0,0
+2024,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,4,Changed school,,1,1,1,3,3,0,0,1
+2025,NEM matches,Below 30 graduates,Unknown count,3,2,Changed school,1,6,1,0.166666666666667,1,0.166666666666667,0,1,0
+2025,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,4,Changed school,,1,0,0,0,0,0,0,0
+2021,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,3,Changed school,,1,0,0,0,0,0,0,0
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,2,Changed school,1,9,3,0.333333333333333,248,27.5555555555556,2,1,0
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,1,Same school and modality,,3,0,0,0,0,0,0,0
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,3,Changed school,1,12,5,0.416666666666667,20,1.66666666666667,1,2,2
+2025,NEM matches,Below 30 graduates,Unknown count,2,3,Changed school,0,4,0,0,0,0,0,0,0
+2025,NEM differs,All contexts at least 30 graduates,Unknown count,3,3,Changed school,0,9,9,1,86,9.55555555555556,9,0,0
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,3,Changed school,0,13,5,0.384615384615385,89,6.84615384615385,4,0,1
+2025,NEM matches,All contexts at least 30 graduates,Unknown count,2,4,Changed school,,11,4,0.363636363636364,114,10.3636363636364,4,0,0
+2024,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,3,"Same school, modality changes",0,1,0,0,0,0,0,0,0
+2021,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,"Same school, modality changes",1,1,0,0,0,0,0,0,0
+2024,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,2,1,Same school and modality,0,2,1,0.5,7,3.5,1,0,0
+2023,NEM matches,Below 30 graduates,Below 30 graduates,1,3,Changed school,1,1,0,0,0,0,0,0,0
+2022,NEM matches,All contexts at least 30 graduates,Unknown count,3,4,Changed school,,8,0,0,0,0,0,0,0
+2022,NEM matches,Unknown count,Unknown count,1,3,Changed school,0,14,2,0.142857142857143,2,0.142857142857143,0,2,0
+2025,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,2,"Same school, modality changes",1,2,2,1,2,1,0,2,0
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,3,Changed school,1,7,0,0,0,0,0,0,0
+2023,NEM differs,All contexts at least 30 graduates,Unknown count,3,2,Changed school,1,3,3,1,118,39.3333333333333,3,0,0
+2022,NEM matches,Below 30 graduates,Below 30 graduates,3,3,Changed school,,3,0,0,0,0,0,0,0
+2024,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,"Same school, modality changes",1,4,4,1,301,75.25,4,0,0
+2023,NEM matches,All contexts at least 30 graduates,Below 30 graduates,2,3,Changed school,0,1,1,1,6,6,1,0,0
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,"Same school, modality changes",0,2,0,0,0,0,0,0,0
+2024,NEM differs,All contexts at least 30 graduates,Unknown count,3,2,Changed school,1,4,4,1,139,34.75,4,0,0
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,3,Changed school,1,7,0,0,0,0,0,0,0
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,3,"Same school, modality changes",0,5,0,0,0,0,0,0,0
+2025,NEM differs,All contexts at least 30 graduates,Unknown count,1,2,Changed school,1,3,3,1,63,21,3,0,0
+2025,NEM matches,Below 30 graduates,Below 30 graduates,1,2,Changed school,0,3,0,0,0,0,0,0,0
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,3,Changed school,,5,0,0,0,0,0,0,0
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,"Same school, modality changes",,5,0,0,0,0,0,0,0
+2021,NEM matches,Below 30 graduates,Unknown count,2,3,Changed school,0,2,1,0.5,5,2.5,0,0,1
+2026,NEM differs,All contexts at least 30 graduates,Unknown count,3,2,Changed school,1,3,3,1,25,8.33333333333333,3,0,0
+2024,NEM matches,Below 30 graduates,Unknown count,3,2,Changed school,0,11,2,0.181818181818182,2,0.181818181818182,0,2,0
+2021,NEM differs,All contexts at least 30 graduates,Unknown count,2,2,Changed school,1,1,1,1,8,8,1,0,0
+2022,NEM matches,All contexts at least 30 graduates,Unknown count,1,3,"Same school, modality changes",0,8,1,0.125,2,0.25,0,0,1
+2025,NEM matches,Below 30 graduates,Below 30 graduates,2,3,Changed school,0,8,0,0,0,0,0,0,0
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,4,Changed school,,1,0,0,0,0,0,0,0
+2026,NEM matches,Below 30 graduates,Unknown count,3,3,Changed school,1,21,6,0.285714285714286,9,0.428571428571429,0,5,1
+2023,NEM matches,All contexts at least 30 graduates,Unknown count,2,4,Changed school,,6,2,0.333333333333333,33,5.5,1,1,0
+2026,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,1,1,Same school and modality,0,21,21,1,187,8.90476190476191,19,0,2
+2023,NEM matches,Below 30 graduates,Unknown count,3,4,Changed school,,1,0,0,0,0,0,0,0
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,1,"Same school, modality changes",1,4,1,0.25,1,0.25,0,1,0
+2023,NEM differs,All contexts at least 30 graduates,Unknown count,3,2,Changed school,0,6,6,1,117,19.5,6,0,0
+2023,NEM matches,Below 30 graduates,Unknown count,2,4,Changed school,1,1,0,0,0,0,0,0,0
+2021,NEM matches,All contexts at least 30 graduates,Unknown count,1,2,Changed school,0,10,2,0.2,2,0.2,0,2,0
+2023,NEM matches,All contexts at least 30 graduates,Unknown count,3,2,"Same school, modality changes",0,2,0,0,0,0,0,0,0
+2024,NEM matches,Unknown count,Unknown count,3,2,Changed school,1,8,2,0.25,10,1.25,1,0,1
+2026,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,4,Changed school,,2,2,1,37,18.5,2,0,0
+2022,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,1,2,2,1,60,30,2,0,0
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,"Same school, modality changes",,2,0,0,0,0,0,0,0
+2023,NEM matches,All contexts at least 30 graduates,Unknown count,1,4,Changed school,,13,8,0.615384615384615,208,16,6,1,1
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,"Same school, modality changes",,7,0,0,0,0,0,0,0
+2023,NEM matches,Unknown count,Unknown count,1,2,Changed school,1,12,2,0.166666666666667,35,2.91666666666667,1,0,1
+2021,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,Changed school,1,14,14,1,195,13.9285714285714,12,0,2
+2023,NEM matches,Unknown count,Unknown count,2,4,Changed school,1,1,1,1,3,3,0,0,1
+2023,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,3,"Same school, modality changes",1,12,0,0,0,0,0,0,0
+2022,NEM matches,Below 30 graduates,Below 30 graduates,2,2,Changed school,1,2,1,0.5,9,4.5,1,0,0
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,3,"Same school, modality changes",1,1,1,1,3,3,0,0,1
+2021,NEM matches,All contexts at least 30 graduates,Unknown count,2,4,Changed school,,1,0,0,0,0,0,0,0
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,2,3,"Same school, modality changes",1,15,0,0,0,0,0,0,0
+2025,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,,5,5,1,111,22.2,5,0,0
+2025,NEM matches,Below 30 graduates,Below 30 graduates,2,2,Changed school,,4,1,0.25,1,0.25,0,1,0
+2024,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,Changed school,0,4,2,0.5,16,4,2,0,0
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,4,Changed school,,1,0,0,0,0,0,0,0
+2022,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,3,Changed school,,1,0,0,0,0,0,0,0
+2024,NEM matches,Below 30 graduates,Unknown count,2,3,Changed school,0,4,1,0.25,9,2.25,1,0,0
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,2,Changed school,,1,0,0,0,0,0,0,0
+2021,NEM matches,Below 30 graduates,Below 30 graduates,3,4,Changed school,1,3,0,0,0,0,0,0,0
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,1,4,Changed school,0,6,2,0.333333333333333,130,21.6666666666667,2,0,0
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,3,Changed school,,9,2,0.222222222222222,27,3,1,1,0
+2021,NEM differs,Below 30 graduates,Below 30 graduates,3,2,Changed school,0,1,1,1,6,6,1,0,0
+2023,NEM matches,Unknown count,Unknown count,1,4,Changed school,0,1,1,1,1,1,0,1,0
+2022,NEM matches,Unknown count,Unknown count,2,3,Changed school,,3,0,0,0,0,0,0,0
+2022,NEM matches,Below 30 graduates,Below 30 graduates,1,2,Changed school,0,2,0,0,0,0,0,0,0
+2022,NEM matches,Below 30 graduates,Unknown count,3,3,Changed school,0,4,1,0.25,1,0.25,0,1,0
+2022,NEM matches,Below 30 graduates,Below 30 graduates,2,3,Changed school,,2,0,0,0,0,0,0,0
+2023,NEM matches,All contexts at least 30 graduates,Unknown count,3,2,"Same school, modality changes",1,2,0,0,0,0,0,0,0
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,3,3,"Same school, modality changes",,1,0,0,0,0,0,0,0
+2021,NEM differs,All contexts at least 30 graduates,Unknown count,3,3,Changed school,1,4,4,1,26,6.5,3,0,1
+2024,NEM matches,Below 30 graduates,Unknown count,2,2,Changed school,0,2,1,0.5,4,2,0,0,1
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,Changed school,,4,2,0.5,2,0.5,0,2,0
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,2,Changed school,1,4,0,0,0,0,0,0,0
+2024,NEM matches,Below 30 graduates,Below 30 graduates,3,4,Changed school,,3,0,0,0,0,0,0,0
+2021,NEM matches,Unknown count,Unknown count,1,2,Changed school,1,9,1,0.111111111111111,12,1.33333333333333,1,0,0
+2021,NEM matches,All contexts at least 30 graduates,Unknown count,1,4,Changed school,0,1,1,1,3,3,0,0,1
+2021,NEM differs,Unknown count,Unknown count,3,2,Changed school,0,1,1,1,24,24,1,0,0
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,"Same school, modality changes",,5,0,0,0,0,0,0,0
+2023,NEM differs,All contexts at least 30 graduates,Unknown count,3,3,Changed school,1,3,3,1,64,21.3333333333333,3,0,0
+2021,NEM matches,Below 30 graduates,Below 30 graduates,1,2,Changed school,1,1,0,0,0,0,0,0,0
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,4,Changed school,,1,0,0,0,0,0,0,0
+2026,NEM matches,Below 30 graduates,Below 30 graduates,2,3,Changed school,0,8,0,0,0,0,0,0,0
+2026,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,"Same school, modality changes",1,6,6,1,45,7.5,6,0,0
+2025,NEM matches,Unknown count,Unknown count,3,4,Changed school,0,1,1,1,1,1,0,1,0
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,4,"Same school, modality changes",1,1,0,0,0,0,0,0,0
+2026,NEM differs,All contexts at least 30 graduates,Unknown count,1,2,Changed school,0,1,1,1,7,7,1,0,0
+2021,NEM matches,Below 30 graduates,Below 30 graduates,3,2,Changed school,,2,0,0,0,0,0,0,0
+2023,NEM matches,All contexts at least 30 graduates,Below 30 graduates,1,3,Changed school,,1,1,1,1,1,0,1,0
+2024,NEM differs,All contexts at least 30 graduates,Unknown count,3,2,Changed school,,2,2,1,53,26.5,2,0,0
+2026,NEM matches,Below 30 graduates,Below 30 graduates,3,4,Changed school,0,4,0,0,0,0,0,0,0
+2025,NEM differs,All contexts at least 30 graduates,Unknown count,3,2,Changed school,1,8,8,1,105,13.125,8,0,0
+2022,NEM matches,Below 30 graduates,Below 30 graduates,2,2,Changed school,0,8,1,0.125,13,1.625,1,0,0
+2021,NEM matches,All contexts at least 30 graduates,Unknown count,3,2,"Same school, modality changes",0,7,0,0,0,0,0,0,0
+2022,NEM matches,Unknown count,Unknown count,1,3,Changed school,1,4,0,0,0,0,0,0,0
+2025,NEM matches,Unknown count,Unknown count,2,3,Changed school,1,12,1,0.0833333333333333,2,0.166666666666667,0,0,1
+2022,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,,1,1,1,6,6,1,0,0
+2024,NEM differs,All contexts at least 30 graduates,Unknown count,3,3,Changed school,1,9,9,1,136,15.1111111111111,9,0,0
+2026,NEM matches,Below 30 graduates,Unknown count,3,3,Changed school,,1,1,1,1,1,0,1,0
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,3,Changed school,,2,1,0.5,115,57.5,1,0,0
+2021,NEM matches,All contexts at least 30 graduates,Unknown count,3,3,"Same school, modality changes",1,4,0,0,0,0,0,0,0
+2024,NEM matches,Below 30 graduates,Below 30 graduates,3,3,Changed school,,5,1,0.2,1,0.2,0,1,0
+2023,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,4,Changed school,,1,1,1,83,83,1,0,0
+2026,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,,4,4,1,42,10.5,4,0,0
+2026,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,Changed school,0,2,2,1,15,7.5,2,0,0
+2021,NEM matches,Below 30 graduates,Unknown count,1,4,Changed school,0,1,0,0,0,0,0,0,0
+2022,NEM matches,Below 30 graduates,Below 30 graduates,3,2,Changed school,,1,0,0,0,0,0,0,0
+2026,NEM matches,Unknown count,Unknown count,2,3,Changed school,,4,0,0,0,0,0,0,0
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,2,Changed school,1,8,3,0.375,162,20.25,2,1,0
+2025,NEM matches,All contexts at least 30 graduates,Unknown count,1,4,Changed school,,3,2,0.666666666666667,8,2.66666666666667,1,1,0
+2026,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,2,"Same school, modality changes",0,1,0,0,0,0,0,0,0
+2021,NEM matches,Below 30 graduates,Below 30 graduates,2,3,Changed school,0,4,0,0,0,0,0,0,0
+2024,NEM matches,Below 30 graduates,Unknown count,2,3,Changed school,1,1,1,1,6,6,1,0,0
+2026,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,4,Changed school,,2,0,0,0,0,0,0,0
+2021,NEM differs,Unknown count,Unknown count,2,3,Changed school,0,2,2,1,21,10.5,2,0,0
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,Changed school,1,2,0,0,0,0,0,0,0
+2021,NEM differs,All contexts at least 30 graduates,Unknown count,3,4,Changed school,,1,1,1,45,45,1,0,0
+2025,NEM matches,Below 30 graduates,Below 30 graduates,2,4,Changed school,0,1,0,0,0,0,0,0,0
+2022,NEM matches,Below 30 graduates,Below 30 graduates,1,2,Changed school,,1,1,1,1,1,0,1,0
+2026,NEM matches,Below 30 graduates,Below 30 graduates,1,2,Changed school,1,3,0,0,0,0,0,0,0
+2023,NEM matches,All contexts at least 30 graduates,Unknown count,2,4,Changed school,0,4,0,0,0,0,0,0,0
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,4,Changed school,0,1,0,0,0,0,0,0,0
+2024,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,1,6,6,1,60,10,6,0,0
+2022,NEM matches,Unknown count,Unknown count,2,4,Changed school,,1,1,1,11,11,1,0,0
+2021,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,0,7,7,1,55,7.85714285714286,6,0,1
+2026,NEM matches,Below 30 graduates,Below 30 graduates,2,2,Changed school,,3,1,0.333333333333333,4,1.33333333333333,0,0,1
+2024,NEM matches,All contexts at least 30 graduates,Below 30 graduates,2,2,Changed school,0,2,1,0.5,1,0.5,0,1,0
+2021,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,,3,3,1,36,12,3,0,0
+2025,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,Changed school,0,1,1,1,16,16,1,0,0
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,"Same school, modality changes",,3,0,0,0,0,0,0,0
+2025,NEM matches,Below 30 graduates,Below 30 graduates,3,4,Changed school,0,1,0,0,0,0,0,0,0
+2024,NEM matches,Below 30 graduates,Unknown count,1,3,Changed school,0,1,0,0,0,0,0,0,0
+2025,NEM matches,Below 30 graduates,Below 30 graduates,3,4,Changed school,,2,0,0,0,0,0,0,0
+2025,NEM matches,Unknown count,Unknown count,1,4,Changed school,1,1,0,0,0,0,0,0,0
+2026,NEM matches,Below 30 graduates,Below 30 graduates,3,4,Changed school,,3,0,0,0,0,0,0,0
+2022,NEM differs,Unknown count,Unknown count,3,3,Changed school,0,1,1,1,51,51,1,0,0
+2025,NEM matches,Below 30 graduates,Below 30 graduates,2,2,Changed school,1,3,0,0,0,0,0,0,0
+2024,NEM differs,All contexts at least 30 graduates,Unknown count,3,2,Changed school,0,5,5,1,129,25.8,5,0,0
+2022,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,4,Changed school,1,1,0,0,0,0,0,0,0
+2021,NEM matches,All contexts at least 30 graduates,Unknown count,1,3,Changed school,1,3,0,0,0,0,0,0,0
+2023,NEM matches,Unknown count,Unknown count,3,4,Changed school,1,1,0,0,0,0,0,0,0
+2023,NEM matches,Below 30 graduates,Below 30 graduates,2,2,Changed school,1,3,1,0.333333333333333,1,0.333333333333333,0,1,0
+2023,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,4,Changed school,1,2,0,0,0,0,0,0,0
+2026,NEM matches,Unknown count,Unknown count,2,4,Changed school,1,1,0,0,0,0,0,0,0
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,1,"Same school, modality changes",1,1,0,0,0,0,0,0,0
+2025,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,Changed school,1,2,2,1,38,19,2,0,0
+2022,NEM matches,All contexts at least 30 graduates,Unknown count,2,3,Changed school,1,4,1,0.25,10,2.5,1,0,0
+2023,NEM matches,Below 30 graduates,Below 30 graduates,3,4,Changed school,1,2,0,0,0,0,0,0,0
+2025,NEM matches,Below 30 graduates,Unknown count,3,4,Changed school,0,6,0,0,0,0,0,0,0
+2024,NEM matches,All contexts at least 30 graduates,Below 30 graduates,1,3,Changed school,1,1,0,0,0,0,0,0,0
+2023,NEM differs,All contexts at least 30 graduates,Unknown count,1,2,Changed school,0,2,2,1,23,11.5,1,1,0
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,3,"Same school, modality changes",1,6,1,0.166666666666667,16,2.66666666666667,1,0,0
+2025,NEM matches,All contexts at least 30 graduates,Unknown count,1,4,Changed school,1,5,2,0.4,16,3.2,1,0,1
+2022,NEM matches,All contexts at least 30 graduates,Unknown count,1,4,Changed school,0,2,1,0.5,1,0.5,0,1,0
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,"Same school, modality changes",,2,1,0.5,1,0.5,0,1,0
+2024,NEM differs,All contexts at least 30 graduates,Unknown count,2,3,Changed school,0,1,1,1,52,52,1,0,0
+2026,NEM differs,All contexts at least 30 graduates,Unknown count,2,2,Changed school,0,1,1,1,10,10,1,0,0
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,Changed school,1,6,1,0.166666666666667,1,0.166666666666667,0,1,0
+2025,NEM differs,Unknown count,Unknown count,2,3,Changed school,0,1,1,1,9,9,1,0,0
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,1,Same school and modality,,2,0,0,0,0,0,0,0
+2024,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,4,Changed school,,1,1,1,7,7,1,0,0
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,2,4,Changed school,1,9,0,0,0,0,0,0,0
+2021,NEM differs,All contexts at least 30 graduates,Unknown count,3,3,Changed school,0,5,5,1,45,9,5,0,0
+2023,NEM matches,Below 30 graduates,Below 30 graduates,1,3,Changed school,0,2,0,0,0,0,0,0,0
+2021,NEM matches,All contexts at least 30 graduates,Unknown count,2,4,Changed school,0,2,0,0,0,0,0,0,0
+2021,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,"Same school, modality changes",1,4,4,1,55,13.75,4,0,0
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,3,Changed school,1,4,1,0.25,13,3.25,1,0,0
+2023,NEM matches,Unknown count,Unknown count,2,3,Changed school,,4,0,0,0,0,0,0,0
+2022,NEM matches,Unknown count,Unknown count,1,2,Changed school,,2,0,0,0,0,0,0,0
+2024,NEM matches,Unknown count,Unknown count,2,4,Changed school,,3,0,0,0,0,0,0,0
+2024,NEM matches,Unknown count,Unknown count,2,2,Changed school,,1,1,1,1,1,0,1,0
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,3,Changed school,0,5,2,0.4,27,5.4,2,0,0
+2023,NEM matches,Below 30 graduates,Unknown count,3,3,Changed school,,1,0,0,0,0,0,0,0
+2023,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,4,Changed school,,4,1,0.25,1,0.25,0,1,0
+2026,NEM matches,All contexts at least 30 graduates,Below 30 graduates,2,4,Changed school,1,1,1,1,1,1,0,1,0
+2023,NEM matches,Below 30 graduates,Below 30 graduates,2,2,Changed school,,3,1,0.333333333333333,3,1,0,0,1
+2026,NEM differs,Unknown count,Unknown count,2,2,Changed school,0,1,1,1,30,30,1,0,0
+2024,NEM matches,Unknown count,Unknown count,1,2,Changed school,,1,0,0,0,0,0,0,0
+2021,NEM matches,Below 30 graduates,Below 30 graduates,2,3,Changed school,,1,0,0,0,0,0,0,0
+2023,NEM matches,All contexts at least 30 graduates,Unknown count,3,2,Changed school,,5,1,0.2,21,4.2,1,0,0
+2026,NEM differs,All contexts at least 30 graduates,Unknown count,3,3,Changed school,,1,1,1,15,15,1,0,0
+2024,NEM matches,Below 30 graduates,Below 30 graduates,2,2,Changed school,1,10,0,0,0,0,0,0,0
+2021,NEM matches,Unknown count,Unknown count,3,3,Changed school,,2,0,0,0,0,0,0,0
+2023,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,,2,2,1,27,13.5,2,0,0
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,"Same school, modality changes",1,2,1,0.5,2,1,0,0,1
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,4,"Same school, modality changes",0,2,0,0,0,0,0,0,0
+2026,NEM matches,Below 30 graduates,Below 30 graduates,3,3,Changed school,,3,0,0,0,0,0,0,0
+2024,NEM differs,All contexts at least 30 graduates,Unknown count,1,2,Changed school,0,1,1,1,31,31,1,0,0
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,3,"Same school, modality changes",,1,0,0,0,0,0,0,0
+2024,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,4,Changed school,0,1,1,1,1,1,0,1,0
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,1,2,Changed school,,1,1,1,1,1,0,1,0
+2021,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,"Same school, modality changes",0,1,1,1,6,6,1,0,0
+2023,NEM differs,All contexts at least 30 graduates,Unknown count,2,2,Changed school,1,1,1,1,110,110,1,0,0
+2025,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,4,Changed school,,2,2,1,21,10.5,2,0,0
+2024,NEM matches,All contexts at least 30 graduates,Unknown count,2,4,Changed school,,2,0,0,0,0,0,0,0
+2023,NEM matches,Unknown count,Unknown count,1,3,Changed school,,1,0,0,0,0,0,0,0
+2026,NEM matches,Below 30 graduates,Below 30 graduates,2,3,Changed school,,1,0,0,0,0,0,0,0
+2024,NEM differs,All contexts at least 30 graduates,Unknown count,2,3,Changed school,1,1,1,1,82,82,1,0,0
+2024,NEM matches,Below 30 graduates,Unknown count,2,2,Changed school,1,3,3,1,68,22.6666666666667,3,0,0
+2026,NEM matches,Unknown count,Unknown count,1,4,Changed school,1,1,0,0,0,0,0,0,0
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,4,Changed school,0,5,1,0.2,3,0.6,0,0,1
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,3,Changed school,,1,1,1,1,1,0,1,0
+2025,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,3,"Same school, modality changes",1,1,0,0,0,0,0,0,0
+2023,NEM matches,All contexts at least 30 graduates,Below 30 graduates,1,4,Changed school,0,1,0,0,0,0,0,0,0
+2025,NEM matches,Below 30 graduates,Unknown count,2,2,Changed school,1,2,0,0,0,0,0,0,0
+2021,NEM differs,All contexts at least 30 graduates,Unknown count,3,2,Changed school,1,3,3,1,20,6.66666666666667,3,0,0
+2024,NEM matches,All contexts at least 30 graduates,Below 30 graduates,2,2,Changed school,1,1,0,0,0,0,0,0,0
+2026,NEM matches,All contexts at least 30 graduates,Below 30 graduates,2,3,"Same school, modality changes",0,1,1,1,2,2,0,0,1
+2023,NEM matches,All contexts at least 30 graduates,Unknown count,1,4,Changed school,0,4,0,0,0,0,0,0,0
+2022,NEM differs,Unknown count,Unknown count,3,2,Changed school,0,1,1,1,36,36,1,0,0
+2024,NEM matches,Below 30 graduates,Below 30 graduates,3,2,Changed school,,3,0,0,0,0,0,0,0
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,3,"Same school, modality changes",0,5,3,0.6,47,9.4,1,1,1
+2024,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,3,"Same school, modality changes",1,2,0,0,0,0,0,0,0
+2025,NEM matches,All contexts at least 30 graduates,Unknown count,2,2,Changed school,,1,0,0,0,0,0,0,0
+2025,NEM differs,All contexts at least 30 graduates,Unknown count,1,2,Changed school,0,1,1,1,8,8,1,0,0
+2021,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,4,Changed school,,1,1,1,53,53,1,0,0
+2025,NEM differs,Unknown count,Unknown count,2,2,Changed school,0,2,2,1,33,16.5,2,0,0
+2024,NEM differs,All contexts at least 30 graduates,Below 30 graduates,3,4,Changed school,0,1,1,1,8,8,1,0,0
+2023,NEM matches,Unknown count,Unknown count,3,4,Changed school,,2,0,0,0,0,0,0,0
+2025,NEM matches,Below 30 graduates,Below 30 graduates,1,2,Changed school,1,2,0,0,0,0,0,0,0
+2025,NEM matches,Below 30 graduates,Unknown count,2,2,Changed school,0,1,1,1,15,15,1,0,0
+2026,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,2,3,Changed school,0,1,1,1,6,6,1,0,0
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,3,Changed school,,8,1,0.125,14,1.75,1,0,0
+2021,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,3,"Same school, modality changes",1,1,0,0,0,0,0,0,0
+2026,NEM differs,All contexts at least 30 graduates,Unknown count,2,2,Changed school,1,1,1,1,11,11,1,0,0
+2022,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,Changed school,0,3,3,1,35,11.6666666666667,3,0,0
+2026,NEM differs,Unknown count,Unknown count,2,3,Changed school,0,1,1,1,36,36,1,0,0
+2023,NEM matches,Below 30 graduates,Unknown count,2,3,Changed school,,1,1,1,2,2,0,0,1
+2024,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,"Same school, modality changes",,1,1,1,7,7,1,0,0
+2025,NEM differs,Unknown count,Unknown count,3,2,Changed school,1,2,2,1,17,8.5,2,0,0
+2021,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,Changed school,0,1,1,1,6,6,1,0,0
+2026,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,1,1,Same school and modality,,1,1,1,16,16,1,0,0
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,1,3,"Same school, modality changes",1,4,1,0.25,16,4,1,0,0
+2025,NEM matches,Unknown count,Unknown count,1,3,Changed school,1,2,0,0,0,0,0,0,0
+2021,NEM matches,Below 30 graduates,Below 30 graduates,3,4,Changed school,,3,1,0.333333333333333,1,0.333333333333333,0,1,0
+2022,NEM matches,Below 30 graduates,Below 30 graduates,3,4,Changed school,1,2,0,0,0,0,0,0,0
+2025,NEM matches,Below 30 graduates,Below 30 graduates,1,4,Changed school,0,1,0,0,0,0,0,0,0
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,2,Changed school,,3,1,0.333333333333333,33,11,1,0,0
+2023,NEM matches,All contexts at least 30 graduates,Below 30 graduates,2,4,Changed school,,1,0,0,0,0,0,0,0
+2023,NEM matches,Below 30 graduates,Below 30 graduates,1,4,Changed school,,1,0,0,0,0,0,0,0
+2025,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,4,Changed school,0,4,0,0,0,0,0,0,0
+2026,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,3,Changed school,,2,1,0.5,1,0.5,0,1,0
+2023,NEM matches,Below 30 graduates,Unknown count,2,3,Changed school,1,1,0,0,0,0,0,0,0
+2024,NEM matches,Unknown count,Unknown count,2,3,Changed school,,2,0,0,0,0,0,0,0
+2024,NEM matches,Below 30 graduates,Unknown count,1,2,Changed school,1,2,1,0.5,4,2,0,0,1
+2026,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,4,Changed school,0,2,1,0.5,6,3,1,0,0
+2026,NEM matches,Below 30 graduates,Unknown count,3,4,Changed school,,3,0,0,0,0,0,0,0
+2026,NEM differs,All contexts at least 30 graduates,Unknown count,1,2,Changed school,1,1,1,1,29,29,1,0,0
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,4,"Same school, modality changes",1,4,3,0.75,3,0.75,0,3,0
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,4,Changed school,0,2,0,0,0,0,0,0,0
+2024,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,1,Same school and modality,,2,2,1,59,29.5,2,0,0
+2026,NEM matches,Unknown count,Unknown count,1,2,Changed school,1,4,2,0.5,2,0.5,0,2,0
+2022,NEM matches,All contexts at least 30 graduates,Unknown count,3,2,"Same school, modality changes",0,1,0,0,0,0,0,0,0
+2022,NEM differs,All contexts at least 30 graduates,Below 30 graduates,3,3,Changed school,0,1,1,1,6,6,1,0,0
+2024,NEM matches,Below 30 graduates,Below 30 graduates,2,3,Changed school,,3,1,0.333333333333333,1,0.333333333333333,0,1,0
+2021,NEM matches,Below 30 graduates,Below 30 graduates,2,3,Changed school,1,1,0,0,0,0,0,0,0
+2025,NEM matches,Unknown count,Unknown count,2,3,Changed school,,1,0,0,0,0,0,0,0
+2025,NEM matches,All contexts at least 30 graduates,Below 30 graduates,2,3,Changed school,1,4,1,0.25,5,1.25,0,0,1
+2024,NEM matches,All contexts at least 30 graduates,Below 30 graduates,1,4,Changed school,1,1,0,0,0,0,0,0,0
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,4,Changed school,0,2,0,0,0,0,0,0,0
+2026,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,"Same school, modality changes",,1,1,1,15,15,1,0,0
+2026,NEM matches,Below 30 graduates,Unknown count,2,4,Changed school,0,1,1,1,1,1,0,1,0
+2022,NEM differs,All contexts at least 30 graduates,Unknown count,1,3,Changed school,0,1,1,1,7,7,1,0,0
+2022,NEM matches,Unknown count,Unknown count,3,3,Changed school,,1,0,0,0,0,0,0,0
+2023,NEM matches,Unknown count,Unknown count,2,4,Changed school,0,2,0,0,0,0,0,0,0
+2025,NEM matches,Unknown count,Unknown count,2,4,Changed school,0,2,0,0,0,0,0,0,0
+2026,NEM differs,Unknown count,Unknown count,3,3,Changed school,1,1,1,1,16,16,1,0,0
+2022,NEM matches,Unknown count,Unknown count,2,4,Changed school,0,3,0,0,0,0,0,0,0
+2023,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,1,3,Changed school,0,1,1,1,11,11,1,0,0
+2026,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,"Same school, modality changes",0,5,5,1,38,7.6,5,0,0
+2023,NEM differs,Unknown count,Unknown count,1,4,Changed school,,1,1,1,8,8,1,0,0
+2025,NEM matches,Below 30 graduates,Below 30 graduates,2,3,Changed school,,1,0,0,0,0,0,0,0
+2026,NEM matches,Unknown count,Unknown count,3,4,Changed school,,2,0,0,0,0,0,0,0
+2025,NEM differs,All contexts at least 30 graduates,Unknown count,2,3,Changed school,,1,1,1,142,142,1,0,0
+2023,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,4,Changed school,0,1,1,1,94,94,1,0,0
+2024,NEM matches,Below 30 graduates,Below 30 graduates,1,3,Changed school,0,1,0,0,0,0,0,0,0
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,"Same school, modality changes",,3,1,0.333333333333333,2,0.666666666666667,0,0,1
+2026,NEM matches,All contexts at least 30 graduates,Below 30 graduates,2,3,Changed school,0,2,0,0,0,0,0,0,0
+2022,NEM matches,Below 30 graduates,Unknown count,3,4,Changed school,1,1,0,0,0,0,0,0,0
+2023,NEM matches,All contexts at least 30 graduates,Below 30 graduates,1,2,Changed school,0,3,0,0,0,0,0,0,0
+2022,NEM differs,All contexts at least 30 graduates,Below 30 graduates,3,3,Changed school,1,3,3,1,47,15.6666666666667,3,0,0
+2026,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,3,"Same school, modality changes",0,1,0,0,0,0,0,0,0
+2024,NEM matches,All contexts at least 30 graduates,Below 30 graduates,1,3,Changed school,0,2,1,0.5,1,0.5,0,1,0
+2025,NEM matches,Below 30 graduates,Below 30 graduates,3,2,Changed school,,3,1,0.333333333333333,1,0.333333333333333,0,1,0
+2022,NEM matches,Below 30 graduates,Unknown count,2,2,Changed school,0,1,1,1,5,5,0,0,1
+2025,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,4,Changed school,0,3,3,1,30,10,3,0,0
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,1,3,"Same school, modality changes",0,1,0,0,0,0,0,0,0
+2026,NEM matches,Unknown count,Unknown count,3,4,Changed school,1,1,0,0,0,0,0,0,0
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,3,Changed school,,2,1,0.5,1,0.5,0,1,0
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,4,Changed school,0,1,1,1,4,4,0,0,1
+2024,NEM matches,All contexts at least 30 graduates,Unknown count,1,4,Changed school,1,2,1,0.5,48,24,1,0,0
+2023,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,2,Changed school,,1,0,0,0,0,0,0,0
+2022,NEM differs,All contexts at least 30 graduates,Unknown count,1,3,"Same school, modality changes",1,1,1,1,7,7,1,0,0
+2026,NEM differs,All contexts at least 30 graduates,Below 30 graduates,3,3,Changed school,0,1,1,1,8,8,1,0,0
+2022,NEM differs,All contexts at least 30 graduates,Unknown count,1,2,Changed school,1,1,1,1,26,26,1,0,0
+2022,NEM matches,Unknown count,Unknown count,2,4,Changed school,1,2,0,0,0,0,0,0,0
+2025,NEM matches,All contexts at least 30 graduates,Below 30 graduates,2,2,Changed school,0,2,0,0,0,0,0,0,0
+2026,NEM differs,Unknown count,Unknown count,1,2,Changed school,0,1,1,1,24,24,1,0,0
+2026,NEM matches,Unknown count,Unknown count,2,4,Changed school,,2,0,0,0,0,0,0,0
+2023,NEM matches,All contexts at least 30 graduates,Below 30 graduates,2,2,Changed school,0,2,0,0,0,0,0,0,0
+2025,NEM differs,All contexts at least 30 graduates,Unknown count,3,3,"Same school, modality changes",1,1,1,1,9,9,1,0,0
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,4,"Same school, modality changes",1,1,0,0,0,0,0,0,0
+2023,NEM matches,Unknown count,Unknown count,1,4,Changed school,1,1,0,0,0,0,0,0,0
+2024,NEM matches,All contexts at least 30 graduates,Below 30 graduates,2,3,"Same school, modality changes",1,2,0,0,0,0,0,0,0
+2021,NEM matches,Unknown count,Unknown count,3,4,Changed school,,1,1,1,1,1,0,1,0
+2024,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,3,Changed school,,1,0,0,0,0,0,0,0
+2022,NEM matches,Unknown count,Unknown count,3,4,Changed school,,1,0,0,0,0,0,0,0
+2024,NEM matches,Below 30 graduates,Below 30 graduates,1,2,Changed school,0,2,0,0,0,0,0,0,0
+2024,NEM matches,Below 30 graduates,Unknown count,3,4,Changed school,,1,0,0,0,0,0,0,0
+2026,NEM matches,Below 30 graduates,Unknown count,1,3,Changed school,1,1,0,0,0,0,0,0,0
+2024,NEM matches,All contexts at least 30 graduates,Below 30 graduates,2,3,Changed school,0,1,0,0,0,0,0,0,0
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,3,Changed school,1,4,2,0.5,28,7,2,0,0
+2021,NEM differs,Unknown count,Unknown count,1,3,Changed school,0,1,1,1,6,6,1,0,0
+2021,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,4,Changed school,,1,0,0,0,0,0,0,0
+2025,NEM matches,All contexts at least 30 graduates,Below 30 graduates,2,3,Changed school,0,1,0,0,0,0,0,0,0
+2023,NEM matches,All contexts at least 30 graduates,Below 30 graduates,1,4,Changed school,,1,0,0,0,0,0,0,0
+2023,NEM differs,Unknown count,Unknown count,2,3,Changed school,0,2,2,1,59,29.5,2,0,0
+2021,NEM matches,Below 30 graduates,Unknown count,3,3,Changed school,,1,0,0,0,0,0,0,0
+2021,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,4,Changed school,0,1,1,1,16,16,1,0,0
+2026,NEM differs,Unknown count,Unknown count,3,2,Changed school,0,1,1,1,10,10,1,0,0
+2022,NEM matches,All contexts at least 30 graduates,Below 30 graduates,2,2,Changed school,0,2,0,0,0,0,0,0,0
+2023,NEM matches,Below 30 graduates,Unknown count,2,3,Changed school,0,3,2,0.666666666666667,13,4.33333333333333,2,0,0
+2026,NEM differs,Below 30 graduates,Below 30 graduates,3,2,Changed school,0,1,1,1,7,7,1,0,0
+2025,NEM matches,Unknown count,Unknown count,3,3,Changed school,,2,0,0,0,0,0,0,0
+2026,NEM matches,Unknown count,Unknown count,1,4,Changed school,0,1,0,0,0,0,0,0,0
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,4,Changed school,0,1,0,0,0,0,0,0,0
+2022,NEM matches,Unknown count,Unknown count,3,4,Changed school,1,1,0,0,0,0,0,0,0
+2023,NEM matches,Below 30 graduates,Below 30 graduates,3,2,Changed school,,3,1,0.333333333333333,59,19.6666666666667,1,0,0
+2024,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,4,Changed school,1,1,0,0,0,0,0,0,0
+2021,NEM matches,All contexts at least 30 graduates,Unknown count,1,4,Changed school,,2,0,0,0,0,0,0,0
+2026,NEM matches,Unknown count,Unknown count,1,2,Changed school,,1,0,0,0,0,0,0,0
+2024,NEM matches,All contexts at least 30 graduates,Unknown count,3,2,"Same school, modality changes",0,1,0,0,0,0,0,0,0
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,3,2,"Same school, modality changes",0,1,1,1,1,1,0,1,0
+2023,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,"Same school, modality changes",1,1,0,0,0,0,0,0,0
+2025,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,2,"Same school, modality changes",1,2,2,1,30,15,2,0,0
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,1,2,"Same school, modality changes",0,1,0,0,0,0,0,0,0
+2022,NEM differs,Below 30 graduates,Unknown count,3,2,Changed school,0,1,1,1,21,21,1,0,0
+2025,NEM matches,All contexts at least 30 graduates,Unknown count,2,2,"Same school, modality changes",0,1,0,0,0,0,0,0,0
+2022,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,1,1,Same school and modality,0,1,1,1,6,6,1,0,0
+2022,NEM matches,All contexts at least 30 graduates,Below 30 graduates,1,3,Changed school,1,1,0,0,0,0,0,0,0
+2022,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,3,3,Changed school,,1,1,1,18,18,1,0,0
+2022,NEM matches,Unknown count,Unknown count,1,4,Changed school,0,2,0,0,0,0,0,0,0
+2024,NEM matches,All contexts at least 30 graduates,Unknown count,2,4,Changed school,1,1,0,0,0,0,0,0,0
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,4,Changed school,1,1,0,0,0,0,0,0,0
+2023,NEM differs,All contexts at least 30 graduates,Unknown count,1,3,Changed school,1,1,1,1,124,124,1,0,0
+2023,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,Changed school,1,1,1,1,87,87,1,0,0
+2023,NEM matches,All contexts at least 30 graduates,Unknown count,2,4,Changed school,1,2,0,0,0,0,0,0,0
+2025,NEM matches,All contexts at least 30 graduates,Below 30 graduates,1,2,Changed school,0,1,0,0,0,0,0,0,0
+2021,NEM matches,Below 30 graduates,Unknown count,2,2,Changed school,1,1,1,1,3,3,0,0,1
+2026,NEM differs,Unknown count,Unknown count,2,3,Changed school,1,1,1,1,9,9,1,0,0
+2021,NEM matches,Below 30 graduates,Below 30 graduates,2,2,Changed school,,1,0,0,0,0,0,0,0
+2021,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,2,"Same school, modality changes",1,1,1,1,9,9,1,0,0
+2025,NEM differs,Below 30 graduates,Unknown count,3,3,Changed school,0,1,1,1,28,28,1,0,0
+2022,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,1,3,Changed school,0,1,1,1,7,7,1,0,0
+2024,NEM matches,Unknown count,Unknown count,3,4,Changed school,1,1,0,0,0,0,0,0,0
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,4,"Same school, modality changes",1,1,0,0,0,0,0,0,0
+2026,NEM matches,All contexts at least 30 graduates,Unknown count,2,2,Changed school,,1,1,1,4,4,0,0,1
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,1,Same school and modality,,1,0,0,0,0,0,0,0
+2022,NEM differs,Unknown count,Unknown count,2,2,Changed school,1,1,1,1,9,9,1,0,0
+2024,NEM matches,Unknown count,Unknown count,3,4,Changed school,0,2,1,0.5,1,0.5,0,1,0
+2023,NEM matches,Below 30 graduates,Below 30 graduates,1,3,Changed school,,1,0,0,0,0,0,0,0
+2024,NEM matches,All contexts at least 30 graduates,Unknown count,1,3,"Same school, modality changes",1,1,0,0,0,0,0,0,0
+2022,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,4,Changed school,,1,0,0,0,0,0,0,0
+2021,NEM matches,All contexts at least 30 graduates,Below 30 graduates,2,2,Changed school,0,2,0,0,0,0,0,0,0
+2022,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,1,Same school and modality,,1,0,0,0,0,0,0,0
+2024,NEM matches,Below 30 graduates,Unknown count,1,2,Changed school,0,1,1,1,18,18,1,0,0
+2021,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,3,Changed school,,1,0,0,0,0,0,0,0
+2021,NEM differs,Below 30 graduates,Unknown count,3,2,Changed school,0,1,1,1,6,6,1,0,0
+2026,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,3,4,"Same school, modality changes",1,1,0,0,0,0,0,0,0
+2024,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,2,Changed school,,1,0,0,0,0,0,0,0
+2024,NEM matches,All contexts at least 30 graduates,Unknown count,2,2,Changed school,,1,1,1,4,4,0,0,1
+2024,NEM differs,All contexts at least 30 graduates,Unknown count,2,2,Changed school,0,1,1,1,7,7,1,0,0
+2022,NEM differs,Unknown count,Unknown count,1,2,Changed school,0,1,1,1,8,8,1,0,0
+2023,NEM differs,All contexts at least 30 graduates,All contexts at least 30 graduates,2,2,Changed school,0,1,1,1,8,8,1,0,0
+2026,NEM differs,Unknown count,Unknown count,1,3,Changed school,0,1,1,1,9,9,1,0,0
+2025,NEM matches,Below 30 graduates,Unknown count,1,3,Changed school,1,1,1,1,12,12,1,0,0
+2023,NEM matches,All contexts at least 30 graduates,Below 30 graduates,2,3,Changed school,,1,0,0,0,0,0,0,0
+2024,NEM differs,Unknown count,Unknown count,2,2,Changed school,0,1,1,1,32,32,1,0,0
+2025,NEM matches,Below 30 graduates,Below 30 graduates,1,3,Changed school,0,2,0,0,0,0,0,0,0
+2025,NEM differs,Unknown count,Unknown count,1,2,Changed school,0,1,1,1,3,3,0,0,1
+2021,NEM matches,Below 30 graduates,Below 30 graduates,1,3,Changed school,1,1,0,0,0,0,0,0,0
+2025,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,3,"Same school, modality changes",0,1,0,0,0,0,0,0,0
+2024,NEM matches,Unknown count,Unknown count,1,4,Changed school,0,1,0,0,0,0,0,0,0
+2022,NEM matches,All contexts at least 30 graduates,Unknown count,1,4,Changed school,1,1,0,0,0,0,0,0,0
+2023,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,1,3,"Same school, modality changes",,1,0,0,0,0,0,0,0
+2023,NEM matches,Unknown count,Unknown count,1,4,Changed school,,1,0,0,0,0,0,0,0
+2025,NEM matches,Below 30 graduates,Below 30 graduates,1,3,Changed school,,1,0,0,0,0,0,0,0
+2024,NEM matches,Below 30 graduates,Unknown count,3,4,Changed school,0,1,0,0,0,0,0,0,0
+2026,NEM differs,Below 30 graduates,Below 30 graduates,3,3,Changed school,0,1,1,1,9,9,1,0,0
+2024,NEM differs,All contexts at least 30 graduates,Unknown count,3,4,Changed school,,1,1,1,118,118,1,0,0
+2025,NEM matches,All contexts at least 30 graduates,All contexts at least 30 graduates,2,4,Changed school,,1,0,0,0,0,0,0,0
+2026,NEM matches,All contexts at least 30 graduates,Below 30 graduates,3,4,Changed school,1,1,0,0,0,0,0,0,0

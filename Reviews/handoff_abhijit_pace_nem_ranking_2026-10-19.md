@@ -2,6 +2,14 @@
 
 Prepared October 19, 2026, for continuing the F08 work with Ignacio. The main unresolved task is to establish whether SAE reduced PACE admission through lower attendance at participating schools, lower academic qualification, or both. We now have official school rosters, an audit of the recorded PACE variables, and reconstructed scores for many graduates without recorded NEM/Ranking. **The Ranking reconstruction remains provisional; full academic eligibility and the corresponding mechanism estimates are not finished.**
 
+## Latest diagnosis: what still drives mismatches
+
+[Remaining-discrepancy patterns](../code/analysis_for_adversarial_report_output/f08/ranking/remaining_patterns_2026-10-19/remaining_discrepancy_patterns_2026-10-19.md) uses the first-pass historical-reference candidate on the same 1,033,587 validated students (95,985 mismatches). Small-school pooling is not the main observed-error pattern: 99.41% of mismatches have school-wide historical graduation counts >=30 in every context; 93.45% still do when counts are split by HC/TP modality. This conclusion concerns reconstructible scores; small references excluded from scoring remain a coverage problem.
+
+Most mismatches are small (57.67% exactly one point; 79.65% at most five). The clean group with exact NEM, one accepted context, three observed cohorts and adequate school/modality counts accounts for 65.40% of mismatches. By contrast, NEM-mismatched students are only 1.02% of the validated sample but account for 31.92% of total absolute Ranking error and 47.06% of errors over five points. Technical graduates and school/modality changers have higher error rates, but most mismatch counts still occur in larger, simpler-history groups.
+
+Prioritize academic-record reconciliation for large errors and historical benchmark/precision checks in the exact-NEM clean group for the bulk of small differences. These are diagnostic hypotheses, not identified causes. The two `f08-ranking-remaining-patterns*` chunks generate aggregate shares, joint strata, coverage and an explicitly ordered non-overlapping decomposition. Candidate scores and manuscript estimates are unchanged.
+
 ## Latest follow-up: short historical records and first-passed grades
 
 See [the short-history report](../code/analysis_for_adversarial_report_output/f08/ranking/short_history_2026-10-19/short_history_report_2026-10-19.md) and its linked official-source review. DEMRE and MINEDUC agree on pooling schools below 30 graduates and permitting one/two available cohorts above 30. Our code already permits incomplete cohort counts. The more detailed 93-student/commune–province–region procedure in the 2025 committee annex begins in admission 2028 and must not be applied to this sample.

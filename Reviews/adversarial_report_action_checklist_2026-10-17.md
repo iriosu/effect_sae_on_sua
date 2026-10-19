@@ -201,6 +201,9 @@ Each package should finish with a short conclusion stating whether the **estimat
 - [x] **F08.3 diagnostic — repeated passed-grade records:** implemented MINEDUC's first-completion rule for distinct years, preserving earliest-year conflicts as unknown. Historical-peer recovery fixes 173 errors and introduces 52 (net 121; a slight exact-match improvement in all years). Own-history recovery validates poorly (56.52% NEM; 48.24% Ranking in newly scored observed cases), so it is not adopted. Three separately labeled private candidates preserve the accepted narrow HHTT reconstruction.
 - [ ] **F08.3 next — operational reference records:** obtain or reconstruct official pre-2028 grouping assignments; resolve the graduate-count unit, dependency categories, exactly-30 boundary, and record versions. Validate the promising `first_pass_reference_only` sensitivity before using it for mechanism estimates. Reconcile genuine repeated completion versus administrative corrections in newly recovered own histories; enrollment dates are required for same-year conflicts.
 
+- [x] **F08.3 diagnostic — remaining-error decomposition:** distinguish mismatch counts, error size and unreconstructed coverage. In the latest candidate, 93.45% of mismatches have adequate observed school-modality graduate counts; 65.40% arise in the exact-NEM, one-context, three-cohort group with adequate counts. NEM disagreement is only 1.02% of the sample but contributes 31.92% of absolute Ranking error. [Report](../code/analysis_for_adversarial_report_output/f08/ranking/remaining_patterns_2026-10-19/remaining_discrepancy_patterns_2026-10-19.md) documents the denominator, exclusions, joint patterns, non-overlapping decomposition and next priorities. Pooling remains a coverage task; neither administrative causes nor full eligibility are established.
+
+
 
 
 ## F09 — Anticipation and the policy bundle

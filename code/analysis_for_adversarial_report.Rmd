@@ -4475,3 +4475,162 @@ fwrite(data.table(package=c('R','data.table'),version=c(as.character(getRversion
  as.character(packageVersion('data.table')))),file.path(sh_out,'runtime_versions.csv'))
 cat('Short-history report written; original scores unchanged.\n')
 ```
+
+## Remaining discrepancies: prevalence versus error magnitude
+
+```{r f08-ranking-remaining-patterns}
+library(data.table)
+setDTthreads(4)
+rp_input<-'analysis_for_adversarial_report_output/input/f08'
+rp_out<-'analysis_for_adversarial_report_output/f08/ranking/remaining_patterns_2026-10-19'
+dir.create(rp_out,recursive=TRUE,showWarnings=FALSE)
+rp<-as.data.table(readRDS(file.path(rp_input,'score_followup_diagnostic_records_2026-10-19.rds')))
+rp_scores<-as.data.table(readRDS(file.path(rp_input,'ranking_first_pass_candidates_2026-10-19.rds')))[
+ variant=='first_pass_reference_only',.(MRUN,grad_year,latest=candidate)]
+rp_base<-as.data.table(readRDS(file.path(rp_input,'ranking_context_hypothesis_2026-10-19.rds')))[,
+ .(MRUN,grad_year,baseline=targeted_candidate,pattern,target_transition)]
+rp<-merge(merge(rp,rp_scores,by=c('MRUN','grad_year'),all.x=TRUE),rp_base,
+ by=c('MRUN','grad_year'),all.x=TRUE)
+# Recompute reference diagnostics for the latest candidate, retaining its narrow
+# HHTT contexts. Do not use the obsolete two-context count for those students.
+c0<-as.data.table(readRDS(file.path(rp_input,'ranking_short_history_contexts_2026-10-19.rds')))[,
+ .(rbd,teaching,exit_year,first,last,MRUN,grad_year,length,g_full,g_trunc,g_round,nem_group,context_group)]
+r<-as.data.table(readRDS(file.path(rp_input,'ranking_first_pass_reference_2026-10-19.rds')))
+r[,teaching:=ifelse(teaching==310,310L,410L)]
+r<-r[population=='exit_context',.(n=sum(n),sum_trunc=sum(sum_trunc),sum_round=sum(sum_round),
+ sum_full=sum(sum_full),max_trunc=max(max_trunc),max_round=max(max_round),max_full=max(max_full)),
+ by=.(rbd,teaching,exit_year,first,last,population)]
+c<-ranking_context_benchmarks(c0,r)
+g<-r[first==4L&last==4L,.(rbd,teaching,exit_year,n)]
+g<-rbindlist(lapply(1:3,function(lag){z<-copy(g);z[,exit_year:=exit_year+lag];z}))
+gm<-g[,.(modality_graduates=sum(n)),by=.(rbd,teaching,exit_year)]
+gs<-g[,.(school_graduates=sum(n)),by=.(rbd,exit_year)]
+c<-merge(merge(c,gm,by=c('rbd','teaching','exit_year'),all.x=TRUE),gs,
+ by=c('rbd','exit_year'),all.x=TRUE)
+ref<-c[,.(latest_contexts=.N,reference_min=min(reference_n),cohorts_min=min(reference_generations),
+ any_small_school=any(school_graduates<30,na.rm=TRUE),
+ any_unknown_school=any(is.na(school_graduates)),
+ any_small_modality=any(modality_graduates<30,na.rm=TRUE),
+ any_unknown_modality=any(is.na(modality_graduates)),
+ min_school_graduates=min(school_graduates),min_modality_graduates=min(modality_graduates)),
+ by=.(MRUN,grad_year)]
+rp<-merge(rp,ref,by=c('MRUN','grad_year'),all.x=TRUE)
+rp[,`:=`(error=latest-ranking_recorded,baseline_error=baseline-ranking_recorded)]
+rp[,school_pool_flag:=fcase(is.na(any_unknown_school)|any_unknown_school,'Unknown count',any_small_school,'Below 30 graduates',
+ default='All contexts at least 30 graduates')]
+rp[,modality_pool_flag:=fcase(is.na(any_unknown_modality)|any_unknown_modality,'Unknown count',any_small_modality,'Below 30 graduates',
+ default='All contexts at least 30 graduates')]
+rp[,`:=`(nem_status=fcase(is.na(nem_error),'NEM unobserved',nem_error==0,'NEM matches',default='NEM differs'),
+ ref_size=cut(reference_min,c(-Inf,29,59,149,299,Inf),labels=c('<30','30-59','60-149','150-299','300+')),
+ school_size=cut(min_school_graduates,c(-Inf,29,59,149,299,Inf),labels=c('<30','30-59','60-149','150-299','300+')))]
+rp[,complex_history:=fcase(!one_school,'Changed school',!stable_modality,'Same school, modality changes',
+ default='Same school and modality')]
+rp[,coverage:=fcase(!is.finite(ranking_recorded),'Recorded Ranking unavailable',
+ !is.finite(latest),'Prediction unavailable',default='Validated')]
+fwrite(rp[,.(n=.N),by=.(admission_year,coverage,complete_history,school_pool_flag,modality_pool_flag)],
+ file.path(rp_out,'coverage.csv'))
+v<-rp[coverage=='Validated']
+stopifnot(!anyDuplicated(v,by=c('MRUN','grad_year')),
+ nrow(v)==1033587L,all(v$reference_min>=30L))
+rp_metrics<-function(z){
+ list(n=length(z),mismatches=sum(z!=0),mismatch_rate=mean(z!=0),
+ abs_error=sum(abs(z)),mae=mean(abs(z)),large=sum(abs(z)>5),
+ one_point=sum(abs(z)==1),two_to_five=sum(abs(z)>=2&abs(z)<=5))
+}
+groups<-c('school_pool_flag','modality_pool_flag','ref_size','school_size','cohorts_min',
+ 'nem_status','nem_group','latest_contexts','complex_history','pattern','pace12','admission_year',
+ 'recorded_bonus','regular_progress')
+out<-rbindlist(lapply(groups,function(g){
+ z<-v[,rp_metrics(error),by=c(g)];setnames(z,g,'group');z[,group:=as.character(group)]
+ z[,`:=`(dimension=g,sample_share=n/nrow(v),mismatch_share=mismatches/sum(v$error!=0),
+ abs_error_share=abs_error/sum(abs(v$error)),large_error_share=large/sum(abs(v$error)>5))];z
+}),use.names=TRUE)
+fwrite(out,file.path(rp_out,'group_patterns.csv'))
+fwrite(v[,rp_metrics(error),by=.(admission_year,nem_status,school_pool_flag,modality_pool_flag,
+ cohorts_min,latest_contexts,complex_history,pace12)],file.path(rp_out,'joint_patterns.csv'))
+fwrite(v[,.(n=.N),by=.(nem_status,absolute_error=abs(error),signed_error=error)],
+ file.path(rp_out,'error_distribution.csv'))
+# Mutually exclusive diagnostic decomposition; ordering prevents double-counting.
+v[,diagnostic_bucket:=fcase(nem_status=='NEM differs','NEM differs',
+ nem_status=='NEM unobserved','NEM unobserved',
+ school_pool_flag!='All contexts at least 30 graduates','Small/unknown school count; NEM matches',
+ modality_pool_flag!='All contexts at least 30 graduates','Small/unknown modality count; NEM matches',
+ cohorts_min<3L,'Short history; NEM matches; counts >=30',
+ latest_contexts>1L,'Multiple contexts; NEM matches; three cohorts; counts >=30',
+ default='One context; NEM matches; three cohorts; counts >=30')]
+fwrite(v[,rp_metrics(error),by=diagnostic_bucket],file.path(rp_out,'disjoint_patterns.csv'))
+# School-year concentration is descriptive, not proof of a benchmark error.
+school<-v[,.(n=.N,bad=sum(error!=0),abs_error=sum(abs(error))),by=.(RBD,admission_year)]
+setorder(school,-abs_error)
+concentration<-rbindlist(lapply(c(.01,.05,.1),function(p){
+ k<-ceiling(nrow(school)*p);z<-school[seq_len(k)]
+ data.table(top_school_year_share=p,school_years=k,student_share=sum(z$n)/sum(school$n),
+ mismatch_share=sum(z$bad)/sum(school$bad),absolute_error_share=sum(z$abs_error)/sum(school$abs_error))
+}))
+fwrite(concentration,file.path(rp_out,'school_year_concentration.csv'))
+# Report the current accepted baseline alongside the tiny reference refinement.
+fwrite(rbindlist(list(data.table(method='Accepted context candidate',as.data.table(rp_metrics(v$baseline_error))),
+ data.table(method='First-pass reference candidate',as.data.table(rp_metrics(v$error))))),
+ file.path(rp_out,'overall_comparison.csv'))
+print(out[dimension%in%c('school_pool_flag','modality_pool_flag','nem_status','cohorts_min',
+ 'complex_history','nem_group','latest_contexts'),.(dimension,group,n,mismatch_rate,mismatch_share,abs_error_share,large_error_share)])
+print(v[,rp_metrics(error),by=diagnostic_bucket])
+```
+
+
+```{r f08-ranking-remaining-patterns-report}
+library(data.table)
+rp_out<-'analysis_for_adversarial_report_output/f08/ranking/remaining_patterns_2026-10-19'
+x<-fread(file.path(rp_out,'group_patterns.csv'))
+d<-fread(file.path(rp_out,'disjoint_patterns.csv'))
+e<-fread(file.path(rp_out,'error_distribution.csv'))
+o<-fread(file.path(rp_out,'overall_comparison.csv'))
+fmt<-function(x)format(x,big.mark=',',scientific=FALSE,trim=TRUE)
+total<-o[method=='First-pass reference candidate']
+rows<-vapply(seq_len(nrow(d)),function(i)sprintf('| %s | %s | %.2f%% | %.2f%% | %.2f%% |',
+ d$diagnostic_bucket[i],fmt(d$mismatches[i]),100*d$mismatch_rate[i],
+ 100*d$mismatches[i]/total$mismatches,100*d$abs_error[i]/total$abs_error),character(1))
+sh<-x[dimension=='school_pool_flag'&group=='All contexts at least 30 graduates']
+sm<-x[dimension=='modality_pool_flag'&group=='All contexts at least 30 graduates']
+nm<-x[dimension=='nem_status'&group=='NEM differs']
+clean<-d[diagnostic_bucket=='One context; NEM matches; three cohorts; counts >=30']
+report<-c('# Remaining Ranking discrepancies — October 19, 2026',
+ '', '**Conclusion:** small-school pooling is not the main pattern among observed-score students whose Ranking can be reconstructed. Most remaining mismatches are small and occur despite matching NEM and adequate observed historical references. Disagreement in NEM identifies a much smaller group with disproportionately large Ranking errors. The data identify diagnostic patterns, not the exact administrative cause.',
+ '', sprintf('The latest first-pass-reference candidate is validated on %s students, with %s mismatches (%.2f%% exact). The accepted narrow HHTT baseline is reported alongside it in `overall_comparison.csv`; the tiny reference refinement does not materially change this diagnosis.',fmt(total$n),fmt(total$mismatches),100*(1-total$mismatch_rate)),
+ '', '## Pooling, reference size and coverage',
+ '', sprintf('%.2f%% of mismatches occur where every relevant school has at least 30 observed prior fourth-grade graduates. Even counting graduates separately by HC/TP modality, %.2f%% of mismatches have counts of at least 30 in every context. These are observed-extract proxies for the pooling criterion, not verified official rosters.',100*sh$mismatch_share,100*sm$mismatch_share),
+ '', sprintf('%.2f%% of mismatches have all three usable historical cohorts. Students with a smallest usable context reference of 30–59 have a higher mismatch rate (%.2f%%) than those with at least 300 (%.2f%%), but the 30–59 group accounts for only %.2f%% of mismatches.',
+ 100*x[dimension=='cohorts_min'&group=='3',mismatch_share],
+ 100*x[dimension=='ref_size'&group=='30-59',mismatch_rate],
+ 100*x[dimension=='ref_size'&group=='300+',mismatch_rate],
+ 100*x[dimension=='ref_size'&group=='30-59',mismatch_share]),
+ '', '**Coverage caveat:** the scoring rule leaves contexts below 30 usable reference records unresolved. The validation sample therefore omits many genuinely small or incomplete references. Pooling still matters for recovering those unavailable scores; the statistics above describe remaining errors in scores we can already calculate. `coverage.csv` retains the excluded and unobserved-score categories.',
+ '', '## Two distinct residual problems',
+ '', sprintf('**Numerous small differences:** %.2f%% of all mismatches are exactly one point and %.2f%% are at most five points. Among mismatches with exact NEM, %.2f%% are at most five points. Even the clean one-context group, with exact NEM, three usable cohorts and school/modality counts of at least 30, contains %s mismatches, %.2f%% of the total. This directs attention to historical benchmark construction, grade versions and arithmetic precision. It does not establish that rounding alone is responsible.',
+ 100*sum(e[absolute_error==1,n])/sum(e[absolute_error>0,n]),
+ 100*sum(e[absolute_error>0&absolute_error<=5,n])/sum(e[absolute_error>0,n]),
+ 100*sum(e[nem_status=='NEM matches'&absolute_error>0&absolute_error<=5,n])/sum(e[nem_status=='NEM matches'&absolute_error>0,n]),
+ fmt(clean$mismatches),100*clean$mismatches/total$mismatches),
+ '', sprintf('**Large differences linked to NEM disagreement:** NEM differs for only %.2f%% of validated students. In that group, %.2f%% also have a Ranking mismatch; the group contributes %.2f%% of total absolute Ranking error and %.2f%% of errors exceeding five points. This is consistent with an upstream academic-record discrepancy affecting both scores, although NEM and Ranking also share conversion and floor mechanics.',
+ 100*nm$sample_share,100*nm$mismatch_rate,100*nm$abs_error_share,100*nm$large_error_share),
+ '', 'The following decomposition is mutually exclusive, prioritizing NEM disagreement, then small/unknown school counts, small/unknown modality counts, short histories, and finally number of contexts. Its ordering is stated so shares are not mistaken for independent causal contributions.',
+ '', '| Diagnostic group | Mismatches | Within-group mismatch rate | Share of mismatches | Share of absolute error |',
+ '|---|---:|---:|---:|---:|',rows,
+ '', '## Other recurring patterns',
+ '', sprintf('- Technical graduates have a %.2f%% mismatch rate, versus %.2f%% for scientific-humanistic graduates. This association is not an adjusted causal comparison.',
+ 100*x[dimension=='nem_group'&group=='C',mismatch_rate],100*x[dimension=='nem_group'&group=='A',mismatch_rate]),
+ sprintf('- Rates are %.2f%% for students who changed school, %.2f%% for within-school modality changes, and %.2f%% for the same school and modality throughout. Nevertheless, the stable-school/modality group contains %.2f%% of all mismatches because it is much larger.',
+ 100*x[dimension=='complex_history'&group=='Changed school',mismatch_rate],
+ 100*x[dimension=='complex_history'&group=='Same school, modality changes',mismatch_rate],
+ 100*x[dimension=='complex_history'&group=='Same school and modality',mismatch_rate],
+ 100*x[dimension=='complex_history'&group=='Same school and modality',mismatch_share]),
+ '- School-year concentration is reported in `school_year_concentration.csv`. Concentration by itself cannot distinguish reference-data errors from differences in student histories or school composition.',
+ '', '**Next diagnostic priority:** reconcile academic records for NEM-mismatched students to address large errors, and inspect historical means/maxima and precision among exact-NEM students with one context and full references to address the bulk of mismatch counts. Pursue official pooling assignments in parallel as a coverage task, rather than assume they explain the majority of currently observed score errors.',
+ '', '## Reproduction and checks',
+ '', 'Run from `code/` the notebook chunks `f08-score-reconstruction-functions`, `f08-ranking-remaining-patterns`, and `f08-ranking-remaining-patterns-report`. Inputs are the saved diagnostic records, accepted context candidate, first-pass reference candidate and reference summaries, plus the accepted-context cache. Historical counts and context counts are recomputed for the latest candidate; the old two-context classification of narrow HHTT histories is not reused.',
+ '', 'Checks ensure unique graduate keys, the expected same-sample count, and the minimum usable context size in the scored sample. Aggregate decomposition totals are checked against the overall score errors. No predictions, observed scores or manuscript estimates are changed. Only aggregate diagnostics are shared.')
+stopifnot(sum(d$n)==total$n,sum(d$mismatches)==total$mismatches,sum(d$abs_error)==total$abs_error,
+ sum(e$n)==total$n,sum(e[absolute_error>0,n])==total$mismatches)
+writeLines(report,file.path(rp_out,'remaining_discrepancy_patterns_2026-10-19.md'))
+cat('Remaining-patterns report and decomposition checks completed.\n')
+```

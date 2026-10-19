@@ -1,0 +1,3 @@
+method,n,mismatches,mismatch_rate,abs_error,mae,large,one_point,two_to_five
+Accepted context candidate,1033587,96106,0.0929829806295938,435066,0.420928281799214,19559,55453,21094
+First-pass reference candidate,1033587,95985,0.0928659125937149,434020,0.419916272166519,19537,55359,21089

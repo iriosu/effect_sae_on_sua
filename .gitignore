@@ -17,6 +17,7 @@
 !code/analysis_for_adversarial_report_output/f08/ranking/*.csv
 !code/analysis_for_adversarial_report_output/f08/ranking/annual_test_2026-10-19/*.csv
 !code/analysis_for_adversarial_report_output/f08/ranking/short_history_2026-10-19/*.csv
+!code/analysis_for_adversarial_report_output/f08/ranking/remaining_patterns_2026-10-19/*.csv
 # F08 aggregate audit tables and public school rosters.
 !code/analysis_for_adversarial_report_output/f08/*.csv
 !code/analysis_for_adversarial_report_output/f08/sources/schools/official_pace_schools_2019_2025.csv

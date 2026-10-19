@@ -1,0 +1,121 @@
+admission_year,coverage,complete_history,school_pool_flag,modality_pool_flag,n
+2021,Validated,TRUE,All contexts at least 30 graduates,All contexts at least 30 graduates,146471
+2024,Validated,TRUE,All contexts at least 30 graduates,All contexts at least 30 graduates,174617
+2023,Validated,TRUE,All contexts at least 30 graduates,All contexts at least 30 graduates,170090
+2026,Validated,TRUE,All contexts at least 30 graduates,All contexts at least 30 graduates,184408
+2022,Validated,TRUE,All contexts at least 30 graduates,All contexts at least 30 graduates,146695
+2025,Validated,TRUE,All contexts at least 30 graduates,All contexts at least 30 graduates,177247
+2026,Prediction unavailable,TRUE,All contexts at least 30 graduates,Below 30 graduates,260
+2026,Recorded Ranking unavailable,TRUE,All contexts at least 30 graduates,All contexts at least 30 graduates,18430
+2021,Prediction unavailable,TRUE,Below 30 graduates,Below 30 graduates,849
+2024,Prediction unavailable,TRUE,Below 30 graduates,Below 30 graduates,708
+2022,Recorded Ranking unavailable,TRUE,All contexts at least 30 graduates,All contexts at least 30 graduates,42999
+2022,Validated,TRUE,All contexts at least 30 graduates,Unknown count,2861
+2023,Prediction unavailable,TRUE,Below 30 graduates,Below 30 graduates,850
+2021,Recorded Ranking unavailable,TRUE,All contexts at least 30 graduates,All contexts at least 30 graduates,41901
+2026,Recorded Ranking unavailable,TRUE,All contexts at least 30 graduates,Unknown count,1588
+2022,Recorded Ranking unavailable,TRUE,All contexts at least 30 graduates,Unknown count,3561
+2025,Recorded Ranking unavailable,TRUE,All contexts at least 30 graduates,All contexts at least 30 graduates,18083
+2026,Recorded Ranking unavailable,TRUE,Unknown count,Unknown count,108
+2025,Validated,TRUE,All contexts at least 30 graduates,Unknown count,6798
+2025,Recorded Ranking unavailable,TRUE,All contexts at least 30 graduates,Unknown count,1499
+2023,Recorded Ranking unavailable,TRUE,All contexts at least 30 graduates,All contexts at least 30 graduates,24958
+2025,Prediction unavailable,TRUE,All contexts at least 30 graduates,Unknown count,1010
+2024,Recorded Ranking unavailable,TRUE,All contexts at least 30 graduates,All contexts at least 30 graduates,21132
+2022,Prediction unavailable,TRUE,All contexts at least 30 graduates,Unknown count,1870
+2026,Prediction unavailable,TRUE,Unknown count,Unknown count,348
+2026,Validated,TRUE,All contexts at least 30 graduates,Unknown count,7583
+2024,Prediction unavailable,TRUE,All contexts at least 30 graduates,Unknown count,1232
+2024,Validated,TRUE,All contexts at least 30 graduates,Below 30 graduates,234
+2023,Validated,TRUE,All contexts at least 30 graduates,Unknown count,4091
+2026,Validated,TRUE,All contexts at least 30 graduates,Below 30 graduates,145
+2021,Recorded Ranking unavailable,TRUE,All contexts at least 30 graduates,Unknown count,2930
+2025,Prediction unavailable,FALSE,Unknown count,Unknown count,4949
+2023,Prediction unavailable,TRUE,Unknown count,Unknown count,715
+2024,Recorded Ranking unavailable,TRUE,Unknown count,Unknown count,156
+2024,Recorded Ranking unavailable,TRUE,All contexts at least 30 graduates,Unknown count,1412
+2024,Prediction unavailable,FALSE,Unknown count,Unknown count,3655
+2023,Prediction unavailable,FALSE,Unknown count,Unknown count,3066
+2025,Recorded Ranking unavailable,FALSE,Unknown count,Unknown count,4720
+2026,Validated,TRUE,Unknown count,Unknown count,319
+2025,Prediction unavailable,TRUE,Unknown count,Unknown count,677
+2024,Prediction unavailable,TRUE,All contexts at least 30 graduates,All contexts at least 30 graduates,197
+2022,Validated,TRUE,All contexts at least 30 graduates,Below 30 graduates,196
+2023,Recorded Ranking unavailable,TRUE,All contexts at least 30 graduates,Unknown count,1817
+2023,Prediction unavailable,TRUE,All contexts at least 30 graduates,Unknown count,1299
+2024,Validated,TRUE,All contexts at least 30 graduates,Unknown count,4865
+2021,Prediction unavailable,TRUE,All contexts at least 30 graduates,Unknown count,1443
+2021,Validated,TRUE,All contexts at least 30 graduates,Unknown count,2731
+2021,Recorded Ranking unavailable,TRUE,All contexts at least 30 graduates,Below 30 graduates,276
+2022,Prediction unavailable,TRUE,Unknown count,Unknown count,997
+2022,Recorded Ranking unavailable,TRUE,Unknown count,Unknown count,566
+2024,Recorded Ranking unavailable,FALSE,Unknown count,Unknown count,4196
+2021,Recorded Ranking unavailable,TRUE,Unknown count,Unknown count,625
+2024,Prediction unavailable,TRUE,Unknown count,Unknown count,745
+2022,Recorded Ranking unavailable,TRUE,Below 30 graduates,Below 30 graduates,448
+2026,Prediction unavailable,FALSE,Unknown count,Unknown count,6412
+2023,Recorded Ranking unavailable,FALSE,Unknown count,Unknown count,3235
+2026,Prediction unavailable,TRUE,Below 30 graduates,Below 30 graduates,691
+2022,Prediction unavailable,FALSE,Unknown count,Unknown count,2742
+2021,Prediction unavailable,FALSE,Unknown count,Unknown count,2993
+2025,Validated,TRUE,Unknown count,Unknown count,292
+2022,Validated,TRUE,Below 30 graduates,Below 30 graduates,248
+2021,Prediction unavailable,TRUE,Unknown count,Unknown count,1299
+2024,Validated,TRUE,Below 30 graduates,Below 30 graduates,267
+2025,Validated,TRUE,All contexts at least 30 graduates,Below 30 graduates,236
+2025,Prediction unavailable,TRUE,Below 30 graduates,Below 30 graduates,735
+2022,Recorded Ranking unavailable,FALSE,Unknown count,Unknown count,3808
+2021,Prediction unavailable,TRUE,All contexts at least 30 graduates,All contexts at least 30 graduates,72
+2026,Validated,TRUE,Below 30 graduates,Unknown count,87
+2023,Validated,TRUE,All contexts at least 30 graduates,Below 30 graduates,244
+2021,Validated,TRUE,All contexts at least 30 graduates,Below 30 graduates,200
+2025,Prediction unavailable,TRUE,All contexts at least 30 graduates,All contexts at least 30 graduates,229
+2022,Recorded Ranking unavailable,TRUE,All contexts at least 30 graduates,Below 30 graduates,327
+2021,Validated,TRUE,Below 30 graduates,Below 30 graduates,230
+2021,Recorded Ranking unavailable,FALSE,Unknown count,Unknown count,3442
+2022,Prediction unavailable,TRUE,Below 30 graduates,Below 30 graduates,667
+2023,Recorded Ranking unavailable,TRUE,All contexts at least 30 graduates,Below 30 graduates,128
+2024,Recorded Ranking unavailable,TRUE,Below 30 graduates,Below 30 graduates,218
+2025,Validated,TRUE,Below 30 graduates,Below 30 graduates,333
+2025,Recorded Ranking unavailable,TRUE,Below 30 graduates,Unknown count,31
+2021,Recorded Ranking unavailable,TRUE,Below 30 graduates,Below 30 graduates,457
+2023,Prediction unavailable,TRUE,Below 30 graduates,Unknown count,32
+2021,Validated,TRUE,Unknown count,Unknown count,363
+2026,Recorded Ranking unavailable,FALSE,Unknown count,Unknown count,5131
+2022,Validated,TRUE,Unknown count,Unknown count,319
+2024,Validated,TRUE,Unknown count,Unknown count,263
+2022,Recorded Ranking unavailable,TRUE,Below 30 graduates,Unknown count,57
+2026,Prediction unavailable,TRUE,All contexts at least 30 graduates,Unknown count,213
+2023,Recorded Ranking unavailable,TRUE,Unknown count,Unknown count,219
+2026,Recorded Ranking unavailable,TRUE,Below 30 graduates,Below 30 graduates,259
+2022,Prediction unavailable,TRUE,All contexts at least 30 graduates,Below 30 graduates,219
+2026,Recorded Ranking unavailable,TRUE,All contexts at least 30 graduates,Below 30 graduates,68
+2023,Prediction unavailable,TRUE,All contexts at least 30 graduates,All contexts at least 30 graduates,152
+2025,Prediction unavailable,TRUE,All contexts at least 30 graduates,Below 30 graduates,165
+2022,Prediction unavailable,TRUE,All contexts at least 30 graduates,All contexts at least 30 graduates,225
+2025,Recorded Ranking unavailable,TRUE,Below 30 graduates,Below 30 graduates,232
+2021,Prediction unavailable,TRUE,All contexts at least 30 graduates,Below 30 graduates,274
+2024,Prediction unavailable,TRUE,All contexts at least 30 graduates,Below 30 graduates,150
+2022,Validated,TRUE,Below 30 graduates,Unknown count,42
+2023,Prediction unavailable,TRUE,All contexts at least 30 graduates,Below 30 graduates,366
+2023,Recorded Ranking unavailable,TRUE,Below 30 graduates,Below 30 graduates,252
+2021,Validated,TRUE,Below 30 graduates,Unknown count,58
+2023,Validated,TRUE,Unknown count,Unknown count,319
+2024,Recorded Ranking unavailable,TRUE,All contexts at least 30 graduates,Below 30 graduates,84
+2021,Recorded Ranking unavailable,TRUE,Below 30 graduates,Unknown count,77
+2025,Prediction unavailable,TRUE,Below 30 graduates,Unknown count,30
+2026,Validated,TRUE,Below 30 graduates,Below 30 graduates,312
+2022,Prediction unavailable,TRUE,Below 30 graduates,Unknown count,32
+2021,Prediction unavailable,TRUE,Below 30 graduates,Unknown count,37
+2026,Prediction unavailable,TRUE,All contexts at least 30 graduates,All contexts at least 30 graduates,108
+2023,Validated,TRUE,Below 30 graduates,Below 30 graduates,240
+2025,Recorded Ranking unavailable,TRUE,Unknown count,Unknown count,124
+2023,Validated,TRUE,Below 30 graduates,Unknown count,59
+2025,Validated,TRUE,Below 30 graduates,Unknown count,74
+2023,Recorded Ranking unavailable,TRUE,Below 30 graduates,Unknown count,35
+2024,Prediction unavailable,TRUE,Below 30 graduates,Unknown count,38
+2026,Recorded Ranking unavailable,TRUE,Below 30 graduates,Unknown count,31
+2025,Recorded Ranking unavailable,TRUE,All contexts at least 30 graduates,Below 30 graduates,100
+2026,Prediction unavailable,TRUE,Below 30 graduates,Unknown count,40
+2024,Validated,TRUE,Below 30 graduates,Unknown count,50
+2024,Recorded Ranking unavailable,TRUE,Below 30 graduates,Unknown count,29
