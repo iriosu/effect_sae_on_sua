@@ -1,0 +1,4 @@
+failure,origin,grad_year,n,observed_score,same_score,same_school,same_graduation_year,below_possible_percentile,min_rank_gap,max_rank_gap
+Academic exclusion,New graduate,2025,34,34,34,34,34,34,1,12
+"Predicted qualification, official denial",New graduate,2025,9,9,9,9,9,0,-60,-1
+Academic exclusion,Carryover,2024,7,7,7,7,7,7,1,4

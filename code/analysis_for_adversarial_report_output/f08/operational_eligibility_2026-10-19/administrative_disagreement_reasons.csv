@@ -1,0 +1,6 @@
+failure,origin,grad_year,school_new,n
+Academic exclusion,New graduate,2025,TRUE,31
+"Predicted qualification, official denial",New graduate,2025,TRUE,9
+Academic exclusion,Carryover,2024,TRUE,6
+Academic exclusion,New graduate,2025,,3
+Academic exclusion,Carryover,2024,,1

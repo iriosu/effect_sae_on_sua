@@ -1,0 +1,63 @@
+grad_year,school_old,school_performance,school_new,history_reason,n
+2020,FALSE,FALSE,FALSE,Resolved,160074
+2023,TRUE,TRUE,TRUE,Resolved,43288
+2022,FALSE,FALSE,FALSE,Resolved,164425
+2025,FALSE,FALSE,FALSE,Resolved,169434
+2021,FALSE,FALSE,FALSE,Resolved,161782
+2023,FALSE,FALSE,FALSE,Resolved,165477
+2024,FALSE,FALSE,FALSE,Resolved,163928
+2025,TRUE,TRUE,TRUE,Resolved,50698
+2024,TRUE,TRUE,TRUE,Resolved,47743
+2021,TRUE,TRUE,TRUE,Resolved,44158
+2022,TRUE,TRUE,TRUE,Resolved,44035
+2020,TRUE,TRUE,TRUE,Resolved,42137
+2022,,TRUE,TRUE,Resolved,1191
+2021,,,,"Grade-11 conflict, incomplete history or early roster",780
+2022,,,,Grade-12 conflict or missing record,473
+2020,,,,"Grade-11 conflict, incomplete history or early roster",1849
+2021,,TRUE,TRUE,Resolved,865
+2020,TRUE,,,"Grade-11 conflict, incomplete history or early roster",1228
+2022,,,,"Grade-11 conflict, incomplete history or early roster",708
+2024,,,,Grade-12 conflict or missing record,480
+2024,TRUE,,,"Grade-11 conflict, incomplete history or early roster",268
+2023,,FALSE,FALSE,Resolved,617
+2025,,FALSE,FALSE,Resolved,639
+2024,,FALSE,FALSE,Resolved,514
+2023,,,,"Grade-11 conflict, incomplete history or early roster",1785
+2024,,,,"Grade-11 conflict, incomplete history or early roster",1701
+2023,,,,No grade-11 record in either source,1252
+2025,,,,Grade-12 conflict or missing record,487
+2022,,FALSE,FALSE,Resolved,316
+2023,,TRUE,TRUE,Resolved,1226
+2021,TRUE,,,"Grade-11 conflict, incomplete history or early roster",374
+2020,,TRUE,TRUE,Resolved,594
+2025,,TRUE,TRUE,Resolved,1279
+2023,TRUE,,,"Grade-11 conflict, incomplete history or early roster",222
+2022,TRUE,,,"Grade-11 conflict, incomplete history or early roster",150
+2025,,,,"Grade-11 conflict, incomplete history or early roster",1867
+2024,,TRUE,TRUE,Resolved,1208
+2025,,,,No grade-11 record in either source,1926
+2025,TRUE,,,"Grade-11 conflict, incomplete history or early roster",201
+2025,TRUE,TRUE,,"Grade-11 conflict, incomplete history or early roster",1
+2021,,FALSE,FALSE,Resolved,155
+2021,,,,No grade-11 record in either source,616
+2020,,FALSE,FALSE,Resolved,135
+2023,,,,Grade-12 conflict or missing record,368
+2024,,,,No grade-11 record in either source,1717
+2021,,,,Grade-12 conflict or missing record,142
+2020,,,,Grade-12 conflict or missing record,155
+2020,FALSE,,,"Grade-11 conflict, incomplete history or early roster",33
+2020,,,,No grade-11 record in either source,516
+2022,,,,No grade-11 record in either source,865
+2024,TRUE,TRUE,,"Grade-11 conflict, incomplete history or early roster",1
+2020,,,FALSE,Resolved,3
+2025,FALSE,,,"Grade-11 conflict, incomplete history or early roster",9
+2023,FALSE,,,"Grade-11 conflict, incomplete history or early roster",13
+2022,FALSE,,,"Grade-11 conflict, incomplete history or early roster",3
+2021,TRUE,TRUE,,"Grade-11 conflict, incomplete history or early roster",1
+2020,,,TRUE,Resolved,2
+2024,FALSE,,,"Grade-11 conflict, incomplete history or early roster",3
+2021,FALSE,,,"Grade-11 conflict, incomplete history or early roster",6
+2020,TRUE,TRUE,,"Grade-11 conflict, incomplete history or early roster",2
+2022,,,TRUE,Resolved,1
+2024,,,TRUE,Resolved,1

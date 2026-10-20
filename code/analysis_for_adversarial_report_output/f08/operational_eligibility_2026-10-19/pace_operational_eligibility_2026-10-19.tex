@@ -1,0 +1,22 @@
+\begin{table}[!htbp]
+\centering
+\caption{Access to PACE: School History, Qualification, and Selection}
+\label{tab:pace-operational}
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{p{3.9cm}rrrr}
+\toprule
+ & \makecell{No-offer mean\\(\%)} & \makecell{Attendance effect\\(pp)} & \makecell{95\% confidence\\envelope (pp)} & \makecell{Uncertain\\students} \\
+\midrule
+PACE school history & [25.12, 26.08] & [-16.09, -13.23] & [-16.95, -12.38] & 1,593 \\[4pt]
+School and academic qualification & [6.10, 8.73] & [-8.55, -2.06] & [-9.42, -1.19] & 3,875 \\[4pt]
+PACE eligibility & [5.49, 7.30] & [-6.84, -2.68] & [-7.49, -2.02] & 2,595 \\[4pt]
+PACE application record & 10.11 & -5.92 & [-6.41, -5.43] & 0 \\[4pt]
+Recorded PACE selection & 1.22 & -0.99 & [-1.16, -0.82] & 0 \\[4pt]
+\bottomrule
+\end{tabular}
+\par\vspace{0.2cm}
+\begin{minipage}{\textwidth}\footnotesize
+Notes: All rows use the same 175,869 students in the finalized school-lottery design, including students who did not graduate, sit the exams, or apply to college. Outcomes refer to the scheduled admission process, five calendar years after the school application (2021--2026). The instrument is the lottery offer; controls and chance-group and application-year fixed effects follow the score specification. School history combines graduation with participating-school attendance in grades 11 and 12. Qualification adds the cohort-specific Ranking percentile or absolute-score alternative. Eligibility additionally requires the relevant exam sittings and, where applicable, unused carryover. Application records and selection are observed separately. Brackets in the first two numerical columns span unresolved classifications; they are not confidence intervals. The confidence envelope contains the heteroskedasticity-robust HC0 normal 95\% IV interval for every allowed completion, conditional on the reconstructed input records. It allows uncertain histories, missing peers, ambiguous graduation schools, tied ranks and fractional quotas, and both roster interpretations for 2021. Additional errors in determinate classifications are examined in Appendix~\ref{app:pace-operational}. The two recorded outcomes have conventional confidence intervals. The components are separate outcome effects and are not additive mediation shares.
+\end{minipage}
+\end{table}

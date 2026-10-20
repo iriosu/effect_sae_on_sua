@@ -1,8 +1,25 @@
 # Handoff: adopted NEM/Ranking baseline, expanded 2SLS and PACE eligibility
 
+## Latest update — F08.3 operational analysis completed with explicit uncertainty
+
+The current [operational PACE report](../code/analysis_for_adversarial_report_output/f08/operational_eligibility_2026-10-19/operational_pace_report_2026-10-19.md) supersedes the earlier PACE status below. The adopted NEM/Ranking baseline and continuous-score estimates are unchanged.
+
+- Actual school histories, enrollment checks, missing/ambiguous peer membership, percentile roster/tie/quota intervals, regular exams, carryover and prior use are implemented. Official restricted rosters are confirmed for 2022–2026; 2021 is bracketed. Carryover can combine required subjects across valid sittings, correcting five validation failures.
+- The public 2026 files recover elective scores and the PACE selection route. The old exclusion of 2026 selection is superseded. The full on-time design is 175,869 students; academic uncertainty falls from 5,434 to 3,875 on the same horizon. Full eligibility has 2,595 unresolved cases.
+- Eligibility IV coefficient range: **[-6.84,-2.68] pp**; conservative **95% confidence envelope [-7.49,-2.02] pp**. It remains negative with 0.1% additional adversarial label errors, but includes zero at 0.5%. Recorded PACE selection effect: -0.99 pp, conventional 95% CI [-1.16,-0.82]. These are separate outcome effects, not additive mediation shares.
+- Independent administrative-status validation: 49 disagreements among 13,389 determinate explicit 2026 decisions (99.634% agreement); selected-applicant support only. Unresolved/out-of-frame cases are retained. Remaining discrepancies include correct observed scores and graduation-school identifiers, so exact Ranking matching cannot close them by itself.
+- New manuscript Appendix Tables D.12–D.13 and Section VI/Appendix D.10 explain the estimates and limits. Old tables remain. Prior section files are backed up in `Others/*_before_pace_operational_2026-10-19.tex`.
+
+Run `Rscript code/run_pace_operational_analysis.R --from-cache` to reproduce events, estimates, validation and tables using the shared private caches; omit the flag for a source rebuild. Use `--tables-only` for aggregate-only table regeneration. Set `SAE_PAPER_ROOT` to the manuscript's `Initial submission` folder to export. All statistical code is in the central notebook's `f08-operational-*` chunks. [Inference proof](../code/analysis_for_adversarial_report_output/f08/operational_eligibility_2026-10-19/inference_method.md) and numerical checks accompany the report.
+
+Private records: `Dropbox/Effect SAE on SUA/data/finalized_design_v1/section3/pace_operational_eligibility_2026-10-19/`. All 13 delivered files have verified sizes and MD5s; see [reproduction instructions](../code/analysis_for_adversarial_report_output/f08/operational_eligibility_2026-10-19/reproduction.md). Git contains aggregate outputs, sources, code and manifests only. The earlier 5,938 unknown count referred to observed-graduation qualification, not the current on-time horizon; do not compare these counts directly.
+
+**Remaining optional information:** official percentile tie/quota rules, the precise 2021 roster and reconciliation of residual administrative/history discrepancies. F08.3's empirical deliverables are complete under partial classification; exact administrative replication is not established. The previous execution history follows and does not create new gates for the adopted baseline.
+
+
 Updated October 19, 2026, after executing the author-approved expanded-score analysis. **Attendance at a sought-after school, instrumented by its SAE lottery offer, reduces NEM by 0.1647 SD and Ranking by 0.2097 SD in the expanded available-score samples.** The baseline includes non-exam takers with reconstructible scores. Continuous-score estimates and PACE academic-classification diagnostics are complete; full official PACE eligibility remains unresolved. The reconstruction is an adopted research baseline, not a certified reproduction of official scores.
 
-## Completed analysis — latest results
+## Earlier expanded-score analysis — PACE details superseded above
 
 Read the [expanded-score and PACE report](../code/analysis_for_adversarial_report_output/f30/expanded_scores_2026-10-19/expanded_scores_and_pace_report_2026-10-19.md). Run `Rscript code/run_adopted_score_analysis.R` from the repository root; it executes eight named chunks in the central Rmd without rerunning earlier reconstruction. Baseline v1 is unchanged. The main draft now uses the separately saved expanded table; its original recorded-score table is preserved.
 
@@ -21,7 +38,7 @@ The [PACE output folder](../code/analysis_for_adversarial_report_output/f08/elig
 
 **Shared private delivery:** `Dropbox/Effect SAE on SUA/data/finalized_design_v1/section3/expanded_score_analysis_2026-10-19/` contains the graduate audit input, compact model summaries and new classification records, with hashes in the report directory. Baseline files remain in the separate `score_baseline_v1_2026-10-19/` folder. No student-level records enter Git.
 
-**Next:** address remaining outcome selection and operational PACE histories/rosters/ties, then update manuscript exhibits and interpretation. Perfect one-point matching is not a gate. F30.9 and the source-gap/availability audit in F30.10 are complete; F08.3 and broader selection/mediation questions remain open. The execution contract below is preserved for reproduction, rather than a list of unrun analyses.
+**Remaining broader work:** address outcome selection and mediation questions. The operational PACE analysis and manuscript exhibits are completed in the extension above. Perfect one-point matching is not a gate. F30.9 and the source-gap/availability audit in F30.10 are complete; F08.3 is now addressed by the operational extension above; broader selection/mediation questions remain open. The execution contract below is preserved for reproduction, rather than a list of unrun analyses.
 
 ### Manuscript table integration
 

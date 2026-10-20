@@ -1,0 +1,162 @@
+                         Esquema de Registro PROCESO DE ADMISIÓN AÑO ACADÉMICO 2026
+                                   POSTULACIÓN Y SELECCIÓN VACANTES1
+                                          Bases Públicas con MRUN
+
+
+Unidad Responsable:       División de Información y Acceso
+Estandarización:          Unidad de Estadísticas
+                          Centro de Estudios
+                          Ministerio de Educación
+Fuente de la información: División de Información y Acceso (Subsecretaría Educación Superior) – DEMRE
+Formato de la base de datos: .CSV con codificación UTF-82.
+
+
+       1.1. Número de observaciones por año
+
+                                                                                                                         Dominio
+Proceso de admisión        Postulaciones       Postulantes                            Proceso
+                                                                                                                          Datos
+          2026               1.694.081           189.3993
+          2025               1.738.995            189.982
+                                                               Prueba de Acceso a la Educación Superior (PAES)
+          2024               1.733.891           188.707
+                                                                                                                         MINEDUC
+          2023                    -              187.226
+          2022                                   148.819
+                                                                   Prueba de Transición Universitaria (PDT)
+          2021                    -              141.417
+          2020                    -              146.465
+         20194                   -               154.366
+          2018                778.885            159.132
+          2017                709.439            145.179
+          2016                679.166            141.906
+          2015                579.274            125.855
+          2014                539.216            119.161
+          2013                558.363            118.208
+          2012                593.338            116.336            Prueba de Selección Universitaria (PSU)
+          2011                425.474             95.536
+          2010                 454723             97.150                                                                  DEMRE
+          2009                492.911            103.929
+          2008                447.417             91.862
+          2007                474.640             96.547
+          2006                430.694             86.272
+          2005                421.591             81.421
+          2004                362.890             72.244
+          2003                348.176             74.785
+          2002                348.176             74.785
+                                                                      Prueba de Aptitud Académica (PAA)
+          2001                343.211             73.355
+          2000                339.316             72.355
+
+
+
+
+1
+    Para este proceso, todos los tipos de postulantes (BEA -PACE-REGULAR- GENERO) están un mismo conjunto de datos.
+2 Hasta el año 2018 la codificación de la base de datos es entorno local.
+3
+  La base de datos original está compuesta de 189.404 registros. Sin embargo, mediante la rutificación enviada por el registro civil
+apareció la categoría de género “no binario”, en el marco del trabajo de bases de datos que realiza el CEM. Dado que solamente
+cinco casos presentaban esta categoría, les hacía fácilmente identificables mediante una combinación de
+características/variables. No obstante, con el fin de cumplir con la Ley N° 19.628 de protección de datos personales y
+considerando que la base de datos incluye información sobre estudiantes menores de edad, se decidió temporalmente eliminar
+los registros para así asegurar el cumplimiento de las normativas de privacidad y confidencialidad en el tratamiento de la
+información.
+4 A partir de 2019 los datos se reportan como Postulantes y no como postulaciones.
+
+
+
+
+                                                                                                                            1|3
+    1.1. Variables
+
+El listado de variables que contienen las bases de datos se detalla a continuación.
+
+
+
+              Nombre                           Tipo                   Descripción                        Valores
+                MRUN                          Cadena           Identificador del estudiante
+           ANYO_PROCESO                      Numérica         Año del proceso de admisión
+                                                                                             1: Hombre
+                SEXO                         Numérica              Sexo del estudiante
+                                                                                             2: Mujer
+                                                                                             P: Tiene por lo menos una
+                                                                                             postulación efectiva (Selección o
+                                                                                             Espera)
+      SITUACIÓN_POSTULANTE                    Cadena          Situación general postulante
+                                                                                             C: No cumple los requisitos de
+                                                                                             ninguna preferencia
+                                                                                             Vacío: No postuló
+                                                                  Indica el orden de la
+            ORDEN_PREF                       Numérica                                        Hasta 20 postulaciones.
+                                                                       preferencia
+                                                                Código de la carrera de la
+        COD_CARRERA_PREF                     Numérica
+                                                                       preferencia
+                                                                Estado de situación de la
+            ESTADO_PREF                      Numérica                                        Ver Anexo I
+                                                                       preferencia
+                                                                                             REGULAR
+                                                                                             BEA
+              TIPO_PREF                      Numérica              Tipo de postulante
+                                                                                             PACE
+                                                                                             GENERO
+                                                                 Puntaje ponderado de
+              PTJE_PREF                      Numérica
+                                                               selección de la preferencia
+                                                                  Indica la posición del
+                                                              postulante en el listado de la
+            LUGAR_PREF                       Numérica
+                                                                  carrera para primera
+                                                                       preferencia
+
+
+
+
+                                                                                                              2|3
+                                               ANEXO I
+                                         ESTADO PREFERENCIAS
+
+
+CODIGO                                            DESCRIPCION
+  9                                FALTA PUNTAJE NOTAS DE ENSENANZA MEDIA
+  10                                      CÓDIGO DE CARRERA INVÁLIDO
+  11                                      CÓDIGO DE CARRERA REPETIDO
+  15                                NO CUMPLE SEXO EXIGIDO POR LA CARRERA
+                            NO CUMPLE PUNTAJE PONDERADO MINIMO DEFINIDO POR LA
+  17
+                                                 CARRERA
+  19         NO RINDIO O NO APROBO PRUEBA ESPECIAL EXCLUYENTE (Válido para cupos regular, BEA y PACE)
+  20                         NO RINDIO PRUEBA ESPECIAL CON RESULTADO A PONDERAR
+  22                  EXCEDE CANTIDAD DE INGRESO VIA PROCESO REGULAR A ESA UNIVERSIDAD
+  23                         IMPEDIMENTO ACADEMICO PARA INGRESAR A ESA CARRERA
+  24                                       EN LISTA DE SELECCIONADOS
+  25                                           EN LISTA DE ESPERA
+  26                                 SELECCIONADO EN PREFERENCIA ANTERIOR
+  27                    FALTA PUNTAJE DE COMPRENSIÓN LECTORA o COMPETENCIA LECTORA
+  28                FALTA PUNTAJE DE PDT DE MATEMATICA o COMPETENCIA MATEMÁTICA 1 (M1)
+  29                             FALTA PUNTAJE PRUEBA DE HISTORIA Y CS. SOCIALES
+  30                                    FALTA PUNTAJE PRUEBA DE CIENCIAS
+         NO CUMPLE CON TENER PROMEDIO DE PRUEBAS OBLIGATORIAS DEFINIDO POR LA CARRERA NI ESTAR EN EL
+  31
+                          10% DE MEJOR RENDIMIENTO DEL ESTABLECIMIENTO DE EGRESO.
+  32                         ESTUDIOS COMPLETOS EN EL EXTRANJERO NO ACREDITADOS
+  35            NO RINDIO NINGUNA DE LAS PRUEBAS OPCIONALES (HISTORIA Y CS. SOCIALES O CIENCIAS)
+          NO CUMPLE PROMEDIO PRUEBAS OBLIGATORIAS MAYOR O IGUAL A 458 PUNTOS NI ESTAR EN EL 10% DE
+  36
+                            MEJOR RENDIMIENTO DEL ESTABLECIMIENTO DE EGRESO
+                         NO CUMPLE PERCENTILES PEDAGOGIA DEFENIDOS POR LEY N°20.903.
+  40
+                                     (Válido para cupos regular, BEA y PACE)
+  41                                  NO CUMPLE PUNTAJE RANKING MINIMO
+                              FALTA PUNTAJE DE PDT DE MATEMATICA o COMPETENCIA
+  42
+                                              MATEMÁTICA 2 (M2)
+  51                           NO CUMPLES CON CRITERIO DE PRE-HABILITACIÓN PACE
+  52                                       NO ERES HABILITADA/O PACE
+
+
+
+
+                                                                                                   3|3
+

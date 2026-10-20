@@ -1,0 +1,67 @@
+grad_year,old_lo,old_hi,new_lo,new_hi,change_reason,n
+2020,0,0,0,0,Unchanged,192832
+2023,0,0,0,0,Unchanged,197006
+2022,0,0,0,0,Unchanged,197227
+2025,0,0,0,0,Unchanged,203721
+2021,0,0,0,0,Unchanged,196101
+2024,0,0,0,0,Unchanged,195984
+2023,1,1,1,1,Unchanged,8249
+2022,1,1,1,1,Unchanged,7848
+2025,1,1,1,1,Unchanged,12454
+2022,0,1,0,1,Unchanged,4695
+2024,1,1,1,1,Unchanged,11868
+2022,0,1,0,0,Own school-history revision,1118
+2021,1,1,1,1,Unchanged,6491
+2021,0,1,0,0,Peer/history/ambiguous-school revision,665
+2020,0,1,0,0,2021 roster sensitivity and peer/history revision,1621
+2025,0,1,0,1,Unchanged,6617
+2020,1,1,1,1,Unchanged,7923
+2021,0,1,0,0,Own school-history revision,834
+2023,0,1,0,0,Peer/history/ambiguous-school revision,1599
+2021,0,1,0,1,Unchanged,4519
+2022,0,1,0,0,Peer/history/ambiguous-school revision,688
+2024,0,1,0,1,Unchanged,6315
+2023,0,1,0,0,Own school-history revision,1437
+2023,0,1,0,1,Unchanged,5599
+2025,0,1,0,0,Own school-history revision,1448
+2024,0,1,0,0,Own school-history revision,1274
+2025,0,0,0,1,Peer/history/ambiguous-school revision,172
+2020,0,1,0,1,Unchanged,3549
+2021,0,1,1,1,Peer/history/ambiguous-school revision,121
+2023,0,0,0,1,Peer/history/ambiguous-school revision,110
+2020,0,1,1,1,Own school-history revision,49
+2025,0,1,0,0,Peer/history/ambiguous-school revision,1803
+2024,1,1,0,1,Peer/history/ambiguous-school revision,140
+2020,0,1,0,0,Own school-history revision,588
+2024,0,0,0,1,Peer/history/ambiguous-school revision,186
+2023,0,1,1,1,Own school-history revision,75
+2024,0,1,0,0,Peer/history/ambiguous-school revision,1595
+2021,1,1,0,1,Peer/history/ambiguous-school revision,58
+2020,0,0,0,1,2021 roster sensitivity and peer/history revision,67
+2022,1,1,0,1,Peer/history/ambiguous-school revision,220
+2021,0,0,0,1,Peer/history/ambiguous-school revision,46
+2025,0,1,1,1,Own school-history revision,137
+2024,0,1,1,1,Own school-history revision,134
+2020,1,1,0,1,2021 roster sensitivity and peer/history revision,55
+2025,1,1,0,1,Peer/history/ambiguous-school revision,87
+2022,0,1,1,1,Peer/history/ambiguous-school revision,146
+2022,0,0,0,1,Peer/history/ambiguous-school revision,167
+2025,0,1,1,1,Peer/history/ambiguous-school revision,91
+2023,0,1,1,1,Peer/history/ambiguous-school revision,77
+2020,1,1,0,1,Own school-history revision,21
+2023,1,1,0,1,Peer/history/ambiguous-school revision,81
+2024,0,1,1,1,Peer/history/ambiguous-school revision,62
+2022,0,1,1,1,Own school-history revision,50
+2021,0,1,1,1,Own school-history revision,42
+2025,1,1,0,1,Own school-history revision,3
+2020,0,1,1,1,2021 roster sensitivity and peer/history revision,4
+2025,0,0,0,1,Own school-history revision,8
+2020,0,0,0,1,Own school-history revision,19
+2023,0,0,0,1,Own school-history revision,11
+2022,1,1,0,1,Own school-history revision,6
+2024,1,1,0,1,Own school-history revision,5
+2022,0,0,0,1,Own school-history revision,2
+2023,1,1,0,1,Own school-history revision,4
+2021,0,0,0,1,Own school-history revision,1
+2021,1,1,0,1,Own school-history revision,1
+2024,0,0,0,1,Own school-history revision,1

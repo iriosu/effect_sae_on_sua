@@ -271,3 +271,7 @@ __marimo__/
 !code/analysis_for_adversarial_report_output/f08/sources/*.pdf
 !code/analysis_for_adversarial_report_output/f30/expanded_scores_2026-10-19/*.pdf
 !code/analysis_for_adversarial_report_output/f08/sources/dictionaries/*.xlsx
+
+# Aggregate F08.3 operational eligibility outputs and public policy sources.
+!code/analysis_for_adversarial_report_output/f08/operational_eligibility_2026-10-19/*.csv
+!code/analysis_for_adversarial_report_output/f08/operational_eligibility_2026-10-19/sources/*.pdf

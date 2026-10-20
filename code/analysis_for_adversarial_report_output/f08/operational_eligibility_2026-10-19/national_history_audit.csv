@@ -1,0 +1,80 @@
+grad_year,school_old,school_new,history_reason,nonconsecutive,n
+2020,FALSE,FALSE,Resolved,FALSE,159378
+2023,TRUE,TRUE,Resolved,FALSE,43288
+2022,FALSE,FALSE,Resolved,FALSE,163405
+2025,FALSE,FALSE,Resolved,FALSE,169009
+2021,FALSE,FALSE,Resolved,FALSE,160555
+2023,FALSE,FALSE,Resolved,FALSE,164952
+2024,FALSE,FALSE,Resolved,FALSE,163466
+2025,TRUE,TRUE,Resolved,FALSE,50699
+2024,TRUE,TRUE,Resolved,FALSE,47744
+2021,TRUE,TRUE,Resolved,FALSE,44159
+2022,TRUE,TRUE,Resolved,FALSE,44035
+2020,TRUE,TRUE,Resolved,FALSE,42139
+2022,,TRUE,Resolved,FALSE,612
+2021,,,Conflicting participation across records,FALSE,831
+2022,,,Conflicting participation across records,FALSE,1156
+2020,,,Conflicting participation across records,FALSE,1544
+2021,,TRUE,Resolved,TRUE,553
+2020,TRUE,,Missing school or pre-2019 roster,FALSE,1228
+2024,,,Conflicting participation across records,FALSE,2154
+2024,TRUE,,Conflicting participation across records,FALSE,268
+2023,,FALSE,Resolved,FALSE,505
+2025,,FALSE,Resolved,FALSE,570
+2023,,FALSE,Resolved,TRUE,112
+2021,FALSE,FALSE,Resolved,TRUE,1227
+2024,,FALSE,Resolved,FALSE,407
+2023,,,Conflicting participation across records,FALSE,2141
+2023,,,No earlier grade-11 performance record,FALSE,1252
+2024,FALSE,FALSE,Resolved,TRUE,462
+2025,,,Conflicting participation across records,FALSE,2314
+2022,,FALSE,Resolved,FALSE,197
+2023,,TRUE,Resolved,FALSE,980
+2020,FALSE,FALSE,Resolved,TRUE,696
+2025,,FALSE,Resolved,TRUE,69
+2021,TRUE,,Conflicting participation across records,FALSE,318
+2022,,FALSE,Resolved,TRUE,119
+2022,FALSE,FALSE,Resolved,TRUE,1020
+2020,,TRUE,Resolved,FALSE,594
+2025,,TRUE,Resolved,FALSE,1101
+2021,,TRUE,Resolved,FALSE,312
+2023,TRUE,,Conflicting participation across records,FALSE,220
+2022,,TRUE,Resolved,TRUE,579
+2025,,TRUE,Resolved,TRUE,178
+2022,TRUE,,Conflicting participation across records,FALSE,140
+2024,,TRUE,Resolved,FALSE,1012
+2025,,,No earlier grade-11 performance record,FALSE,1926
+2025,TRUE,,Conflicting participation across records,FALSE,201
+2020,,,Missing school or pre-2019 roster,TRUE,436
+2021,,FALSE,Resolved,TRUE,82
+2023,FALSE,FALSE,Resolved,TRUE,525
+2021,,,No earlier grade-11 performance record,FALSE,616
+2020,,FALSE,Resolved,FALSE,122
+2020,,,Missing school or pre-2019 roster,FALSE,24
+2024,,,No earlier grade-11 performance record,FALSE,1718
+2021,,,Missing school or pre-2019 roster,TRUE,65
+2023,,TRUE,Resolved,TRUE,246
+2024,,FALSE,Resolved,TRUE,107
+2024,,TRUE,Resolved,TRUE,196
+2021,,FALSE,Resolved,FALSE,73
+2020,,FALSE,Resolved,TRUE,13
+2025,FALSE,FALSE,Resolved,TRUE,425
+2021,TRUE,,Missing school or pre-2019 roster,FALSE,56
+2020,FALSE,,Missing school or pre-2019 roster,FALSE,33
+2021,,,Conflicting participation across records,TRUE,26
+2023,TRUE,,Missing school or pre-2019 roster,FALSE,2
+2024,,,Conflicting participation across records,TRUE,27
+2020,,,No earlier grade-11 performance record,FALSE,521
+2022,,,No earlier grade-11 performance record,FALSE,866
+2025,,,Conflicting participation across records,TRUE,39
+2022,,,Conflicting participation across records,TRUE,19
+2022,TRUE,,Missing school or pre-2019 roster,FALSE,10
+2023,,,Conflicting participation across records,TRUE,12
+2022,,,Missing school or pre-2019 roster,TRUE,6
+2025,FALSE,,Conflicting participation across records,FALSE,9
+2023,FALSE,,Conflicting participation across records,FALSE,12
+2022,FALSE,,Conflicting participation across records,FALSE,3
+2024,FALSE,,Conflicting participation across records,FALSE,3
+2021,FALSE,,Conflicting participation across records,FALSE,6
+2023,FALSE,,Missing school or pre-2019 roster,FALSE,1
+2025,,,Missing school or pre-2019 roster,TRUE,1
