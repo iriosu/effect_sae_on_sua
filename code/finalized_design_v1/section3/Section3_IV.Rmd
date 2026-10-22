@@ -26,6 +26,8 @@ controls <- c("GPA8_Z", "ES_MUJER", "PRIORITARIO", "ALTO", "ORIGIN_OD")
 
 college <- c(
   GRAD     = "Graduated from high school",
+  GRAD_REGULAR = "\\quad Through regular secondary education",
+  GRAD_ADULT   = "\\quad Through adult secondary education",
   APPLIED  = "Applied to a college program",
   ASSIGNED = "Assigned a college seat",
   INSUA    = "Enrolled (In SUA)",
@@ -172,6 +174,7 @@ Each outcome is regressed on attendance at an over-demanded school by 2SLS, with
 
 ```{r table3}
 sample3 <- drop_na(lottery, all_of(controls))
+stopifnot(nrow(sample3) == 175869L)   # Table 3's note gives DEMRE's 345 validation and recognition completers among these 175,869 children
 vars3 <- c(paste0(names(college), "_OT"), paste0(names(college), "_EVER"))
 
 first_stage <- feols(D_OD ~ OFFER + .[controls] + i(YEAR, ref = 2016) | CHANCE_GROUP, sample3)
@@ -199,7 +202,7 @@ note3 <- paste0(
   "application-year fixed effects, and the characteristics as controls (Section 3.4); the first stage is ", num(100 * fs3$est, 2),
   " pp (", num(100 * fs3$se, 2), "). Columns (1) and (3) are means among the children without an offer, in \\%; the effects are in pp. ",
   "Heteroskedasticity-robust standard errors in parentheses. On time and ever are defined in Section 3.3. ",
-  "A child who completes secondary school in adult education counts as not graduated. A child who enrolled through ",
+  "A child who completes secondary school in adult education counts as graduated; the two indented rows divide graduation by route, and a child who also completes twelfth grade in regular secondary education counts in the regular row. DEMRE's registration records list 345 children who completed secondary school through validation exams or the recognition of studies abroad, two routes outside the year-end school records; they count as not graduated. A child who enrolled through ",
   "SUA and outside it in the same year counts in the In SUA row. $^{***}$p$<$0.01, $^{**}$p$<$0.05, $^{*}$p$<$0.1."
 )
 

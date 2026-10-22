@@ -14,7 +14,7 @@ The notebook prints these numbers of the text:
 |---|---|
 | 3.3 | 1,045 over-demanded schools; 304,547 children; 176,321 in the lottery sample and 175,869 of them with every characteristic; 128,226 with a chance of 0 or 1 |
 | 3.6 | 63,211 children with an offer and 113,110 without; 1.2% with no enrollment record in the entry year |
-| 3.7 | the on-time effects as shares of the non-offered means: 3.8%, 3.5%, 7.4% and 9.1% |
+| 3.7 | the on-time effects as shares of the non-offered means: 3.2%, 3.5%, 7.4% and 9.1% |
 | 3.7, the footnote to Table 4 | -0.16 and -0.55 pp; the two joint tests; the one statistically significant difference of the sixteen, 0.011 SD; the trim of about 5% of the sample and its effects of 0.032, -0.181 and -0.228 SD |
 
 The other results the text quotes (3.4's 101 chance groups; 3.6's 0.380, 19.36, 62.56, 62.57 and 14.39; the effects in 3.7)
@@ -35,8 +35,10 @@ From this folder:
 
     Rscript -e "knitr::knit('Section3_IV.Rmd', 'output/Section3_IV.md')"
 
-On Windows the six table files are byte-identical to the paper's. On macOS and Linux R writes them with LF line endings;
-compare them there with `identical(readLines(a), readLines(b))`, which reads either line ending.
+Table 3 (`lottery_college.tex`) carries the three graduation rows of Table IV in the submission draft
+(`Initial submission/tables/results/lottery_college.tex`), in this notebook's format. On Windows R writes the table files with
+CRLF line endings, on macOS and Linux with LF; compare files with `identical(readLines(a), readLines(b))`, which reads either
+line ending.
 
 ## Setup
 
@@ -66,7 +68,7 @@ where `<home>` is `USERPROFILE` on Windows and `~` on macOS and Linux; the noteb
 
 | File | Rows | Columns | MD5 |
 |---|---|---|---|
-| `section3_panel.rds` | 304,547 | 30 | `3390a0487374564a5350a98be299f1a2` |
+| `section3_panel.rds` | 304,547 | 34 | `878a9a8a9459d972dc6dd732d6278ae4` |
 | `table_a3_panel.rds` | 2,545 | 40 | `572f4faba00263d249abc267b41146e2` |
 
 `section3_panel.rds` has one row per applicant to 9th grade in SAE's 2016-2021 processes.
@@ -84,11 +86,12 @@ where `<home>` is `USERPROFILE` on Windows and `~` on macOS and Linux; the noteb
 | `ENTRY_RBD` | the child's school in the enrollment census of the entry year; missing with no enrollment record |
 | `N_CLASS`, `N_OD`, `FC_OD` | choices ranked; over-demanded schools ranked; 1 if an over-demanded school is ranked first (Table 2, Panel A) |
 | `GPA8_Z`, `ES_MUJER`, `PRIORITARIO`, `ALTO`, `ORIGIN_OD` | the characteristics of 3.3: 8th-grade average (SD); female; low income; top 20% of the school's grade ranking; enrolled at an over-demanded school in 8th grade |
-| `GRAD`, `APPLIED`, `ASSIGNED`, `INSUA`, `OUTSIDE`, each with `_OT` (on time) and `_EVER` | graduated from high school; applied to a college program; assigned a college seat; enrolled through SUA; enrolled outside SUA (3.3) |
+| `GRAD`, `APPLIED`, `ASSIGNED`, `INSUA`, `OUTSIDE`, each with `_OT` (on time) and `_EVER` | graduated from high school (promoted from twelfth grade in regular secondary education or from the last level of adult secondary education); applied to a college program; assigned a college seat; enrolled through SUA; enrolled outside SUA (3.3) |
+| `GRAD_REGULAR_OT`, `GRAD_REGULAR_EVER`, `GRAD_ADULT_OT`, `GRAD_ADULT_EVER` | `GRAD` by route: graduated through regular secondary education; graduated only through adult secondary education (a child with both records counts in the regular columns); the two add up to `GRAD` |
 | `LM_Z_MAX`, `NEM_Z_LATEST`, `RANK_Z_LATEST` | Table 4's scores in SD: the highest reading-mathematics mean, the latest NEM and ranking scores |
 
-Outside the lottery sample, `N_CLASS`, `N_OD`, `FC_OD` and the outcome columns other than `GRAD_EVER` and `ASSIGNED_EVER` are
-missing.
+Outside the lottery sample, `N_CLASS`, `N_OD`, `FC_OD` and the outcome columns other than `GRAD_EVER`, `GRAD_REGULAR_EVER`,
+`GRAD_ADULT_EVER` and `ASSIGNED_EVER` are missing.
 
 `table_a3_panel.rds` has one row per school: the 1,045 over-demanded schools, 1,033 of them in Table A3's comparison, and the
 comparison's 1,500 other SAE schools.
