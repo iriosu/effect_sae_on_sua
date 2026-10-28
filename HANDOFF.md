@@ -1,5 +1,13 @@
 # Handoff: branch `finalized-design-v1`
 
+## Section VI tables and code integration — October 28, 2026
+
+Start with the [October 28 mechanisms handoff](Reviews/handoff_mechanisms_2026-10-28.md) for the current submission manuscript. It delivers the new stringency and direct admission-track code, the updated table assembly adapter, a frozen copy of today's manuscript changes, numerical targets, and a list of generators that still need to be recovered from the coauthor's newer code. Overleaf sync does not publish these scripts to GitHub. This handoff supersedes the older score-table filenames and Section VI table layouts described below; retain the older entries as historical provenance.
+
+## Grade stringency for Table V, Panel C — October 28, 2026
+
+The [grade-stringency handoff](Reviews/handoff_grade_stringency_2026-10-28.md) documents the implemented historical calibration, lottery analysis, manuscript export, and steps for incorporation into the final mechanisms code. The [module](code/finalized_design_v1/section6/README.md) runs independently from the shared data files; the [dated reference](code/finalized_design_v1/section6/reference/2026-10-28_results.md) records the saved results, coverage, input/code hashes, and environment. Integration into the final notebook remains to be done. The new row has its own observed-index sample; preserve its coverage qualifications and GPA-point units.
+
 ## Adopted score baseline — October 19, 2026
 
 Ignacio adopted the independent NEM/Ranking reconstruction as the baseline for the next Section 3 2SLS analysis of attendance at sought-after schools, including students without originally observed admission scores. The [current score/2SLS handoff](Reviews/handoff_abhijit_pace_nem_ranking_2026-10-19.md) supersedes earlier score-file and prioritization instructions. The [baseline package](code/analysis_for_adversarial_report_output/f08/ranking/baseline_v1_2026-10-19/baseline_readme.md) contains shared aggregate coverage, validation, standardization and input/output manifests; individual files remain private.

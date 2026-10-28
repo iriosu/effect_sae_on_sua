@@ -1,0 +1,31 @@
+% Numerical table copied from Skeleton; references adapted for the reorganized manuscript.
+\begin{table}[htbp]\singlespacing\renewcommand{\arraystretch}{1.2}
+   \caption{Effect of Attending an Over-Demanded School on Downstream Outcomes, On Time and Ever}\label{tab: lottery college}
+   \centerline{\scalebox{0.85}{\begin{tabular}{lcccc}
+      \toprule
+                   & \multicolumn{2}{c}{On time} & \multicolumn{2}{c}{Ever}\\
+      \cmidrule(lr){2-3}\cmidrule(lr){4-5}
+                   & No offer & 2SLS & No offer & 2SLS\\
+                   & mean &  & mean & \\
+                   & (1) & (2) & (3) & (4)\\
+      \midrule
+      Graduated from high school & \marar{85.67} & \marar{-2.72$^{***}$} & \marar{91.84} & \marar{-0.86$^{***}$}\\
+       &  & \marar{(0.34)} &  & \marar{(0.26)}\\
+      \quad \marar{Through regular secondary education} & \marar{81.08} & \marar{-3.12$^{***}$} & \marar{85.53} & \marar{-1.39$^{***}$}\\
+       &  & \marar{(0.37)} &  & \marar{(0.33)}\\
+      \quad \marar{Through adult secondary education} & \marar{4.59} & \marar{0.40$^{**}$} & \marar{6.31} & \marar{0.53$^{**}$}\\
+       &  & \marar{(0.20)} &  & \marar{(0.24)}\\
+      Applied to a college program & 39.65 & -1.38$^{***}$ & 46.76 & -0.51\\
+       &  & (0.44) &  & (0.45)\\
+      Assigned a college seat & 30.10 & -2.23$^{***}$ & 38.35 & -1.04$^{**}$\\
+       &  & (0.41) &  & (0.44)\\
+      Enrolled (In SUA) & 25.80 & -2.36$^{***}$ & 35.81 & -1.33$^{***}$\\
+       &  & (0.40) &  & (0.43)\\
+      Enrolled (Outside SUA) & 21.19 & -0.54 & 32.12 & 0.43\\
+       &  & (0.40) &  & (0.45)\\
+      \midrule
+      $N$ & 112,796 & 175,869 & 112,796 & 175,869\\
+      \bottomrule
+   \end{tabular}}}
+   \par\smallskip{\footnotesize Notes: The sample is the 175,869 students of the lottery sample with every characteristic of Section~\ref{sec:lottery-data}. Columns (2) and (4) report 2SLS estimates of the effect of attending an over-demanded school, with the offer as the instrument, chance-group and application-year fixed effects, and the characteristics as controls (Section~\ref{sec:lottery-estimation}); the first stage is 62.57 pp (0.25). Columns (1) and (3) are means among the students without an offer, in \%; the effects are in pp. Heteroskedasticity-robust standard errors in parentheses. On time and ever are defined in Section~\ref{sec:lottery-data}. A student who completes secondary school in adult education counts as \marar{graduated; the two indented rows divide graduation by route, and a student who also completes twelfth grade in regular secondary education counts in the regular row. DEMRE's registration records list 345 students who completed secondary school through validation exams or the recognition of studies abroad, two routes outside the year-end school records; they count as not graduated.} A student who enrolled through SUA and outside it in the same year counts in the In SUA row. $^{***}$p$<$0.01, $^{**}$p$<$0.05, $^{*}$p$<$0.1.}
+\end{table}

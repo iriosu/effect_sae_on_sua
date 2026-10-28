@@ -10,6 +10,8 @@
 *.rda
 *.RData
 *.csv
+# Aggregate direct-route estimates/audits only; no student records.
+!code/finalized_design_v1/section6/output/admission_tracks/*.csv
 # Aggregate F02.4 diagnostic outputs; student-level input caches remain ignored.
 !code/analysis_for_adversarial_report_output/f02_*.csv
 # Aggregate entrant-count and score-validation diagnostics.

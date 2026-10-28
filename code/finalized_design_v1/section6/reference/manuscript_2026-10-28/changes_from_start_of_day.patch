@@ -1,0 +1,759 @@
+diff --git a/Initial submission/sample.bib b/Initial submission/sample.bib
+index 20f0f9c..69650ff 100644
+--- a/Initial submission/sample.bib	
++++ b/Initial submission/sample.bib	
+@@ -1,3 +1,12 @@
++@article{betts_2003,
++title = {The impact of grading standards on student achievement, educational attainment, and entry-level earnings},
++journal = {Economics of Education Review},
++volume = {22},
++number = {4},
++pages = {343-352},
++year = {2003},
++author = {Julian R. Betts and Jeff Grogger}}
++
+ @misc{sfusd_neighborhood_2026,
+   author       = {{San Francisco Unified School District}},
+   title        = {San Francisco Board of Education Approves Resolution to Move {SFUSD} Toward Neighborhood-Based Student Assignment},
+@@ -295,6 +304,50 @@
+   doi     = {10.1257/app.6.3.58}
+ }
+  
++@article{Krueger1999,
++  author  = {Krueger, Alan B.},
++  title   = {Experimental Estimates of Education Production Functions},
++  journal = {Quarterly Journal of Economics},
++  year    = {1999},
++  volume  = {114},
++  number  = {2},
++  pages   = {497--532},
++  doi     = {10.1162/003355399556052}
++}
++
++@article{AngristLavy1999,
++  author  = {Angrist, Joshua D. and Lavy, Victor},
++  title   = {Using {Maimonides}' Rule to Estimate the Effect of Class Size on Scholastic Achievement},
++  journal = {Quarterly Journal of Economics},
++  year    = {1999},
++  volume  = {114},
++  number  = {2},
++  pages   = {533--575},
++  doi     = {10.1162/003355399556061}
++}
++
++@article{CordesRickSchwartz2022,
++  author  = {Cordes, Sarah A. and Rick, Christopher and Schwartz, Amy Ellen},
++  title   = {Do Long Bus Rides Drive Down Academic Outcomes?},
++  journal = {Educational Evaluation and Policy Analysis},
++  year    = {2022},
++  volume  = {44},
++  number  = {4},
++  pages   = {689--716},
++  doi     = {10.3102/01623737221092450}
++}
++
++@article{MurphyWeinhardt2020,
++  author  = {Murphy, Richard and Weinhardt, Felix},
++  title   = {Top of the Class: The Importance of Ordinal Rank},
++  journal = {Review of Economic Studies},
++  year    = {2020},
++  volume  = {87},
++  number  = {6},
++  pages   = {2777--2826},
++  doi     = {10.1093/restud/rdaa020}
++}
++
+ @article{PopEleches2013,
+   author  = {Pop-Eleches, Cristian and Urquiola, Miguel},
+   title   = {Going to a Better School: Effects and Behavioral Responses},
+@@ -1196,3 +1249,43 @@ author = {Macarena Kutscher and Shanjukta Nath and Sergio Urzúa}}
+   howpublished = {\href{https://acceso.mineduc.cl/wp-content/uploads/2025/10/oferta-Definitiva-2026-291025UV_compressed-1.pdf}{Official admission rules}},
+   note = {Admission process 2026; accessed October 19, 2026}
+ }
++
++@misc{promotionDecree112,
++  author = {{Ministerio de Educaci{\'o}n}},
++  title = {Decreto Exento 112: Establece disposiciones para que establecimientos educacionales elaboren reglamento de evaluaci{\'o}n y reglamenta promoci{\'o}n de alumnos de 1{\textsuperscript{o}} y 2{\textsuperscript{o}} a{\~n}o de ense{\~n}anza media, ambas modalidades},
++  year = {1999},
++  howpublished = {\href{https://www.bcn.cl/leychile/navegar?idNorma=135826}{Official decree}},
++  note = {Version of December 12, 2002, repealed December 31, 2018; accessed September 10, 2026}
++}
++
++@misc{promotionDecree83,
++  author = {{Ministerio de Educaci{\'o}n}},
++  title = {Decreto Exento 83: Reglamenta calificaci{\'o}n y promoci{\'o}n de alumnos(as) de 3{\textsuperscript{o}} y 4{\textsuperscript{o}} a{\~n}o de ense{\~n}anza media, ambas modalidades, y establece disposiciones para que los establecimientos educacionales elaboren su reglamento de evaluaci{\'o}n},
++  year = {2001},
++  howpublished = {\href{https://www.bcn.cl/leychile/navegar?idNorma=182968}{Official decree}},
++  note = {Version of December 12, 2002, repealed December 31, 2018; accessed September 10, 2026}
++}
++
++@misc{promotionDecree67,
++  author = {{Ministerio de Educaci{\'o}n}},
++  title = {Decreto 67: Aprueba normas m{\'\i}nimas nacionales sobre evaluaci{\'o}n, calificaci{\'o}n y promoci{\'o}n y deroga los decretos exentos N{\textsuperscript{o}} 511 de 1997, N{\textsuperscript{o}} 112 de 1999 y N{\textsuperscript{o}} 83 de 2001},
++  year = {2018},
++  howpublished = {\href{https://www.bcn.cl/leychile/navegar?idNorma=1127255}{Official decree}},
++  note = {Published December 31, 2018; in force from school year 2020; accessed September 10, 2026}
++}
++
++@misc{promotionDecree2169,
++  author = {{Ministerio de Educaci{\'o}n}},
++  title = {Decreto Exento 2169: Aprueba reglamento de evaluaci{\'o}n y promoci{\'o}n escolar para educaci{\'o}n b{\'a}sica y media de adultos},
++  year = {2007},
++  howpublished = {\href{https://www.bcn.cl/leychile/navegar?idNorma=267838}{Official decree}},
++  note = {Articles 6 to 8; accessed October 28, 2026}
++}
++
++@misc{promotionCriteria2020,
++  author = {{Ministerio de Educaci{\'o}n}},
++  title = {Criterios de evaluaci{\'o}n, calificaci{\'o}n y promoci{\'o}n de estudiantes de 1{\textsuperscript{o}} b{\'a}sico a 4{\textsuperscript{o}} a{\~n}o medio},
++  year = {2020},
++  howpublished = {\href{https://www.mineduc.cl/wp-content/uploads/sites/19/2020/08/CriteriosPromocionEscolarCalificacionEvaluacion.pdf}{Official guidance}},
++  note = {Unidad de Curr{\'\i}culum y Evaluaci{\'o}n, August 2020; school year 2020; accessed September 10, 2026}
++}
+diff --git a/Initial submission/sections/6_mechanisms.tex b/Initial submission/sections/6_mechanisms.tex
+index ec69fb2..0acf04b 100644
+--- a/Initial submission/sections/6_mechanisms.tex	
++++ b/Initial submission/sections/6_mechanisms.tex	
+@@ -1,78 +1,120 @@
+ % !TeX root =../main.tex
+ \section{Mechanisms}\label{sec:mechanisms}
++\input{tables/grade_stringency_facts.tex}
+ 
+ The results in the previous section show that attending an over-demanded school lowers high school graduation, college assignment, and enrollment through the centralized college admissions system for students whose attendance depends on an offer. In this section, we examine potential channels behind these effects. \marar{All analyses in this section} use the attendance design from Section~\ref{sec:school-effects}.
+ 
+ \subsection{Lower High School Graduation Rates}
+-\nacho{Expand on explanation of why attending an over-demanded school might lead to lower high school graduation rates. Consider discussing potential factors such as increased academic pressure, larger class sizes, or less individualized attention, lower attendance, or anything else that could contribute to higher failure rates and delayed graduation.}
+-Appendix Table~\ref{tab: appendix failure paths} examines the school paths accompanying delayed graduation in the \SixFrame{} first-choice applications. Receiving an offer raises the share who fail ninth grade and miss scheduled graduation by 1.8 percentage points, from 4.9\% among applicants without an offer. It also raises the share who miss scheduled graduation while remaining at their entry-year school by 1.7 percentage points, and the share who miss it after failing a year and transferring by 0.8. All three differences are statistically significant. These patterns show that the graduation loss includes students who remain at their entry-year school and students who fail and then transfer; they do not separately identify a transfer's effect on graduation.
+-
+-We also examine whether the school paths accompany differences in days attended. Table~\ref{tab: focused school records} shows no statistically significant difference in the mean percentage of school days attended over the first four school years after application.\footnote{We average each student's recorded annual percentages with equal weight over observed years, including students who do not graduate. Appendix Table~\ref{tab: appendix school records} reports annual estimates, record coverage, and the number of observed years. Annual differences vary across school years despite the insignificant four-year average.}
+-
+-\subsection{Lower College Assignment}
+-
+-\marar{Attending an over-demanded school lowers the share of students who are assigned a college seat by 2.23 percentage points on time and by 1.04 points ever (Table~\ref{tab: lottery college}). Besides regular admission, the BEA and PACE tracks reserve seats for the students who meet their conditions.}
+-
+-The \marar{regular and PACE} admission tracks select students based on different criteria. On the one hand, regular admission combines national exam scores with the grade-based NEM and Ranking scores. On the other hand, PACE admission requires attendance in grades 11 and 12 and graduation from a participating school, a cohort-specific percentile or absolute threshold based on the official Ranking score, and completion of the required exams (Appendix Table~\ref{tab: pace annual rules}). Eligible applicants compete based on their \emph{Puntaje Ponderado PACE} (PPP), which assigns 80\% weight to the Ranking score and 20\% to NEM, with territorial and preference-order bonuses and, in 2025--2026, bonuses for specified types of degree programs. These differences imply that changes in national exam scores may \marar{affect} regular admission and changes in eligibility may reduce access to reserved seats, while changes in NEM and Ranking scores may affect admission through both tracks. We examine admission scores and then the evidence on access to reserved seats.
+-
+-
+-\subsubsection{College Admission Scores}\label{sec:college-scores}
+-
+-\marar{Table~\ref{tab: lottery scores} reports the effect of attending an over-demanded school on the three admission scores, on time and ever, with NEM and Ranking measured for the same students: those who graduate within the horizon and have both scores. Attending an over-demanded school raises the math-verbal mean by 0.032 SD on time and lowers NEM and Ranking by 0.163 and 0.208 SD, respectively. Ever, the estimates differ from these by at most 0.002 SD, and all six are statistically significant.}
++Attending an over-demanded school lowers the share of students who graduate from high school by 2.72 percentage points on time and by 0.86 points ever (Table~\ref{tab: lottery college}). To examine why, Table~\ref{tab: lottery graduation} reports the effects of attending an over-demanded school on the causes of lower graduation (Panel A), the causes of failing a year (Panel B), the characteristics of the schools students attend (Panel C), and students' performance in ninth grade (Panel D).
+ 
+ \begin{table}[htp!]
+ \singlespacing\renewcommand{\arraystretch}{1.2}
+ \centering
+-\caption{\marar{Effect of Attending an Over-Demanded School on Admission Scores, On Time and Ever}}\label{tab: lottery scores}
++\caption{\marar{Effect of Attending an Over-Demanded School on Graduation, Failing, School Characteristics, and Ninth-Grade Performance}}\label{tab: lottery graduation}
+ \small
+-\input{tables/lottery_scores_horizons.tex}
++\input{tables/lottery_graduation_part1.tex}
+ \par\smallskip
+ \begin{minipage}{\textwidth}\footnotesize
+-\marar{Notes: 2SLS estimates of the effect of attending an over-demanded school, with the specification of Table~\ref{tab: lottery college}; means among students without an offer. Math-Verbal uses the students with a reading and a mathematics score in a process within the horizon, NEM and Ranking those who graduate within the horizon with both scores; NEM and Ranking are DEMRE's official scores for 137,487 of the 161,310 ever, and are computed from school records for the rest. Scores in SD. Heteroskedasticity-robust standard errors in parentheses. $^{***}p<0.01$, $^{**}p<0.05$, $^{*}p<0.1$.}
++\marar{Notes: 2SLS estimates of the effect of attending an over-demanded school, with the specification of Table~\ref{tab: lottery college}; means among students without an offer, in \%; effects in percentage points. Panels A and B count only students who did not graduate within the horizon; Failed a year includes adult secondary education, Withdrew includes a year enrolled nowhere, Other is a student with neither, and a student can be in more than one row. A failed year counts in Grades when attendance met the promotion minimum or the average was below 4.0, in Attendance alone when attendance fell short and the average was 5.0 or higher (5.5 in grades 11 and 12 through 2019), and in Attendance, grades unknown otherwise; Appendix Table~\ref{tab: promotion rules} gives the promotion rules. Heteroskedasticity-robust standard errors in parentheses. $^{***}p<0.01$, $^{**}p<0.05$, $^{*}p<0.1$.}
+ \end{minipage}
+ \end{table}
+ 
+-\marar{Whether these changes help or hurt a student in regular admission depends on how the programs she applies to weigh the three scores. Table~\ref{tab: lottery application scores} follows the students who submit a rank-ordered list of programs in the regular track within the horizon, using the first list each student submits: 67,132 students on time and 79,522 ever. Panel A shows that students submit similar lists whether or not they attend an over-demanded school. On time, the estimates for the number of programs listed, the mean cutoff percentile of the listed programs (how selective they are), and the average weight these programs place on NEM and Ranking are $-0.08$ programs from a mean of 7.54, $-0.05$ percentile points from 65.58, and $-0.12$ percentage points from 43.33\%. None of the eight estimates in Panel A is statistically significant.}
+-
+ \begin{table}[htp!]
+-\singlespacing\renewcommand{\arraystretch}{1.0}
++\ContinuedFloat
++\singlespacing\renewcommand{\arraystretch}{1.1}
+ \centering
+-\caption{\marar{Application Lists, Application Scores, and Cutoffs at the Listed Programs, On Time and Ever}}\label{tab: lottery application scores}
+-% Taller than the page at the common row spacing: single row spacing.
++\caption{\marar{Effect of Attending an Over-Demanded School on Graduation, Failing, School Characteristics, and Ninth-Grade Performance (continued)}}
+ \small
+-\setlength{\tabcolsep}{4pt}
+-\input{tables/lottery_application_scores.tex}
++\input{tables/lottery_graduation_part2.tex}
+ \par\smallskip
+ \begin{minipage}{\textwidth}\footnotesize
+-\marar{Notes: Students with a rank-ordered list in the regular track within the horizon, each with her first list. 2SLS estimates of the effect of attending an over-demanded school, with the specification of Table~\ref{tab: lottery college}; means among students without an offer. Rows marked (\%) are in \%, effects in percentage points. A cutoff percentile ranks the program's cutoff among the process's programs. Panel B is in SD of the application scores DEMRE published in the process; the parts sum to the score. A listed cutoff is missed when the student fails a requirement or scores below it. Heteroskedasticity-robust standard errors in parentheses. Rounding can affect sums. $^{***}p<0.01$, $^{**}p<0.05$, $^{*}p<0.1$.}
++\marar{Notes: Estimates and means as in Panels A and B; rows marked (\%) are in \%, effects in percentage points. Panel C's first three rows use students with a school in April of the entry year and all three measures; distance is the straight line from the SAE application address to the school, capped at its 99th percentile, 193 km. Grade stringency uses students whose entry schools have a historical index; its sample sizes are reported separately. The index is in GPA points, with higher values indicating stricter grading; Appendix~\ref{app:grade-stringency} gives its construction and coverage. Panel D uses students in ninth grade at their entry school who were graded there at year end; a student's percentile ranks her among the school's ninth graders by ninth-grade GPA, and the change subtracts her percentile among them by eighth-grade GPA at entry. Heteroskedasticity-robust standard errors in parentheses; those for stringency treat the historical index as fixed. $^{***}p<0.01$, $^{**}p<0.05$, $^{*}p<0.1$.}
+ \end{minipage}
+ \end{table}
+ 
+-\marar{Panel B reports the student's application score at the programs on her list, averaged over the list. DEMRE publishes a student's application score at only some of the programs on her list, and never its parts, so we rebuild the score and its parts at every listed program from DEMRE's records and each program's weights. The rebuilt score matches more than 99.8\% of the scores DEMRE published in each admission process. Attending an over-demanded school lowers the application score at the listed programs by 0.113 SD on time and by 0.111 SD ever, about 12 to 13 points on the scale used since 2023. Both effects are statistically significant.}
++Panel A shows that the graduation loss comes from students who fail a year, that is, whose grades or attendance fall short of the promotion rules (Appendix Table~\ref{tab: promotion rules}). Attending an over-demanded school raises the share of students who fail a year and do not graduate by 3.24 percentage points on time and by 1.02 points ever, from 9.25\% and 4.44\% among students without an offer. The estimates for students who withdraw and for other non-graduates are smaller, and only the ever estimate for withdrawal (0.40 points) is statistically significant at the 10\% level.
++
++Panel B shows that most of this rise comes from students whose average grade falls below the passing threshold of 4.0, which increases by 3.14 points on time and by 1.00 point ever. The share who fail for other reasons, such as failing individual subjects without the higher average that would offset them, rises by a further 0.53 points on time and 0.30 points ever, both effects being also significant. Failing on attendance alone, in contrast, shows no effect.
++
++Several features of the schools students attend could contribute to lower grades. Over-demanded schools may have larger classes or more students per teacher and may require longer commutes, which can reduce achievement~\citep{Krueger1999,AngristLavy1999} and make regular attendance harder~\citep{CordesRickSchwartz2022}. Students may also rank lower among their more able classmates or face stricter grading standards, which can weaken their confidence and later achievement~\citep{MurphyWeinhardt2020,betts_2003}. To test these alternative explanations, Panels C and D examine why students who attend an over-demanded school fail more often due to failing to meet the passing threshold of 4.0.
++
++Panel C points to less individualized attention, as attending an over-demanded school increases class size by 3.76 students (9.62\%) and the number of students per teacher by 3.88 (17.02\%), relative to no-offer means of 39.08 and 22.79. These schools also grade more strictly, with a historical GPA, adjusted for student characteristics, that is \GSEffect{} points lower on the 1--7 scale.\footnote{As with the value-added measure, we construct a grade-stringency index from school fixed effects in a regression of tenth-grade GPA for the 2014--2016 cohorts, controlling flexibly for SIMCE mathematics and reading scores, sex, and cohort. We center the fixed effects and reverse their sign so that higher values indicate stricter grading. The index is available for \GSObservedN{} of the \GSLotteryN{} lottery students with complete baseline controls; it is missing when a student's entry school is outside the calibration sample or unobserved. Standard errors treat the historical index as fixed. Appendix~\ref{app:grade-stringency} provides full details.} Distance to school, in contrast, is not significantly affected.
++
++Panel D turns to ninth grade, the year in which most of the rise in failing occurs, with a raise of 2.98 percentage points in the share of students who fail relative to students without an offer (whose average fail rate is 4.36\%; see Appendix Table~\ref{tab: failing by year} for details). Because their classmates enter with higher eighth-grade GPAs, these students start ninth grade 6.75 percentile points lower in their school's ranking, fall a further 4.86 points during the year, and end it 11.61 points lower. As a result, the share who end ninth grade in the bottom fifth of their class rises by 11.93 points, from 16.83\%, and this is where 93.7\% of the students who fail ninth grade finish the year.  
++
++Overall, these results suggest that students who attend an over-demanded school receive less individualized attention, face stricter grading, and start lower in stronger classes, and during ninth grade they slip further into the part of the class where failing concentrates.
++
++
++% \marar{Panels C and D examine why students who attend an over-demanded school fail more often on their grades. These students get less individualized attention: their classes have 3.76 more students, from 39.08 among students without an offer, and their schools 3.88 more students per teacher, from 22.79 (Panel C). Their distance from home to school is about the same: the estimate, $-0.35$ km from 8.13 km, is not statistically significant. 
++% Panel D turns to ninth grade, the year in which most of the rise in failing occurs (Appendix Table~\ref{tab: failing by year}): attending raises the share of students who fail ninth grade by 2.98 percentage points, from 4.36\%. Students who attend sit among classmates with higher eighth-grade GPAs: they start ninth grade 6.75 percentile points lower in their school's ranking, fall another 4.86 points during the year, and end it 11.61 points lower. The share who end ninth grade in the bottom fifth of the class rises by 11.93 points, from 16.83\%, and the bottom fifth is where 93.7\% of the students who fail ninth grade end the year. All estimates in Panels C and D other than distance are statistically significant. Attending an over-demanded school thus gives students less individualized attention and places them lower in stronger classes, and during ninth grade they fall further, into the part of the class where the failing happens.}
++
++\subsection{Lower College Assignment}
++
++Table~\ref{tab: lottery college} shows that attending an over-demanded school lowers the share of students assigned a college seat in the centralized system by 2.23 percentage points on time and by 1.04 points ever. Table~\ref{tab: lottery admission tracks} divides these effects by admission track. On time, attendance lowers assignment through regular admission and PACE by similar amounts, 1.01 and 0.99 percentage points, and through BEA by a smaller 0.30 points; all three effects are statistically significant. Ever, the negative effects are concentrated in BEA and PACE, with declines of 0.30 and 1.03 percentage points, respectively. The regular-admission and gender-quota estimates are not statistically significant at this horizon.
++
++\input{tables/results/lottery_admission_tracks.tex}
+ 
+-\marar{The remaining rows of Panel B divide this effect by score. The part of a student's application score that comes from NEM is each program's NEM weight times her NEM, averaged over her list, and likewise for Ranking and the exams, each centered and scaled like the application score. The split is an accounting: the three parts add up to the application score for every student, so their 2SLS estimates, each the effect of attending on one part, add up to the effect on the total. On time, the Ranking part falls by 0.122 SD and the NEM part by 0.037 SD, while the exams part rises by 0.046 SD; all three effects are statistically significant at both horizons. At the programs students list, the losses through NEM and Ranking are more than three times the gain through the exams.}
++All tracks share a single application, in which students submit one ranked list of programs and are considered in every track for which they are eligible. Hence, these differences reflect how each track determines eligibility and selection, that is, who may compete for a seat and how seats are allocated among eligible applicants. Regular admission sets a lower bar for eligibility, as any student who meets the minimum requirements posted by a program (e.g., a minimum application score or a minimum average of the mathematics and verbal exams) may compete. Selection is then based on a weighted average of national exam scores and the grade-based NEM and Ranking scores. BEA uses the same selection criteria but restricts eligibility to students who graduated from a public or voucher school, ranked in the top 10\% of their graduating class by GPA, applied for student aid, and belong to the bottom four income quintiles of the \emph{Registro Social de Hogares}. PACE differs in both dimensions. To be eligible, students must have attended grades 11 and 12 at a participating school and graduated from it, exceed a cohort-specific percentile or absolute threshold on the Ranking score, and take the required exams (see Appendix Table~\ref{tab: pace annual rules}). Eligible applicants are then selected on a different score, the \emph{Puntaje Ponderado PACE} (PPP), which puts 80\% weight on the Ranking score and 20\% on NEM and adds territorial and preference-order bonuses and, in 2025--2026, bonuses for specified types of degree programs.
+ 
+-\marar{Attending an over-demanded school also raises the share of listed programs whose cutoff a student misses (Panel C). On time, this share rises by 2.56 percentage points, from 55.75\%, and the share of students who reach at least one listed cutoff falls by 2.64 points, from 76.09\%. Ever, the share of listed programs missed rises by 2.16 points and the share of students who reach at least one listed cutoff falls by 2.04 points. All four estimates are statistically significant.}
++Given these rules, attending an over-demanded school could lower assignment through three channels. First, it may change students' preferences, leading them to apply to more selective programs where their chances of admission are lower, even if their scores and eligibility are unchanged. Because students submit a single list, such a change would affect all three tracks. Second, it may cost students their eligibility for reserved seats, which is determined mostly by their high school performance and applies to every program that offers BEA or PACE seats. Third, it may lower the scores on which eligible applicants compete. Lower national exam scores matter in regular and BEA admission, whereas lower NEM and Ranking scores matter in all three tracks, and how much a given drop lowers a student's application score depends on the weights that the programs they apply to place on each component. We examine each channel in turn.
+ 
+-\marar{Taken together, attending an over-demanded school raises exam scores but lowers the grade-based NEM and Ranking scores. The lists students submit are similar whether or not they attend, and at the programs they list the lower NEM and Ranking outweigh the higher exam scores, so their application scores fall. Attending also raises the share of listed programs whose cutoff they miss. The same grades enter eligibility for reserved seats, which we examine next.}
++\subsubsection{Preferences}\label{sec:application-choices}
++Table~\ref{tab: lottery application choices} examines students' application choices using the first list each student submits to the centralized system. We characterize each list by the number of programs it includes, the average and highest cutoff percentiles among those programs, and the average combined weight they place on the NEM and Ranking scores. If attending an over-demanded school shifted students toward more selective programs, or toward programs that weigh grade-based scores differently, these measures would change. However, we observe that none of the estimates is statistically significant, either on time or ever, and all are small relative to the means among students without an offer. Students thus submit similar lists whether or not they attend an over-demanded school, which makes changes in preferences an unlikely explanation for the decline in assignment.
+ 
+-\subsubsection{Access to Reserved Seats}\label{sec:reserved-seats}
+-Attending an over-demanded school can affect access to PACE seats by changing whether students attend a participating school \marar{or} satisfy the cohort-specific academic requirement. \marar{Attendance can also affect access to BEA seats, which require being in the top 10\% of the school's graduates by grade average. Table~\ref{tab:reserved_seats} reports the effects of attendance on graduating from a participating school (a PACE school) and on meeting each track's academic requirement (its grade rule). The estimates use} the full sample of 175,869 lottery students, including those who did not graduate, take the exams, or apply to college. \marar{Where the rules leave a choice open, such as how a class's top percentage is rounded to a whole number of students, Table~\ref{tab:reserved_seats} adopts one version, and Appendix~\ref{app:pace-construction} compares the resulting classification with MINEDUC's eligibility decisions and with the records of PACE selection.}
++\input{tables/results/lottery_application_choices.tex}
++
++\subsubsection{Admission Scores}\label{sec:college-scores}
++
++Panel A of Table~\ref{tab: lottery scores} reports the effects of attending an over-demanded school on admission scores, including the average of the mandatory mathematics and verbal exams and the grade-based NEM and Ranking scores, for all students with available scores.\footnote{Mathematics and verbal scores are available only for students who take the national exams, whereas NEM and Ranking scores are available for all high school graduates except those who graduated abroad. Because attending an over-demanded school lowers graduation and, on time, college application (Table~\ref{tab: lottery college}), the samples with observed scores may differ between students with and without an offer, so these estimates should be interpreted with this selection in mind. Nevertheless, the scope of selection as a driver of these results is limited, since exam and grade-based scores are observed for over 60\% and 80\% of the sample, respectively.}
++We observe that attending an over-demanded school raises the math-verbal mean by 0.032 SD on time and lowers NEM and Ranking by 0.163 and 0.208 SD, respectively. Ever, the estimates differ from these by at most 0.002 SD, and all six are statistically significant. These results suggest that attending over-demanded schools has a positive and significant effect on exam scores, but this effect is outweighted by the drop in grade-based scores.
++
++Panel A of Table~\ref{tab: lottery scores} reports the effects of attending an over-demanded school on admission scores, including the average of the mandatory mathematics and verbal exams and the grade-based NEM and Ranking scores, for all students with available scores.\footnote{Mathematics and verbal scores are available only for students who take the national exams, whereas NEM and Ranking scores are available for all high school graduates except those who graduated abroad. Because attending an over-demanded school lowers graduation and, on time, college application (Table~\ref{tab: lottery college}), the samples with observed scores may differ between students with and without an offer. The scope for such selection is limited, however, since exam scores are observed for about 61\% of the sample and grade-based scores for about 80\%, while the effects on graduation and application are between one and three percentage points.}
++Attending an over-demanded school raises the on-time math-verbal average by 0.032 SD but lowers NEM and Ranking by 0.163 and 0.208 SD, respectively, with nearly identical ever estimates and all statistically significant. Students therefore perform slightly better on the national exams but considerably worse on grade-based scores.
++
++
++\input{tables/results/lottery_admission_scores.tex}
++
++The impact of the score changes in regular and BEA admissions depends on the weights that programs use to compute applications scores. To analyze this, Panel B of Table~\ref{tab: lottery scores} reports the average application score and the average contribution of each admission factor across all listed programs.\footnote{DEMRE publishes a student's overall application score at programs where thy are either selected or waitlisted. Hence,  we rebuild the score and its parts at every listed program from DEMRE's records and each program's weights.} We find that attending an over-demanded school lowers the on-time application score at the listed programs by 0.113 SD, and this effect is statistically significant for both time horizons. Furthermore, consistent with the invariance in weights (see last row in Table~\ref{tab: lottery application choices}), we observe that the Ranking part falls by 0.122 SD and the NEM part by 0.037 SD, while the exams part rises by 0.046 SD; all three effects are statistically significant at both horizons. Finally, we also observe that the gains in the exam part come from higher scores in Verbal and History or Science, while there is no effect in Math scores. 
++
++How much these score changes matter in regular and BEA admission depends on the weights that programs use to compute application scores.  To analyze this, Panel B of Table~\ref{tab: lottery scores} reports the average application score and the average contribution of each admission factor across all listed programs.\footnote{DEMRE publishes a student's overall application score only at programs where the student is selected or waitlisted. We therefore reconstruct the score and its components at every listed program from DEMRE's records and each program's weights.} Attending an over-demanded school lowers the on-time application score at the listed programs by 0.113 SD, and the effect is statistically significant at both horizons. Because students list programs with similar weights whether or not they attend (Table~\ref{tab: lottery application choices}), this decline reflects changes in scores rather than in where students apply. Furthermore, we observe that the Ranking and NEM contributions fall by 0.122 SD and 0.037 SD, respectively, while the exam contribution rises by 0.046 SD, all statistically significant at both horizons. The losses from grade-based scores are thus more than three times the gain from the exams, which comes from higher verbal and history or science scores, with no effect on mathematics.
++
++% The remaining rows of Panel B divide this effect by score. The part of a student's application score that comes from NEM is each program's NEM weight times her NEM, averaged over her list, and likewise for Ranking and the exams, each centered and scaled like the application score. The split is an accounting: the three parts add up to the application score for every student, so their 2SLS estimates, each the effect of attending on one part, add up to the effect on the total. On time, the Ranking part falls by 0.122 SD and the NEM part by 0.037 SD, while the exams part rises by 0.046 SD; all three effects are statistically significant at both horizons. At the programs students list, the losses through NEM and Ranking are more than three times the gain through the exams.
++
++
++% \marar{Panel B of Table~\ref{tab: lottery scores} uses the regular-track applicants in Table~\ref{tab: lottery application choices}: 67,132 students on time and 79,522 ever. It reports the student's application score at the programs on her list, averaged over the list. DEMRE publishes a student's application score at only some of the programs on her list, and never its parts, so we rebuild the score and its parts at every listed program from DEMRE's records and each program's weights. The rebuilt score matches more than 99.8\% of the scores DEMRE published in each admission process. Attending an over-demanded school lowers the application score at the listed programs by 0.113 SD on time and by 0.111 SD ever, about 12 to 13 points on the scale used since 2023. Both effects are statistically significant.}
++
++% \marar{The remaining rows of Panel B divide this effect by score. The part of a student's application score that comes from NEM is each program's NEM weight times her NEM, averaged over her list, and likewise for Ranking and the exams, each centered and scaled like the application score. The split is an accounting: the three parts add up to the application score for every student, so their 2SLS estimates, each the effect of attending on one part, add up to the effect on the total. On time, the Ranking part falls by 0.122 SD and the NEM part by 0.037 SD, while the exams part rises by 0.046 SD; all three effects are statistically significant at both horizons. At the programs students list, the losses through NEM and Ranking are more than three times the gain through the exams.}
++
++% \marar{Panel C of Table~\ref{tab: lottery scores} shows that attending an over-demanded school raises the share of listed programs whose cutoff a student misses. On time, this share rises by 2.56 percentage points, from 55.75\%, and the share of students who reach at least one listed cutoff falls by 2.64 points, from 76.09\%. Ever, the share of listed programs missed rises by 2.16 points and the share of students who reach at least one listed cutoff falls by 2.04 points. All four estimates are statistically significant.}
++
++% \marar{Taken together, attending an over-demanded school raises exam scores but lowers the grade-based NEM and Ranking scores. At the programs students list, the lower NEM and Ranking outweigh the higher exam scores, so their application scores fall. These score changes help explain the lower cutoff attainment in Panel C. The same grades enter eligibility for reserved seats, which we examine next.}
++
++\subsubsection{Eligibility for Reserved Seats}\label{sec:reserved-seats}
++The decline in high school performance, reflected in the lower NEM and Ranking scores reported in Table~\ref{tab: lottery scores}, may also cost students their eligibility for reserved seats in the BEA and PACE tracks. The top rows of Panels A and B in Table~\ref{tab:reserved_seats} examine this channel, using as outcomes indicators for whether a student meets the grade-based eligibility criteria for PACE and BEA, respectively. 
++We observe that attending an over-demanded school lowers the share who meet the PACE and BEA requirement on-time by 9.00 and 4.86 percentage points, respectively. Relative to the means among students without an offer, 25.50\% and 10.47\%, these are declines of 35.3\% and 46.4\%, and both effects are statistically significant at both horizons.\footnote{BEA and PACE eligibility does not guarantee a reserved seat, since seats are limited and allocated by weighted admission scores among eligible applicants on programs' waiting lists after the assignment of regular seats. Eligible students who obtain a regular-admission seat count under regular admission, not BEA or PACE. As a back-of-the-envelope benchmark, applying the 46.4\% decline in meeting BEA's grade requirement to the no-offer BEA assignment rate of 0.54\% implies a decline of approximately 0.25 percentage points ($0.464 \times 0.54$), close to the estimated 0.30 points. This calculation illustrates the difference in scale between the outcomes; it does not identify the share of the assignment effect attributable to eligibility.}
++
++
++% Attending an over-demanded school can affect access to PACE seats by changing whether students attend a participating school \marar{or} satisfy the cohort-specific academic requirement. \marar{Attendance can also affect access to BEA seats, which require being in the top 10\% of the school's graduates by grade average. Table~\ref{tab:reserved_seats} reports the effects of attendance on graduating from a participating school (a PACE school) and on meeting each track's academic requirement (its grade rule). The estimates use} the full sample of 175,869 lottery students, including those who did not graduate, take the exams, or apply to college. \marar{Where the rules leave a choice open, such as how a class's top percentage is rounded to a whole number of students, Table~\ref{tab:reserved_seats} adopts one version, and Appendix~\ref{app:pace-construction} compares the resulting classification with MINEDUC's eligibility decisions and with the records of PACE selection.}
+ 
+ \begin{table}[htp!]
+ \singlespacing\renewcommand{\arraystretch}{1.2}
+ \centering
+-\caption{\marar{PACE and BEA: Attendance Effects on Their Conditions, On Time and Ever}}\label{tab:reserved_seats}
++\caption{{PACE and BEA: Attendance Effects on Their Conditions}}\label{tab:reserved_seats}
+ \small
+ \input{tables/pace_bea_access.tex}
+ \par\smallskip
+ \begin{minipage}{\textwidth}\footnotesize
+-\marar{Notes: 2SLS estimates of the effect of attending an over-demanded school, with the specification of Table~\ref{tab: lottery college}; means among students without an offer, in \%; effects in percentage points. A student who does not graduate within the horizon, or whose records leave a condition undetermined, counts as not meeting it. Appendix~\ref{app:pace-construction} defines each condition; Appendix Table~\ref{tab: pace annual rules} gives PACE's grade rule by year. Heteroskedasticity-robust standard errors in parentheses. $^{***}p<0.01$, $^{**}p<0.05$, $^{*}p<0.1$.}
++{Notes: 2SLS estimates of the effect of attending an over-demanded school, with the specification of Table~\ref{tab: lottery college}; means among students without an offer, in \%; effects in percentage points. A student who does not graduate within the horizon, or whose records leave a condition undetermined, counts as not meeting it. Appendix~\ref{app:pace-construction} defines each condition; Appendix Table~\ref{tab: pace annual rules} gives PACE's grade rule by year. Heteroskedasticity-robust standard errors in parentheses. $^{***}p<0.01$, $^{**}p<0.05$, $^{*}p<0.1$.}
+ \end{minipage}
+ \end{table}
+ 
+-\marar{Attending an over-demanded school lowers the share of students who graduate from a PACE school by 14.63 percentage points, from 26.30\% among students without an offer (Table~\ref{tab:reserved_seats}). Over-demanded schools are rarely PACE schools: in each school year from 2019 to 2025, between 3.9\% and 5.0\% of the over-demanded schools with a twelfth grade appear on MINEDUC's list of PACE schools, compared with 24.5\% to 27.6\% of the other publicly funded schools with a twelfth grade. The share of students who also satisfy the academic requirement falls by 5.83 points, from 8.16\%.}
++Panels A in Table~\ref{tab:reserved_seats} also reports the effects of attending an over-demanded school on the other eligibility criteria used in PACE admissions. We observe that itlowers the share of students who graduate from a PACE school by 14.63 percentage points, from 26.30\% among students without an offer. The main reason for this drop is that over-demanded schools are rarely PACE schools: in each school year from 2019 to 2025, between 3.9\% and 5.0\% of the over-demanded schools with a twelfth grade appear on MINEDUC's list of PACE schools, compared with 24.5\% to 27.6\% of the other publicly funded schools with a twelfth grade. The share of students who also satisfy the academic requirement falls by 5.83 points, from 8.16\%.
++
++Panel A of Table~\ref{tab:reserved_seats} also reports the effects of attending an over-demanded school on the other PACE eligibility criteria. Attendance lowers the share of students who graduate from a PACE school by 14.63 percentage points, from 26.30\% among students without an offer, largely because over-demanded schools rarely participate in the program.\footnote{In each year from 2019 to 2025, only 3.9\% to 5.0\% of over-demanded schools with a twelfth grade appear on MINEDUC's list of PACE schools, compared with 24.5\% to 27.6\% of other publicly funded schools with a twelfth grade.} Combining both requirements, the share of students who graduate from a PACE school and also meet the academic criterion falls by 5.83 points, from 8.16\%, a decline of about 71\%.
++
++
++% \marar{Attending an over-demanded school lowers the share of students who graduate from a PACE school by 14.63 percentage points, from 26.30\% among students without an offer (Table~\ref{tab:reserved_seats}). Over-demanded schools are rarely PACE schools: in each school year from 2019 to 2025, between 3.9\% and 5.0\% of the over-demanded schools with a twelfth grade appear on MINEDUC's list of PACE schools, compared with 24.5\% to 27.6\% of the other publicly funded schools with a twelfth grade. The share of students who also satisfy the academic requirement falls by 5.83 points, from 8.16\%.}
+ 
+-\marar{To separate the academic requirement from the school, Table~\ref{tab:reserved_seats} also applies it at every school, PACE school or not, so that every graduate faces it among her own classmates. Attendance lowers the share who meet it by 9.00 points, from 25.50\%, and the share who meet BEA's grade rule by 4.86 points, from 10.47\%, consistent with the lower NEM and Ranking scores in Table~\ref{tab: lottery scores}. All attendance effects in Table~\ref{tab:reserved_seats} are statistically significant, and each is the same size ever, within 0.13 points of its on-time value.}
++% \marar{To separate the academic requirement from the school, Table~\ref{tab:reserved_seats} also applies it at every school, PACE school or not, so that every graduate faces it among her own classmates. Attendance lowers the share who meet it by 9.00 points, from 25.50\%, and the share who meet BEA's grade rule by 4.86 points, from 10.47\%, consistent with the lower NEM and Ranking scores in Table~\ref{tab: lottery scores}. All attendance effects in Table~\ref{tab:reserved_seats} are statistically significant, and each is the same size ever, within 0.13 points of its on-time value.}
+ 
+-\marar{Attending an over-demanded school thus lowers access to a college seat both through regular admission and through the seats PACE and BEA reserve. In regular admission, it lowers the application score at the listed programs and the share of students who reach at least one listed cutoff; for the reserved seats, it lowers the share of students who graduate from a PACE school and the shares who meet PACE's and BEA's grade rules.}
++Overall, these results show that attending an over-demanded school lowers access to a college seat both through regular admission and through the seats PACE and BEA reserve. In regular admission, it lowers the application score at the listed programs and the share of students who reach at least one listed cutoff; for the reserved seats, it lowers the share of students who graduate from a PACE school and the shares who meet PACE's and BEA's grade rules.
+diff --git a/Initial submission/sections/9_appendix_mechanisms.tex b/Initial submission/sections/9_appendix_mechanisms.tex
+index bb084c8..4468349 100644
+--- a/Initial submission/sections/9_appendix_mechanisms.tex	
++++ b/Initial submission/sections/9_appendix_mechanisms.tex	
+@@ -3,115 +3,63 @@
+ \setcounter{table}{0}
+ \setcounter{equation}{0}
+ 
+-\subsection{First-Choice Offer Comparisons}\label{sec:lottery-detailed}\label{app:mechanism-comparisons}
++\subsection[Promotion Rules]{\marar{Promotion Rules}}\label{app:promotion-rules}
+ 
+-The detailed school-record and mechanism comparisons use \SixFrame{} first-choice applications from 2016--2021 in \SixFrameStrata{} lottery strata. They compare applicants who ranked the same classroom first in the same application year and share the relevant priority and sibling-application conditions. Regressions include lottery-stratum fixed effects and retain strata containing applicants with and without an offer in the sample required for the outcome. SE are clustered by school and application year, and significance is assessed using 9,999 within-stratum reshuffles of offer status.
+-
+-These comparisons report offer effects rather than the attendance effects estimated by 2SLS in Section~\ref{sec:school-effects}. Their sample also differs from the 102,291 students in the alternative first-choice IV specification. Comparisons that require graduation select students after the offer. Record-coverage and baseline-balance results accompany the corresponding outcomes below.
+-% Author review: The Skeleton reports the 45,123-application mechanism frame
+-% and the 102,291-student first-choice IV sample, but does not document all
+-% additional restrictions separating them. Confirm against the analysis code.
+-
+-\subsection{Academic Performance, Standing, and Days Attended}
+-
+-Table~\ref{tab: focused school records} supplies the school-record comparison referenced in Section~\ref{sec:mechanisms}. Receiving an offer places students among classmates with higher prior GPA and is associated with lower ninth-grade GPA and lower standing within the school. Among graduates with complete histories, cumulative GPA and graduating-class standing are also lower. Mean days attended over the first four school years does not differ significantly. The construction and coverage of these records are described below.
++\marar{Table~\ref{tab: promotion rules} gives the rules that decide whether a secondary-school student is promoted or fails the year.}
+ 
+ \begin{table}[!htbp]
+ \singlespacing\renewcommand{\arraystretch}{1.2}
+ \centering
+-\caption{Academic Performance, Standing, and Days Attended of Applicants with and without an Offer}
+-\label{tab: focused school records}
++\caption{\marar{Promotion Rules in Secondary Education, School Years 2017--2025}}\label{tab: promotion rules}
+ \small
+-\setlength{\tabcolsep}{4pt}
+-\input{tables/focus_school_record_outcomes.tex}
++\input{tables/appendix_promotion_rules.tex}
+ \par\smallskip
+ \begin{minipage}{\textwidth}\footnotesize
+-Notes: First-choice applications, 2016--2021. Differences are with an offer minus without an offer. Each row retains students with the outcome in strata containing applicants with and without an offer. Estimates include lottery-stratum fixed effects and no additional controls. SE are clustered by school/application-year; stars use 9,999 within-stratum reshuffles: $^{***}p<0.01$, $^{**}p<0.05$, $^{*}p<0.1$. Means among applicants without an offer are unweighted. Peer GPA averages schoolmates' nationally standardized eighth-grade GPA, excluding the student. Ninth-grade GPA is standardized nationally by year; percentiles compare students with their graded school cohort. Cumulative GPA uses the first passing record for each grade, and its percentile uses the actual graduating school and year. Percentiles run from zero to one. Mean days attended averages observed annual percentages over the first four school years, retaining zeros.
++\marar{Notes: Subjects are graded from 1.0 to 7.0 and pass at 4.0; the averages include the subjects below 4.0. $^{a}$5.5 when Spanish or mathematics is one of the two. $^{b}$5.0 when the subject is Spanish or mathematics. $^{c}$A student with up to two subjects below 4.0 takes a special evaluation, whose grade replaces the failed one. The school may promote a student below the attendance minimum and, from 2020, decides each case of a student who falls short; in 2020, the Ministry's criteria required no attendance percentage. Sources: Decrees 112 of 1999, 83 of 2001, 67 of 2018, and 2169 of 2007 \citep{promotionDecree112,promotionDecree83,promotionDecree67,promotionDecree2169}, and the Ministry's criteria for 2020 \citep{promotionCriteria2020}.}
+ \end{minipage}
+ \end{table}
+ 
+-\subsection{Records Supporting Academic Performance and Standing}
++\subsection[Failing a Year in Each of the First Four School Years]{\marar{Failing a Year in Each of the First Four School Years}}\label{app:failing-by-year}
+ 
+-Table~\ref{tab: appendix school records} reports who has the \marar{school records behind Table~\ref{tab: focused school records}} and how completely their graduating classmates are observed. It also reports annual days attended: differences across school years can coexist with the insignificant difference in the four-year average. The annual comparisons retain their own record coverage and baseline balance checks.
++\marar{Attending an over-demanded school raises the share of students who fail a year in their first four school years by 3.93 percentage points, and 2.84 of these points come from the first year (Table~\ref{tab: failing by year}).}
+ 
+ \begin{table}[!htbp]
+ \singlespacing\renewcommand{\arraystretch}{1.2}
+ \centering
+-\caption{Records Supporting Academic Performance and Standing}
+-\label{tab: appendix school records}
+-\small
+-\input{tables/appendix14_a5_records_coverage.tex}
+-\par\medskip
+-\input{tables/appendix14_a5_records_reference.tex}
+-\par\smallskip
+-\begin{minipage}{\textwidth}\footnotesize
+-Notes: Outcome coverage uses the full lottery application sample before removing strata containing applicants with only one offer status among students with the outcome. These observed counts can therefore exceed Table~\ref{tab: focused school records}'s estimation counts. Mean days attended requires at least one recorded year. A recorded zero counts as observed. Class coverage is the share of graduates with complete four-grade GPAs among regular-secondary graduates with a resolved school, averaged across lottery applications with a known graduating school; its minimum uses the same application population. Missing-classmate percentile bounds place all classmates without complete GPA below or above the student; the mean bound width averages applications with complete GPA. The bounds use the resolved-school roster. Unresolved graduating schools are reported separately. The construction note below defines the cumulative record.
+-\end{minipage}
+-\end{table}
+-
+-\clearpage
+-\begin{table}[!htbp]
+-\singlespacing\renewcommand{\arraystretch}{1.2}
+-\ContinuedFloat
+-\centering
+-\caption{Records Supporting Academic Performance and Standing (continued)}
+-\small
+-\input{tables/appendix14_a5_records_attendance.tex}
+-\par\medskip
+-\input{tables/appendix14_a5_records_attendance_coverage.tex}
+-\par\smallskip
+-\begin{minipage}{\textwidth}\footnotesize
+-Notes: Columns follow the first four school years after application. The annual days-attended estimates use the recorded days attended of promoted or failed regular-secondary students and retain strata containing applicants with and without an offer. Coverage counts and shares use all applicants with each offer status before those restrictions. Annual samples and the sample with at least one recorded year differ. Effects and means are days attended per 100. Estimates include lottery-stratum fixed effects; SE are clustered by school/application-year. Stars use 9,999 within-stratum reshuffles: $^{***}p<0.01$, $^{**}p<0.05$, $^{*}p<0.1$.
+-\end{minipage}
+-\end{table}
+-
+-\subsubsection{Cumulative GPA, graduating-class standing, and days attended}
+-\label{app: school record construction}
+-
+-We use the first year in which a student passes each regular-secondary grade from 9 through 12, retaining grades earned before a transfer. The four passing years must be chronological, each annual GPA must be valid, and the first graduation after the lottery must have a resolved school. Conflicting grades in the first passing year remain missing. The four-grade average is rounded half up to two decimals, then standardized among national graduates with complete histories in the actual graduation year. Records extend through 2025. Each student's percentile is $(r-0.5)/N$, where $r$ is her average rank among the $N$ complete-history graduates of her actual graduating school and year. Ties share a rank, and the reference distribution includes graduates outside the lottery sample. Receiving an offer affects which students graduate and have complete records, so this comparison describes observed graduates.
+-
+-Mean days attended gives equal weight to the available annual records in the first four years after application. We retain zeros, use promoted or failed regular-secondary records, and average kept records when a student has more than one in a year. Missing years are not imputed. The number of observed years therefore matters alongside the mean; the table reports the full distribution for applicants with and without an offer.
+-
+-\clearpage
+-\begin{table}[!htbp]
+-\singlespacing\renewcommand{\arraystretch}{1.15}
+-\ContinuedFloat
+-\centering
+-\caption{Records Supporting Academic Performance and Standing (continued)}
++\caption{\marar{Effect of Attending an Over-Demanded School on Failing a Year in Each of the First Four School Years}}\label{tab: failing by year}
+ \small
+-\input{tables/appendix14_a5_records_balance.tex}
++\input{tables/appendix_failing_by_year.tex}
+ \par\smallskip
+ \begin{minipage}{\textwidth}\footnotesize
+-Notes: Recorded and unrecorded groups refer to the availability of a days-attended record in the indicated school year. Each balance row requires its own baseline measure and then applicants with and without an offer within a stratum. Group means describe that row's estimation sample; the estimated difference is with an offer minus without an offer, uses stratum weights, and need not equal the difference between displayed means. GPA is in SD and female is an indicator. SE are clustered by school/application-year; RI stars follow the preceding page. Balance on these characteristics does not rule out selection into the recorded days-attended sample.
++\marar{Notes: 2SLS estimates with the specification of Table~\ref{tab: lottery college}; means among students without an offer, in \%; effects in percentage points. Each row's outcome is 1 for a student, graduate or not, who failed that school year in regular or adult secondary education; year 1 is the entry year. Heteroskedasticity-robust standard errors in parentheses. $^{***}p<0.01$, $^{**}p<0.05$, $^{*}p<0.1$.}
+ \end{minipage}
+ \end{table}
+ 
+ \clearpage
+-
+-\begin{table}[p]
+-\singlespacing\renewcommand{\arraystretch}{1.2}
+-\centering
+-\caption{Failure and School Paths behind Delayed Graduation}
+-\label{tab: appendix failure paths}
+-\small
+-\textit{Panel A. First departure from schedule}\par\smallskip
+-\input{tables/e2_table8_panel_b_first_off_schedule.tex}
+-\par\smallskip{\footnotesize Notes for both panels appear with Panel B.}
+-\end{table}
+-
+-\begin{table}[p]
+-\singlespacing\renewcommand{\arraystretch}{1.2}
+-\ContinuedFloat
+-\centering
+-\caption{Failure and School Paths behind Delayed Graduation (continued)}
+-\small
+-\textit{Panel B. School path}\par\smallskip
+-\input{tables/e2_table8_panel_c_school_paths.tex}
+-\par\smallskip
+-\begin{minipage}{\textwidth}\footnotesize
+-Notes: Applications 2016--2021. All rows retain the full lottery sample. Estimates compare applicants with an offer minus those without an offer. Estimates and SE are in probability units; brackets and braces give means among applicants without and with an offer, respectively. Each panel partitions the absence of graduation in the scheduled fourth year. The early-graduation category requires graduation before that year and on-schedule promotion through every preceding grade. Five of the 20 applications graduating before, with no graduation in, the scheduled year meet this condition; the other 15 are classified by their records. Regular secondary records determine promotion, failure, and withdrawal; a transfer or blank status permits classification through an adult-secondary record. Panel A's other category includes unexpected grades and unmatched records. Panel B's ``Changed school otherwise'' includes other school changes, adult-secondary records, and incomplete census histories. SE use one cluster per school/application-year pair. Stars use 9,999 within-stratum reshuffles: $^{***}p<0.01$, $^{**}p<0.05$, $^{*}p<0.1$.
+-\end{minipage}
+-\end{table}
++\subsection[Grade Stringency]{\marar{Grade Stringency}}\label{app:grade-stringency}
++
++\marar{We measure grade stringency using tenth-grade students in 2014--2016, before SAE determined secondary-school entry. We match SIMCE mathematics and reading scores to annual GPA by student, year, and school, retaining unique records with both scores, observed sex, and a GPA between 1.0 and 7.0. We retain both passing and failing students. Schools must be publicly funded, never recorded as fee-paying private in 2012--2025 in the performance records or school directory, and have at least 20 matched students across at least two cohorts. The calibration sample contains \GSCalibrationN{} students at \GSSchoolN{} schools, including \GSFailureN{} students who fail the year. None belongs to the lottery sample.}
++
++\marar{For student $i$ at school $s$ in year $t$, we estimate
++\begin{equation*}
++GPA_{ist}=\alpha_t+f_t(M_{it},R_{it})+\gamma Female_i+\theta_s+\varepsilon_{ist},
++\end{equation*}
++where $M_{it}$ and $R_{it}$ are mathematics and reading scores standardized within the calibration year. The function $f_t$ contains separate natural cubic splines with four degrees of freedom in mathematics and reading, plus the product $M_{it}R_{it}$, with separate coefficients by year. The school fixed effect $\theta_s$ measures differences in GPA conditional on these achievement measures and sex.}
++
++\marar{We center the estimated school effects with equal school weights and shrink imprecise estimates toward zero. Let $a_s=\widehat{\theta}_s-J^{-1}\sum_r\widehat{\theta}_r$, where $J$ is the number of calibration schools, and let $v_s$ be its heteroskedasticity-robust sampling variance, including uncertainty in the common coefficients. We use the empirical Bayes rule
++\begin{equation*}
++\begin{aligned}
++\widehat{\tau}^{\,2}
++&=\max\left\{\frac{\sum_s a_s^2-\sum_s v_s}{J-1},0\right\},
++& \lambda_s&=\frac{\widehat{\tau}^{\,2}}{\widehat{\tau}^{\,2}+v_s},\\
++S_s&=-\left(\lambda_s a_s-\frac{1}{J}\sum_r\lambda_r a_r\right).
++\end{aligned}
++\end{equation*}
++Higher $S_s$ indicates lower grades at comparable measured achievement. The index remains in GPA points and averages zero across calibration schools.}
++
++\marar{We attach $S_s$ to the school attended in April of the lottery student's entry year and apply the attendance specification of Table~\ref{tab: lottery college}. The index is observed for \GSObservedN{} of the \GSLotteryN{} students with complete baseline controls. An offer raises its availability by \GSAvailabilityEffect{} percentage points (standard error \GSAvailabilitySE{}), so the comparison restricted to students with an observed index need not retain the full sample's randomized comparison. The reported standard errors treat the historical index as fixed and do not propagate uncertainty from its estimation or shrinkage. Leaving out each historical cohort in turn gives stringency estimates from \GSLOOMin{} to \GSLOOMax{} GPA points on the same lottery sample; the estimate without shrinkage is \GSUnshrunkEffect{}.}
++
++\marar{Stringency is a proxy. GPA covers all subjects, whereas SIMCE measures mathematics and reading, and the calibration describes students who reached tenth grade and took both tests. Differences in curriculum, effort, and the selected pre-SAE student populations may remain. Applying the index to ninth-grade outcomes also assumes persistence in schools' relative grading practices across grades and cohorts. The estimates describe exposure to historical grading environments and do not identify the share of the ninth-grade effects attributable to grading standards.}
+ 
+ \clearpage
+ \subsection{PACE Eligibility Rules by Cohort}\label{app:pace-rules}
+diff --git a/Initial submission/tables/appendix_failing_by_year.tex b/Initial submission/tables/appendix_failing_by_year.tex
+new file mode 100644
+index 0000000..e2990d2
+--- /dev/null
++++ b/Initial submission/tables/appendix_failing_by_year.tex	
+@@ -0,0 +1,21 @@
++\begin{tabular}{lcc}
++\toprule
++ & No offer & 2SLS\\
++ & mean & \\
++ & (1) & (2)\\
++\midrule
++\multicolumn{3}{l}{\textit{Failed a year (\%)}}\\
++Year 1 after entry & 4.39 & 2.84$^{***}$\\
++ &  & (0.22)\\
++Year 2 after entry & 3.48 & 1.32$^{***}$\\
++ &  & (0.19)\\
++Year 3 after entry & 3.81 & 0.84$^{***}$\\
++ &  & (0.19)\\
++Year 4 after entry & 1.99 & 0.24$^{*}$\\
++ &  & (0.14)\\
++Any of years 1 to 4 & 11.03 & 3.93$^{***}$\\
++ &  & (0.31)\\
++\midrule
++$N$ & 112,796 & 175,869\\
++\bottomrule
++\end{tabular}
+diff --git a/Initial submission/tables/appendix_promotion_rules.tex b/Initial submission/tables/appendix_promotion_rules.tex
+new file mode 100644
+index 0000000..0cb223c
+--- /dev/null
++++ b/Initial submission/tables/appendix_promotion_rules.tex	
+@@ -0,0 +1,15 @@
++\begin{tabular}{lcccc}
++\toprule
++ & & \multicolumn{2}{c}{Minimum average with} & \\
++ & School & \multicolumn{2}{c}{subjects below 4.0} & Minimum \\
++\cmidrule(lr){3-4}
++Grades and decree & years & One & Two & attendance \\
++\midrule
++\multicolumn{5}{l}{\textit{Regular secondary education}}\\
++\quad Grades 9--10, Decree 112 (1999) & 2017--2019 & 4.5 & 5.0 & 85\%\\
++\quad Grades 11--12, Decree 83 (2001) & 2017--2019 & 4.5 & 5.0 or 5.5$^{a}$ & 85\%\\
++\quad Grades 9--12, Decree 67 (2018) & 2020--2025 & 4.5 & 5.0 & 85\%\\
++\multicolumn{5}{l}{\textit{Adult secondary education}}\\
++\quad Decree 2169 (2007)$^{c}$ & 2017--2025 & 4.5 or 5.0$^{b}$ & Special evaluation & 80\% per subject\\
++\bottomrule
++\end{tabular}
+diff --git a/Initial submission/tables/grade_stringency_facts.tex b/Initial submission/tables/grade_stringency_facts.tex
+new file mode 100644
+index 0000000..122348a
+--- /dev/null
++++ b/Initial submission/tables/grade_stringency_facts.tex	
+@@ -0,0 +1,18 @@
++% Generated by section6/run_grade_stringency.R; do not edit numbers manually.
++\newcommand{\GSCalibrationN}{455,436}
++\newcommand{\GSSchoolN}{2,399}
++\newcommand{\GSFailureN}{15,172}
++\newcommand{\GSLotteryN}{175,869}
++\newcommand{\GSObservedN}{163,470}
++\newcommand{\GSNoOfferN}{103,483}
++\newcommand{\GSEffect}{0.120}
++\newcommand{\GSSE}{0.002}
++\newcommand{\GSMean}{0.003}
++\newcommand{\GSAvailabilityEffect}{2.88}
++\newcommand{\GSAvailabilitySE}{0.15}
++\newcommand{\GSAvailabilityNoOffer}{91.74}
++\newcommand{\GSAvailabilityOffer}{95.11}
++\newcommand{\GSLOOMin}{0.119}
++\newcommand{\GSLOOMax}{0.123}
++\newcommand{\GSUnshrunkEffect}{0.122}
++\newcommand{\GSSupportEffect}{0.120}
+diff --git a/Initial submission/tables/lottery_admission_scores.tex b/Initial submission/tables/lottery_admission_scores.tex
+new file mode 100644
+index 0000000..5f8a88d
+--- /dev/null
++++ b/Initial submission/tables/lottery_admission_scores.tex	
+@@ -0,0 +1,40 @@
++% Generated by code/finalized_design_v1/section6/merge_admission_tables.py.
++\begin{tabular}{lcccccc}
++\toprule
++ & \multicolumn{3}{c}{On time} & \multicolumn{3}{c}{Ever}\\
++\cmidrule(lr){2-4}\cmidrule(lr){5-7}
++ & No offer & 2SLS & $N$ & No offer & 2SLS & $N$\\
++ & mean &  &  & mean &  & \\
++ & (1) & (2) & (3) & (4) & (5) & (6)\\
++\midrule
++\multicolumn{7}{l}{\textit{Panel A. Individual admission scores (SD)}}\\
++Math-Verbal & -0.317 & 0.032$^{***}$ & 108,292 & -0.272 & 0.033$^{***}$ & 117,718\\
++ &  & (0.009) &  &  & (0.009) & \\
++NEM & -0.144 & -0.163$^{***}$ & 149,595 & -0.199 & -0.164$^{***}$ & 161,310\\
++ &  & (0.008) &  &  & (0.008) & \\
++Ranking & -0.115 & -0.208$^{***}$ & 149,595 & -0.170 & -0.206$^{***}$ & 161,310\\
++ &  & (0.009) &  &  & (0.008) & \\
++\midrule
++\multicolumn{7}{l}{\textit{Panel B. Application score at the listed programs (SD)}}\\
++\quad Application score & -0.123 & -0.113$^{***}$ & 67,132 & -0.175 & -0.111$^{***}$ & 79,522\\
++ &  & (0.012) &  &  & (0.011) & \\
++\quad\quad NEM part & 0.045 & -0.037$^{***}$ & 67,132 & 0.029 & -0.036$^{***}$ & 79,522\\
++ &  & (0.005) &  &  & (0.004) & \\
++\quad\quad Ranking part & 0.221 & -0.122$^{***}$ & 67,132 & 0.187 & -0.118$^{***}$ & 79,522\\
++ &  & (0.009) &  &  & (0.008) & \\
++\quad\quad Exams part & -0.389 & 0.046$^{***}$ & 67,132 & -0.390 & 0.043$^{***}$ & 79,522\\
++ &  & (0.009) &  &  & (0.009) & \\
++\quad\quad\quad Reading & -0.074 & 0.029$^{***}$ & 67,132 & -0.061 & 0.025$^{***}$ & 79,522\\
++ &  & (0.006) &  &  & (0.006) & \\
++\quad\quad\quad Mathematics & -0.174 & 0.005 & 67,132 & -0.187 & 0.007 & 79,522\\
++ &  & (0.008) &  &  & (0.007) & \\
++\quad\quad\quad History or science & -0.141 & 0.012$^{***}$ & 67,132 & -0.142 & 0.011$^{***}$ & 79,522\\
++ &  & (0.004) &  &  & (0.003) & \\
++% \midrule
++% \multicolumn{7}{l}{\textit{Panel C. Cutoff attainment at listed programs}}\\
++% \quad Listed cutoffs missed (\%) & 55.75 & 2.56$^{***}$ & 67,132 & 56.18 & 2.16$^{***}$ & 79,522\\
++%  &  & (0.56) &  &  & (0.51) & \\
++% \quad Reached a listed cutoff (\%) & 76.09 & -2.64$^{***}$ & 67,132 & 76.03 & -2.04$^{***}$ & 79,522\\
++%  &  & (0.69) &  &  & (0.64) & \\
++\bottomrule
++\end{tabular}
+diff --git a/Initial submission/tables/lottery_admission_tracks.tex b/Initial submission/tables/lottery_admission_tracks.tex
+new file mode 100644
+index 0000000..1900831
+--- /dev/null
++++ b/Initial submission/tables/lottery_admission_tracks.tex	
+@@ -0,0 +1,25 @@
++% Generated by code/finalized_design_v1/section6/export_admission_tracks.R.
++\begin{tabular}{lcccc}
++\toprule
++ & \multicolumn{2}{c}{On time} & \multicolumn{2}{c}{Ever}\\
++\cmidrule(lr){2-3}\cmidrule(lr){4-5}
++ & No offer & 2SLS & No offer & 2SLS\\
++ & mean &  & mean & \\
++ & (1) & (2) & (3) & (4)\\
++\midrule
++Total: assigned a college seat & 30.10 & -2.23$^{***}$ & 38.35 & -1.04$^{**}$\\
++ &  & (0.41) &  & (0.44)\\
++\midrule
++\multicolumn{5}{l}{\textit{Admission tracks}}\\
++Regular & 28.10 & -1.01$^{**}$ & 36.18 & 0.20\\
++ &  & (0.41) &  & (0.44)\\
++BEA & 0.54 & -0.30$^{***}$ & 0.55 & -0.30$^{***}$\\
++ &  & (0.07) &  & (0.07)\\
++PACE & 1.22 & -0.99$^{***}$ & 1.31 & -1.03$^{***}$\\
++ &  & (0.09) &  & (0.09)\\
++Gender quota & 0.24 & 0.08 & 0.32 & 0.09\\
++ &  & (0.05) &  & (0.06)\\
++\midrule
++$N$ & 112,796 & 175,869 & 112,796 & 175,869\\
++\bottomrule
++\end{tabular}
+diff --git a/Initial submission/tables/lottery_application_choices.tex b/Initial submission/tables/lottery_application_choices.tex
+new file mode 100644
+index 0000000..ab92079
+--- /dev/null
++++ b/Initial submission/tables/lottery_application_choices.tex	
+@@ -0,0 +1,21 @@
++% Generated by code/finalized_design_v1/section6/merge_admission_tables.py.
++\begin{tabular}{lcccc}
++\toprule
++ & \multicolumn{2}{c}{On time} & \multicolumn{2}{c}{Ever}\\
++\cmidrule(lr){2-3}\cmidrule(lr){4-5}
++ & No offer & 2SLS & No offer & 2SLS\\
++ & mean &  & mean & \\
++ & (1) & (2) & (3) & (4)\\
++\midrule
++\quad Programs listed & 7.54 & -0.08 & 7.56 & -0.05\\
++ &  & (0.08) &  & (0.08)\\
++\quad Mean cutoff percentile of the listed programs & 65.58 & -0.05 & 64.91 & -0.26\\
++ &  & (0.30) &  & (0.28)\\
++\quad Highest cutoff percentile among the listed programs & 86.34 & -0.03 & 85.93 & -0.09\\
++ &  & (0.26) &  & (0.25)\\
++\quad Weight on NEM and Ranking (\%) & 43.33 & -0.12 & 43.27 & -0.11\\
++ &  & (0.10) &  & (0.10)\\
++\midrule
++$N$ & 43,815 & 67,132 & 51,607 & 79,522\\
++\bottomrule
++\end{tabular}
+diff --git a/Initial submission/tables/lottery_graduation_part1.tex b/Initial submission/tables/lottery_graduation_part1.tex
+new file mode 100644
+index 0000000..121698e
+--- /dev/null
++++ b/Initial submission/tables/lottery_graduation_part1.tex	
+@@ -0,0 +1,30 @@
++\begin{tabular}{lcccc}
++\toprule
++ & \multicolumn{2}{c}{On time} & \multicolumn{2}{c}{Ever}\\
++\cmidrule(lr){2-3}\cmidrule(lr){4-5}
++ & No offer & 2SLS & No offer & 2SLS\\
++ & mean &  & mean & \\
++ & (1) & (2) & (3) & (4)\\
++\midrule
++Graduated from high school & 85.67 & -2.72$^{***}$ & 91.84 & -0.86$^{***}$\\
++ &  & (0.34) &  & (0.26)\\
++\midrule
++\multicolumn{5}{l}{\textit{Panel A: Causes of Lower Graduation}}\\
++Failed a year & 9.25 & 3.24$^{***}$ & 4.44 & 1.02$^{***}$\\
++ &  & (0.29) &  & (0.21)\\
++Withdrew & 7.44 & -0.07 & 6.58 & 0.40$^{*}$\\
++ &  & (0.25) &  & (0.24)\\
++Other & 0.39 & 0.00 & 0.10 & 0.02\\
++ &  & (0.06) &  & (0.03)\\
++\midrule
++\multicolumn{5}{l}{\textit{Panel B: Causes of Failing}}\\
++Grades & 7.28 & 3.14$^{***}$ & 3.50 & 1.00$^{***}$\\
++ &  & (0.27) &  & (0.19)\\
++Attendance alone & 0.10 & 0.01 & 0.06 & -0.01\\
++ &  & (0.03) &  & (0.02)\\
++Attendance, grades unknown & 2.60 & 0.53$^{***}$ & 1.46 & 0.30$^{**}$\\
++ &  & (0.16) &  & (0.12)\\
++\midrule
++$N$ & 112,796 & 175,869 & 112,796 & 175,869\\
++\bottomrule
++\end{tabular}
+diff --git a/Initial submission/tables/lottery_graduation_part2.tex b/Initial submission/tables/lottery_graduation_part2.tex
+new file mode 100644
+index 0000000..e77424b
+--- /dev/null
++++ b/Initial submission/tables/lottery_graduation_part2.tex	
+@@ -0,0 +1,40 @@
++\begin{tabular}{lcccc}
++\toprule
++ & No offer & 2SLS &  & \\
++ & mean &  &  & \\
++ & (1) & (2) &  & \\
++\midrule
++\multicolumn{5}{l}{\textit{Panel C: Characteristics of the School They Attend}}\\
++ & \multicolumn{2}{c}{9th grade} &  & \\
++\cmidrule(lr){2-3}
++Class size (students) & 39.08 & 3.76$^{***}$ &  & \\
++ &  & (0.09) &  & \\
++Students per teacher at the school & 22.79 & 3.88$^{***}$ &  & \\
++ &  & (0.06) &  & \\
++Distance to school (km) & 8.13 & -0.35 &  & \\
++ &  & (0.22) &  & \\
++% BEGIN GENERATED GRADE STRINGENCY OUTCOME
++Grade stringency (GPA points) & 0.003 & 0.120$^{***}$ &  & \\
++ &  & (0.002) &  & \\
++% END GENERATED GRADE STRINGENCY OUTCOME
++\midrule
++$N$ & 109,433 & 171,223 &  & \\
++% BEGIN GENERATED GRADE STRINGENCY SAMPLE SIZE
++$N$ (grade stringency) & 103,483 & 163,470 &  & \\
++% END GENERATED GRADE STRINGENCY SAMPLE SIZE
++\midrule
++\multicolumn{5}{l}{\textit{Panel D: Performance in the 9th grade}}\\
++ & \multicolumn{2}{c}{9th grade} &  & \\
++\cmidrule(lr){2-3}
++Failed 9th grade (\%) & 4.36 & 2.98$^{***}$ &  & \\
++ &  & (0.22) &  & \\
++Percentile at the end of 9th grade & 53.33 & -11.61$^{***}$ &  & \\
++ &  & (0.24) &  & \\
++Change in percentile during 9th grade & -1.76 & -4.86$^{***}$ &  & \\
++ &  & (0.24) &  & \\
++Ended 9th grade in the bottom fifth of the class (\%) & 16.83 & 11.93$^{***}$ &  & \\
++ &  & (0.38) &  & \\
++\midrule
++$N$ & 104,696 & 164,196 &  & \\
++\bottomrule
++\end{tabular}
+diff --git a/Initial submission/tables/pace_bea_access.tex b/Initial submission/tables/pace_bea_access.tex
+index a7cd497..c2ecbd1 100644
+--- a/Initial submission/tables/pace_bea_access.tex	
++++ b/Initial submission/tables/pace_bea_access.tex	
+@@ -7,10 +7,10 @@
+  & (1) & (2) & (3) & (4)\\
+ \midrule
+ \multicolumn{5}{l}{\textit{Panel A. PACE}}\\
+-\quad Graduated from a PACE school & 26.30 & -14.63$^{***}$ & 28.03 & -14.55$^{***}$\\
+- &  & (0.38) &  & (0.40)\\
+ \quad Met PACE's grade rule at her school & 25.50 & -9.00$^{***}$ & 26.11 & -9.03$^{***}$\\
+  &  & (0.36) &  & (0.37)\\
++\quad Graduated from a PACE school & 26.30 & -14.63$^{***}$ & 28.03 & -14.55$^{***}$\\
++ &  & (0.38) &  & (0.40)\\
+ \quad Met both & 8.16 & -5.83$^{***}$ & 8.31 & -5.81$^{***}$\\
+  &  & (0.22) &  & (0.23)\\
+ \midrule
+diff --git a/Initial submission/tables/results/lottery_admission_scores.tex b/Initial submission/tables/results/lottery_admission_scores.tex
+new file mode 100644
+index 0000000..0259fdc
+--- /dev/null
++++ b/Initial submission/tables/results/lottery_admission_scores.tex	
+@@ -0,0 +1,13 @@
++% Generated by code/finalized_design_v1/section6/merge_admission_tables.py.
++\begin{table}[htp!]
++\singlespacing\renewcommand{\arraystretch}{1.0}
++\centering
++\caption{{Effect of Attending an Over-Demanded School on Admission Scores and Cutoff Attainment}}\label{tab: lottery scores}
++\small
++\setlength{\tabcolsep}{6pt}
++\input{tables/lottery_admission_scores.tex}
++\par\smallskip
++\begin{minipage}{\textwidth}\footnotesize
++{Notes: 2SLS estimates as in Table~\ref{tab: lottery college}; means among students without an offer. Panel A uses students with both compulsory exam scores for Math-Verbal, and graduates with both NEM and Ranking for those rows. NEM and Ranking are official for 137,487 of the 161,310 students ever, and computed from school records for the rest. Panels B uses the applicants and first lists in Table~\ref{tab: lottery application choices}; Panel B averages scores and components over listed programs. Panel A is in SD of each score; Panel B is in SD of published application scores. Parts share the total's centering and scale and add to it before rounding. Panels B includes 43,815 students without an offer on time, 51,607 ever. Heteroskedasticity-robust standard errors in parentheses. $^{***}p<0.01$, $^{**}p<0.05$, $^{*}p<0.1$.}
++\end{minipage}
++\end{table}
+diff --git a/Initial submission/tables/results/lottery_admission_tracks.tex b/Initial submission/tables/results/lottery_admission_tracks.tex
+new file mode 100644
+index 0000000..2a15f86
+--- /dev/null
++++ b/Initial submission/tables/results/lottery_admission_tracks.tex	
+@@ -0,0 +1,12 @@
++% Generated by code/finalized_design_v1/section6/export_admission_tracks.R.
++\begin{table}[htp!]
++\singlespacing\renewcommand{\arraystretch}{1.2}
++\centering
++\caption{{Effect of Attending an Over-Demanded School on College Assignment by Admission Track}}\label{tab: lottery admission tracks}
++\small
++\input{tables/lottery_admission_tracks.tex}
++\par\smallskip
++\begin{minipage}{\textwidth}\footnotesize
++{Notes: 2SLS estimates of the effect of attending an over-demanded school, with the sample and specification of Table~\ref{tab: lottery college}; means among students without an offer, in \%; effects in percentage points. The total records assignment through any track. Each assigned student counts once, under the track of her first recorded assignment within the horizon. The four track indicators partition total assignment, so their means and 2SLS effects add to the total before rounding. On time and ever are defined in Section~\ref{sec:lottery-data}. The gender quota starts with the 2024 admission process. Heteroskedasticity-robust standard errors in parentheses. $^{***}p<0.01$, $^{**}p<0.05$, $^{*}p<0.1$.}
++\end{minipage}
++\end{table}
+diff --git a/Initial submission/tables/results/lottery_application_choices.tex b/Initial submission/tables/results/lottery_application_choices.tex
+new file mode 100644
+index 0000000..3db4f29
+--- /dev/null
++++ b/Initial submission/tables/results/lottery_application_choices.tex	
+@@ -0,0 +1,13 @@
++% Generated by code/finalized_design_v1/section6/merge_admission_tables.py.
++\begin{table}[htp!]
++\singlespacing\renewcommand{\arraystretch}{1.2}
++\centering
++\caption{{Effect of Attending an Over-Demanded School on Application Choices}}\label{tab: lottery application choices}
++\small
++\setlength{\tabcolsep}{6pt}
++\input{tables/lottery_application_choices.tex}
++\par\smallskip
++\begin{minipage}{\textwidth}\footnotesize
++{Notes: 2SLS estimates with the specification of Table~\ref{tab: lottery college}; means among students without an offer. Effects are in program counts, cutoff percentiles, or percentage points as indicated. A cutoff percentile ranks the program's cutoff among the process's programs. On time and ever are defined in Section~\ref{sec:lottery-data}. Heteroskedasticity-robust standard errors in parentheses. $^{***}p<0.01$, $^{**}p<0.05$, $^{*}p<0.1$.}
++\end{minipage}
++\end{table}

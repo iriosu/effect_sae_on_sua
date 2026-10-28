@@ -6,7 +6,11 @@ This repository contains the code and documents for a research project studying 
 
 ## Revision checklist
 
+The [October 28 mechanisms handoff](Reviews/handoff_mechanisms_2026-10-28.md) documents the current submission manuscript's Tables V–IX and Appendix D, new stringency and admission-track analyses, table-generation code, and outstanding integration work. It includes a frozen manuscript reference so collaborators can reconcile their newer code without reverting today's table changes. Use branch `finalized-design-v1` for this delivery; the Overleaf repository syncs separately.
+
 The [adversarial-report action checklist](Reviews/adversarial_report_action_checklist_2026-10-17.md) tracks findings F01–F32, completed work, remaining analyses, evidence, and instructions for coauthors. It distinguishes the current manuscript project from the older draft in this repository.
+
+The [grade-stringency handoff](Reviews/handoff_grade_stringency_2026-10-28.md) documents the analysis added to Table V, Panel C of the submission manuscript, with reproduction commands, a reference run, and instructions for incorporation into the final code.
 
 ## Repository Structure
 

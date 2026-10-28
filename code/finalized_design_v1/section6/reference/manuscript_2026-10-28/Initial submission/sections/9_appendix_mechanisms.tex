@@ -1,0 +1,77 @@
+% !TeX root =../main.tex
+\section{Appendix to Section~\ref{sec:mechanisms}: Mechanisms}\label{app:mechanisms}
+\setcounter{table}{0}
+\setcounter{equation}{0}
+
+\subsection[Promotion Rules]{\marar{Promotion Rules}}\label{app:promotion-rules}
+
+\marar{Table~\ref{tab: promotion rules} gives the rules that decide whether a secondary-school student is promoted or fails the year.}
+
+\begin{table}[!htbp]
+\singlespacing\renewcommand{\arraystretch}{1.2}
+\centering
+\caption{\marar{Promotion Rules in Secondary Education, School Years 2017--2025}}\label{tab: promotion rules}
+\small
+\input{tables/appendix_promotion_rules.tex}
+\par\smallskip
+\begin{minipage}{\textwidth}\footnotesize
+\marar{Notes: Subjects are graded from 1.0 to 7.0 and pass at 4.0; the averages include the subjects below 4.0. $^{a}$5.5 when Spanish or mathematics is one of the two. $^{b}$5.0 when the subject is Spanish or mathematics. $^{c}$A student with up to two subjects below 4.0 takes a special evaluation, whose grade replaces the failed one. The school may promote a student below the attendance minimum and, from 2020, decides each case of a student who falls short; in 2020, the Ministry's criteria required no attendance percentage. Sources: Decrees 112 of 1999, 83 of 2001, 67 of 2018, and 2169 of 2007 \citep{promotionDecree112,promotionDecree83,promotionDecree67,promotionDecree2169}, and the Ministry's criteria for 2020 \citep{promotionCriteria2020}.}
+\end{minipage}
+\end{table}
+
+\subsection[Failing a Year in Each of the First Four School Years]{\marar{Failing a Year in Each of the First Four School Years}}\label{app:failing-by-year}
+
+\marar{Attending an over-demanded school raises the share of students who fail a year in their first four school years by 3.93 percentage points, and 2.84 of these points come from the first year (Table~\ref{tab: failing by year}).}
+
+\begin{table}[!htbp]
+\singlespacing\renewcommand{\arraystretch}{1.2}
+\centering
+\caption{\marar{Effect of Attending an Over-Demanded School on Failing a Year in Each of the First Four School Years}}\label{tab: failing by year}
+\small
+\input{tables/appendix_failing_by_year.tex}
+\par\smallskip
+\begin{minipage}{\textwidth}\footnotesize
+\marar{Notes: 2SLS estimates with the specification of Table~\ref{tab: lottery college}; means among students without an offer, in \%; effects in percentage points. Each row's outcome is 1 for a student, graduate or not, who failed that school year in regular or adult secondary education; year 1 is the entry year. Heteroskedasticity-robust standard errors in parentheses. $^{***}p<0.01$, $^{**}p<0.05$, $^{*}p<0.1$.}
+\end{minipage}
+\end{table}
+
+\clearpage
+\subsection[Grade Stringency]{\marar{Grade Stringency}}\label{app:grade-stringency}
+
+\marar{We measure grade stringency using tenth-grade students in 2014--2016, before SAE determined secondary-school entry. We match SIMCE mathematics and reading scores to annual GPA by student, year, and school, retaining unique records with both scores, observed sex, and a GPA between 1.0 and 7.0. We retain both passing and failing students. Schools must be publicly funded, never recorded as fee-paying private in 2012--2025 in the performance records or school directory, and have at least 20 matched students across at least two cohorts. The calibration sample contains \GSCalibrationN{} students at \GSSchoolN{} schools, including \GSFailureN{} students who fail the year. None belongs to the lottery sample.}
+
+\marar{For student $i$ at school $s$ in year $t$, we estimate
+\begin{equation*}
+GPA_{ist}=\alpha_t+f_t(M_{it},R_{it})+\gamma Female_i+\theta_s+\varepsilon_{ist},
+\end{equation*}
+where $M_{it}$ and $R_{it}$ are mathematics and reading scores standardized within the calibration year. The function $f_t$ contains separate natural cubic splines with four degrees of freedom in mathematics and reading, plus the product $M_{it}R_{it}$, with separate coefficients by year. The school fixed effect $\theta_s$ measures differences in GPA conditional on these achievement measures and sex.}
+
+\marar{We center the estimated school effects with equal school weights and shrink imprecise estimates toward zero. Let $a_s=\widehat{\theta}_s-J^{-1}\sum_r\widehat{\theta}_r$, where $J$ is the number of calibration schools, and let $v_s$ be its heteroskedasticity-robust sampling variance, including uncertainty in the common coefficients. We use the empirical Bayes rule
+\begin{equation*}
+\begin{aligned}
+\widehat{\tau}^{\,2}
+&=\max\left\{\frac{\sum_s a_s^2-\sum_s v_s}{J-1},0\right\},
+& \lambda_s&=\frac{\widehat{\tau}^{\,2}}{\widehat{\tau}^{\,2}+v_s},\\
+S_s&=-\left(\lambda_s a_s-\frac{1}{J}\sum_r\lambda_r a_r\right).
+\end{aligned}
+\end{equation*}
+Higher $S_s$ indicates lower grades at comparable measured achievement. The index remains in GPA points and averages zero across calibration schools.}
+
+\marar{We attach $S_s$ to the school attended in April of the lottery student's entry year and apply the attendance specification of Table~\ref{tab: lottery college}. The index is observed for \GSObservedN{} of the \GSLotteryN{} students with complete baseline controls. An offer raises its availability by \GSAvailabilityEffect{} percentage points (standard error \GSAvailabilitySE{}), so the comparison restricted to students with an observed index need not retain the full sample's randomized comparison. The reported standard errors treat the historical index as fixed and do not propagate uncertainty from its estimation or shrinkage. Leaving out each historical cohort in turn gives stringency estimates from \GSLOOMin{} to \GSLOOMax{} GPA points on the same lottery sample; the estimate without shrinkage is \GSUnshrunkEffect{}.}
+
+\marar{Stringency is a proxy. GPA covers all subjects, whereas SIMCE measures mathematics and reading, and the calibration describes students who reached tenth grade and took both tests. Differences in curriculum, effort, and the selected pre-SAE student populations may remain. Applying the index to ninth-grade outcomes also assumes persistence in schools' relative grading practices across grades and cohorts. The estimates describe exposure to historical grading environments and do not identify the share of the ninth-grade effects attributable to grading standards.}
+
+\clearpage
+\subsection{PACE Eligibility Rules by Cohort}\label{app:pace-rules}
+
+The academic requirement changes across admission processes. Table~\ref{tab: pace annual rules} distinguishes the rule for each newly graduating cohort from the validity of eligibility in a subsequent process. The thresholds concern the official Ranking score; they cannot be applied directly to standardized scores or to ranks computed only within the lottery sample.
+
+\input{tables/appendix_pace_rules.tex}
+
+
+\clearpage
+\subsection[The Conditions for PACE and BEA Seats]{\marar{The Conditions for PACE and BEA Seats}}\label{app:pace-construction}
+
+\marar{We link each student of the lottery sample who graduates within the horizon to MINEDUC's records of 2020--2025 graduates, regular and adult (students who complete secondary school in adult education). A regular graduate meets PACE's school condition when her grade-11 and grade-12 schools are on MINEDUC's annual lists of PACE schools (2019--2025) and she graduates from one; an adult graduate meets it when the schools where she passed the levels covering grades 11 and 12 are on the lists. Her Ranking score, on the official scale, is the one used in Table~\ref{tab: lottery scores} (the official score, or its reconstruction from school records); when that is missing, the score DEMRE recorded in the admission process right after she graduated; when both are missing, a score rebuilt from MINEDUC's official grade averages with DEMRE's formula. PACE's grade rule sets the number of places at the cohort's top share of the graduates of her school and year, rounded up, and ranks her among the classmates whose Ranking score DEMRE recorded, with tied students taking the best rank; an adult graduate is ranked against every classmate of her school's adult graduating class. For meeting both PACE conditions, the places and the rank come from the classmates who meet the school condition, as MINEDUC's resolutions set it from the 2022 admission process on.\footnote{\marar{Resolution 3395 of 2021 and Resolution 2625 of 2022, article 1 and footnote 1 of each, for the 2022 and 2023 processes; Resolution 3625 of 2023 for 2024 \citep{paceRules2024}; Resolution 5543 of 2024 and Resolution 7447 of 2025, article 1 and footnote 1 of each, for 2025 and 2026. The rules for the 2021 process do not set this group.}} BEA's grade rule is MINEDUC's own record of the top 10\% of each school's graduates by grade average, published in its files of graduates' grade averages and percentiles.}
+
+\marar{We check the resulting classification against the administrative records. Of the 14,018 graduates of 2025 with a MINEDUC decision on PACE's school condition and grade rule for the 2026 admission process, our records settle whether 13,728 meet both conditions, and they agree with the decision for 13,642 of them. In the lottery sample, 1,889 of the 1,907 students who obtain a PACE seat meet both conditions, and 857 of the 860 who obtain a BEA seat meet BEA's grade rule.}
