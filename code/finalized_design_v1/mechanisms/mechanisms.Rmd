@@ -1344,9 +1344,9 @@ claims <- text_claims(
     falls(rows_of(est7, ot_ever("LIST_SCORE"))),
   "the mechanisms section's text on Table VIII, Panel B: the Ranking and NEM parts fall and the exams part rises, all statistically significant at both horizons" =
     falls(rows_of(est7, c(ot_ever("LIST_SCORE_RANKING"), ot_ever("LIST_SCORE_NEM")))) && rises(rows_of(est7, ot_ever("LIST_SCORE_EXAMS"))),
-  "the mechanisms section's text on Table VIII, Panel B: the losses from the grade-based parts are more than three times the gain from the exams, on time and ever" =
+  "the mechanisms section's text on Table VIII, Panel B: the losses from the grade-based parts are more than four times the gain from the exams, on time and ever" =
     all(map_lgl(c("_OT", "_EVER"), function(h)
-      abs(est_of(est7, paste0("LIST_SCORE_NEM", h))) + abs(est_of(est7, paste0("LIST_SCORE_RANKING", h))) > 3 * est_of(est7, paste0("LIST_SCORE_EXAMS", h)))),
+      abs(est_of(est7, paste0("LIST_SCORE_NEM", h))) + abs(est_of(est7, paste0("LIST_SCORE_RANKING", h))) > 4 * est_of(est7, paste0("LIST_SCORE_EXAMS", h)))),
   "the mechanisms section's text on Table VIII, Panel B: the exams gain comes from higher reading and history or science parts, with no statistically significant effect on mathematics, at both horizons" =
     rises(rows_of(est7, c(ot_ever("LIST_SCORE_READING"), ot_ever("LIST_SCORE_HIST_SCIENCE")))) && null(rows_of(est7, ot_ever("LIST_SCORE_MATH"))),
   "the mechanisms section's, the abstract's, the Introduction's and the conclusion's text on Table IX: attending lowers the shares meeting PACE's and BEA's grade rules, statistically significant at both horizons" =
