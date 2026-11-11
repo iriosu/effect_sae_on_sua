@@ -1,0 +1,19 @@
+run_time_utc: 2026-11-11 22:02:37 UTC
+git_head: 251e9ef20ebdd1836737df8651100d1730b2aba3
+r_version: R version 4.5.2 (2025-10-31)
+fixest: 0.14.2
+seed: 20261111; bootstrap draws: 300
+panel_md5: 8d1b6996f18f2d678b543c4428567709
+survey_sha256: 594ef6c268a43bdcad359c02b4d3fd1db78a831493ab8179166ac53cbce8cd44
+registration_sha256: 64adf9a1bd76624253b8939578e0764ac34eb8a69fe99500e69d3edef5161d8d
+regular_sha256: c6a366030f1ff74ba618eb3505b3f3da515f089244a783836c322c0be8ef7415
+bea_sha256: 68b4972bac351a3de5f252ba0986684e0f142ca81b16db38bbf0f46362e261ea
+pace_sha256: 8a823eeed511a4669cbccaef17a3ad9066c9220b64dc156b457cce455372d958
+jan4_sha256: 2e3bac473e5e9edf149c44caf9669b8ed6e3907199c093152bbeff5e13030630
+final_sha256: f9b4a6ab462e28c9ea5d788e8db0ef2746f6cb3a6dfeec2ffc260d43a2e65f31
+names_codes_md5: 59a44d7107b1341b64d89d115ff5e1c3
+estimators_md5: 51474bc7ef7c11c2c7719a51cb5489e3
+specification_log_md5: 0f561f0ba619fe6e0b452787860f1554
+cohort_2018_children: 34052 ; started: 3680 ; in the public file: 13526
+rows: survey-linked 16 ; whole cohort 9 ; not estimated for small cells: 0
+output_md5: 930bc5e52d8735af57d231b439a2d502

@@ -1,0 +1,9 @@
+run_time_utc: 2026-11-11 18:58:20 UTC
+git_head: 251e9ef20ebdd1836737df8651100d1730b2aba3
+git_branch: survey-lottery-2023
+r_version: R version 4.5.2 (2025-10-31)
+input_md5 f02_lottery_support_audit.csv: 7f6b2911a87604fe5faba38c68ace03b
+input_md5 offer_and_attendance_effects.csv: f67f6e4f2c3a162a4d65f94dac6453fa
+student_level_files_read: none
+output: code/survey_lottery_2023/output/power_from_committed_aggregates.md
+output_md5: bcf5d0e877d505cd9c8935f15c61dd68

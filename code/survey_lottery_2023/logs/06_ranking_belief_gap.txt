@@ -1,0 +1,13 @@
+run_time_utc: 2026-11-11 21:32:24 UTC
+git_head: 251e9ef20ebdd1836737df8651100d1730b2aba3
+r_version: R version 4.5.2 (2025-10-31)
+fixest: 0.14.2
+seed: 20261111; bootstrap draws: 300
+panel_md5: 8d1b6996f18f2d678b543c4428567709
+survey_sha256: 594ef6c268a43bdcad359c02b4d3fd1db78a831493ab8179166ac53cbce8cd44
+registration_sha256: 64adf9a1bd76624253b8939578e0764ac34eb8a69fe99500e69d3edef5161d8d
+estimators_md5: 51474bc7ef7c11c2c7719a51cb5489e3
+specification_log_md5: 0f561f0ba619fe6e0b452787860f1554
+cohort_2018_children: 34052 ; with a Ranking score: 23153 ; answered and have a Ranking score: 3074
+rows: children who answered 15 ; without the survey 6
+output_md5: b04e441d3e80ce584d37a477b204bc97

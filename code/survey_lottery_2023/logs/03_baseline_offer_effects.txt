@@ -1,0 +1,15 @@
+run_time_utc: 2026-11-11 21:25:41 UTC
+git_head: 251e9ef20ebdd1836737df8651100d1730b2aba3
+r_version: R version 4.5.2 (2025-10-31)
+fixest: 0.14.2
+seed: 20261111; bootstrap draws: 300
+panel_md5: 8d1b6996f18f2d678b543c4428567709
+survey_sha256: 594ef6c268a43bdcad359c02b4d3fd1db78a831493ab8179166ac53cbce8cd44
+registration_sha256: 64adf9a1bd76624253b8939578e0764ac34eb8a69fe99500e69d3edef5161d8d
+cutoffs_md5: 6d65dee92e2bfa53d81161208dd1b67a
+names_codes_md5: 59a44d7107b1341b64d89d115ff5e1c3
+carreras_md5: ae193256cec25b5bf52c3eac7f653997
+specification_log_md5: 1fcaf6b0b71fce397fab27f1b87376a9
+cohort_2018_children: 34052 ; started: 3680
+outcomes: 50 ; rows not estimated (2018): 0
+output_md5: e3e14ea4f6b7df70b8ad7275911533d3

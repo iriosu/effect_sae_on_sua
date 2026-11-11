@@ -1,0 +1,17 @@
+run_time_utc: 2026-11-11 19:22:36 UTC
+git_head: 251e9ef20ebdd1836737df8651100d1730b2aba3
+git_branch: survey-lottery-2023
+r_version: R version 4.5.2 (2025-10-31)
+fixest: 0.14.2
+dplyr: 1.1.4
+source: ~/Dropbox/Effect SAE on SUA/data/finalized_design_v1/mechanisms/mechanisms_panel.rds
+source_bytes: 21527646
+source_md5: 8d1b6996f18f2d678b543c4428567709 (matches code/finalized_design_v1/mechanisms/data_manifest.csv)
+rows_read: 186440
+rows_with_every_control: 185970
+specification_log_md5: b64c1451d555f2a111095885a553ca4a
+outcome_inventory_md5: 075d5d46c7293eec414434d1fee6e6a7
+check_pooled_first_stage: 0.6104 (the paper reports 0.6104)
+smallest_printed_count: 72
+output: code/survey_lottery_2023/output/lottery_cohort_aggregates.md
+output_md5: 720ec5187d4441be11392ed425e61383
