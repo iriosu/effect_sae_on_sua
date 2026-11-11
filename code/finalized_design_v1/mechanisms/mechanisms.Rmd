@@ -1,151 +1,112 @@
 ---
 title: "Mechanisms: why attending an over-demanded school lowers graduation and college assignment"
+output: html_document
 params:
-  data_dir: !r file.path(ifelse(Sys.getenv("USERPROFILE") != "", Sys.getenv("USERPROFILE"), path.expand("~")), "Dropbox", "Effect SAE on SUA", "data", "finalized_design_v1", "mechanisms")
+  data_dir: !r file.path(Sys.getenv("USERPROFILE", "~"), "Dropbox", "Effect SAE on SUA", "data",
+    "finalized_design_v1", "mechanisms")
   out_dir: "output"
 ---
 
-This notebook writes every table file of the paper's mechanisms section and of its appendix into `out_dir/tables/`, in the layout of the
-paper's `tables/` folder, and the estimates behind them, with the other numbers the text quotes (apart from the appendix's three counts of
-2025 graduates, which stay outside this package; the README gives their source), at full precision into
-`out_dir/numbers/mechanisms_estimates.csv`:
+Tables of the mechanisms section ("Mechanisms") and of its appendix, and the numbers their text quotes. The
+children and the 2SLS are those of the outcomes section's Table IV: the children who applied to ninth grade through
+SAE in 2016-2021 with the same chance of an offer at an over-demanded school, some offered and some not, with
+attendance at an over-demanded school instrumented by the offer, chance-group and application-year fixed effects,
+the five characteristics as controls, and heteroskedasticity-robust standard errors. The notebook reads the data
+folder (`data_dir`) and writes `tables/` in the output folder (`out_dir`).
 
-* Table V in two files, `lottery_graduation_part1.tex` and `lottery_graduation_part2.tex` (Panel C carries the grade-stringency row), and
-  `grade_stringency_facts.tex`, the text's numbers on grade stringency;
-* Table VI, the college seat by admission track: `results/lottery_admission_tracks.tex` and its body `lottery_admission_tracks.tex`;
-* Table VII, the application choices: `results/lottery_application_choices.tex` and `lottery_application_choices.tex`;
-* Table VIII, the admission scores: `results/lottery_admission_scores.tex` and `lottery_admission_scores.tex`;
-* Table IX, PACE and BEA: `pace_bea_access.tex`;
-* Appendix Tables D.1 (`appendix_promotion_rules.tex`), D.2 (`appendix_failing_by_year.tex`) and D.3 (`appendix_pace_rules.tex`);
-* `mechanisms_text_macros.tex`, the numbers the section's text and its appendix's text quote, as the LaTeX macros the paper prints
-  (`out_dir/numbers/mechanisms_text_numbers.csv` lists them, one row per number; the text's Table IV numbers are the outcomes notebook's
-  macros, its grade-stringency numbers those of `grade_stringency_facts.tex`, and the appendix's three counts of 2025 graduates stay typed);
-  and `out_dir/numbers/mechanisms_text_claims.csv`, each statement the paper's text makes about these results, with whether it holds.
+```{r setup, error = FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(error = FALSE, warning = FALSE, message = FALSE)
 
-It reads the three data files of its data folder (parameter `data_dir`; by default the shared data folder), each checked against
-`data_manifest.csv` beside the notebook; a relative `data_dir` or `out_dir` is taken from the notebook's folder. It needs fixest 0.14.2 or
-later. Run it with `rmarkdown::render("mechanisms.Rmd", params = list(data_dir = "<the data folder>"))`; the README gives the other ways.
-
-```{r setup, error = FALSE}
 library(dplyr)
 library(tidyr)
 library(purrr)
 library(fixest)
 library(data.table)
-knitr::opts_chunk$set(error = FALSE)   # a failed check stops the knit
-KNIT_START <- Sys.time() - 2           # the chunk outputs checks that this knit wrote every output (two seconds for a file system's coarse clock)
-if (getRversion() != "4.5.1") message("R ", getRversion(), " is not 4.5.1, the version this notebook's numbers come from")
-# fixest 0.14.2 or later: with ssc(K.adj = FALSE) it gives the heteroskedasticity-robust 2SLS SEs the tables print; earlier versions can
-# differ (0.12.1 keeps a factor n/(n-1))
-if (packageVersion("fixest") < "0.14.2") stop("fixest 0.14.2 or later is required (this is ", packageVersion("fixest"), "): earlier versions compute a different robust SE")
-if (packageVersion("fixest") > "0.14.2") message("fixest ", packageVersion("fixest"), " is newer than 0.14.2, the version this notebook's numbers come from")
+stopifnot(packageVersion("fixest") >= "0.13.0")   # versions before 0.13.0 add a factor n/(n-1) to robust SEs
 
-if (!exists("params")) stop("params is missing: render the notebook with rmarkdown::render(), or knit it with a list params in its environment (README)")
-# the notebook's own folder: data_manifest.csv is read from it, and a relative data_dir or out_dir is taken from it, whatever the folder the
-# chunks run in (RStudio's Knit Directory); when the chunks are run one by one outside a knit, the working directory, which must hold the notebook
-knitting <- !is.null(knitr::current_input())
-nb_dir <- if (knitting) dirname(knitr::current_input(dir = TRUE)) else normalizePath(".", winslash = "/")
-if (!knitting && !file.exists(file.path(nb_dir, "mechanisms.Rmd"))) stop("the notebook's folder is not known: knit mechanisms.Rmd, or set the working directory to its folder")
-is_absolute <- function(p) grepl("^(~|/|\\\\|[A-Za-z]:[/\\\\])", p)   # a full path (a drive, a root, a network share or the home folder)
-stopifnot("is_absolute self-test" = identical(is_absolute(c("C:/a", "c:\\a", "/a", "\\\\server\\a", "~/a", "output", "./a", "a/b", "C:a")),
-                                              c(TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE, FALSE)))
-from_notebook <- function(p) if (is_absolute(p)) path.expand(p) else file.path(nb_dir, p)
-data_dir <- from_notebook(params$data_dir)   # the data folder
-out_dir <- from_notebook(params$out_dir)     # the output folder ("output" beside the notebook by default)
-# every input is required, each at the bytes and MD5 of data_manifest.csv beside this notebook; the data folder's own data_manifest.csv must
-# list the same files, bytes and MD5s
-manifest_file <- file.path(nb_dir, "data_manifest.csv")
-if (!file.exists(manifest_file)) stop("data_manifest.csv is missing: it sits beside mechanisms.Rmd and lists the data files with their MD5s")
-if (!dir.exists(data_dir)) stop("the data folder is missing: ", data_dir, "; set the parameter data_dir to the folder that holds the data files")
-read_manifest <- function(f) read.csv(f, colClasses = c(file = "character", bytes = "numeric", md5 = "character"))
-manifest <- read_manifest(manifest_file)
-inputs <- c("mechanisms_panel.rds", "mechanisms_schools.rds", "mechanisms_calibration.rds")
-if (!setequal(manifest$file, inputs) || anyDuplicated(manifest$file)) stop("data_manifest.csv must list the three data files, each once: ", paste(inputs, collapse = ", "))
-absent <- setdiff(c(inputs, "data_manifest.csv"), list.files(data_dir))
-if (length(absent)) stop("the data folder ", data_dir, " lacks ", paste(absent, collapse = ", "), "; set the parameter data_dir to the folder that holds them")
-if (!identical(read_manifest(file.path(data_dir, "data_manifest.csv")), manifest)) stop("the data folder's data_manifest.csv is not the one beside the notebook")
-on_disk <- data.frame(file = manifest$file, bytes = file.size(file.path(data_dir, manifest$file)), md5 = unname(tools::md5sum(file.path(data_dir, manifest$file))))
-differ <- on_disk$file[on_disk$bytes != manifest$bytes | on_disk$md5 != manifest$md5]
-if (length(differ)) stop("not the data files data_manifest.csv records (bytes or MD5): ", paste(differ, collapse = ", "))
-on_disk
-panel <- readRDS(file.path(data_dir, "mechanisms_panel.rds"))               # one row per child of the lottery sample
-schools <- readRDS(file.path(data_dir, "mechanisms_schools.rds"))           # one row per publicly funded school with a 12th grade and school year, 2019-2025
-calibration <- readRDS(file.path(data_dir, "mechanisms_calibration.rds"))   # one row per grade-stringency calibration candidate (tenth grade, 2014-2016)
-stopifnot("one row per child" = !anyDuplicated(panel$MRUN),
-          "the design's columns are complete" = !anyNA(panel[c("MRUN", "YEAR", "CHANCE_GROUP", "OFFER", "D_OD")]),
-          "the offer and attendance are 0/1" = all(panel$OFFER %in% 0:1) && all(panel$D_OD %in% 0:1),
-          "each chance group is a whole number from 0 to 100" = all(panel$CHANCE_GROUP %in% 0:100),
-          "the application years are 2016-2021" = identical(sort(unique(panel$YEAR)), 2016:2021))
-dir.create(file.path(out_dir, "tables", "results"), recursive = TRUE, showWarnings = FALSE)
-dir.create(file.path(out_dir, "numbers"), showWarnings = FALSE)
+# folders: from `params` when given (rmarkdown::render, or a list named params defined before knitr::knit)
+opt <- list(data_dir = file.path(Sys.getenv("USERPROFILE", "~"), "Dropbox", "Effect SAE on SUA", "data",
+                                 "finalized_design_v1", "mechanisms"),
+            out_dir = "output")
+if (exists("params")) opt[names(params)] <- params
+DATA_DIR <- opt$data_dir
+TAB_DIR <- file.path(opt$out_dir, "tables")
+dir.create(file.path(TAB_DIR, "results"), recursive = TRUE, showWarnings = FALSE)
 
-setFixest_vcov(all = "hetero")            # robust SEs
+setFixest_vcov(all = "hetero")            # robust SEs: OLS with the N/(N-K) factor, as Stata's robust
 setFixest_estimation(fixef.rm = "none")   # keep chance groups that hold a single child
 
 controls <- c("GPA8_Z", "ES_MUJER", "PRIORITARIO", "ALTO", "ORIGIN_OD")
-sample3 <- drop_na(panel, all_of(controls))   # the lottery sample with every characteristic (Table IV's children)
-# the outcomes of Tables VII to IX come from runs on these children, and only on them
-stopifnot(identical(!is.na(panel$PACE_SCHOOL_OT), complete.cases(panel[controls])), !anyDuplicated(sample3$MRUN))
 
-stars <- function(p) ifelse(p < 0.01, "$^{***}$", ifelse(p < 0.05, "$^{**}$", ifelse(p < 0.1, "$^{*}$", "")))
-num <- function(x, d) sub("^-(0\\.0+)$", "\\1", sprintf(paste0("%.", d, "f"), x))   # never "-0.00"
-comma <- function(x) format(x, big.mark = ",", scientific = FALSE, trim = TRUE)
-tex_row <- function(label, cells) paste0(label, " & ", paste(cells, collapse = " & "), "\\\\")   # the lines of the paper's table files
+# the rows of each table; a row printed on time and ever is the outcome with _OT and with _EVER
+reasons <- c(FAILNG = "Failed a year", WDNG = "Withdrew", OTHNG = "Other")
+failing <- c(PB_G = "Grades", PB_A = "Attendance alone", PB_U = "Attendance, grades unknown")
+school <- c(CLASS_SIZE = "Class size (students)", STUDENT_TEACHER = "Students per teacher at the school",
+            DIST_P99 = "Distance to school (km)")
+ninth <- c(FAILED_9 = "Failed 9th grade (\\%)", RANK9 = "Percentile at the end of 9th grade",
+           CHANGE = "Change in percentile during 9th grade",
+           BOTTOM20 = "Ended 9th grade in the bottom fifth of the class (\\%)")
+tracks <- c(REG = "Regular", BEA = "BEA", PACE = "PACE", GENERO = "Gender quota")
+scores <- c(LM = "Math-Verbal", NEM = "NEM", RANKING = "Ranking")
+choices <- c(LIST_PROGRAMS           = "\\quad Programs listed",
+             LIST_MEAN_CUTOFF        = "\\quad Mean cutoff percentile of the listed programs",
+             LIST_MAX_CUTOFF         = "\\quad Highest cutoff percentile among the listed programs",
+             LIST_WEIGHT_NEM_RANKING = "\\quad Weight on NEM and Ranking (\\%)")
+app_score <- c(LIST_SCORE              = "\\quad Application score",
+               LIST_SCORE_NEM          = "\\quad\\quad NEM part",
+               LIST_SCORE_RANKING      = "\\quad\\quad Ranking part",
+               LIST_SCORE_EXAMS        = "\\quad\\quad Exams part",
+               LIST_SCORE_READING      = "\\quad\\quad\\quad Reading",
+               LIST_SCORE_MATH         = "\\quad\\quad\\quad Mathematics",
+               LIST_SCORE_HIST_SCIENCE = "\\quad\\quad\\quad History or science")
+cutoffs <- c(LIST_MISSED  = "\\quad Listed cutoffs missed (\\%)",
+             LIST_REACHED = "\\quad Reached a listed cutoff (\\%)")
+access <- c(PACE_SCHOOL = "\\quad Graduated from a PACE school",
+            PACE_GRADE  = "\\quad Met PACE's grade rule at her school",
+            PACE_BOTH   = "\\quad Met both",
+            BEA_GRADE   = "\\quad Met BEA's grade rule at her school")
+fail_years <- c(FAIL_YEAR_1 = "Year 1 after entry", FAIL_YEAR_2 = "Year 2 after entry",
+                FAIL_YEAR_3 = "Year 3 after entry", FAIL_YEAR_4 = "Year 4 after entry",
+                FAIL_YEAR_ANY = "Any of years 1 to 4")
 
-# a constructed 0/1 flag: its share printed; it stops unless the flag takes both values
-flag <- function(x, what) {
-  if (anyNA(x) || !all(x %in% 0:1) || n_distinct(x) != 2L) stop(what, ": a 0/1 flag taking both values expected")
-  message(sprintf("%s: share %.4f of %s", what, mean(x), comma(length(x))))
-  invisible(x)
-}
+star <- function(p) ifelse(p < 0.01, "$^{***}$", ifelse(p < 0.05, "$^{**}$", ifelse(p < 0.1, "$^{*}$", "")))
+fmt <- function(x, d) sub("^-(0\\.0+)$", "\\1", sprintf(paste0("%.", d, "f"), x))   # -0.00 prints as 0.00
+comma_int <- function(x) format(x, big.mark = ",", scientific = FALSE, trim = TRUE)
+row_tex <- function(label, cells) paste0(label, " & ", paste(cells, collapse = " & "), "\\\\")
+panel_title <- function(title, ncol = 5) sprintf("\\multicolumn{%d}{l}{\\textit{%s}}\\\\", ncol, title)
+ot_ever <- function(k) paste0(k, c("_OT", "_EVER"))
+write_tex <- function(lines, file) writeLines(c("% Generated by mechanisms.Rmd", lines), file.path(TAB_DIR, file))
 
-# each table file: the line saying where it comes from, then its lines; it stops on a missing or infinite number
-no_missing <- function(tex) !any(grepl("(^|[^A-Za-z])(NA|NaN|Inf)([^A-Za-z]|$)", tex))
-stopifnot("no_missing self-test" = no_missing("x & 1.00 & (0.39) DEMRE's NAME Info") && !no_missing("x & NA\\\\") && !no_missing("-Inf") && !no_missing("{NaN}"))
-write_tex <- function(lines, file) {
-  if (!no_missing(lines)) stop(file, ": a missing or infinite number")
-  writeLines(c("% Generated by mechanisms.Rmd", lines), file.path(out_dir, "tables", file))
-}
-
-# coefficient on attendance (2SLS), SE, p-value and N, one row per model, the models' dependent variables y in their order (checked); p-values
-# from the normal distribution, as ivreg2's
-effect <- function(fit, y) {
-  models <- if (inherits(fit, "fixest_multi")) as.list(fit) else list(fit)
-  stopifnot(identical(unname(map_chr(models, function(m) deparse(m$fml[[2]]))), y),   # each model's dependent variable is its label
-            all(map_lgl(models, function(m) length(m$collin.var) == 0L)))           # no regressor dropped
-  bind_rows(map(models, function(m) {
-    tibble(est = coef(m)[["fit_D_OD"]], se = se(m)[["fit_D_OD"]], p = 2 * pnorm(-abs(tstat(m)[["fit_D_OD"]])), n = nobs(m))
-  }))
-}
-
-# each row of a table: 2SLS of the row on attendance with the offer as the instrument (Table IV's), on the children d who have it; the mean
-# without an offer among them
+# 2SLS of each outcome in vars on attendance, the offer as the instrument, on the children of d who have it; with
+# the mean and the count of the children without an offer. p-values from the normal distribution, as ivreg2's
 tsls <- function(d, vars) {
   fit <- feols(.[vars] ~ .[controls] + i(YEAR, ref = 2016) | CHANCE_GROUP | D_OD ~ OFFER, d,
                ssc = ssc(K.adj = FALSE))   # 2SLS SEs without the N/(N-K) factor, as ivreg2's robust
-  est <- effect(fit, vars) %>%
-    mutate(var = vars, mean = colMeans(d[d$OFFER == 0, vars, drop = FALSE], na.rm = TRUE),
-           n0 = map_int(vars, function(v) sum(d$OFFER == 0 & !is.na(d[[v]]))))
-  stopifnot(all(est$n == map_int(vars, function(v) sum(!is.na(d[[v]])))))   # every student with the row is used
-  est
+  models <- if (inherits(fit, "fixest_multi")) as.list(fit) else list(fit)
+  tibble(var = vars,
+         est = map_dbl(models, function(m) coef(m)[["fit_D_OD"]]),
+         se = map_dbl(models, function(m) se(m)[["fit_D_OD"]]),
+         p = map_dbl(models, function(m) 2 * pnorm(-abs(tstat(m)[["fit_D_OD"]]))),
+         n = map_dbl(models, nobs),
+         n0 = map_dbl(vars, function(v) sum(d$OFFER == 0 & !is.na(d[[v]]))),
+         mean = colMeans(d[d$OFFER == 0, vars, drop = FALSE], na.rm = TRUE))
 }
 
-# a row's two lines in a table of mean and estimate (with stars) on time and ever, or in one pair of columns (d decimals; x the scale)
-row_lines <- function(est, label, vars, d = 2, x = 100, cells = 4) {
-  r <- map(vars, function(v) { e <- filter(est, var == .env$v); stopifnot(nrow(e) == 1L); e })
-  top <- unlist(map(r, function(e) c(num(x * e$mean, d), paste0(num(x * e$est, d), stars(e$p)))))
-  ses <- unlist(map(r, function(e) c("", paste0("(", num(x * e$se, d), ")"))))
-  pad <- rep("", cells - length(top))
-  c(tex_row(label, c(top, pad)), tex_row("", c(ses, pad)))
+# a row's two lines: the mean without an offer and the estimate with its stars, then the SE, for each outcome in
+# vars; x = 100 prints a 0/1 outcome in % and its effects in pp
+row_lines <- function(est, label, vars, d = 2, x = 100) {
+  e <- est[match(vars, est$var), ]
+  c(row_tex(label, c(rbind(fmt(x * e$mean, d), paste0(fmt(x * e$est, d), star(e$p))))),
+    row_tex("", c(rbind("", paste0("(", fmt(x * e$se, d), ")")))))
 }
-panel_title <- function(title, ncol = 5) sprintf("\\multicolumn{%d}{l}{\\textit{%s}}\\\\", ncol, title)
-# a panel's N line: the children without an offer and all children, one N per panel (on time and ever, or one pair of columns)
-n_lines <- function(est, both) {
-  n0 <- unique(est$n0); n <- unique(est$n)
-  stopifnot(length(n0) == 1L, length(n) == 1L)   # one N per panel
-  tex_row("$N$", c(comma(n0), comma(n), if (both) c(comma(n0), comma(n)) else c("", "")))
+
+# a panel's N: the children without an offer and all children, for each outcome in vars
+n_line <- function(est, vars) {
+  e <- est[match(vars, est$var), ]
+  row_tex("$N$", comma_int(c(rbind(e$n0, e$n))))
 }
-head_on_time_ever <- c(
+
+on_time_ever_header <- c(
   "\\begin{tabular}{lcccc}",
   "\\toprule",
   " & \\multicolumn{2}{c}{On time} & \\multicolumn{2}{c}{Ever}\\\\",
@@ -153,561 +114,331 @@ head_on_time_ever <- c(
   " & No offer & 2SLS & No offer & 2SLS\\\\",
   " & mean &  & mean & \\\\",
   " & (1) & (2) & (3) & (4)\\\\",
-  "\\midrule"
-)
+  "\\midrule")
+
+# Tables VII to IX: the float around a body file, with caption and note
+tex_float <- function(caption, label, body, note, stretch = "1.2", tabcolsep = TRUE) c(
+  "\\begin{table}[htp!]", paste0("\\singlespacing\\renewcommand{\\arraystretch}{", stretch, "}"), "\\centering",
+  paste0("\\caption{", caption, "}\\label{", label, "}"), "\\small", if (tabcolsep) "\\setlength{\\tabcolsep}{6pt}",
+  paste0("\\input{tables/", body, "}"), "\\par\\smallskip", "\\begin{minipage}{\\textwidth}\\footnotesize",
+  paste0("{Notes: ", note, "}"), "\\end{minipage}", "\\end{table}")
 ```
 
-# Table V: why graduation falls
+# Data
 
-Graduation on top; Panel A, the reasons a student does not graduate; Panel B, what her failed years show; Panel C, the school she attends;
-Panel D, how she does in 9th grade. Panels A and B are on every student with every characteristic, each row 0 for a graduate; Panel C on
-those with an entry school and its three measures (the grade-stringency row on those whose entry school has the historical index); Panel D
-on those with a percentile at the start and at the end of 9th grade.
+```{r data}
+panel <- readRDS(file.path(DATA_DIR, "mechanisms_panel.rds"))       # one row per child of the lottery sample
+schools <- readRDS(file.path(DATA_DIR, "mechanisms_schools.rds"))   # school-years, 2019-2025
+calibration <- as.data.table(readRDS(file.path(DATA_DIR, "mechanisms_calibration.rds")))   # tenth graders, 2014-2016
+
+estimation_sample <- drop_na(panel, all_of(controls))   # the children with every characteristic, as in Table IV
+```
+
+# Table V: graduation and failing a year
+
+Panel A divides the students who do not graduate by the reason, Panel B the students who fail a year by what
+their records show; each row of the two panels is 0 for a student who graduates within the horizon.
 
 ```{r graduation}
-grad <- c("GRAD_OT", "GRAD_EVER")
-reasons <- c(FAILNG = "Failed a year", WDNG = "Withdrew", OTHNG = "Other")
-failing <- c(PB_G = "Grades", PB_A = "Attendance alone", PB_U = "Attendance, grades unknown")
-vars5 <- c(grad, paste0(names(reasons), "_OT"), paste0(names(reasons), "_EVER"), paste0(names(failing), "_OT"), paste0(names(failing), "_EVER"))
-walk(vars5, function(v) flag(sample3[[v]], v))
-# Panels A and B count only the students who did not graduate within the horizon: each of their rows is 0 for a graduate
-stopifnot("Panels A and B: each row is 0 for a student who graduated within the horizon" =
-            all(map_lgl(c("_OT", "_EVER"), function(h) all(as.matrix(sample3[sample3[[paste0("GRAD", h)]] == 1L, paste0(c(names(reasons), names(failing)), h)]) == 0L))))
-est5 <- tsls(sample3, vars5)
+graduation_est <- tsls(estimation_sample, c("GRAD_OT", "GRAD_EVER",
+                                            paste0(names(reasons), "_OT"), paste0(names(reasons), "_EVER"),
+                                            paste0(names(failing), "_OT"), paste0(names(failing), "_EVER")))
 
-# Panel C: the distance capped at its 99th percentile among the students with every characteristic
-cap <- unname(quantile(sample3$DIST_HOME_KM, 0.99, na.rm = TRUE, type = 7))
-school <- c(CLASS_SIZE = "Class size (students)", STUDENT_TEACHER = "Students per teacher at the school", DIST_P99 = "Distance to school (km)")
-sample_c <- sample3 %>%
-  mutate(DIST_P99 = pmin(DIST_HOME_KM, cap)) %>%
-  filter(!is.na(ENTRY_RBD), !is.na(CLASS_SIZE), !is.na(STUDENT_TEACHER), !is.na(DIST_P99))
-est5c <- tsls(sample_c, names(school))
-
-# Panel D: the percentile at the end of 9th grade, its change from the start, the bottom fifth
-ninth <- c(FAILED_9 = "Failed 9th grade (\\%)", RANK9 = "Percentile at the end of 9th grade", CHANGE = "Change in percentile during 9th grade",
-           BOTTOM20 = "Ended 9th grade in the bottom fifth of the class (\\%)")
-sample_d <- sample3 %>%
-  filter(!is.na(START_RANK), !is.na(RANK9)) %>%
-  mutate(CHANGE = RANK9 - START_RANK, BOTTOM20 = as.integer(RANK9 <= 20))
-flag(sample_d$FAILED_9, "FAILED_9"); flag(sample_d$BOTTOM20, "BOTTOM20")
-est5d <- tsls(sample_d, names(ninth))
-c(cap_km = cap, panel_c = nrow(sample_c), panel_d = nrow(sample_d))
-# the text's share: of the students of Panel D who fail 9th grade, those who end it in the bottom fifth of their class (%)
-failed_9 <- sample_d$FAILED_9 == 1L
-bottom_among_failed <- tibble(failed = sum(failed_9), share_pct = 100 * mean(sample_d$BOTTOM20[failed_9] == 1L))   # the count stays an integer
-bottom_among_failed
-```
-
-## Grade stringency (Table V, Panel C, and the text's numbers)
-
-The grade-stringency index is a historical grading index for each school, from the
-school fixed effects of a regression of tenth-grade GPA in the 2014-2016 cohorts on sex, cohort indicators and, within each cohort, natural
-splines (four degrees of freedom) of the standardized SIMCE mathematics and reading scores and their product; the effects centered with
-equal school weights, their sign reversed (higher is stricter), and shrunk by a scalar empirical Bayes weight. The calibration keeps publicly funded schools never fee-paying in 2012-2025 with at least 20 students across at least two
-cohorts. Each lottery child gets the index of the school she attends in April of the entry year; the row is the 2SLS of Table IV on the
-children whose school has it. The robustness numbers: the unshrunk index and the index fitted without one cohort, which the text quotes,
-and a refit on the mathematics-reading cells where both groups of schools have at least 20 students, written to the estimates file and to
-`grade_stringency_facts.tex` but not quoted by the text (the knit prints how many calibration rows that restriction keeps).
-
-```{r grade-stringency}
-# ---- Ignacio Rios's grade-stringency functions, unchanged ----
-.stringency_centered_fe_hc0 <- function(X, residual, group, n_group) {
-  # OLS with school indicators Z and nuisance regressors X. After centering the
-  # school effects with equal school weights, the influence of observation i on
-  # school s is 1{g_i=s}/n_s - 1/(J*n_g_i) - D_s' A^{-1} x_tilde_i.
-  # The algebra below computes its squared-residual weighted norm without an
-  # N by J influence matrix or a J by J fixed-effect covariance matrix.
-  J <- length(n_group)
-  p <- ncol(X)
-  if (J < 2L || p < 1L) stop("Need at least two schools and one nuisance regressor.")
-  if (nrow(X) != length(residual) || length(group) != nrow(X)) {
-    stop("Inconsistent matrix, residual, or grouping lengths.")
-  }
-  xbar <- rowsum(X, group, reorder = FALSE) / n_group
-  X_tilde <- X - xbar[group, , drop = FALSE]
-  Ainv <- chol2inv(chol(crossprod(X_tilde)))
-  residual2 <- residual^2
-  weighted_X <- X_tilde * residual
-  V_beta <- Ainv %*% crossprod(weighted_X) %*% Ainv
-  rm(weighted_X)
-  B <- rowsum(X_tilde * residual2, group, reorder = FALSE) / n_group
-  h <- as.numeric(rowsum(residual2, group, reorder = FALSE)) / n_group^2
-  D <- sweep(xbar, 2L, colMeans(xbar), "-")
-  B_centered <- sweep(B, 2L, colMeans(B), "-")
-  V <- (1 - 2 / J) * h + sum(h) / J^2 +
-    rowSums((D %*% V_beta) * D) -
-    2 * rowSums((D %*% Ainv) * B_centered)
-  tolerance <- 1e-10 * max(1, max(abs(V)))
-  if (any(!is.finite(V)) || any(V < -tolerance)) {
-    stop("Centered fixed-effect HC0 variance is nonfinite or materially negative.")
-  }
-  list(variance = pmax(V, 0), nuisance_vcov_hc0 = V_beta,
-       school_regressor_means = xbar)
-}
-
-fit_grade_stringency <- function(data, shrink = TRUE) {
-  if (!requireNamespace("data.table", quietly = TRUE) ||
-      !requireNamespace("fixest", quietly = TRUE)) {
-    stop("The data.table and fixest packages are required.")
-  }
-  if (length(shrink) != 1L || is.na(shrink) || !is.logical(shrink)) {
-    stop("shrink must be TRUE or FALSE.")
-  }
-  data.table::setDTthreads(4L)
-  required <- c("MRUN", "AGNO", "RBD", "math", "reading", "female",
-                "COD_ENSE", "PROM_GRAL", "SIT_FIN_R")
-  if (!all(required %in% names(data))) {
-    stop("Missing calibration columns: ", paste(setdiff(required, names(data)), collapse = ", "))
-  }
-  d <- data.table::as.data.table(data.table::copy(data))[, ..required]
-  numeric_required <- setdiff(required, "SIT_FIN_R")
-  if (!all(vapply(d[, ..numeric_required], is.numeric, logical(1)))) {
-    stop("Identifier, score, sex, teaching-code and GPA columns must be numeric.")
-  }
-  if (anyNA(d) || any(!is.finite(as.matrix(d[, ..numeric_required])))) {
-    stop("Calibration data must have complete finite values before fitting.")
-  }
-  if (any(d$MRUN <= 0 | d$RBD <= 0 | d$PROM_GRAL < 1 | d$PROM_GRAL > 7) ||
-      any(!d$female %in% 0:1) || any(!d$SIT_FIN_R %in% c("P", "R"))) {
-    stop("Invalid identifiers, GPA, sex or final-status values in calibration data.")
-  }
-  if (anyDuplicated(d[, c("MRUN", "AGNO"), with = FALSE])) {
-    stop("Calibration data contain duplicate student-year records.")
-  }
-  years <- sort(unique(d$AGNO))
-  school_ids <- sort(unique(d$RBD))
-  J <- length(school_ids)
-  if (J < 2L) stop("At least two schools are required.")
-
-  # Sorting ensures rowsum(reorder=FALSE) aligns with school_ids, n_group and
-  # the integer group vector used in the influence-function calculation.
-  data.table::setorderv(d, c("RBD", "AGNO", "MRUN"))
-  group <- match(d$RBD, school_ids)
-  n_group <- tabulate(group, nbins = J)
-  if (any(n_group < 2L)) {
-    stop("Prefilter calibration schools to at least two matched records; the main pipeline may impose a stronger rule.")
-  }
-  basis_names <- character()
-  transformation <- list()
-  for (yr in years) {
-    ii <- which(d$AGNO == yr)
-    score_z <- list()
-    transformation[[as.character(yr)]] <- list()
-    for (subject in c("math", "reading")) {
-      values <- d[[subject]][ii]
-      mu <- mean(values)
-      sig <- stats::sd(values)
-      if (length(values) < 10L || !is.finite(sig) || sig <= 0 ||
-          length(unique(values)) < 5L) {
-        stop("Insufficient score variation for four-degree splines in year ", yr)
-      }
-      z <- (values - mu) / sig
-      score_z[[subject]] <- z
-      basis <- splines::ns(z, df = 4L, intercept = FALSE)
-      transformation[[as.character(yr)]][[subject]] <- list(
-        mean = mu, sd = sig, df = 4L,
-        knots = unname(attr(basis, "knots")),
-        boundary_knots = unname(attr(basis, "Boundary.knots")))
-      for (k in seq_len(ncol(basis))) {
-        nm <- paste0(subject, "_ns", k, "_y", yr)
-        data.table::set(d, j = nm, value = 0)
-        data.table::set(d, i = ii, j = nm, value = basis[, k])
-        basis_names <- c(basis_names, nm)
-      }
-    }
-    nm <- paste0("math_reading_y", yr)
-    data.table::set(d, j = nm, value = 0)
-    data.table::set(d, i = ii, j = nm,
-                    value = score_z$math * score_z$reading)
-    basis_names <- c(basis_names, nm)
-  }
-  # Explicit year indicators keep the school effects' normalization transparent.
-  year_names <- character()
-  for (yr in years[-1L]) {
-    nm <- paste0("year_", yr)
-    data.table::set(d, j = nm, value = as.numeric(d$AGNO == yr))
-    year_names <- c(year_names, nm)
-  }
-  nuisance <- c("female", year_names, basis_names)
-  fml <- stats::as.formula(paste("PROM_GRAL ~", paste(nuisance, collapse = " + "), "| RBD"))
-  fit <- fixest::feols(fml, data = d, nthreads = 4L, fixef.rm = "none",
-                       fixef.tol = 1e-10, collin.tol = 1e-10,
-                       mem.clean = TRUE, notes = FALSE, warn = FALSE)
-  if (stats::nobs(fit) != nrow(d)) stop("The regression silently dropped calibration records.")
-  beta <- stats::coef(fit)
-  if (length(beta) == 0L) stop("No identified nuisance regressors.")
-  # Explicitly retain only the estimable RHS columns, after fixest's collinearity
-  # removal. No dense school-indicator matrix is created in the empirical fit.
-  X <- as.matrix(d[, names(beta), with = FALSE])
-  residual <- stats::residuals(fit)
-  theta_all <- fixest::fixef(fit, notes = FALSE)$RBD
-  theta <- unname(theta_all[match(as.character(school_ids), names(theta_all))])
-  if (anyNA(theta)) stop("A calibration school's fixed effect is missing.")
-  centered_theta <- theta - mean(theta)
-  variance <- .stringency_centered_fe_hc0(X, residual, group, n_group)
-  V <- variance$variance
-  noise_variance <- sum(V) / (J - 1L)
-  tau2 <- max(stats::var(centered_theta) - noise_variance, 0)
-  reliability <- if (tau2 == 0) rep(0, J) else tau2 / (tau2 + V)
-  theta_eb <- reliability * centered_theta
-  theta_eb <- theta_eb - mean(theta_eb)
-  index <- if (shrink) -theta_eb else -centered_theta
-  schools <- data.table::data.table(
-    RBD = school_ids, n_calibration = n_group,
-    theta = theta, theta_centered = centered_theta,
-    theta_var_hc0 = V, theta_se_hc0 = sqrt(V),
-    reliability = reliability, theta_eb = theta_eb,
-    GRADE_STRINGENCY = index,
-    GRADE_STRINGENCY_UNSHRUNK = -centered_theta)
-  stopifnot(abs(mean(schools$GRADE_STRINGENCY)) < 1e-10,
-            abs(mean(schools$GRADE_STRINGENCY_UNSHRUNK)) < 1e-10,
-            all(is.finite(schools$GRADE_STRINGENCY)),
-            all(schools$reliability >= 0 & schools$reliability <= 1))
-  fit_metadata <- list(
-    n_calibration = nrow(d), n_schools = J, years = years,
-    n_by_year = d[, .(n = .N), by = AGNO][order(AGNO)],
-    n_by_status = d[, .(n = .N), by = SIT_FIN_R][order(SIT_FIN_R)],
-    specification = paste(deparse(fml), collapse = " "),
-    standardization = "Subject scores standardized using mean and sample SD within calibration year.",
-    spline = "Natural cubic spline, df=4, separately for subject and year; year-specific standardized math x reading product.",
-    transformations = transformation,
-    coefficients = beta,
-    omitted_collinear_terms = setdiff(nuisance, names(beta)),
-    nuisance_vcov_hc0 = variance$nuisance_vcov_hc0,
-    centering = "Equal weight to each calibration school; recentered after shrinkage.",
-    tau2 = tau2, observed_school_variance = stats::var(centered_theta),
-    sampling_variance_correction = noise_variance,
-    shrink = shrink,
-    shrinkage = "Scalar empirical Bayes approximation: tau2=max(var(centered school FE)-sum(centered FE HC0 variances)/(J-1),0); reliability=tau2/(tau2+variance). Cross-school covariances are not used in the scalar weights.",
-    historical_variance = "Centered school-FE HC0 sandwich includes common-slope uncertainty; conditional on observed covariates and spline knots.",
-    uncertainty_caveat = "Empirical Bayes prior variance and weights are estimated; their uncertainty is not propagated. This helper supplies no lottery-stage standard errors.",
-    residual_rmse = sqrt(mean(residual^2)),
-    largest_absolute_school_mean_residual = max(abs(as.numeric(rowsum(residual, group, reorder = FALSE)) / n_group)),
-    threads_requested = 4L,
-    package_versions = c(fixest = as.character(utils::packageVersion("fixest")),
-                         data.table = as.character(utils::packageVersion("data.table"))))
-  list(schools = schools, metadata = fit_metadata)
-}
-
-verify_grade_stringency_covariance <- function(tolerance = 1e-9) {
-  # Deterministic numerical verification of the algebra, separate from the
-  # empirical estimation. Compare with full-dummy OLS HC0 on an unbalanced
-  # example. No random draws, empirical estimates, or manuscript exports occur.
-  n_group <- c(8L, 10L, 11L, 13L, 9L, 12L)
-  J <- length(n_group)
-  group <- rep(seq_len(J), n_group)
-  i <- seq_along(group)
-  X <- cbind(x1 = sin(i / 3) + group / 5,
-             x2 = cos(i / 7) + group / 10,
-             x3 = i %% 5)
-  Z <- stats::model.matrix(~ factor(group) - 1)
-  W <- cbind(Z, X)
-  y <- group * 0.3 + X[, 1] * 0.2 - X[, 2] * 0.1 + X[, 3] * 0.05 +
-    sin(i * 1.7) * (1 + group / 10)
-  direct <- stats::lm.fit(W, y)
-  Winv <- chol2inv(chol(crossprod(W)))
-  V_full <- Winv %*% crossprod(W * direct$residuals) %*% Winv
-  C <- diag(J) - matrix(1 / J, J, J)
-  expected <- diag(C %*% V_full[seq_len(J), seq_len(J)] %*% t(C))
-  computed <- .stringency_centered_fe_hc0(X, direct$residuals, group, n_group)$variance
-  error <- max(abs(expected - computed))
-  if (!is.finite(error) || error > tolerance * max(1, max(abs(expected)))) {
-    stop("Centered FE covariance failed the full-dummy HC0 comparison: ", error)
-  }
-  list(passed = TRUE, maximum_absolute_difference = error,
-       tolerance = tolerance, reference = "Full-dummy OLS HC0, deterministic unbalanced groups")
-}
-
-# ---- the calibration sample, as in Ignacio Rios's grade-stringency code ----
-d_all <- as.data.table(calibration)
-flag(d_all$EVER_PRIVATE, "EVER_PRIVATE (calibration candidates)")
-# A school observed as fee-paying private anywhere in 2012-2025 (EVER_PRIVATE) cannot enter this public school calibration, including
-# schools that later switch funding status.
-d_public <- d_all[COD_DEPE %in% c(1L, 2L, 3L, 5L, 6L) & !EVER_PRIVATE]
-school_counts <- d_public[, .(n = .N, n_years = uniqueN(AGNO)), by = RBD]
-school_counts[, retained := n >= 20L & n_years >= 2L]
-d <- d_public[RBD %in% school_counts[retained == TRUE, RBD]]
-stopifnot(nrow(d) > 0, !anyDuplicated(d, by = c("MRUN", "AGNO")),
-          all(d$AGNO %in% 2014:2016), all(d$COD_GRADO == 2L))
-lot <- as.data.table(sample3)   # the lottery children with every characteristic
-stopifnot(!anyDuplicated(lot$MRUN), length(intersect(d$MRUN, lot$MRUN)) == 0L,
-          "no calibration student is in the lottery sample (all its children, with or without every characteristic)" = length(intersect(d$MRUN, panel$MRUN)) == 0L)
-flag(d$OVER_DEMANDED, "OVER_DEMANDED (calibration sample)")
-d[, over_demanded := OVER_DEMANDED]   # the calibration school is an over-demanded school
-verification <- verify_grade_stringency_covariance()
-
-# ---- the index and the row of Table V, Panel C ----
-baseline <- fit_grade_stringency(d)
-stopifnot(baseline$metadata$largest_absolute_school_mean_residual < 1e-7,
-          baseline$metadata$tau2 > 0)
-school_index <- baseline$schools   # the join's lookup table, a named object built before the join
-lot[school_index, on = .(ENTRY_RBD = RBD),
-    `:=`(GRADE_STRINGENCY = i.GRADE_STRINGENCY,
-         GRADE_STRINGENCY_UNSHRUNK = i.GRADE_STRINGENCY_UNSHRUNK)]
-stopifnot(identical(lot$GRADE_STRINGENCY, school_index$GRADE_STRINGENCY[match(lot$ENTRY_RBD, school_index$RBD)]))   # the join recounted by match()
-lot[, HAS_STRINGENCY := as.integer(!is.na(GRADE_STRINGENCY))]
-flag(lot$HAS_STRINGENCY, "HAS_STRINGENCY")
-iv_result <- function(variable, label, sample = lot) {
-  dd <- sample[!is.na(get(variable))]
-  f <- as.formula(paste(variable, "~", paste(controls, collapse = " + "),
-    "+ i(YEAR, ref = 2016) | CHANCE_GROUP | D_OD ~ OFFER"))
-  fit <- feols(f, dd, vcov = "hetero", ssc = ssc(K.adj = FALSE),
-               fixef.rm = "none", notes = FALSE)
-  stopifnot(nobs(fit) == nrow(dd))
-  b <- coef(fit)[["fit_D_OD"]]; s <- se(fit)[["fit_D_OD"]]
-  data.table(specification = label, mean = dd[OFFER == 0, mean(get(variable))],
-    est = b, se = s, p = 2 * pnorm(-abs(b / s)), n = nrow(dd),
-    n_nooffer = dd[OFFER == 0, .N])
-}
-main <- iv_result("GRADE_STRINGENCY", "Baseline: shrunk historical school effects")
-stringency <- rbind(main, iv_result("GRADE_STRINGENCY_UNSHRUNK", "Unshrunk historical school effects"))
-# whether the index is observed, on the offer (reduced form, Stata-robust SEs)
-availability <- feols(HAS_STRINGENCY ~ OFFER + GPA8_Z + ES_MUJER + PRIORITARIO + ALTO +
-  ORIGIN_OD + i(YEAR, ref = 2016) | CHANCE_GROUP, lot, vcov = "hetero",
-  fixef.rm = "none", notes = FALSE)
-availability_result <- data.table(outcome = "Stringency observed", n = nobs(availability),
-  mean_nooffer = lot[OFFER == 0, mean(HAS_STRINGENCY)],
-  offer_effect = coef(availability)[["OFFER"]], se = se(availability)[["OFFER"]],
-  p = pvalue(availability)[["OFFER"]])
-
-# ---- leave one calibration cohort out ----
-for (excluded_year in 2014:2016) {
-  dd <- d[AGNO != excluded_year]
-  counts <- dd[, .N, by = RBD]
-  dd <- dd[RBD %in% counts[N >= 2L, RBD]]
-  fit <- fit_grade_stringency(dd)
-  name <- paste0("STRINGENCY_EXCLUDING_", excluded_year)
-  lookup <- fit$schools[, .(RBD, value = GRADE_STRINGENCY)]
-  lot[lookup, on = .(ENTRY_RBD = RBD), (name) := i.value]
-  stopifnot(identical(lot[[name]], lookup$value[match(lot$ENTRY_RBD, lookup$RBD)]))   # the join recounted by match()
-}
-loo_columns <- paste0("STRINGENCY_EXCLUDING_", 2014:2016)
-common_panel <- lot[complete.cases(lot[, c("GRADE_STRINGENCY", loo_columns), with = FALSE])]
-stringency <- rbind(stringency, rbindlist(lapply(2014:2016, function(yr)
-  iv_result(paste0("STRINGENCY_EXCLUDING_", yr), paste("Exclude historical cohort", yr), common_panel))))
-
-# ---- refit on a score region with observations from both school groups in each historical year; no full-sample effect is used to select
-#      the restriction ----
-support <- copy(d)
-support[, math_cell := pmin(5L, as.integer(ceiling(frank(math, ties.method = "average") / .N * 5))), by = AGNO]
-support[, reading_cell := pmin(5L, as.integer(ceiling(frank(reading, ties.method = "average") / .N * 5))), by = AGNO]
-cells <- support[, .(n = .N), by = .(AGNO, math_cell, reading_cell, over_demanded)]
-keep_cells <- cells[, .(both_groups = uniqueN(over_demanded) == 2L,
-                       minimum_group_n = min(n)), by = .(AGNO, math_cell, reading_cell)]
-keep_cells <- keep_cells[both_groups == TRUE & minimum_group_n >= 20L]
-support <- support[keep_cells, on = .(AGNO, math_cell, reading_cell), nomatch = 0]
-counts <- support[, .(n = .N, n_years = uniqueN(AGNO)), by = RBD]
-support <- support[RBD %in% counts[n >= 20L & n_years >= 2L, RBD]]
-message(sprintf("the common-support refit keeps %s of the %s calibration rows", comma(nrow(support)), comma(nrow(d))))
-supported_fit <- fit_grade_stringency(support)
-lookup <- supported_fit$schools[, .(RBD, value = GRADE_STRINGENCY)]
-lot[lookup, on = .(ENTRY_RBD = RBD), STRINGENCY_COMMON_SUPPORT := i.value]
-stopifnot(identical(lot$STRINGENCY_COMMON_SUPPORT, lookup$value[match(lot$ENTRY_RBD, lookup$RBD)]))   # the join recounted by match()
-common_support_panel <- lot[!is.na(STRINGENCY_COMMON_SUPPORT) & !is.na(GRADE_STRINGENCY)]
-stringency <- rbind(stringency,
-  iv_result("STRINGENCY_COMMON_SUPPORT", "Common math-reading support calibration", common_support_panel))
-print(stringency[, .(specification, mean, est, se, p, n, n_nooffer)])
-print(availability_result)
-
-# ---- the text's numbers ----
-number <- function(x, digits = 0L) formatC(x, digits = digits, format = "f", big.mark = ",")
-facts <- c(
-  GSCalibrationN = number(nrow(d)), GSSchoolN = number(uniqueN(d$RBD)),
-  GSFailureN = number(sum(d$SIT_FIN_R == "R")), GSLotteryN = number(nrow(lot)),
-  GSObservedN = number(main$n), GSNoOfferN = number(main$n_nooffer),
-  GSEffect = number(main$est, 3), GSSE = number(main$se, 3), GSMean = number(main$mean, 3),
-  GSAvailabilityEffect = number(100 * availability_result$offer_effect, 2),
-  GSAvailabilitySE = number(100 * availability_result$se, 2),
-  GSAvailabilityNoOffer = number(100 * lot[OFFER == 0, mean(HAS_STRINGENCY)], 2),
-  GSAvailabilityOffer = number(100 * lot[OFFER == 1, mean(HAS_STRINGENCY)], 2),
-  GSLOOMin = number(min(stringency[grepl("^Exclude historical", specification), est]), 3),
-  GSLOOMax = number(max(stringency[grepl("^Exclude historical", specification), est]), 3),
-  GSUnshrunkEffect = number(stringency[specification == "Unshrunk historical school effects", est], 3),
-  GSSupportEffect = number(stringency[specification == "Common math-reading support calibration", est], 3))
-fact_lines <- sprintf("\\newcommand{\\%s}{%s}", names(facts), facts)
-write_tex(fact_lines, "grade_stringency_facts.tex")
-cat(fact_lines, sep = "\n")
-```
-
-```{r graduation-tex}
-ninth_grade_head <- c(" & \\multicolumn{2}{c}{9th grade} &  & \\\\", "\\cmidrule(lr){2-3}")
-tex5a <- c(
-  head_on_time_ever,
-  row_lines(est5, "Graduated from high school", grad),
+graduation_tex <- c(
+  "\\begin{tabular*}{\\textwidth}{@{\\extracolsep{\\fill}}lcccc@{}}",
+  "\\toprule",
+  " & \\multicolumn{2}{c}{On time} & \\multicolumn{2}{c}{Ever}\\\\",
+  "\\cmidrule(lr){2-3}\\cmidrule(lr){4-5}",
+  " & No offer mean & 2SLS & No offer mean & 2SLS\\\\",
+  " & (1) & (2) & (3) & (4)\\\\",
+  "\\midrule",
+  row_lines(graduation_est, "Graduated from high school", ot_ever("GRAD")),
   "\\midrule",
   panel_title("Panel A: Causes of Lower Graduation"),
-  unlist(imap(reasons, function(lbl, k) row_lines(est5, lbl, paste0(k, c("_OT", "_EVER"))))),
+  unlist(imap(reasons, function(label, k) row_lines(graduation_est, label, ot_ever(k)))),
   "\\midrule",
   panel_title("Panel B: Causes of Failing"),
-  unlist(imap(failing, function(lbl, k) row_lines(est5, lbl, paste0(k, c("_OT", "_EVER"))))),
+  unlist(imap(failing, function(label, k) row_lines(graduation_est, label, ot_ever(k)))),
   "\\midrule",
-  n_lines(est5, TRUE),
+  n_line(graduation_est, ot_ever("GRAD")),
   "\\bottomrule",
-  "\\end{tabular}"
-)
-tex5b <- c(
-  "\\begin{tabular}{lcccc}",
-  "\\toprule",
-  " & No offer & 2SLS &  & \\\\",
-  " & mean &  &  & \\\\",
-  " & (1) & (2) &  & \\\\",
-  "\\midrule",
-  panel_title("Panel C: Characteristics of the School They Attend"),
-  ninth_grade_head,
-  unlist(imap(school, function(lbl, k) row_lines(est5c, lbl, k, x = 1))),
-  "\\midrule",
-  n_lines(est5c, FALSE),
-  "\\midrule",
-  panel_title("Panel D: Performance in the 9th grade"),
-  ninth_grade_head,
-  unlist(imap(ninth, function(lbl, k) row_lines(est5d, lbl, k, x = if (k %in% c("FAILED_9", "BOTTOM20")) 100 else 1))),
-  "\\midrule",
-  n_lines(est5d, FALSE),
-  "\\bottomrule",
-  "\\end{tabular}"
-)
-
-# the grade-stringency row and its sample size, placed in Panel C: the row (between its two comment marks) after the distance row, its N
-# (between its two comment marks) after Panel C's N
-add_stringency <- function(lines, result) {
-  required <- c("mean", "est", "se", "p", "n", "n_nooffer")
-  values <- lapply(required, function(key) result[[key]])
-  names(values) <- required
-  stopifnot(all(vapply(values, function(x) is.numeric(x) && length(x) == 1L && is.finite(x), logical(1L))),
-            values$se >= 0, values$p >= 0, values$p <= 1,
-            all(unlist(values[c("n", "n_nooffer")]) >= 0), all(unlist(values[c("n", "n_nooffer")]) == floor(unlist(values[c("n", "n_nooffer")]))),
-            values$n_nooffer <= values$n)
-  c_index <- which(lines == panel_title("Panel C: Characteristics of the School They Attend"))
-  d_index <- which(lines == panel_title("Panel D: Performance in the 9th grade"))
-  stopifnot("one Panel C and one Panel D heading, in that order" = length(c_index) == 1L && length(d_index) == 1L && c_index < d_index,
-            "no stringency row yet" = !any(grepl("stringency", lines, ignore.case = TRUE)))
-  c_indices <- seq.int(c_index + 1L, d_index - 1L)
-  distance <- c_indices[startsWith(lines[c_indices], "Distance to school (km) &")]
-  stopifnot("one distance row in Panel C" = length(distance) == 1L)
-  distance_se <- distance + 1L
-  se_cells <- strsplit(lines[distance_se], "&", fixed = TRUE)[[1L]]
-  stopifnot("the distance row's SE line, then a rule" =
-              length(se_cells) == 5L && trimws(se_cells[[1L]]) == "" && trimws(se_cells[[2L]]) == "" &&
-              grepl("^\\([-+0-9.,]+\\)$", trimws(se_cells[[3L]])) && trimws(se_cells[[4L]]) == "" && trimws(se_cells[[5L]]) == "\\\\" &&
-              distance_se + 1L < d_index && lines[distance_se + 1L] == "\\midrule")
-  n_index <- c_indices[startsWith(lines[c_indices], "$N$ &")]
-  stopifnot("one Panel C N line after the distance row, then a rule" =
-              length(n_index) == 1L && n_index > distance_se && n_index + 1L < d_index && lines[n_index + 1L] == "\\midrule")
-  decimal <- function(x) {
-    out <- sprintf("%.3f", x)
-    if (identical(out, "-0.000")) "0.000" else out
-  }
-  stars <- if (values$p < 0.01) "***" else if (values$p < 0.05) "**" else if (values$p < 0.10) "*" else ""
-  estimate <- paste0(decimal(values$est), if (nzchar(stars)) paste0("$^{", stars, "}$") else "")
-  outcome_rows <- c(
-    paste0("Grade stringency (GPA points) & ", decimal(values$mean), " & ", estimate, " &  & \\\\"),
-    paste0(" &  & (", decimal(values$se), ") &  & \\\\")
-  )
-  count <- function(x) format(x, big.mark = ",", scientific = FALSE, trim = TRUE, nsmall = 0L)
-  sample_row <- paste0("$N$ (grade stringency) & ", count(values$n_nooffer), " & ", count(values$n), " &  & \\\\")
-  # insert from bottom to top so both indices refer to the original table lines
-  updated <- append(lines, c("% BEGIN GENERATED GRADE STRINGENCY SAMPLE SIZE", sample_row, "% END GENERATED GRADE STRINGENCY SAMPLE SIZE"),
-                    after = n_index)
-  append(updated, c("% BEGIN GENERATED GRADE STRINGENCY OUTCOME", outcome_rows, "% END GENERATED GRADE STRINGENCY OUTCOME"), after = distance_se)
-}
-tex5b <- add_stringency(tex5b, as.list(main))
-write_tex(tex5a, "lottery_graduation_part1.tex")
-write_tex(tex5b, "lottery_graduation_part2.tex")
-cat(tex5a, tex5b, sep = "\n")
+  "\\end{tabular*}")
+write_tex(graduation_tex, "lottery_graduation_part1.tex")
+graduation_est
 ```
 
-# Table VI: the college seat by admission track
+# Table VI: the school environment and performance in ninth grade
 
-Each assigned student counts once, under the track of her first recorded
-assignment within the horizon (regular, BEA, PACE or the gender quota), so the four tracks add up to Table IV's college seat. The data
-folder carries each child's first recorded assignment (its admission process and track) from the admission records of the processes
-2018-2026; on time is by the fifth process after the application year, ever by the 2026 process. The sample and specification are Table
-IV's.
+Panel A covers the students with an entry school and its three measures, the distance capped at its 99th
+percentile; Panel B the students with a percentile at the start and at the end of ninth grade.
+
+```{r ninth-grade}
+cap <- unname(quantile(estimation_sample$DIST_HOME_KM, 0.99, na.rm = TRUE, type = 7))
+school_sample <- estimation_sample %>%
+  mutate(DIST_P99 = pmin(DIST_HOME_KM, cap)) %>%
+  filter(!is.na(ENTRY_RBD), !is.na(CLASS_SIZE), !is.na(STUDENT_TEACHER), !is.na(DIST_P99))
+school_est <- tsls(school_sample, names(school))
+
+ninth_sample <- estimation_sample %>%
+  filter(!is.na(START_RANK), !is.na(RANK9)) %>%
+  mutate(CHANGE = RANK9 - START_RANK, BOTTOM20 = as.integer(RANK9 <= 20))
+ninth_est <- tsls(ninth_sample, names(ninth))
+bind_rows(school_est, ninth_est)
+```
+
+## Grade stringency
+
+Ignacio Rios's index of how strictly each school grades: the school fixed effects of a regression of tenth-grade
+GPA in 2014-2016 on sex, cohort and, within each cohort, natural splines (four degrees of freedom) of the
+standardized SIMCE math and reading scores and their product; centered with equal school weights, shrunk by a
+scalar empirical Bayes weight, and with the sign reversed (higher is stricter). The calibration keeps publicly
+funded schools never private non-subsidized in 2012-2025 with at least 20 students across at least two cohorts.
+Each child gets the index of the school she attends in April of the entry year. The text also quotes the
+unshrunk index, the index fitted without one cohort, a refit on the math-reading cells where both groups of
+schools have at least 20 students, and the offer's effect on whether a child has the index.
+
+```{r grade-stringency-functions}
+# the HC0 variance of each centered school effect of an OLS with school indicators and regressors X, without
+# the N x J influence matrix
+fe_variance <- function(X, e, group, n) {
+  J <- length(n)
+  xbar <- rowsum(X, group, reorder = FALSE) / n
+  Xt <- X - xbar[group, , drop = FALSE]
+  Ainv <- chol2inv(chol(crossprod(Xt)))
+  V_beta <- Ainv %*% crossprod(Xt * e) %*% Ainv
+  B <- rowsum(Xt * e^2, group, reorder = FALSE) / n
+  h <- as.numeric(rowsum(e^2, group, reorder = FALSE)) / n^2
+  D <- sweep(xbar, 2L, colMeans(xbar), "-")
+  B <- sweep(B, 2L, colMeans(B), "-")
+  V <- (1 - 2 / J) * h + sum(h) / J^2 + rowSums((D %*% V_beta) * D) - 2 * rowSums((D %*% Ainv) * B)
+  pmax(V, 0)
+}
+
+spline_cols <- function(yr) c(paste0(rep(c("math", "reading"), each = 4), "_ns", 1:4, "_y", yr),
+                              paste0("math_reading_y", yr))
+
+# the index of each school of the calibration sample cal, shrunk and unshrunk
+stringency_index <- function(cal) {
+  d <- setorder(cal[, .(MRUN, AGNO, RBD, math, reading, female, PROM_GRAL)], RBD, AGNO, MRUN)
+  years <- sort(unique(d$AGNO))
+  for (yr in years[-1]) set(d, j = paste0("year_", yr), value = as.numeric(d$AGNO == yr))
+  for (yr in years) {
+    ii <- which(d$AGNO == yr)
+    z <- lapply(d[ii, .(math, reading)], function(x) (x - mean(x)) / sd(x))
+    basis <- cbind(splines::ns(z$math, df = 4L), splines::ns(z$reading, df = 4L), z$math * z$reading)
+    cols <- spline_cols(yr)
+    for (k in 1:9) set(d, j = cols[k], value = replace(numeric(nrow(d)), ii, basis[, k]))   # 0 in other cohorts
+  }
+  rhs <- c("female", paste0("year_", years[-1]), unlist(lapply(years, spline_cols)))
+  fit <- feols(as.formula(paste("PROM_GRAL ~", paste(rhs, collapse = " + "), "| RBD")), d, nthreads = 4L,
+               fixef.tol = 1e-10, collin.tol = 1e-10, mem.clean = TRUE, notes = FALSE, warn = FALSE)
+
+  ids <- sort(unique(d$RBD))
+  group <- match(d$RBD, ids)
+  theta <- unname(fixef(fit)$RBD[as.character(ids)])
+  theta <- theta - mean(theta)
+  V <- fe_variance(as.matrix(d[, names(coef(fit)), with = FALSE]), resid(fit), group, tabulate(group))
+  tau2 <- max(var(theta) - sum(V) / (length(ids) - 1L), 0)
+  eb <- tau2 / (tau2 + V) * theta
+  data.table(RBD = ids, GRADE_STRINGENCY = -(eb - mean(eb)), GRADE_STRINGENCY_UNSHRUNK = -theta)
+}
+
+# the 2SLS of Table IV on the children of d who have the index v
+stringency_iv <- function(d, v) {
+  d <- d[!is.na(get(v))]
+  fit <- feols(.[v] ~ .[controls] + i(YEAR, ref = 2016) | CHANCE_GROUP | D_OD ~ OFFER, d, ssc = ssc(K.adj = FALSE))
+  b <- coef(fit)[["fit_D_OD"]]
+  s <- se(fit)[["fit_D_OD"]]
+  tibble(var = v, est = b, se = s, p = 2 * pnorm(-abs(b / s)), n = nrow(d), n0 = d[OFFER == 0, .N],
+         mean = d[OFFER == 0, mean(get(v))])
+}
+```
+
+```{r grade-stringency-row}
+public <- calibration[COD_DEPE %in% c(1L, 2L, 3L, 5L, 6L) & !EVER_PRIVATE]
+cal <- public[RBD %in% public[, .(n = .N, years = uniqueN(AGNO)), by = RBD][n >= 20L & years >= 2L, RBD]]
+children <- as.data.table(estimation_sample)
+
+index <- stringency_index(cal)
+children[, GRADE_STRINGENCY := index$GRADE_STRINGENCY[match(ENTRY_RBD, index$RBD)]]
+children[, GRADE_STRINGENCY_UNSHRUNK := index$GRADE_STRINGENCY_UNSHRUNK[match(ENTRY_RBD, index$RBD)]]
+stringency_est <- stringency_iv(children, "GRADE_STRINGENCY")
+unshrunk_est <- stringency_iv(children, "GRADE_STRINGENCY_UNSHRUNK")
+
+# whether the child's school has the index, on the offer (OLS)
+children[, HAS_STRINGENCY := as.integer(!is.na(GRADE_STRINGENCY))]
+availability <- feols(HAS_STRINGENCY ~ OFFER + .[controls] + i(YEAR, ref = 2016) | CHANCE_GROUP, children)
+bind_rows(stringency_est, unshrunk_est)
+```
+
+```{r grade-stringency-checks}
+# the index fitted without one cohort (schools keep two students), on the children who have all four indexes
+for (yr in 2014:2016) {
+  fewer <- cal[AGNO != yr]
+  fewer <- fewer[RBD %in% fewer[, .N, by = RBD][N >= 2L, RBD]]
+  loo <- stringency_index(fewer)
+  children[, (paste0("GS_WITHOUT_", yr)) := loo$GRADE_STRINGENCY[match(ENTRY_RBD, loo$RBD)]]
+}
+loo_children <- children[complete.cases(children[, .(GRADE_STRINGENCY, GS_WITHOUT_2014, GS_WITHOUT_2015,
+                                                     GS_WITHOUT_2016)])]
+loo_est <- map_dbl(2014:2016, function(yr) stringency_iv(loo_children, paste0("GS_WITHOUT_", yr))$est)
+
+# the refit on the math-reading cells (fifths within each cohort) where both groups of schools have 20 students
+support <- copy(cal)
+support[, math_cell := pmin(5L, as.integer(ceiling(frank(math, ties.method = "average") / .N * 5))), by = AGNO]
+support[, reading_cell := pmin(5L, as.integer(ceiling(frank(reading, ties.method = "average") / .N * 5))), by = AGNO]
+cells <- support[, .N, by = .(AGNO, math_cell, reading_cell, OVER_DEMANDED)][
+  , .(groups = .N, smallest = min(N)), by = .(AGNO, math_cell, reading_cell)][groups == 2L & smallest >= 20L]
+support <- support[cells, on = .(AGNO, math_cell, reading_cell), nomatch = 0]
+support <- support[RBD %in% support[, .(n = .N, years = uniqueN(AGNO)), by = RBD][n >= 20L & years >= 2L, RBD]]
+common <- stringency_index(support)
+children[, GS_COMMON_SUPPORT := common$GRADE_STRINGENCY[match(ENTRY_RBD, common$RBD)]]
+support_est <- stringency_iv(children[!is.na(GS_COMMON_SUPPORT) & !is.na(GRADE_STRINGENCY)], "GS_COMMON_SUPPORT")
+c(loo_est, support_est$est)
+```
+
+```{r grade-stringency-facts}
+gpa_sd <- sd(cal$PROM_GRAL)   # the text also states the effect in SDs of GPA among the calibration students
+facts <- c(
+  GSCalibrationN        = comma_int(nrow(cal)),
+  GSSchoolN             = comma_int(uniqueN(cal$RBD)),
+  GSFailureN            = comma_int(sum(cal$SIT_FIN_R == "R")),
+  GSLotteryN            = comma_int(nrow(children)),
+  GSObservedN           = comma_int(stringency_est$n),
+  GSNoOfferN            = comma_int(stringency_est$n0),
+  GSEffect              = fmt(stringency_est$est, 3),
+  GSSE                  = fmt(stringency_est$se, 3),
+  GSMean                = fmt(stringency_est$mean, 3),
+  GSAvailabilityEffect  = fmt(100 * coef(availability)[["OFFER"]], 2),
+  GSAvailabilitySE      = fmt(100 * se(availability)[["OFFER"]], 2),
+  GSAvailabilityNoOffer = fmt(100 * children[OFFER == 0, mean(HAS_STRINGENCY)], 2),
+  GSAvailabilityOffer   = fmt(100 * children[OFFER == 1, mean(HAS_STRINGENCY)], 2),
+  GSLOOMin              = fmt(min(loo_est), 3),
+  GSLOOMax              = fmt(max(loo_est), 3),
+  GSUnshrunkEffect      = fmt(unshrunk_est$est, 3),
+  GSSupportEffect       = fmt(support_est$est, 3),
+  GSGPASD               = fmt(gpa_sd, 3),
+  GSEffectInSD          = fmt(stringency_est$est / gpa_sd, 2))
+write_tex(sprintf("\\newcommand{\\%s}{%s}", names(facts), facts), "grade_stringency_facts.tex")
+facts
+```
+
+```{r ninth-grade-tex}
+ninth_tex <- c(
+  "\\begin{tabular*}{\\textwidth}{@{\\extracolsep{\\fill}}lcc@{}}",
+  "\\toprule",
+  " & \\multicolumn{2}{c}{{Ninth grade}}\\\\",
+  "\\cmidrule(lr){2-3}",
+  " & No offer mean & 2SLS\\\\",
+  "\\midrule",
+  panel_title("{Panel A: School Environment Experienced in Ninth Grade}", 3),
+  unlist(imap(school, function(label, k) row_lines(school_est, label, k, x = 1))),
+  # the paper's file marks the grade-stringency rows with these comment lines
+  "% BEGIN GENERATED GRADE STRINGENCY OUTCOME",
+  row_lines(stringency_est, "Grade stringency (GPA points)", "GRADE_STRINGENCY", d = 3, x = 1),
+  "% END GENERATED GRADE STRINGENCY OUTCOME",
+  "\\midrule",
+  n_line(school_est, "CLASS_SIZE"),
+  "% BEGIN GENERATED GRADE STRINGENCY SAMPLE SIZE",
+  row_tex("$N$ (grade stringency)", comma_int(c(stringency_est$n0, stringency_est$n))),
+  "% END GENERATED GRADE STRINGENCY SAMPLE SIZE",
+  "\\midrule",
+  panel_title("{Panel B: Performance in Ninth Grade}", 3),
+  unlist(imap(ninth, function(label, k) {
+    row_lines(ninth_est, label, k, x = if (k %in% c("FAILED_9", "BOTTOM20")) 100 else 1)   # the two shares in %
+  })),
+  "\\midrule",
+  n_line(ninth_est, "FAILED_9"),
+  "\\bottomrule",
+  "\\end{tabular*}")
+write_tex(ninth_tex, "lottery_graduation_part2.tex")
+```
+
+# Table VII: college assignment by admission track
+
+Each assigned student counts once, under the track of her first recorded assignment within the horizon (on time,
+by the fifth admission process after the application year; ever, by the 2026 process), so the four tracks add up
+to Table IV's college seat.
 
 ```{r admission-tracks}
-tracks <- c(ASSIGNED = "Total: assigned a college seat", REG = "Regular", BEA = "BEA", PACE = "PACE", GENERO = "Gender quota")
-routes <- c("REG", "BEA", "PACE", "GENERO")
-sample_t <- sample3
+track_sample <- estimation_sample
 for (h in c("OT", "EVER")) {
-  eligible <- !is.na(sample_t$FIRST_ASSIGNED_PROCESS) & sample_t$FIRST_ASSIGNED_PROCESS <= if (h == "OT") sample_t$YEAR + 5L else 2026L
-  stopifnot(sum(eligible != sample_t[[paste0("ASSIGNED_", h)]]) == 0L)   # the first assignment in the horizon is Table IV's college seat
-  for (r in routes) sample_t[[paste0(r, "_", h)]] <- as.integer(eligible & sample_t$FIRST_ASSIGNED_TRACK %in% r)
-  stopifnot(all(rowSums(sample_t[paste0(routes, "_", h)]) == sample_t[[paste0("ASSIGNED_", h)]]))   # the four tracks partition the total
+  by_process <- if (h == "OT") track_sample$YEAR + 5L else 2026L
+  in_horizon <- !is.na(track_sample$FIRST_ASSIGNED_PROCESS) & track_sample$FIRST_ASSIGNED_PROCESS <= by_process
+  for (r in names(tracks)) {
+    track_sample[[paste0(r, "_", h)]] <- as.integer(in_horizon & track_sample$FIRST_ASSIGNED_TRACK %in% r)
+  }
 }
-vars_t <- unlist(lapply(c("OT", "EVER"), function(h) paste0(names(tracks), "_", h)))
-walk(vars_t, function(v) flag(sample_t[[v]], v))
-est_t <- tsls(sample_t, vars_t)
-additivity <- bind_rows(map(c("OT", "EVER"), function(h) {
-  total <- filter(est_t, var == paste0("ASSIGNED_", h))
-  parts <- filter(est_t, var %in% paste0(routes, "_", h))
-  tibble(horizon = h, estimate_error = sum(100 * parts$est) - 100 * total$est, mean_error = sum(100 * parts$mean) - 100 * total$mean)
-}))
-stopifnot(max(abs(additivity$estimate_error)) < 1e-9, max(abs(additivity$mean_error)) < 1e-9,   # the tracks add to the total
-          all(est_t$n == nrow(sample_t)))                                                         # N is the sample's count
-additivity
-# on the data of record, the rows this notebook shares with Table IV are Table IV's: Table V's graduation and Table VI's total, on time and
-# ever, each estimate and robust SE equal to the outcomes notebook's values of record (its numbers/outcomes_estimates.csv as written on
-# Windows, MD5 a4568c40a19769850f90dc12b80e7116, table IV, rows GRAD_OT, GRAD_EVER, ASSIGNED_OT and ASSIGNED_EVER); a later fixest with other defaults
-# would move them, and the knit stops here. On another panel the values of record do not apply: the knit prints a message and goes on
-if (on_disk$md5[on_disk$file == "mechanisms_panel.rds"] == "8d1b6996f18f2d678b543c4428567709") {
-  shared <- function(est, v) { r <- est[est$var == v, ]; stopifnot(nrow(r) == 1L); c(r$est, r$se) }
-  of_record <- list(GRAD_OT = c(-0.031247278696618825, 0.0033514252152544565), GRAD_EVER = c(-0.0094057447897240264, 0.0025825161821881612),
-                    ASSIGNED_OT = c(-0.023282059999731958, 0.0040473286987271996), ASSIGNED_EVER = c(-0.012002790882630046, 0.0042604440706998595))
-  stopifnot("Table V's graduation is Table IV's, on time and ever (estimate and robust SE of record)" =
-              all(map_lgl(c("GRAD_OT", "GRAD_EVER"), function(v) max(abs(shared(est5, v) - of_record[[v]])) < 1e-12)),
-            "Table VI's total is Table IV's college seat, on time and ever (estimate and robust SE of record)" =
-              all(map_lgl(c("ASSIGNED_OT", "ASSIGNED_EVER"), function(v) max(abs(shared(est_t, v) - of_record[[v]])) < 1e-12)))
-} else message("the panel is another panel than the one of record: the rows shared with Table IV are not checked against its values of record")
-# no gender-quota first assignment comes before the 2024 admission process, when the quota starts (Table VI's note)
-stopifnot("the gender quota starts with the 2024 admission process (Table VI's note): no gender-quota first assignment comes before it" =
-            all(sample_t$FIRST_ASSIGNED_PROCESS[sample_t$FIRST_ASSIGNED_TRACK %in% "GENERO"] >= 2024L))
-# the regular-admission and PACE effects on time against each other (the text's "similar amounts"): the 2SLS of their difference
-est_t_diff <- tsls(mutate(sample_t, REG_MINUS_PACE_OT = REG_OT - PACE_OT), "REG_MINUS_PACE_OT")
-est_t_diff
-tex_t <- c(
-  head_on_time_ever,
-  row_lines(est_t, tracks[["ASSIGNED"]], paste0("ASSIGNED", c("_OT", "_EVER"))),
+track_vars <- c("ASSIGNED", names(tracks))
+track_est <- tsls(track_sample, c(paste0(track_vars, "_OT"), paste0(track_vars, "_EVER")))
+
+tracks_tex <- c(
+  on_time_ever_header,
+  row_lines(track_est, "Total: assigned a college seat", ot_ever("ASSIGNED")),
   "\\midrule",
   panel_title("Admission tracks"),
-  unlist(map(routes, function(r) row_lines(est_t, tracks[[r]], paste0(r, c("_OT", "_EVER"))))),
+  unlist(imap(tracks, function(label, k) row_lines(track_est, label, ot_ever(k)))),
   "\\midrule",
-  n_lines(est_t, TRUE),
+  n_line(track_est, ot_ever("ASSIGNED")),
   "\\bottomrule",
-  "\\end{tabular}"
-)
-wrapper_t <- c(
-  "\\begin{table}[htp!]", "\\singlespacing\\renewcommand{\\arraystretch}{1.2}", "\\centering",
-  "\\caption{{Effect of Attending an Over-Demanded School on College Assignment by Admission Track}}\\label{tab: lottery admission tracks}",
-  "\\small", "\\input{tables/lottery_admission_tracks.tex}", "\\par\\smallskip",
-  "\\begin{minipage}{\\textwidth}\\footnotesize",
-  paste0("{Notes: 2SLS estimates of the effect of attending an over-demanded school, with the sample and specification of Table~\\ref{tab: lottery college}; ",
-         "means among students without an offer, in \\%; effects in percentage points. The total records assignment through any track. ",
-         "Each assigned student counts once, under the track of her first recorded assignment within the horizon. ",
-         "The four track indicators partition total assignment, so their means and 2SLS effects add to the total before rounding. ",
-         "On time and ever are defined in Section~\\ref{sec:lottery-data}. The gender quota starts with the 2024 admission process. ",
-         "Heteroskedasticity-robust standard errors in parentheses. $^{***}p<0.01$, $^{**}p<0.05$, $^{*}p<0.1$.}"),
-  "\\end{minipage}", "\\end{table}"
-)
-write_tex(tex_t, "lottery_admission_tracks.tex")
-write_tex(wrapper_t, "results/lottery_admission_tracks.tex")
-cat(tex_t, sep = "\n")
+  "\\end{tabular}")
+tracks_note <- paste0(
+  "2SLS estimates of the effect of attending an over-demanded school, with the sample and specification of ",
+  "Table~\\ref{tab: lottery college}; means among students without an offer, in \\%; effects in percentage points. ",
+  "The total records assignment through any track. Each assigned student counts once, under the track of her first ",
+  "recorded assignment within the horizon. The four track indicators partition total assignment, so their means and ",
+  "2SLS effects add to the total before rounding. On time and ever are defined in Section~\\ref{sec:lottery-data}. ",
+  "The gender quota starts with the 2024 admission process. Heteroskedasticity-robust standard errors in ",
+  "parentheses. $^{***}p<0.01$, $^{**}p<0.05$, $^{*}p<0.1$.")
+write_tex(tracks_tex, "lottery_admission_tracks.tex")
+write_tex(tex_float("College Assignment by Admission Track", "tab: lottery admission tracks",
+                    "lottery_admission_tracks.tex", tracks_note, tabcolsep = FALSE),
+          "results/lottery_admission_tracks.tex")
+track_est
 ```
 
-# Tables VII and VIII: the application choices and the admission scores
+# Tables VIII and IX: application choices and admission scores
 
-The rows come from two sets of estimates. The admission scores: each score among the students who have it, the highest reading--mathematics
-mean, the NEM and the ranking scores (in standard deviations within the admission process); on time, from the admission processes up to
-five years after the application year, NEM and ranking for the students who graduated by the fourth school year after it. The first
-application list: each student's first regular application list in the horizon (the list, the application score at the listed programs
-with its parts, and the listed cutoffs), among the students with such a list.
+The admission scores among the students who have each; the first regular application list in the horizon among
+the students with one, its programs, the application score at the listed programs with its parts, and the listed
+cutoffs, which Table IX keeps as comment lines.
 
 ```{r admission-scores}
-admission <- c(LM = "Math-Verbal", NEM = "NEM", RANKING = "Ranking")
-vars6 <- c(paste0("SCORE_", names(admission), "_OT"), paste0("SCORE_", names(admission), "_EVER"))
-est6 <- tsls(sample3, vars6)
-stopifnot(all(est6$n[est6$var == "SCORE_NEM_OT"] == est6$n[est6$var == "SCORE_RANKING_OT"]),     # NEM and ranking on the same students
-          all(est6$n[est6$var == "SCORE_NEM_EVER"] == est6$n[est6$var == "SCORE_RANKING_EVER"]))
-tex6 <- c(
+score_vars <- paste0("SCORE_", names(scores))
+score_est <- tsls(estimation_sample, c(paste0(score_vars, "_OT"), paste0(score_vars, "_EVER")))
+list_vars <- names(c(choices, app_score, cutoffs))
+list_est <- tsls(estimation_sample, c(paste0(list_vars, "_OT"), paste0(list_vars, "_EVER")))
+bind_rows(score_est, list_est)
+```
+
+```{r choices-tex}
+choices_tex <- c(
+  on_time_ever_header,
+  unlist(imap(choices, function(label, k) row_lines(list_est, label, ot_ever(k), x = 1))),
+  "\\midrule",
+  n_line(list_est, ot_ever("LIST_PROGRAMS")),
+  "\\bottomrule",
+  "\\end{tabular}")
+choices_note <- paste0(
+  "2SLS estimates with the specification of Table~\\ref{tab: lottery college}; means among students without an ",
+  "offer. Effects are in program counts, cutoff percentiles, or percentage points as indicated. A cutoff percentile ",
+  "ranks the program's cutoff among the process's programs. On time and ever are defined in ",
+  "Section~\\ref{sec:lottery-data}. Heteroskedasticity-robust standard errors in parentheses. $^{***}p<0.01$, ",
+  "$^{**}p<0.05$, $^{*}p<0.1$.")
+write_tex(choices_tex, "lottery_application_choices.tex")
+write_tex(tex_float("College Application Choices", "tab: lottery application choices",
+                    "lottery_application_choices.tex", choices_note),
+          "results/lottery_application_choices.tex")
+```
+
+```{r scores-tex}
+# a row of Table IX: the mean without an offer, the estimate and the N, on time and ever, then the SEs
+score_lines <- function(est, label, vars, d = 3) {
+  e <- est[match(vars, est$var), ]
+  c(row_tex(label, c(rbind(fmt(e$mean, d), paste0(fmt(e$est, d), star(e$p)), comma_int(e$n)))),
+    row_tex("", c(rbind("", paste0("(", fmt(e$se, d), ")"), ""))))
+}
+scores_tex <- c(
   "\\begin{tabular}{lcccccc}",
   "\\toprule",
   " & \\multicolumn{3}{c}{On time} & \\multicolumn{3}{c}{Ever}\\\\",
@@ -716,269 +447,67 @@ tex6 <- c(
   " & mean &  &  & mean &  & \\\\",
   " & (1) & (2) & (3) & (4) & (5) & (6)\\\\",
   "\\midrule",
-  unlist(imap(admission, function(lbl, k) {
-    r <- map(paste0("SCORE_", k, c("_OT", "_EVER")), function(v) { e <- filter(est6, var == .env$v); stopifnot(nrow(e) == 1L); e })
-    c(tex_row(lbl, unlist(map(r, function(e) c(num(e$mean, 3), paste0(num(e$est, 3), stars(e$p)), comma(e$n))))),
-      tex_row("", unlist(map(r, function(e) c("", paste0("(", num(e$se, 3), ")"), "")))))
-  })),
+  panel_title("Panel A. Individual admission scores (SD)", 7),
+  unlist(map2(score_vars, scores, function(k, label) score_lines(score_est, label, ot_ever(k)))),
+  "\\midrule",
+  panel_title("Panel B. Application score at the listed programs (SD)", 7),
+  unlist(imap(app_score, function(label, k) score_lines(list_est, label, ot_ever(k)))),
+  paste0("% ", c("\\midrule", panel_title("Panel C. Cutoff attainment at listed programs", 7),
+                 unlist(imap(cutoffs, function(label, k) score_lines(list_est, label, ot_ever(k), d = 2))))),
   "\\bottomrule",
-  "\\end{tabular}"
-)
+  "\\end{tabular}")
 
-list_rows <- tribble(
-  ~var,                      ~panel, ~label,                                                    ~digits,
-  "LIST_PROGRAMS",           "A",    "\\quad Programs listed",                                  2,
-  "LIST_MEAN_CUTOFF",        "A",    "\\quad Mean cutoff percentile of the listed programs",    2,
-  "LIST_MAX_CUTOFF",         "A",    "\\quad Highest cutoff percentile among the listed programs", 2,
-  "LIST_WEIGHT_NEM_RANKING", "A",    "\\quad Weight on NEM and Ranking (\\%)",                  2,
-  "LIST_SCORE",              "B",    "\\quad Application score",                                3,
-  "LIST_SCORE_NEM",          "B",    "\\quad\\quad NEM part",                                   3,
-  "LIST_SCORE_RANKING",      "B",    "\\quad\\quad Ranking part",                               3,
-  "LIST_SCORE_EXAMS",        "B",    "\\quad\\quad Exams part",                                 3,
-  "LIST_SCORE_READING",      "B",    "\\quad\\quad\\quad Reading",                              3,
-  "LIST_SCORE_MATH",         "B",    "\\quad\\quad\\quad Mathematics",                          3,
-  "LIST_SCORE_HIST_SCIENCE", "B",    "\\quad\\quad\\quad History or science",                   3,
-  "LIST_MISSED",             "C",    "\\quad Listed programs whose cutoff is missed (\\%)",     2,
-  "LIST_REACHED",            "C",    "\\quad Reached at least one listed cutoff (\\%)",         2
-)
-vars7 <- c(paste0(list_rows$var, "_OT"), paste0(list_rows$var, "_EVER"))
-est7 <- tsls(sample3, vars7)
-stopifnot(n_distinct(est7$n[endsWith(est7$var, "_OT")]) == 1L, n_distinct(est7$n[endsWith(est7$var, "_EVER")]) == 1L,     # one N per horizon
-          n_distinct(est7$n0[endsWith(est7$var, "_OT")]) == 1L, n_distinct(est7$n0[endsWith(est7$var, "_EVER")]) == 1L)
-# Table VIII's note: the application score's three parts add up to it, and the exams part is the sum of its three scores (estimates and
-# means without an offer, on time and ever, before rounding)
-add_up <- function(total, parts) all(map_lgl(c("_OT", "_EVER"), function(h) all(map_lgl(c("est", "mean"), function(field) {
-  pick <- function(v) { x <- est7[[field]][est7$var == paste0(v, h)]; stopifnot(length(x) == 1L); x }
-  abs(pick(total) - sum(map_dbl(parts, pick))) < 1e-9
-}))))
-stopifnot("Table VIII: the application score's NEM, Ranking and exams parts add up to it" = add_up("LIST_SCORE", c("LIST_SCORE_NEM", "LIST_SCORE_RANKING", "LIST_SCORE_EXAMS")),
-          "Table VIII: the exams part is the sum of its reading, mathematics and history-or-science scores" =
-            add_up("LIST_SCORE_EXAMS", c("LIST_SCORE_READING", "LIST_SCORE_MATH", "LIST_SCORE_HIST_SCIENCE")))
-lines7 <- function(p) unlist(map(which(list_rows$panel == p), function(i) {
-  r <- list_rows[i, ]
-  row_lines(est7, r$label, paste0(r$var, c("_OT", "_EVER")), d = r$digits, x = 1)
-}))
-n7 <- map(c("_OT", "_EVER"), function(h) filter(est7, endsWith(var, .env$h))[1, ])
-tex7 <- c(
-  head_on_time_ever,
-  panel_title("Panel A. The application list"),
-  lines7("A"),
-  "\\midrule",
-  panel_title("Panel B. Application score at the listed programs (SD)"),
-  lines7("B"),
-  "\\midrule",
-  panel_title("Panel C. The listed cutoffs"),
-  lines7("C"),
-  "\\midrule",
-  tex_row("$N$", unlist(map(n7, function(e) c(comma(e$n0), comma(e$n))))),
-  "\\bottomrule",
-  "\\end{tabular}"
-)
-
-# the admission-scores note: of the students with both NEM and Ranking ever, those whose two scores are DEMRE's official ones (the rest are
-# computed from school records)
-both_ever <- !is.na(sample3$SCORE_NEM_EVER) & !is.na(sample3$SCORE_RANKING_EVER)
-stopifnot(identical(!is.na(sample3$SCORE_NEM_RANKING_EVER_OFFICIAL), both_ever), sum(both_ever) == est6$n[est6$var == "SCORE_NEM_EVER"])
-n_both <- sum(both_ever)
-n_official <- sum(sample3$SCORE_NEM_RANKING_EVER_OFFICIAL[both_ever])
-c(official = n_official, both = n_both)
+official <- estimation_sample$SCORE_NEM_RANKING_EVER_OFFICIAL   # missing without both NEM and Ranking ever
+first_list <- list_est[match(ot_ever("LIST_PROGRAMS"), list_est$var), ]
+scores_note <- paste0(
+  "2SLS estimates as in Table~\\ref{tab: lottery college}; means among students without an offer. Panel A uses ",
+  "students with both compulsory exam scores for Math-Verbal, and graduates with both NEM and Ranking for those ",
+  "rows. NEM and Ranking are official for ", comma_int(sum(official, na.rm = TRUE)), " of the ",
+  comma_int(sum(!is.na(official))), " students ever, and computed from school records for the rest. Panel B uses ",
+  "the applicants and first lists in Table~\\ref{tab: lottery application choices}; Panel B averages scores and ",
+  "components over listed programs. Panel A is in SD of each score; Panel B is in SD of published application ",
+  "scores. Parts share the total's centering and scale and add to it before rounding. Panel B includes ",
+  comma_int(first_list$n0[1]), " students without an offer on time, ", comma_int(first_list$n0[2]), " ever. ",
+  "Heteroskedasticity-robust standard errors in parentheses. $^{***}p<0.01$, $^{**}p<0.05$, $^{*}p<0.1$.")
+write_tex(scores_tex, "lottery_admission_scores.tex")
+write_tex(tex_float("College Admission Scores", "tab: lottery scores", "lottery_admission_scores.tex", scores_note,
+                    stretch = "1.0"),
+          "results/lottery_admission_scores.tex")
 ```
 
-The two tables are assembled from these rows: Table VII takes the list's
-Panel A; Table VIII takes the scores (Panel A) and the application score with its parts (Panel B), each with its N, and keeps the listed
-cutoffs as comment lines. Every estimate, standard error and star is copied from the rows above.
+# Table X: PACE and BEA
 
-```{r merge-admission-tables}
-scores_text <- paste(tex6, collapse = "\n")
-applications_text <- paste(tex7, collapse = "\n")
-# the text between the marker start and the first marker end after it, each marker once in the text
-between_text <- function(text, start, end) {
-  count <- function(s) sum(gregexpr(s, text, fixed = TRUE)[[1L]] > 0L)   # occurrences of s (gregexpr gives -1 for none)
-  stopifnot(count(start) == 1L, count(end) == 1L)
-  after <- substring(text, regexpr(start, text, fixed = TRUE) + nchar(start))
-  stopifnot(regexpr(end, after, fixed = TRUE) > 0L)
-  substr(after, 1L, regexpr(end, after, fixed = TRUE) - 1L)
-}
-# the table rows of a text: lines with a cell, other than panel titles and N lines
-data_rows <- function(text) {
-  lines <- strsplit(text, "\n", fixed = TRUE)[[1L]]
-  lines[grepl("&", lines, fixed = TRUE) & !startsWith(lines, "\\multicolumn") & !startsWith(lines, "$N$")]
-}
-# a line's cells: the line without its closing row break, split at each &, each cell without its surrounding spaces, a trailing empty cell kept
-cells_of <- function(line) {
-  if (endsWith(line, "\\\\")) line <- substr(line, 1L, nchar(line) - 2L)
-  cells <- strsplit(line, "&", fixed = TRUE)[[1L]]
-  if (endsWith(line, "&")) cells <- c(cells, "")
-  trimws(cells)
-}
-stopifnot("between_text self-test" = identical(between_text("a<x>b<y>c", "<x>", "<y>"), "b") &&
-            inherits(tryCatch(between_text("<x>a<x>b<y>", "<x>", "<y>"), error = function(e) e), "error"),
-          "data_rows self-test" = identical(data_rows("\\multicolumn{5}{l}{x} & y\nA & 1\\\\\nno cell\n$N$ & 2\\\\\n & (3)\\\\"), c("A & 1\\\\", " & (3)\\\\")),
-          "cells_of self-test" = identical(cells_of(" &  & (0.01) &  & \\\\"), c("", "", "(0.01)", "", "")) &&
-            identical(cells_of("A & 1 &"), c("A", "1", "")) && identical(cells_of("$N$ & 1,234 & 5\\\\"), c("$N$", "1,234", "5")))
-score_rows <- data_rows(between_text(scores_text, "\\midrule", "\\bottomrule"))
-choice_rows <- data_rows(between_text(applications_text, "\\textit{Panel A. The application list}}\\\\",
-                                      "\\textit{Panel B. Application score at the listed programs (SD)}}\\\\"))
-application_score_rows <- data_rows(between_text(applications_text, "\\textit{Panel B. Application score at the listed programs (SD)}}\\\\",
-                                                 "\\textit{Panel C. The listed cutoffs}}\\\\"))
-cutoff_rows <- data_rows(between_text(applications_text, "\\textit{Panel C. The listed cutoffs}}\\\\", "\\bottomrule"))
-stopifnot(identical(lengths(list(score_rows, choice_rows, application_score_rows, cutoff_rows)), c(6L, 8L, 14L, 4L)))
-app_n <- tex7[startsWith(tex7, "$N$")]
-stopifnot(length(app_n) == 1L)
-app_n_cells <- cells_of(app_n)
-stopifnot(length(app_n_cells) == 5L)
-no_offer_ot <- app_n_cells[2L]; total_ot <- app_n_cells[3L]; no_offer_ever <- app_n_cells[4L]; total_ever <- app_n_cells[5L]
-
-# Table VII: application choices among regular-track applicants
-header4 <- c("\\begin{tabular}{lcccc}", "\\toprule",
-             " & \\multicolumn{2}{c}{On time} & \\multicolumn{2}{c}{Ever}\\\\",
-             "\\cmidrule(lr){2-3}\\cmidrule(lr){4-5}",
-             " & No offer & 2SLS & No offer & 2SLS\\\\",
-             " & mean &  & mean & \\\\", " & (1) & (2) & (3) & (4)\\\\")
-choices <- c(header4, "\\midrule", choice_rows, "\\midrule", app_n, "\\bottomrule", "\\end{tabular}")
-write_tex(choices, "lottery_application_choices.tex")
-
-# Table VIII: individual scores and weighted application scores, with N columns identifying the applicant sample on each row; the cutoff
-# panel kept as comments
-with_sample_sizes <- function(rows, labels = NULL) {
-  expanded <- character(length(rows))
-  for (i in seq_along(rows)) {
-    cells <- cells_of(rows[[i]])
-    stopifnot(length(cells) == 5L)
-    if (!is.null(labels) && cells[[1L]] %in% names(labels)) cells[[1L]] <- labels[[cells[[1L]]]]
-    n_cells <- if (i %% 2L == 1L) c(total_ot, total_ever) else c("", "")   # the first line of each row carries the N
-    expanded[[i]] <- paste0(paste(c(cells[1:3], n_cells[[1L]], cells[4:5], n_cells[[2L]]), collapse = " & "), "\\\\")
-    stopifnot(identical(cells_of(expanded[[i]])[c(1L, 2L, 3L, 5L, 6L)], cells))
-  }
-  expanded
-}
-expanded_application_rows <- with_sample_sizes(application_score_rows)
-expanded_cutoff_rows <- with_sample_sizes(cutoff_rows, c(
-  "\\quad Listed programs whose cutoff is missed (\\%)" = "\\quad Listed cutoffs missed (\\%)",
-  "\\quad Reached at least one listed cutoff (\\%)" = "\\quad Reached a listed cutoff (\\%)"))
-HEADER6 <- c("\\begin{tabular}{lcccccc}", "\\toprule", " & \\multicolumn{3}{c}{On time} & \\multicolumn{3}{c}{Ever}\\\\",
-             "\\cmidrule(lr){2-4}\\cmidrule(lr){5-7}", " & No offer & 2SLS & $N$ & No offer & 2SLS & $N$\\\\", " & mean &  &  & mean &  & \\\\",
-             " & (1) & (2) & (3) & (4) & (5) & (6)\\\\")
-header6 <- strsplit(trimws(strsplit(scores_text, "\\midrule", fixed = TRUE)[[1L]][[1L]]), "\n", fixed = TRUE)[[1L]]
-stopifnot(identical(header6, HEADER6))
-panel_block <- function(title, rows, columns = 5L) c("\\midrule", panel_title(title, columns), rows)
-combined_scores <- c(header6,
-                     panel_block("Panel A. Individual admission scores (SD)", score_rows, 7L),
-                     panel_block("Panel B. Application score at the listed programs (SD)", expanded_application_rows, 7L),
-                     paste0("% ", panel_block("Panel C. Cutoff attainment at listed programs", expanded_cutoff_rows, 7L)),
-                     "\\bottomrule", "\\end{tabular}")
-write_tex(combined_scores, "lottery_admission_scores.tex")
-
-wrapper <- function(name, caption, label, body, notes, spacing) {
-  write_tex(c("\\begin{table}[htp!]", paste0("\\singlespacing\\renewcommand{\\arraystretch}{", spacing, "}"), "\\centering",
-              paste0("\\caption{{", caption, "}}\\label{", label, "}"), "\\small", "\\setlength{\\tabcolsep}{6pt}",
-              paste0("\\input{tables/", body, "}"), "\\par\\smallskip", "\\begin{minipage}{\\textwidth}\\footnotesize",
-              paste0("{Notes: ", notes, "}"), "\\end{minipage}", "\\end{table}"),
-            file.path("results", name))
-}
-wrapper("lottery_application_choices.tex", "Effect of Attending an Over-Demanded School on Application Choices",
-        "tab: lottery application choices", "lottery_application_choices.tex",
-        paste0("2SLS estimates with the specification of Table~\\ref{tab: lottery college}; means among students without an offer. ",
-               "Effects are in program counts, cutoff percentiles, or percentage points as indicated. ",
-               "A cutoff percentile ranks the program's cutoff among the process's programs. ",
-               "On time and ever are defined in Section~\\ref{sec:lottery-data}. ",
-               "Heteroskedasticity-robust standard errors in parentheses. $^{***}p<0.01$, $^{**}p<0.05$, $^{*}p<0.1$."),
-        "1.2")
-wrapper("lottery_admission_scores.tex", "Effect of Attending an Over-Demanded School on Admission Scores",
-        "tab: lottery scores", "lottery_admission_scores.tex",
-        paste0("2SLS estimates as in Table~\\ref{tab: lottery college}; means among students without an offer. ",
-               "Panel A uses students with both compulsory exam scores for Math-Verbal, and graduates with both NEM and Ranking for those rows. ",
-               "NEM and Ranking are official for ", comma(n_official), " of the ", comma(n_both), " students ever, and computed from school records for the rest. ",
-               "Panel B uses the applicants and first lists in Table~\\ref{tab: lottery application choices}; Panel B averages scores and components over listed programs. ",
-               "Panel A is in SD of each score; Panel B is in SD of published application scores. Parts share the total's centering and scale and add to it before rounding. ",
-               "Panel B includes ", no_offer_ot, " students without an offer on time, ", no_offer_ever, " ever. ",
-               "Heteroskedasticity-robust standard errors in parentheses. $^{***}p<0.01$, $^{**}p<0.05$, $^{*}p<0.1$."),
-        "1.0")
-cat(choices, combined_scores, sep = "\n")
-```
-
-# Table IX: PACE and BEA
-
-Each student with every characteristic, on time and ever: PACE's school condition (her grade-11 and grade-12 schools on the PACE list,
-graduating from one), PACE's grade rule among her school's graduates, both, and BEA's grade rule (the Ministry's own record of the top
-10% of her school's graduates by grade average). In "Met both", from the 2022 admission process on, the grade rule's places and rank
-come from the classmates who meet the school condition, as the resolutions set it, so that row can differ from the product of the first
-two. Each row is 0 for a student who does not graduate in the horizon, or whose records leave the condition undetermined.
-
-The appendix checks these rows against the seats the students obtain (ever): a PACE seat in DEMRE's selections in any admission process
-after the year of the graduation record her row reads, a BEA seat in the process right after it (the data folder's PACE_SEAT_EVER and
-BEA_SEAT_EVER); of the holders of each seat, those who meet PACE's two conditions, or BEA's grade rule.
+PACE's school condition (grades 11 and 12 at schools on the PACE list, graduating from one), PACE's grade rule
+among her school's graduates, both, and BEA's grade rule; each row is 0 for a student who does not graduate
+within the horizon.
 
 ```{r pace-bea}
-access <- c(PACE_SCHOOL = "\\quad Graduated from a PACE school", PACE_GRADE = "\\quad Met PACE's grade rule at her school",
-            PACE_BOTH = "\\quad Met both", BEA_GRADE = "\\quad Met BEA's grade rule at her school")
-vars8 <- c(paste0(names(access), "_OT"), paste0(names(access), "_EVER"))
-walk(vars8, function(v) flag(sample3[[v]], v))
-# Table IX's note: each row is 0 for a student who did not graduate within the horizon
-stopifnot("Table IX: each row is 0 for a student who did not graduate within the horizon" =
-            all(map_lgl(c("_OT", "_EVER"), function(h) all(as.matrix(sample3[sample3[[paste0("GRAD", h)]] == 0L, paste0(names(access), h)]) == 0L))))
-est8 <- tsls(sample3, vars8)
-lines8 <- function(keys) unlist(map(keys, function(k) row_lines(est8, access[[k]], paste0(k, c("_OT", "_EVER")))))
-tex8 <- c(
-  head_on_time_ever,
+access_est <- tsls(estimation_sample, c(paste0(names(access), "_OT"), paste0(names(access), "_EVER")))
+
+pace_tex <- c(
+  on_time_ever_header,
   panel_title("Panel A. PACE"),
-  lines8(c("PACE_GRADE", "PACE_SCHOOL", "PACE_BOTH")),   # the paper's order: the grade rule first
+  unlist(map(c("PACE_GRADE", "PACE_SCHOOL", "PACE_BOTH"), function(k) {   # the paper's order: the grade rule first
+    row_lines(access_est, access[[k]], ot_ever(k))
+  })),
   "\\midrule",
   panel_title("Panel B. BEA"),
-  lines8("BEA_GRADE"),
+  row_lines(access_est, access[["BEA_GRADE"]], ot_ever("BEA_GRADE")),
   "\\midrule",
-  n_lines(est8, TRUE),
+  n_line(access_est, ot_ever("PACE_GRADE")),
   "\\bottomrule",
-  "\\end{tabular}"
-)
-write_tex(tex8, "pace_bea_access.tex")
-cat(tex8, sep = "\n")
-
-# the appendix's check: the students holding each seat (ever), and those of them meeting the matching row
-walk(c("PACE_SEAT_EVER", "BEA_SEAT_EVER"), function(v) flag(sample3[[v]], v))
-seat_holders <- tibble(seat = c("PACE", "BEA"), row = c("PACE_BOTH_EVER", "BEA_GRADE_EVER"),
-                       holders = c(sum(sample3$PACE_SEAT_EVER == 1L), sum(sample3$BEA_SEAT_EVER == 1L)),
-                       meeting = c(sum(sample3$PACE_SEAT_EVER == 1L & sample3$PACE_BOTH_EVER == 1L),
-                                   sum(sample3$BEA_SEAT_EVER == 1L & sample3$BEA_GRADE_EVER == 1L)))
-seat_holders
+  "\\end{tabular}")
+write_tex(pace_tex, "pace_bea_access.tex")
+access_est
 ```
 
-## The schools on the PACE list
+# Appendix Table D.1: promotion rules in secondary education
 
-The share of the over-demanded schools with a 12th grade on the Ministry's PACE list, by school year, against the other publicly funded
-schools with a 12th grade (the text's footnote on PACE schools).
-
-```{r pace-list-share}
-flag(schools$OVER_DEMANDED, "OVER_DEMANDED (schools)"); flag(schools$ON_PACE_LIST, "ON_PACE_LIST")
-stopifnot("the schools' two flags are logical (the shares below index by them)" = is.logical(schools$OVER_DEMANDED) && is.logical(schools$ON_PACE_LIST))
-pace_share <- schools %>%
-  group_by(YEAR, OVER_DEMANDED) %>%
-  summarise(schools = n(), on_pace_list = sum(ON_PACE_LIST), share_pct = 100 * mean(ON_PACE_LIST), .groups = "drop")
-stopifnot(nrow(pace_share) == 14L)   # 2019-2025, both groups
-as.data.frame(mutate(pace_share, share_pct = round(share_pct, 1)))
-round(range(pace_share$share_pct[pace_share$OVER_DEMANDED]), 1)    # the over-demanded schools
-round(range(pace_share$share_pct[!pace_share$OVER_DEMANDED]), 1)   # the other publicly funded schools with a 12th grade
-```
-
-# Appendix Table D.1: the promotion rules in secondary education
-
-The rules of the school years 2017-2025 that promote a student with one or two subjects below 4.0, and the attendance minimum: Decrees
-112 (1999), 83 (2001) and 67 (2018) for regular secondary education, Decree 2169 (2007) for adult secondary education (constants; no
-data). The paper's note to the table explains the marks a, b and c.
+Decrees 112 (1999), 83 (2001) and 67 (2018) for regular secondary education, Decree 2169 (2007) for adult
+secondary education.
 
 ```{r promotion-rules}
-promotion_rules <- tribble(
-  ~program,                      ~rule,                             ~years,       ~one,               ~two,                 ~attendance,
-  "Regular secondary education", "Grades 9--10, Decree 112 (1999)", "2017--2019", "4.5",              "5.0",                "85\\%",
-  "Regular secondary education", "Grades 11--12, Decree 83 (2001)", "2017--2019", "4.5",              "5.0 or 5.5$^{a}$",   "85\\%",
-  "Regular secondary education", "Grades 9--12, Decree 67 (2018)",  "2020--2025", "4.5",              "5.0",                "85\\%",
-  "Adult secondary education",   "Decree 2169 (2007)$^{c}$",        "2017--2025", "4.5 or 5.0$^{b}$", "Special evaluation", "80\\% per subject"
-)
-promotion_lines <- unlist(map(unique(promotion_rules$program), function(p) {
-  r <- filter(promotion_rules, program == .env$p)
-  c(panel_title(p), map_chr(seq_len(nrow(r)), function(i) tex_row(paste0("\\quad ", r$rule[i]), c(r$years[i], r$one[i], r$two[i], r$attendance[i]))))
-}))
-tex_promotion <- c(
+promotion_tex <- c(
   "\\begin{tabular}{lcccc}",
   "\\toprule",
   " & & \\multicolumn{2}{c}{Minimum average with} & \\\\",
@@ -986,26 +515,27 @@ tex_promotion <- c(
   "\\cmidrule(lr){3-4}",
   "Grades and decree & years & One & Two & attendance \\\\",
   "\\midrule",
-  promotion_lines,
+  panel_title("Regular secondary education"),
+  row_tex("\\quad Grades 9--10, Decree 112 (1999)", c("2017--2019", "4.5", "5.0", "85\\%")),
+  row_tex("\\quad Grades 11--12, Decree 83 (2001)", c("2017--2019", "4.5", "5.0 or 5.5$^{a}$", "85\\%")),
+  row_tex("\\quad Grades 9--12, Decree 67 (2018)", c("2020--2025", "4.5", "5.0", "85\\%")),
+  panel_title("Adult secondary education"),
+  row_tex("\\quad Decree 2169 (2007)$^{c}$",
+          c("2017--2025", "4.5 or 5.0$^{b}$", "Special evaluation", "80\\% per subject")),
   "\\bottomrule",
-  "\\end{tabular}"
-)
-write_tex(tex_promotion, "appendix_promotion_rules.tex")
-cat(tex_promotion, sep = "\n")
+  "\\end{tabular}")
+write_tex(promotion_tex, "appendix_promotion_rules.tex")
 ```
 
 # Appendix Table D.2: failing a year in each of the first four school years
 
-A failed year in regular or adult secondary education in each school year after the application year, on every student with every
-characteristic, whether or not she graduates.
+A failed year in regular or adult secondary education in each school year after the application year, whether or
+not the student graduates.
 
 ```{r failing-by-year}
-years <- c(FAIL_YEAR_1 = "Year 1 after entry", FAIL_YEAR_2 = "Year 2 after entry", FAIL_YEAR_3 = "Year 3 after entry",
-           FAIL_YEAR_4 = "Year 4 after entry", FAIL_YEAR_ANY = "Any of years 1 to 4")
-walk(names(years), function(v) flag(sample3[[v]], v))
-stopifnot(all(sample3$FAIL_YEAR_ANY == pmax(sample3$FAIL_YEAR_1, sample3$FAIL_YEAR_2, sample3$FAIL_YEAR_3, sample3$FAIL_YEAR_4)))
-est_years <- tsls(sample3, names(years))
-tex_years <- c(
+fail_est <- tsls(estimation_sample, names(fail_years))
+
+fail_tex <- c(
   "\\begin{tabular}{lcc}",
   "\\toprule",
   " & No offer & 2SLS\\\\",
@@ -1013,388 +543,136 @@ tex_years <- c(
   " & (1) & (2)\\\\",
   "\\midrule",
   panel_title("Failed a year (\\%)", 3),
-  unlist(imap(years, function(lbl, k) row_lines(est_years, lbl, k, cells = 2))),
+  unlist(imap(fail_years, function(label, k) row_lines(fail_est, label, k))),
   "\\midrule",
-  tex_row("$N$", c(comma(unique(est_years$n0)), comma(unique(est_years$n)))),
+  n_line(fail_est, "FAIL_YEAR_ANY"),
   "\\bottomrule",
-  "\\end{tabular}"
-)
-write_tex(tex_years, "appendix_failing_by_year.tex")
-cat(tex_years, sep = "\n")
+  "\\end{tabular}")
+write_tex(fail_tex, "appendix_failing_by_year.tex")
+fail_est
 ```
 
 # Appendix Table D.3: PACE's academic rules by admission process
 
-The rules of the six admission processes, from the official guides of 2021-2023, Resolution 3625 of June 29, 2023, and the 2025-2026
-guides (constants; no data).
+From the official guides of 2021-2023, Resolution 3625 of June 29, 2023, and the 2025-2026 guides.
 
 ```{r pace-rules}
-pace_rules <- tibble(
-  admission_process = 2021:2026,
-  graduation_cohort = 2020:2025,
-  top_share = c(.15, .15, .20, .20, .25, .25),
-  minimum_ranking = c(710, 749, 863, 851, 815, 830),
-  valid_through = c(2021L, 2022L, 2024L, 2025L, 2026L, 2027L)
-)
-stopifnot(all(pace_rules$admission_process == pace_rules$graduation_cohort + 1L))
-rules_rows <- pace_rules %>%
-  mutate(valid = ifelse(valid_through == admission_process, as.character(admission_process), paste0(admission_process, "--", valid_through))) %>%
-  with(paste0(admission_process, " & ", graduation_cohort, " & ", 100 * top_share, "\\% & $\\geq ", minimum_ranking, "$ & ", valid, " \\\\"))
-tex_pace_rules <- c(
+pace_rules_tex <- c(
   "\\begin{table}[!htbp]",
   "\\singlespacing\\renewcommand{\\arraystretch}{1.25}\\centering",
   "\\caption{PACE Academic Requirements by Admission Process}\\label{tab: pace annual rules}",
   "\\small\\begin{tabular}{ccccc}\\toprule",
   "Admission & Graduation & Within-school & Absolute Ranking & Valid admission \\\\",
   "process & cohort & top share & alternative & processes \\\\\\midrule",
-  rules_rows,
+  "2021 & 2020 & 15\\% & $\\geq 710$ & 2021 \\\\",
+  "2022 & 2021 & 15\\% & $\\geq 749$ & 2022 \\\\",
+  "2023 & 2022 & 20\\% & $\\geq 863$ & 2023--2024 \\\\",
+  "2024 & 2023 & 20\\% & $\\geq 851$ & 2024--2025 \\\\",
+  "2025 & 2024 & 25\\% & $\\geq 815$ & 2025--2026 \\\\",
+  "2026 & 2025 & 25\\% & $\\geq 830$ & 2026--2027 \\\\",
   "\\bottomrule\\end{tabular}\\par\\smallskip",
   "\\begin{minipage}{\\textwidth}\\footnotesize",
-  paste0("Notes: Each row describes a newly graduating cohort. The academic condition is the within-school ",
-    "percentile of the official Ranking score or the absolute-score alternative. Scores use the 150--850 ",
-    "scale in 2021--2022 and the approximately 100--1000 scale from 2023. Students must also attend ",
-    "grades 11 and 12 and graduate from a participating school, and take reading, mathematics ",
-    "(Mathematics 1 from 2023), and an elective in history/social sciences or sciences. From 2023, ",
-    "school history and the academic condition establish prehabilitation; the required regular exams ",
-    "establish habilitation. A previous cohort can retain eligibility in the following process, ",
-    "subject to exam completion and the one-use condition, without being reassessed under the new ",
-    "cohort's academic threshold. The 2024--2026 rules count enrollment at a PACE university as use ",
-    "regardless of the admission track. The 2024 resolution defines the percentile reference group ",
-    "as graduates meeting the school-history condition. Selection ranks eligible applications using ",
-    "80\\% Ranking and 20\\% NEM, with territorial and preference-order bonuses; the 2025--2026 ",
-    "guides also include degree-type bonuses. Eligibility does not imply application or selection."),
-  paste0("Sources: Annual official guides for 2021--2023 ",
-    "\\citep{paceRules2021,paceRules2022,paceRules2023}, Resolution 3625 of June 29, 2023 ",
-    "for admission 2024 \\citep{paceRules2024}, and the 2025--2026 guides ",
-    "\\citep{paceRules2025,paceRules2026}."),
-  "\\end{minipage}\\end{table}"
-)
-write_tex(tex_pace_rules, "appendix_pace_rules.tex")
-cat(tex_pace_rules, sep = "\n")
+  paste0("Notes: Each row describes a newly graduating cohort. The academic requirement is the within-school ",
+         "percentile of the official Ranking score or the absolute-score alternative. Scores use the 150--850 scale ",
+         "in 2021--2022 and the approximately 100--1000 scale from 2023. Students must also attend grades 11 and 12 ",
+         "at a participating school and graduate from one, and take reading, mathematics (Mathematics 1 from 2023), ",
+         "and an elective in history/social sciences or sciences. A previous cohort can retain eligibility in the ",
+         "following process, subject to exam completion and the one-use condition, without being reassessed under ",
+         "the new cohort's academic threshold."),
+  paste0("Sources: Annual official guides for 2021--2023 \\citep{paceRules2021,paceRules2022,paceRules2023}, ",
+         "Resolution 3625 of June 29, 2023 for admission 2024 \\citep{paceRules2024}, and the 2025--2026 guides ",
+         "\\citep{paceRules2025,paceRules2026}."),
+  "\\end{minipage}\\end{table}")
+write_tex(pace_rules_tex, "appendix_pace_rules.tex")
 ```
 
-# Every estimate at full precision
+# The numbers the text quotes
 
-Written to `out_dir/numbers/mechanisms_estimates.csv` (17 significant digits), so that the tables can be checked against other runs. `table`
-is the table file the row is printed in (`text` for numbers of the text and notes), `column` its panel or column. For each outcome of a table
-(a row printed on time and ever is two outcomes): the estimate, its SE, p-value and N, the students without an offer among them (n0) and
-their mean. Also: the distance's cap (km); the grade-stringency numbers of the text (its robustness estimates, whether the index is
-observed on the offer, the calibration counts); and for the text, each year's share of schools on the PACE list (%) over the schools it is
-computed on (n), the shares of Table IV's children with each admission score on time (%) over those children (n), the count of
-students with official NEM and Ranking (est) among those with both ever (n), the share of the students of Panel D who fail 9th grade that
-end it in the bottom fifth (%) over those who fail (n), and the students holding a PACE or a BEA seat ever (est) among Table IV's children
-(n), with those of them meeting the matching row (est) among the holders (n). The numbers the text works out from two estimates of the
-tables are rows too (est): the effects on class size and on students per teacher over their means without an offer (%); how much lower
-the start of 9th grade is (the change's effect less the end-of-year effect, in percentile points); the declines in meeting PACE's grade
-rule, BEA's grade rule and both PACE conditions on time over their means without an offer (%; BEA's also as a fraction); and BEA's fraction
-times the BEA assignment rate on time without an offer (percentage points).
-
-```{r estimates}
-choice_vars <- paste0(list_rows$var[list_rows$panel == "A"], rep(c("_OT", "_EVER"), each = sum(list_rows$panel == "A")))
-stringency_rows <- function(spec, var) {
-  r <- stringency[specification == spec]
-  stopifnot(nrow(r) == 1L)
-  tibble(table = "grade_stringency_facts", column = "robustness", var = var, est = r$est, se = r$se, p = r$p, n = r$n, n0 = r$n_nooffer, mean = r$mean)
-}
-score_share <- function(v) tibble(table = "text", column = "share with the score, on time", var = v,
-                                  est = 100 * est6$n[est6$var == v] / nrow(sample3), n = nrow(sample3))
-# the value of field in the one row of d whose column `by` equals key; it stops on a miss, a duplicate or an NA key
-one_value <- function(d, key, field, by = "var") {
-  hit <- which(d[[by]] == key)
-  if (length(key) != 1L || length(hit) != 1L) stop("one row with ", by, " = ", key, " expected, ", length(hit), " found")
-  d[[field]][[hit]]
-}
-stopifnot("one_value self-test" = local({
-  d <- tibble(var = c("a", "b", "b", NA), est = c(1, 2, 3, 4))
-  fails <- function(...) inherits(tryCatch(one_value(d, ...), error = function(e) e), "error")
-  identical(one_value(d, "a", "est"), 1) && fails("z", "est") && fails(NA, "est") && fails("b", "est") && fails(c("a", "a"), "est")
-}))
-# the numbers the text works out from two estimates, at full precision from the estimates above: the effect over the mean without an offer;
-# the effect on the percentile at the start of 9th grade is the end-of-year effect less the change's (the same students), so the start is
-# lower by the change's effect less the end-of-year effect; BEA's decline as a fraction, times the BEA assignment rate on time without an
-# offer (Table VI's BEA row, in %)
-over_mean <- function(est, v) one_value(est, v, "est") / one_value(est, v, "mean")
-bea_fraction <- -over_mean(est8, "BEA_GRADE_OT")
-decline <- "PACE and BEA, on time: decline over the mean without an offer (%)"
-derived <- tibble(
-  table = "text",
-  column = c("Panel C: effect over the mean without an offer (%)", "Panel C: effect over the mean without an offer (%)",
-             "Panel D: how much lower the start of 9th grade is (percentile points; the change's effect less the end-of-year effect)",
-             decline, decline, "BEA, on time: decline over the mean without an offer (fraction)",
-             "BEA, on time: the decline fraction times the BEA assignment rate without an offer (percentage points)", decline),
-  var = c("CLASS_SIZE_EFFECT_OVER_MEAN", "STUDENT_TEACHER_EFFECT_OVER_MEAN", "START_PERCENTILE_LOWER", "PACE_GRADE_OT_DECLINE",
-          "BEA_GRADE_OT_DECLINE", "BEA_GRADE_OT_DECLINE_FRACTION", "BEA_ASSIGNED_OT_IMPLIED_DECLINE", "PACE_BOTH_OT_DECLINE"),
-  est = c(100 * over_mean(est5c, "CLASS_SIZE"), 100 * over_mean(est5c, "STUDENT_TEACHER"),
-          one_value(est5d, "CHANGE", "est") - one_value(est5d, "RANK9", "est"),
-          -100 * over_mean(est8, "PACE_GRADE_OT"), 100 * bea_fraction, bea_fraction, bea_fraction * 100 * one_value(est_t, "BEA_OT", "mean"),
-          -100 * over_mean(est8, "PACE_BOTH_OT")))
-as.data.frame(derived[c("var", "est")])
-estimates <- bind_rows(
-  mutate(est5, table = "lottery_graduation_part1", column = ifelse(var %in% grad, "graduation", ifelse(sub("_(OT|EVER)$", "", var) %in% names(reasons), "Panel A", "Panel B"))),
-  mutate(est5c, table = "lottery_graduation_part2", column = "Panel C"),
-  tibble(table = "lottery_graduation_part2", column = "Panel C", var = "GRADE_STRINGENCY", est = main$est, se = main$se, p = main$p, n = main$n,
-         n0 = main$n_nooffer, mean = main$mean),
-  tibble(table = "lottery_graduation_part2", column = "Panel C", var = "cap_km", est = cap),
-  mutate(est5d, table = "lottery_graduation_part2", column = "Panel D"),
-  stringency_rows("Unshrunk historical school effects", "GRADE_STRINGENCY_UNSHRUNK"),
-  stringency_rows("Exclude historical cohort 2014", "STRINGENCY_EXCLUDING_2014"),
-  stringency_rows("Exclude historical cohort 2015", "STRINGENCY_EXCLUDING_2015"),
-  stringency_rows("Exclude historical cohort 2016", "STRINGENCY_EXCLUDING_2016"),
-  stringency_rows("Common math-reading support calibration", "STRINGENCY_COMMON_SUPPORT"),
-  tibble(table = "grade_stringency_facts", column = "availability", var = c("HAS_STRINGENCY", "HAS_STRINGENCY_NO_OFFER", "HAS_STRINGENCY_OFFER"),
-         est = c(availability_result$offer_effect, lot[OFFER == 0, mean(HAS_STRINGENCY)], lot[OFFER == 1, mean(HAS_STRINGENCY)]),
-         se = c(availability_result$se, NA, NA), p = c(availability_result$p, NA, NA),
-         n = c(availability_result$n, sum(lot$OFFER == 0), sum(lot$OFFER == 1)), n0 = c(sum(lot$OFFER == 0), NA, NA),
-         mean = c(availability_result$mean_nooffer, NA, NA)),
-  tibble(table = "grade_stringency_facts", column = "calibration", var = c("students", "schools", "failed", "lottery_children"),
-         est = c(nrow(d), uniqueN(d$RBD), sum(d$SIT_FIN_R == "R"), nrow(lot))),
-  mutate(est_t, table = "lottery_admission_tracks", column = "2SLS"),
-  mutate(filter(est7, var %in% choice_vars), table = "lottery_application_choices", column = "2SLS"),
-  mutate(est6, table = "lottery_admission_scores", column = "Panel A"),
-  mutate(filter(est7, sub("_(OT|EVER)$", "", var) %in% list_rows$var[list_rows$panel == "B"]), table = "lottery_admission_scores", column = "Panel B"),
-  mutate(filter(est7, sub("_(OT|EVER)$", "", var) %in% list_rows$var[list_rows$panel == "C"]), table = "lottery_admission_scores",
-         column = "Panel C (comment lines)"),
-  mutate(est8, table = "pace_bea_access", column = ifelse(startsWith(var, "BEA"), "Panel B", "Panel A")),
-  mutate(est_years, table = "appendix_failing_by_year", column = "Failed a year"),
-  transmute(pace_share, table = "text", column = ifelse(OVER_DEMANDED, "PACE-list share, over-demanded schools", "PACE-list share, other schools"),
-            var = as.character(YEAR), est = share_pct, n = schools),
-  score_share("SCORE_LM_OT"),
-  score_share("SCORE_NEM_OT"),
-  tibble(table = "text", column = "official NEM and Ranking, ever", var = "SCORE_NEM_RANKING_EVER_OFFICIAL", est = n_official, n = n_both),
-  tibble(table = "text", column = "Panel D: of those failing 9th grade, in the bottom fifth (%)", var = "BOTTOM20_AMONG_FAILED_9",
-         est = bottom_among_failed$share_pct, n = bottom_among_failed$failed),
-  tibble(table = "text", column = rep(c("PACE seat holders, ever", "BEA seat holders, ever"), each = 2L),
-         var = c("PACE_SEAT_EVER", "PACE_SEAT_EVER_MEETING_BOTH", "BEA_SEAT_EVER", "BEA_SEAT_EVER_MEETING_GRADE"),
-         est = c(one_value(seat_holders, "PACE", "holders", "seat"), one_value(seat_holders, "PACE", "meeting", "seat"),
-                 one_value(seat_holders, "BEA", "holders", "seat"), one_value(seat_holders, "BEA", "meeting", "seat")),
-         n = c(nrow(sample3), one_value(seat_holders, "PACE", "holders", "seat"), nrow(sample3), one_value(seat_holders, "BEA", "holders", "seat"))),
-  derived
-) %>%
-  select(table, column, variable = var, est, se, p, n, n0, mean)
-stopifnot(!anyDuplicated(select(estimates, table, column, variable)))
-estimates %>%
-  mutate(across(c(est, se, p, mean), function(x) sprintf("%.17g", x))) %>%
-  write.csv(file.path(out_dir, "numbers", "mechanisms_estimates.csv"), row.names = FALSE)
-nrow(estimates)
-```
-
-# The numbers and statements of the mechanisms section's text and of its appendix
-
-The numbers the mechanisms section and its appendix quote are written, named as the macro the text prints, to
-`numbers/mechanisms_text_numbers.csv` and, as LaTeX macros, to `tables/mechanisms_text_macros.tex`. Effects are quoted in absolute value where
-the text gives their direction in words, and a statement below checks each such direction; the withdrawal estimate, which the text quotes
-with no direction, keeps its sign. Shares are plain numbers, and the text adds the percent sign. The
-text's Table IV numbers are the outcomes notebook's macros, and its grade-stringency numbers are those of `grade_stringency_facts.tex`; the
-years, the rules' constants and the appendix's three counts of 2025 graduates stay typed. Each statement the text makes about these results
-is then checked and written, with whether it holds, to `numbers/mechanisms_text_claims.csv`, and the knit stops when one does not hold.
+Written as LaTeX macros: shares are plain numbers (the text adds the percent sign) and effects are absolute values
+where the text gives their direction in words. The text's footnote on PACE schools compares the share of the
+over-demanded schools with a 12th grade on the PACE list, each school year, with that of the other publicly funded
+schools with a 12th grade; the appendix counts the students holding a PACE or a BEA seat ever, and those of them
+meeting the matching row of Table X.
 
 ```{r text-numbers}
-pp <- function(x) num(abs(100 * x), 2)                # an effect on a 0/1 row in percentage points (the direction in words)
-pct <- function(x, d = 2) num(100 * x, d)             # a mean of a 0/1 row in %
-est_of <- function(est, v) one_value(est, v, "est")   # an estimate at full precision
-mean0 <- function(est, v) one_value(est, v, "mean")   # its mean without an offer
-dv <- function(v) one_value(derived, v, "est")        # a number the text works out from two estimates
-pace_range <- function(od) num(range(pace_share$share_pct[pace_share$OVER_DEMANDED == od]), 1)   # the lowest and highest yearly share (%)
-seats <- function(seat, field) comma(one_value(seat_holders, seat, field, "seat"))
-od_range <- pace_range(TRUE); other_range <- pace_range(FALSE)
-text_numbers <- tribble(
-  ~macro,                         ~value,                                          ~what,
-  "MechDistanceCapKm",            num(cap, 0),                                     "Table V's note: the distance's cap, its 99th percentile among the students with every characteristic, km",
-  "MechFailedYearOnTime",         pp(est_of(est5, "FAILNG_OT")),                   "Table V, failed a year and did not graduate, on time, pp",
-  "MechFailedYearEver",           pp(est_of(est5, "FAILNG_EVER")),                 "Table V, failed a year and did not graduate, ever, pp",
-  "MechFailedYearOnTimeMean",     pct(mean0(est5, "FAILNG_OT")),                   "Table V, failed a year, on time, mean without an offer, %",
-  "MechFailedYearEverMean",       pct(mean0(est5, "FAILNG_EVER")),                 "Table V, failed a year, ever, mean without an offer, %",
-  "MechWithdrewEver",             num(100 * est_of(est5, "WDNG_EVER"), 2),         "Table V, withdrew, ever, pp (with its sign: the text gives no direction)",
-  "MechGradesOnTime",             pp(est_of(est5, "PB_G_OT")),                     "Table V, failing on grades, on time, pp",
-  "MechGradesEver",               pp(est_of(est5, "PB_G_EVER")),                   "Table V, failing on grades, ever, pp",
-  "MechAttendanceUnknownOnTime",  pp(est_of(est5, "PB_U_OT")),                     "Table V, failing on attendance with grades unknown, on time, pp",
-  "MechAttendanceUnknownEver",    pp(est_of(est5, "PB_U_EVER")),                   "Table V, failing on attendance with grades unknown, ever, pp",
-  "MechClassSize",                num(abs(est_of(est5c, "CLASS_SIZE")), 2),        "Table V, class size, students",
-  "MechClassSizeShare",           num(dv("CLASS_SIZE_EFFECT_OVER_MEAN"), 2),       "the class-size effect over its mean without an offer, %",
-  "MechClassSizeMean",            num(mean0(est5c, "CLASS_SIZE"), 2),              "Table V, class size, mean without an offer, students",
-  "MechStudentsPerTeacher",       num(abs(est_of(est5c, "STUDENT_TEACHER")), 2),   "Table V, students per teacher",
-  "MechStudentsPerTeacherShare",  num(dv("STUDENT_TEACHER_EFFECT_OVER_MEAN"), 2),  "the students-per-teacher effect over its mean without an offer, %",
-  "MechStudentsPerTeacherMean",   num(mean0(est5c, "STUDENT_TEACHER"), 2),         "Table V, students per teacher, mean without an offer",
-  "MechFailedNinth",              pp(est_of(est5d, "FAILED_9")),                   "Table V, failed 9th grade, pp",
-  "MechFailedNinthMean",          pct(mean0(est5d, "FAILED_9")),                   "Table V, failed 9th grade, mean without an offer, %",
-  "MechStartPercentileLower",     num(dv("START_PERCENTILE_LOWER"), 2),            "how much lower the percentile at the start of 9th grade is, percentile points",
-  "MechPercentileChange",         num(abs(est_of(est5d, "CHANGE")), 2),            "Table V, change in percentile during 9th grade, percentile points",
-  "MechPercentileEnd",            num(abs(est_of(est5d, "RANK9")), 2),             "Table V, percentile at the end of 9th grade, percentile points",
-  "MechBottomFifth",              pp(est_of(est5d, "BOTTOM20")),                   "Table V, ended 9th grade in the bottom fifth of the class, pp",
-  "MechBottomFifthMean",          pct(mean0(est5d, "BOTTOM20")),                   "Table V, bottom fifth, mean without an offer, %",
-  "MechBottomFifthAmongFailed",   num(bottom_among_failed$share_pct, 1),           "of the students of Panel D who fail 9th grade, those who end it in the bottom fifth, %",
-  "MechRegularOnTime",            pp(est_of(est_t, "REG_OT")),                     "Table VI, regular admission, on time, pp",
-  "MechPACEOnTime",               pp(est_of(est_t, "PACE_OT")),                    "Table VI, PACE, on time, pp",
-  "MechBEAOnTime",                pp(est_of(est_t, "BEA_OT")),                     "Table VI, BEA, on time, pp",
-  "MechBEAEver",                  pp(est_of(est_t, "BEA_EVER")),                   "Table VI, BEA, ever, pp",
-  "MechPACEEver",                 pp(est_of(est_t, "PACE_EVER")),                  "Table VI, PACE, ever, pp",
-  "MechExamScoreShare",           num(100 * one_value(est6, "SCORE_LM_OT", "n") / nrow(sample3), 0),  "Table IV's children with a Math-Verbal score on time, %",
-  "MechGradeScoreShare",          num(100 * one_value(est6, "SCORE_NEM_OT", "n") / nrow(sample3), 0), "Table IV's children with NEM and Ranking on time, %",
-  "MechMathVerbalOnTime",         num(abs(est_of(est6, "SCORE_LM_OT")), 3),        "Table VIII, Math-Verbal, on time, SD",
-  "MechNEMOnTime",                num(abs(est_of(est6, "SCORE_NEM_OT")), 3),       "Table VIII, NEM, on time, SD",
-  "MechRankingOnTime",            num(abs(est_of(est6, "SCORE_RANKING_OT")), 3),   "Table VIII, Ranking, on time, SD",
-  "MechApplicationScoreOnTime",   num(abs(est_of(est7, "LIST_SCORE_OT")), 3),      "Table VIII, application score at the listed programs, on time, SD",
-  "MechRankingPartOnTime",        num(abs(est_of(est7, "LIST_SCORE_RANKING_OT")), 3), "Table VIII, its Ranking part, on time, SD",
-  "MechNEMPartOnTime",            num(abs(est_of(est7, "LIST_SCORE_NEM_OT")), 3),  "Table VIII, its NEM part, on time, SD",
-  "MechExamsPartOnTime",          num(abs(est_of(est7, "LIST_SCORE_EXAMS_OT")), 3), "Table VIII, its exams part, on time, SD",
-  "MechPACEGradeOnTime",          pp(est_of(est8, "PACE_GRADE_OT")),               "Table IX, met PACE's grade rule, on time, pp",
-  "MechBEAGradeOnTime",           pp(est_of(est8, "BEA_GRADE_OT")),                "Table IX, met BEA's grade rule, on time, pp",
-  "MechPACEGradeMean",            pct(mean0(est8, "PACE_GRADE_OT")),               "Table IX, PACE's grade rule, on time, mean without an offer, %",
-  "MechBEAGradeMean",             pct(mean0(est8, "BEA_GRADE_OT")),                "Table IX, BEA's grade rule, on time, mean without an offer, %",
-  "MechPACEGradeDecline",         num(dv("PACE_GRADE_OT_DECLINE"), 1),             "PACE's grade rule: the decline over its mean without an offer, %",
-  "MechBEAGradeDecline",          num(dv("BEA_GRADE_OT_DECLINE"), 1),              "BEA's grade rule: the decline over its mean without an offer, %",
-  "MechBEAGradeDeclineFraction",  num(dv("BEA_GRADE_OT_DECLINE_FRACTION"), 3),     "the same decline as a fraction",
-  "MechBEAAssignedMean",          pct(mean0(est_t, "BEA_OT")),                     "Table VI, BEA, on time, mean without an offer, %",
-  "MechBEAImpliedDecline",        num(dv("BEA_ASSIGNED_OT_IMPLIED_DECLINE"), 2),   "the decline fraction times that rate, pp",
-  "MechPACESchoolOnTime",         pp(est_of(est8, "PACE_SCHOOL_OT")),              "Table IX, graduated from a PACE school, on time, pp",
-  "MechPACESchoolMean",           pct(mean0(est8, "PACE_SCHOOL_OT")),              "Table IX, graduated from a PACE school, on time, mean without an offer, %",
-  "MechPACEListODMin",            od_range[1],                                     "the lowest yearly share of the over-demanded schools with a 12th grade on the PACE list, 2019-2025, %",
-  "MechPACEListODMax",            od_range[2],                                     "the highest such share, %",
-  "MechPACEListOtherMin",         other_range[1],                                  "the lowest yearly share of the other publicly funded schools with a 12th grade on the PACE list, %",
-  "MechPACEListOtherMax",         other_range[2],                                  "the highest such share, %",
-  "MechPACEBothOnTime",           pp(est_of(est8, "PACE_BOTH_OT")),                "Table IX, met both PACE conditions, on time, pp",
-  "MechPACEBothMean",             pct(mean0(est8, "PACE_BOTH_OT")),                "Table IX, met both, on time, mean without an offer, %",
-  "MechPACEBothDecline",          num(dv("PACE_BOTH_OT_DECLINE"), 0),              "both PACE conditions: the decline over the mean without an offer, %",
-  "MechFailAnyYear",              pp(est_of(est_years, "FAIL_YEAR_ANY")),          "Table D.2, failed a year in any of the first four school years, pp",
-  "MechFailFirstYear",            pp(est_of(est_years, "FAIL_YEAR_1")),            "Table D.2, failed the first school year, pp",
-  "MechPACESeatHolders",          seats("PACE", "holders"),                        "the appendix's check: students holding a PACE seat ever",
-  "MechPACESeatMeeting",          seats("PACE", "meeting"),                        "of them, those meeting both PACE conditions",
-  "MechBEASeatHolders",           seats("BEA", "holders"),                         "the appendix's check: students holding a BEA seat ever",
-  "MechBEASeatMeeting",           seats("BEA", "meeting"),                         "of them, those meeting BEA's grade rule"
-)
-stopifnot("each macro name is letters only and appears once" = all(grepl("^[A-Za-z]+$", text_numbers$macro)) && !anyDuplicated(text_numbers$macro),
-          "every number the text quotes has a value (none missing, empty or infinite)" =
-            !anyNA(text_numbers$value) && all(nzchar(text_numbers$value)) && no_missing(text_numbers$value))
-write.csv(text_numbers, file.path(out_dir, "numbers", "mechanisms_text_numbers.csv"), row.names = FALSE)
-write_tex(sprintf("\\newcommand{\\%s}{%s}", text_numbers$macro, text_numbers$value), "mechanisms_text_macros.tex")
-as.data.frame(text_numbers)
+pace_share <- schools %>%
+  group_by(YEAR, OVER_DEMANDED) %>%
+  summarise(share = 100 * mean(ON_PACE_LIST), .groups = "drop")
+od_range <- fmt(range(pace_share$share[pace_share$OVER_DEMANDED]), 1)
+other_range <- fmt(range(pace_share$share[!pace_share$OVER_DEMANDED]), 1)
 
-# a statement the current text makes about these results, named by the part of the paper that makes it: each is evaluated (an error counts
-# as not holding) and written with whether it holds (numbers/mechanisms_text_claims.csv); each that does not hold is printed (a sentence of
-# the text that moves with these results), and once they are all written the knit stops on it
-text_claims <- function(...) {
-  labels <- ...names()
-  stopifnot("every statement carries its label, each once" = ...length() > 0L && !is.null(labels) && all(nzchar(labels)) && !anyDuplicated(labels))
-  holds <- logical(...length())
-  for (i in seq_len(...length())) holds[i] <- isTRUE(tryCatch(...elt(i), error = function(e) {
-    message("a statement of the current text could not be evaluated (", conditionMessage(e), "): ", labels[i]); NA }))
-  for (s in labels[!holds]) message("a statement of the current text does not hold with these results: ", s)
-  tibble(statement = labels, holds = holds)
-}
-local({   # self-test: a true, a false and an erroring statement are recorded as TRUE, FALSE, FALSE; an unlabelled statement stops
-  stops <- function(expr) inherits(tryCatch(expr, error = function(e) e), "error")
-  s <- suppressMessages(text_claims("t1" = TRUE, "t2" = FALSE, "t3" = stop("an error")))
-  stopifnot("text_claims self-test" = identical(s$holds, c(TRUE, FALSE, FALSE)) && identical(s$statement, c("t1", "t2", "t3")) && stops(text_claims(TRUE)))
-})
+all_est <- bind_rows(graduation_est, school_est, ninth_est, track_est, score_est, list_est, access_est, fail_est)
+b <- setNames(all_est$est, all_est$var)       # the 2SLS estimates
+m <- setNames(all_est$mean, all_est$var)      # the means without an offer
+n_obs <- setNames(all_est$n, all_est$var)
+pp <- function(x) fmt(abs(100 * x), 2)        # an effect on a 0/1 outcome, in pp
+pct <- function(x) fmt(100 * x, 2)            # a mean of a 0/1 outcome, in %
+bea_drop <- -(b[["BEA_GRADE_OT"]] / m[["BEA_GRADE_OT"]])   # BEA's grade rule: the fall over its mean
+failed_ninth <- ninth_sample$FAILED_9 == 1L
+seats <- with(estimation_sample, c(
+  PACESeatHolders = sum(PACE_SEAT_EVER == 1L), PACESeatMeeting = sum(PACE_SEAT_EVER == 1L & PACE_BOTH_EVER == 1L),
+  BEASeatHolders = sum(BEA_SEAT_EVER == 1L), BEASeatMeeting = sum(BEA_SEAT_EVER == 1L & BEA_GRADE_EVER == 1L)))
 
-row_of <- function(est, v) { r <- est[est$var == v, ]; if (nrow(r) != 1L) stop(nrow(r), " rows match ", v); r }
-rows_of <- function(est, ...) bind_rows(map(c(...), function(v) row_of(est, v)))
-ot_ever <- function(k) paste0(k, c("_OT", "_EVER"))
-falls <- function(r) nrow(r) > 0L && all(r$est < 0 & r$p < 0.1)   # negative and statistically significant
-rises <- function(r) nrow(r) > 0L && all(r$est > 0 & r$p < 0.1)   # positive and statistically significant
-null <- function(r) nrow(r) > 0L && all(r$p >= 0.1)               # not statistically significant
-claims <- text_claims(
-  "the mechanisms section's text on Table V's graduation row (Table IV's) and its footnote on Table VIII: attending lowers graduation on time and ever, both statistically significant (the footnote's on-time application effect is Table IV's, checked by the outcomes notebook)" =
-    falls(rows_of(est5, ot_ever("GRAD"))),
-  "the mechanisms section's and the Introduction's text on Table V, Panel A: the graduation loss comes from failing a year (the Introduction: the graduation decline is concentrated among students with grade-related failures), which rises on time and ever, both statistically significant, by at least the graduation loss at each horizon" =
-    rises(rows_of(est5, ot_ever("FAILNG"))) && all(map_lgl(c("_OT", "_EVER"), function(h) est_of(est5, paste0("FAILNG", h)) >= abs(est_of(est5, paste0("GRAD", h))))),
-  "the mechanisms section's text on Table V, Panel A: the estimates for withdrawal and other non-graduates are smaller than failing a year's, at each horizon" =
-    all(map_lgl(c("_OT", "_EVER"), function(h) all(abs(rows_of(est5, paste0(c("WDNG", "OTHNG"), h))$est) < abs(est_of(est5, paste0("FAILNG", h)))))),
-  "the mechanisms section's text on Table V, Panel A: of withdrawal and other, only the ever estimate for withdrawal is statistically significant, at the 10% level" =
-    row_of(est5, "WDNG_EVER")$p < 0.1 && row_of(est5, "WDNG_EVER")$p >= 0.05 && null(rows_of(est5, "WDNG_OT", "OTHNG_OT", "OTHNG_EVER")),
-  "the mechanisms section's and the Introduction's text on Table V, Panel B: most of the rise comes from grade-related failures (Grades rises on time and ever, statistically significant, and is more than half of failing a year at each horizon)" =
-    rises(rows_of(est5, ot_ever("PB_G"))) && est_of(est5, "PB_G_OT") > 0.5 * est_of(est5, "FAILNG_OT") && est_of(est5, "PB_G_EVER") > 0.5 * est_of(est5, "FAILNG_EVER"),
-  "the mechanisms section's text on Table V, Panel B: failing on attendance with grades unknown rises on time and ever, both statistically significant" =
-    rises(rows_of(est5, ot_ever("PB_U"))),
-  "the mechanisms section's text on Table V, Panel B: failing on attendance alone shows no statistically significant effect" = null(rows_of(est5, ot_ever("PB_A"))),
-  "the mechanisms section's and the Introduction's text on Table V, Panel C: attending increases class size and students per teacher, both statistically significant" =
-    rises(rows_of(est5c, "CLASS_SIZE", "STUDENT_TEACHER")),
-  "the mechanisms section's, the abstract's, the Introduction's and the conclusion's text on Table V, Panel C: these schools grade more strictly (the abstract: a more demanding school environment; the grade-stringency row positive and statistically significant)" =
-    main$est > 0 && main$p < 0.1,
-  "the mechanisms section's text on Table V, Panel C: the effect on distance to school is negative and statistically significant only at the 10% level, while class size, students per teacher and grade stringency are statistically significant at the 5% level or below" =
-    row_of(est5c, "DIST_P99")$est < 0 && row_of(est5c, "DIST_P99")$p < 0.1 && row_of(est5c, "DIST_P99")$p >= 0.05 &&
-    all(rows_of(est5c, "CLASS_SIZE", "STUDENT_TEACHER")$p < 0.05) && main$p < 0.05,
-  "the mechanisms section's text on Table V, Panel D: attending raises failing 9th grade, statistically significant" = rises(row_of(est5d, "FAILED_9")),
-  "the mechanisms section's, the Introduction's and the conclusion's text on Table D.2: ninth grade, the first year, is the year in which most of the rise in failing occurs (the first year's effect is the largest of the four and more than half of the effect on failing in any of years 1 to 4)" =
-    local({ y <- map_dbl(paste0("FAIL_YEAR_", 1:4), function(v) est_of(est_years, v)); which.max(y) == 1L && y[1] > 0.5 * est_of(est_years, "FAIL_YEAR_ANY") }),
-  "the mechanisms section's, the Introduction's, the conclusion's and the abstract's text on Table V, Panel D: students start 9th grade lower in their school's ranking, fall further during the year and end it lower (the change and the end-of-year percentile fall, statistically significant)" =
-    dv("START_PERCENTILE_LOWER") > 0 && falls(rows_of(est5d, "CHANGE", "RANK9")),
-  "the mechanisms section's text on Table V, Panel D: the share ending 9th grade in the bottom fifth rises, statistically significant, and most students who fail 9th grade end it there" =
-    rises(row_of(est5d, "BOTTOM20")) && bottom_among_failed$share_pct > 50,
-  "the mechanisms section's text on Table VI's total (Table IV's college seat): attending lowers assignment on time and ever, both statistically significant" =
-    falls(rows_of(est_t, ot_ever("ASSIGNED"))),
-  "the mechanisms section's text on Table VI: on time, attending lowers assignment through regular admission, PACE and BEA, all three statistically significant" =
-    falls(rows_of(est_t, "REG_OT", "PACE_OT", "BEA_OT")),
-  "the mechanisms section's text on Table VI: on time, regular admission and PACE fall by similar amounts (the larger less than one and a half times the smaller, and their difference not statistically significant) and BEA by a smaller amount" =
-    local({ r <- abs(est_of(est_t, "REG_OT")); p <- abs(est_of(est_t, "PACE_OT")); b <- abs(est_of(est_t, "BEA_OT"))
-            max(r, p) < 1.5 * min(r, p) && row_of(est_t_diff, "REG_MINUS_PACE_OT")$p >= 0.1 && b < min(r, p) }),
-  "the mechanisms section's and the Introduction's text on Table VI: ever, the losses are concentrated in BEA and PACE (both fall, statistically significant, together by at least half of the total's fall), and the regular-admission and gender-quota estimates are not statistically significant" =
-    falls(rows_of(est_t, "BEA_EVER", "PACE_EVER")) && null(rows_of(est_t, "REG_EVER", "GENERO_EVER")) &&
-    abs(est_of(est_t, "BEA_EVER") + est_of(est_t, "PACE_EVER")) >= 0.5 * abs(est_of(est_t, "ASSIGNED_EVER")),
-  "the mechanisms section's text on Table VII: none of the estimates is statistically significant, on time or ever, and each is below 1% of its mean without an offer (students list programs with similar weights)" =
-    local({ r <- rows_of(est7, choice_vars); null(r) && all(abs(r$est) < 0.01 * abs(r$mean)) }),
-  "the mechanisms section's, the abstract's, the Introduction's and the conclusion's text on Table VIII: attending raises the Math-Verbal mean slightly and lowers NEM and Ranking considerably, on time and ever, all statistically significant (the Math-Verbal effect below a quarter of NEM's and of Ranking's at each horizon), each ever estimate within 0.01 SD and within 10% of its on-time estimate" =
-    rises(rows_of(est6, ot_ever("SCORE_LM"))) && falls(rows_of(est6, c(ot_ever("SCORE_NEM"), ot_ever("SCORE_RANKING")))) &&
-    all(map_lgl(c("_OT", "_EVER"), function(h) abs(est_of(est6, paste0("SCORE_LM", h))) <
-                  0.25 * min(abs(est_of(est6, paste0("SCORE_NEM", h))), abs(est_of(est6, paste0("SCORE_RANKING", h)))))) &&
-    all(map_lgl(names(admission), function(k) {
-      ot <- est_of(est6, paste0("SCORE_", k, "_OT")); ev <- est_of(est6, paste0("SCORE_", k, "_EVER"))
-      abs(ev - ot) < 0.01 && abs(ev - ot) < 0.1 * abs(ot) })),
-  "the mechanisms section's and the abstract's text on Table VIII, Panel B: attending lowers the application score at the listed programs (the abstract's weaker position in selection), statistically significant at both horizons" =
-    falls(rows_of(est7, ot_ever("LIST_SCORE"))),
-  "the mechanisms section's text on Table VIII, Panel B: the Ranking and NEM parts fall and the exams part rises, all statistically significant at both horizons" =
-    falls(rows_of(est7, c(ot_ever("LIST_SCORE_RANKING"), ot_ever("LIST_SCORE_NEM")))) && rises(rows_of(est7, ot_ever("LIST_SCORE_EXAMS"))),
-  "the mechanisms section's text on Table VIII, Panel B: the losses from the grade-based parts are more than four times the gain from the exams, on time and ever" =
-    all(map_lgl(c("_OT", "_EVER"), function(h)
-      abs(est_of(est7, paste0("LIST_SCORE_NEM", h))) + abs(est_of(est7, paste0("LIST_SCORE_RANKING", h))) > 4 * est_of(est7, paste0("LIST_SCORE_EXAMS", h)))),
-  "the mechanisms section's text on Table VIII, Panel B: the exams gain comes from higher reading and history or science parts, with no statistically significant effect on mathematics, at both horizons" =
-    rises(rows_of(est7, c(ot_ever("LIST_SCORE_READING"), ot_ever("LIST_SCORE_HIST_SCIENCE")))) && null(rows_of(est7, ot_ever("LIST_SCORE_MATH"))),
-  "the mechanisms section's, the abstract's, the Introduction's and the conclusion's text on Table IX: attending lowers the shares meeting PACE's and BEA's grade rules, statistically significant at both horizons" =
-    falls(rows_of(est8, c(ot_ever("PACE_GRADE"), ot_ever("BEA_GRADE")))),
-  "a footnote of the mechanisms section on Tables IX and VI: the BEA decline implied by the grade rule is close to the estimated BEA assignment effect on time (within 0.1 percentage points and within a third of the estimate)" =
-    local({ gap <- abs(dv("BEA_ASSIGNED_OT_IMPLIED_DECLINE") - 100 * abs(est_of(est_t, "BEA_OT"))); gap < 0.1 && gap < 100 * abs(est_of(est_t, "BEA_OT")) / 3 }),
-  "the mechanisms section's, the abstract's, the Introduction's and the conclusion's text on Table IX: attending lowers the shares graduating from a PACE school and meeting both PACE conditions, on time, statistically significant (the conclusion: college eligibility tied to the school students attend)" =
-    falls(rows_of(est8, "PACE_SCHOOL_OT", "PACE_BOTH_OT")),
-  "a footnote of the mechanisms section, and the abstract, the Introduction and the conclusion, on the PACE list: in each school year 2019-2025 under 10% of the over-demanded schools with a 12th grade are on it, the highest year's share below half of the lowest year's share of the other publicly funded schools" =
-    local({ od <- pace_share$OVER_DEMANDED %in% TRUE
-            identical(sort(unique(pace_share$YEAR)), 2019:2025) && max(pace_share$share_pct[od]) < 10 && max(pace_share$share_pct[od]) < 0.5 * min(pace_share$share_pct[!od]) }),
-  "the mechanisms section's closing paragraph: on time, attending lowers access through regular admission, PACE and BEA; it lowers the application score, graduation from a PACE school and the shares meeting PACE's and BEA's grade rules" =
-    falls(rows_of(est_t, "REG_OT", "PACE_OT", "BEA_OT")) && falls(row_of(est7, "LIST_SCORE_OT")) && falls(rows_of(est8, "PACE_SCHOOL_OT", "PACE_GRADE_OT", "BEA_GRADE_OT")),
-  "the mechanisms appendix's text on Table D.2: attending raises failing a year in the first four school years, statistically significant, and most of it comes from the first year (the first year's effect more than half of the four years' and at most all of it)" =
-    rises(row_of(est_years, "FAIL_YEAR_ANY")) && est_of(est_years, "FAIL_YEAR_1") > 0.5 * est_of(est_years, "FAIL_YEAR_ANY") &&
-    est_of(est_years, "FAIL_YEAR_1") <= est_of(est_years, "FAIL_YEAR_ANY"),
-  "the mechanisms appendix's text on grade stringency: the calibration uses tenth graders of 2014-2016, none of them in the lottery sample" =
-    identical(sort(unique(d$AGNO)), 2014:2016) && length(intersect(d$MRUN, panel$MRUN)) == 0L,
-  "the mechanisms appendix's text on grade stringency: an offer raises the index's availability" = availability_result$offer_effect > 0,
-  "the mechanisms appendix's text on grade stringency: the leave-one-cohort-out estimates are on the same lottery sample as the baseline (each N the baseline's)" =
-    local({ loo <- stringency[grepl("^Exclude historical", specification)]; nrow(loo) == 3L && all(loo$n == main$n) })
-)
-write.csv(claims, file.path(out_dir, "numbers", "mechanisms_text_claims.csv"), row.names = FALSE)
-message(sprintf("%d statements of the current text checked; %d do not hold with these results", nrow(claims), sum(!claims$holds)))
-if (!all(claims$holds)) stop("statements of the current text that do not hold with these results: ", paste(claims$statement[!claims$holds], collapse = "; "))
-as.data.frame(claims)
-```
-
-# The files written
-
-Checks that this knit wrote every file listed here, and prints each with its bytes and MD5.
-
-```{r outputs}
-written <- c(file.path("tables", c("lottery_graduation_part1.tex", "lottery_graduation_part2.tex", "grade_stringency_facts.tex",
-                                   "lottery_admission_tracks.tex", "lottery_application_choices.tex", "lottery_admission_scores.tex",
-                                   "pace_bea_access.tex", "appendix_promotion_rules.tex", "appendix_failing_by_year.tex", "appendix_pace_rules.tex",
-                                   "mechanisms_text_macros.tex")),
-             file.path("tables", "results", c("lottery_admission_tracks.tex", "lottery_application_choices.tex", "lottery_admission_scores.tex")),
-             file.path("numbers", c("mechanisms_estimates.csv", "mechanisms_text_numbers.csv", "mechanisms_text_claims.csv")))
-full <- file.path(out_dir, written)
-stopifnot("every output was written by this knit" = all(file.exists(full)) && all(file.mtime(full) >= KNIT_START))
-others <- setdiff(list.files(out_dir, recursive = TRUE), written)
-if (length(others)) message("the output folder also holds files this knit did not write: ", paste(others, collapse = ", "))
-data.frame(file = written, bytes = file.size(full), md5 = unname(tools::md5sum(full)))
-```
-
-# R session
-
-```{r session-info}
-sessionInfo()
+macros <- c(
+  DistanceCapKm           = fmt(cap, 0),
+  FailedYearOnTime        = pp(b[["FAILNG_OT"]]),
+  FailedYearEver          = pp(b[["FAILNG_EVER"]]),
+  FailedYearOnTimeMean    = pct(m[["FAILNG_OT"]]),
+  FailedYearEverMean      = pct(m[["FAILNG_EVER"]]),
+  WithdrewEver            = fmt(100 * b[["WDNG_EVER"]], 2),   # with its sign: the text gives no direction
+  GradesOnTime            = pp(b[["PB_G_OT"]]),
+  GradesEver              = pp(b[["PB_G_EVER"]]),
+  AttendanceUnknownOnTime = pp(b[["PB_U_OT"]]),
+  AttendanceUnknownEver   = pp(b[["PB_U_EVER"]]),
+  ClassSize               = fmt(abs(b[["CLASS_SIZE"]]), 2),
+  ClassSizeShare          = fmt(100 * (b[["CLASS_SIZE"]] / m[["CLASS_SIZE"]]), 2),
+  ClassSizeMean           = fmt(m[["CLASS_SIZE"]], 2),
+  StudentsPerTeacher      = fmt(abs(b[["STUDENT_TEACHER"]]), 2),
+  StudentsPerTeacherShare = fmt(100 * (b[["STUDENT_TEACHER"]] / m[["STUDENT_TEACHER"]]), 2),
+  StudentsPerTeacherMean  = fmt(m[["STUDENT_TEACHER"]], 2),
+  FailedNinth             = pp(b[["FAILED_9"]]),
+  FailedNinthMean         = pct(m[["FAILED_9"]]),
+  StartPercentileLower    = fmt(b[["CHANGE"]] - b[["RANK9"]], 2),   # the start of 9th grade: the change less the end
+  PercentileChange        = fmt(abs(b[["CHANGE"]]), 2),
+  PercentileEnd           = fmt(abs(b[["RANK9"]]), 2),
+  BottomFifth             = pp(b[["BOTTOM20"]]),
+  BottomFifthMean         = pct(m[["BOTTOM20"]]),
+  BottomFifthAmongFailed  = fmt(100 * mean(ninth_sample$BOTTOM20[failed_ninth] == 1L), 1),
+  RegularOnTime           = pp(b[["REG_OT"]]),
+  PACEOnTime              = pp(b[["PACE_OT"]]),
+  BEAOnTime               = pp(b[["BEA_OT"]]),
+  BEAEver                 = pp(b[["BEA_EVER"]]),
+  PACEEver                = pp(b[["PACE_EVER"]]),
+  ExamScoreShare          = fmt(100 * n_obs[["SCORE_LM_OT"]] / nrow(estimation_sample), 0),
+  GradeScoreShare         = fmt(100 * n_obs[["SCORE_NEM_OT"]] / nrow(estimation_sample), 0),
+  MathVerbalOnTime        = fmt(abs(b[["SCORE_LM_OT"]]), 3),
+  NEMOnTime               = fmt(abs(b[["SCORE_NEM_OT"]]), 3),
+  RankingOnTime           = fmt(abs(b[["SCORE_RANKING_OT"]]), 3),
+  ApplicationScoreOnTime  = fmt(abs(b[["LIST_SCORE_OT"]]), 3),
+  RankingPartOnTime       = fmt(abs(b[["LIST_SCORE_RANKING_OT"]]), 3),
+  NEMPartOnTime           = fmt(abs(b[["LIST_SCORE_NEM_OT"]]), 3),
+  ExamsPartOnTime         = fmt(abs(b[["LIST_SCORE_EXAMS_OT"]]), 3),
+  PACEGradeOnTime         = pp(b[["PACE_GRADE_OT"]]),
+  BEAGradeOnTime          = pp(b[["BEA_GRADE_OT"]]),
+  PACEGradeMean           = pct(m[["PACE_GRADE_OT"]]),
+  BEAGradeMean            = pct(m[["BEA_GRADE_OT"]]),
+  PACEGradeDecline        = fmt(-100 * (b[["PACE_GRADE_OT"]] / m[["PACE_GRADE_OT"]]), 1),
+  BEAGradeDecline         = fmt(100 * bea_drop, 1),
+  BEAGradeDeclineFraction = fmt(bea_drop, 3),
+  BEAAssignedMean         = pct(m[["BEA_OT"]]),
+  BEAImpliedDecline       = fmt(bea_drop * 100 * m[["BEA_OT"]], 2),   # in pp of BEA assignment on time
+  PACESchoolOnTime        = pp(b[["PACE_SCHOOL_OT"]]),
+  PACESchoolMean          = pct(m[["PACE_SCHOOL_OT"]]),
+  PACEListODMin           = od_range[1],
+  PACEListODMax           = od_range[2],
+  PACEListOtherMin        = other_range[1],
+  PACEListOtherMax        = other_range[2],
+  PACEBothOnTime          = pp(b[["PACE_BOTH_OT"]]),
+  PACEBothMean            = pct(m[["PACE_BOTH_OT"]]),
+  PACEBothDecline         = fmt(-100 * (b[["PACE_BOTH_OT"]] / m[["PACE_BOTH_OT"]]), 0),
+  FailAnyYear             = pp(b[["FAIL_YEAR_ANY"]]),
+  FailFirstYear           = pp(b[["FAIL_YEAR_1"]]),
+  comma_int(seats))
+write_tex(sprintf("\\newcommand{\\Mech%s}{%s}", names(macros), macros), "mechanisms_text_macros.tex")
+macros
 ```

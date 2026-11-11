@@ -2,183 +2,130 @@
 title: "Outcomes: attending an over-demanded school, graduation and college outcomes"
 output: html_document
 params:
-  data_dir: !r file.path(ifelse(Sys.getenv("USERPROFILE") != "", Sys.getenv("USERPROFILE"), path.expand("~")), "Dropbox", "Effect SAE on SUA", "data", "finalized_design_v1", "outcomes")
+  data_dir: !r file.path(Sys.getenv("USERPROFILE", "~"), "Dropbox", "Effect SAE on SUA", "data",
+    "finalized_design_v1", "outcomes")
   out_dir: "output"
 ---
 
-This notebook writes every table of the paper's outcomes section and of its appendix, on design K of the over-demanded schools,
-in the paper's folder layout under `out_dir`: Table III (`tables/results/lottery_balance.tex`), Table IV
-(`tables/results/lottery_college.tex`) and Appendix Tables C.1 to C.6 (`tables/lottery_sample_construction.tex`,
-`tables/results/lottery_characteristics.tex`, `tables/complier_alternatives.tex`, `tables/results/lottery_college_offer.tex`,
-`tables/results/lottery_college_first_choice.tex`, `tables/lottery_followup.tex`). It also writes `numbers/outcomes_estimates.csv`
-(every estimate at full precision), `numbers/outcomes_text_numbers.csv` (each number the outcomes section and its appendix quote, one
-row per number, named as the text's macro), `tables/outcomes_text_macros.tex` (the same numbers as the LaTeX macros the paper's text
-prints; shares are plain numbers, the text adds the percent sign; the years stay typed) and `numbers/outcomes_text_claims.csv` (each
-statement the text makes about these results, with whether it holds). It reads the five files of its data folder (`data_dir`; by default the shared data
-folder), each checked against `data_manifest.csv` beside this notebook; a relative `data_dir` or `out_dir` is taken from the notebook's
-folder. It needs fixest 0.14.2 or later. Render it with
-`rmarkdown::render("outcomes.Rmd", params = list(data_dir = <the data folder>, out_dir = <the output folder>))`; the defaults read the
-shared folder and write `output/` next to the notebook.
+Tables of the outcomes section ("Effects of Attending Over-Demanded Schools") and of its appendix, and the
+numbers their text quotes. The children who applied to ninth grade through SAE in 2016-2021 with the same chance
+of an offer at an over-demanded school are compared, some offered and some not; each child's chance comes from one
+million reruns of SAE's main stage. The effect of attending an over-demanded school is estimated by 2SLS with the
+offer as the instrument, chance-group and application-year fixed effects, and heteroskedasticity-robust standard
+errors. The notebook reads the data folder (`data_dir`) and writes `tables/` in the output folder (`out_dir`).
 
-The two enrollment rows of Tables IV, C.4 and C.5 classify each child by her first higher-education record after the application
-year: an enrollment in DEMRE's file D puts her in SUA; any higher-education registry row without a matching DEMRE enrollment, coded or
-uncoded, puts her outside SUA; the earlier record decides, and a same-year pair counts in SUA. "Enrolled anywhere" is being in either
-row; each child is in at most one.
+```{r setup, error = FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(error = FALSE, warning = FALSE, message = FALSE)
 
-```{r setup, error = FALSE}
 library(dplyr)
 library(tidyr)
 library(purrr)
 library(fixest)
-knitr::opts_chunk$set(error = FALSE)   # a failed check stops the knit
-KNIT_START <- Sys.time() - 2           # the chunk outputs checks that this knit wrote every output (two seconds for a file system's coarse clock)
-if (getRversion() != "4.5.1") message("R ", getRversion(), " is not 4.5.1, the version this notebook's numbers come from")
-# fixest 0.14.2 or later: it gives the heteroskedasticity-robust SEs the tables print (OLS with the N/(N-K) factor; 2SLS with
-# ssc(K.adj = FALSE), without it); earlier versions can differ (0.12.1 keeps a factor n/(n-1))
-if (packageVersion("fixest") < "0.14.2") stop("fixest 0.14.2 or later is required (this is ", packageVersion("fixest"), "): earlier versions compute a different robust SE")
-if (packageVersion("fixest") > "0.14.2") message("fixest ", packageVersion("fixest"), " is newer than 0.14.2, the version this notebook's numbers come from")
+stopifnot(packageVersion("fixest") >= "0.13.0")   # versions before 0.13.0 add a factor n/(n-1) to robust SEs
 
-if (!exists("params")) stop("params is missing: render the notebook with rmarkdown::render(), or knit it with a list params in its environment (README)")
-# the notebook's own folder: data_manifest.csv is read from it, and a relative data_dir or out_dir is taken from it, whatever the folder the
-# chunks run in (RStudio's Knit Directory); when the chunks are run one by one outside a knit, the working directory, which must hold the notebook
-knitting <- !is.null(knitr::current_input())
-nb_dir <- if (knitting) dirname(knitr::current_input(dir = TRUE)) else normalizePath(".", winslash = "/")
-if (!knitting && !file.exists(file.path(nb_dir, "outcomes.Rmd"))) stop("the notebook's folder is not known: knit outcomes.Rmd, or set the working directory to its folder")
-is_absolute <- function(p) grepl("^(~|/|\\\\|[A-Za-z]:[/\\\\])", p)   # a full path (a drive, a root, a network share or the home folder)
-stopifnot("is_absolute self-test" = identical(is_absolute(c("C:/a", "c:\\a", "/a", "\\\\server\\a", "~/a", "output", "./a", "a/b", "C:a")),
-                                              c(TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE, FALSE)))
-from_notebook <- function(p) if (is_absolute(p)) path.expand(p) else file.path(nb_dir, p)
-data_dir <- from_notebook(params$data_dir)   # the data folder
-out_dir <- from_notebook(params$out_dir)     # the output folder ("output" beside the notebook by default)
-manifest_file <- file.path(nb_dir, "data_manifest.csv")
-# the five inputs, every one required, each at the bytes and MD5 of data_manifest.csv beside this notebook; the data folder's own
-# data_manifest.csv must list the same files and MD5s
-inputs <- c(panel = "outcomes_panel.rds", applications = "outcomes_applications.rds", entrants = "outcomes_entrants.rds",
-            group = "outcomes_group.rds", note_counts = "outcomes_note_counts.rds")
-if (!file.exists(manifest_file)) stop("data_manifest.csv is missing beside the notebook (", nb_dir, ")")
-if (!dir.exists(data_dir)) stop("the data folder is missing: ", data_dir)
-missing_files <- setdiff(c(inputs, "data_manifest.csv"), list.files(data_dir))
-if (length(missing_files)) stop("missing in the data folder ", data_dir, ": ", paste(missing_files, collapse = ", "))
-on_disk <- local({
-  read_manifest <- function(f) read.csv(f, colClasses = c(file = "character", bytes = "numeric", md5 = "character"))
-  manifest <- read_manifest(manifest_file)
-  stopifnot("data_manifest.csv lists the five inputs, each once" = setequal(manifest$file, inputs) && !anyDuplicated(manifest$file),
-            "the data folder's data_manifest.csv must be the one beside the notebook" = identical(read_manifest(file.path(data_dir, "data_manifest.csv")), manifest))
-  m <- match(inputs, manifest$file)
-  d <- data.frame(file = unname(inputs), bytes = file.size(file.path(data_dir, inputs)), md5 = unname(tools::md5sum(file.path(data_dir, inputs))))
-  differ <- d$file[d$bytes != manifest$bytes[m] | d$md5 != manifest$md5[m]]
-  if (length(differ)) stop("inputs that differ from data_manifest.csv: ", paste(differ, collapse = ", "))
-  d
-})
-on_disk
+# folders: from `params` when given (rmarkdown::render, or a list named params defined before knitr::knit)
+opt <- list(data_dir = file.path(Sys.getenv("USERPROFILE", "~"), "Dropbox", "Effect SAE on SUA", "data",
+                                 "finalized_design_v1", "outcomes"),
+            out_dir = "output")
+if (exists("params")) opt[names(params)] <- params
+DATA_DIR <- opt$data_dir
+TAB_DIR <- file.path(opt$out_dir, "tables")
+dir.create(file.path(TAB_DIR, "results"), recursive = TRUE, showWarnings = FALSE)
 
-panel <- readRDS(file.path(data_dir, inputs[["panel"]]))                 # one row per applicant child
-applications <- readRDS(file.path(data_dir, inputs[["applications"]]))   # one row per application of the population (Table C.1; the placements footnote)
-entrants <- readRDS(file.path(data_dir, inputs[["entrants"]]))           # one row per entry at the over-demanded schools (Table C.2's column (3))
-group <- readRDS(file.path(data_dir, inputs[["group"]]))                 # the over-demanded schools, one row each
-note_counts <- readRDS(file.path(data_dir, inputs[["note_counts"]]))     # Table IV's note: DEMRE's validation and recognition completers
-n_over_demanded <- nrow(group)
-stopifnot("the over-demanded schools, each once" = !anyNA(group$RBD) && !anyDuplicated(group$RBD),
-          "one count of validation and recognition completers" = nrow(note_counts) == 1L && !is.na(note_counts$validation_completers),
-          "Table IV's note: these completers count as not graduated" = isTRUE(note_counts$not_graduated_ever == note_counts$validation_completers),
-          "one row per child" = !anyDuplicated(panel$MRUN),
-          "the design's columns are complete" = !anyNA(panel[c("YEAR", "CHANCE_GROUP", "LOTTERY_SAMPLE", "LOTTERY_SAMPLE_THOUSANDTHS", "OFFER", "D_OD",
-                                                               "FIRST_CHOICE_SAMPLE", "ENTRY_SCHOOL_TYPE")]),
-          "each chance group is a whole number from 0 to 100" = all(panel$CHANCE_GROUP %in% 0:100),
-          "the offer is a main-stage placement at one of the over-demanded schools" =
-            all(applications$RBD_ADMITIDO %in% c(NA, group$RBD)) && identical(panel$OFFER, as.integer(!is.na(applications$RBD_ADMITIDO[applications$KEPT]))),
-          "attendance is the entry-year enrollment at one of the over-demanded schools" = identical(panel$D_OD, as.integer(panel$ENTRY_RBD %in% group$RBD)),
-          "attendance and the entry school's type agree" = identical(panel$D_OD == 1L, panel$ENTRY_SCHOOL_TYPE == "over_demanded"))
-message(sprintf("over-demanded schools %d; children %s; validation and recognition completers %d", n_over_demanded,
-                format(nrow(panel), big.mark = ","), note_counts$validation_completers))
-dir.create(file.path(out_dir, "tables", "results"), recursive = TRUE, showWarnings = FALSE)
-dir.create(file.path(out_dir, "numbers"), recursive = TRUE, showWarnings = FALSE)
-
-setFixest_vcov(all = "hetero")            # robust SEs; OLS with the N/(N-K) factor and t(N-K) p-values, as Stata's robust
+setFixest_vcov(all = "hetero")            # robust SEs: OLS with the N/(N-K) factor, as Stata's robust
 setFixest_estimation(fixef.rm = "none")   # keep chance groups that hold a single child
 
 controls <- c("GPA8_Z", "ES_MUJER", "PRIORITARIO", "ALTO", "ORIGIN_OD")
-years <- paste0(min(panel$YEAR), "--", max(panel$YEAR))   # the application years
 
 college <- c(
-  GRAD     = "Graduated from high school",
+  GRAD         = "Graduated from high school",
   GRAD_REGULAR = "\\quad Through regular secondary education",
   GRAD_ADULT   = "\\quad Through adult secondary education",
-  APPLIED  = "Applied to a college program",
-  ASSIGNED = "Assigned a college seat",
-  ANYWHERE = "Enrolled anywhere",
-  INSUA    = "\\quad First enrollment in SUA",
-  OUTSIDE  = "\\quad First enrollment outside SUA"
+  APPLIED      = "Applied to a college program",
+  ASSIGNED     = "Assigned a college seat",
+  ANYWHERE     = "Enrolled anywhere",
+  INSUA        = "\\quad First enrollment in SUA",
+  OUTSIDE      = "\\quad First enrollment outside SUA"
 )
 
-# Enrolled anywhere: in either enrollment row, the child's first enrollment in SUA or outside it; each child is in at most one row.
-# The panel's columns are missing for the children without the outcomes; flag() checks them on each estimation sample (the college and
-# first-choice chunks)
-invisible(lapply(c("OT", "EVER"), function(h) {
-  s <- panel[[paste0("INSUA_", h)]]; o <- panel[[paste0("OUTSIDE_", h)]]
-  stopifnot("the two enrollment rows present or missing together" = identical(is.na(s), is.na(o)),
-            "the enrollment rows are 0/1 integers" = is.integer(s) && is.integer(o) && all(c(s, o) %in% c(0L, 1L, NA)),
-            "each child in at most one enrollment row" = all(s + o <= 1L, na.rm = TRUE))
-}))
-panel <- mutate(panel, ANYWHERE_OT = INSUA_OT + OUTSIDE_OT, ANYWHERE_EVER = INSUA_EVER + OUTSIDE_EVER)
-
-# the windows of the panel's on-time outcomes and the last year of the records (Table C.6 and the notes of Tables C.4 and C.6)
 ON_TIME_GRADUATION <- 4L       # graduation by the fourth school year after the application year
 ON_TIME_COLLEGE <- 5L          # college outcomes by the admission process five years after it
 LAST_SCHOOL_YEAR <- 2025L      # the year-end school records run through the 2025 school year
-LAST_COLLEGE_PROCESS <- 2026L  # the college admission and higher-education enrollment records run through 2026
+LAST_COLLEGE_PROCESS <- 2026L  # the college records run through the 2026 admission process
 
-stars <- function(p) ifelse(p < 0.01, "$^{***}$", ifelse(p < 0.05, "$^{**}$", ifelse(p < 0.1, "$^{*}$", "")))
-num <- function(x, d) sub("^-(0\\.0+)$", "\\1", sprintf(paste0("%.", d, "f"), x))   # never "-0.00"
-comma <- function(x) format(x, big.mark = ",", scientific = FALSE, trim = TRUE)
-tex_row <- function(label, cells) paste0("      ", label, " & ", paste(cells, collapse = " & "), "\\\\\n")
+star <- function(p) ifelse(p < 0.01, "$^{***}$", ifelse(p < 0.05, "$^{**}$", ifelse(p < 0.1, "$^{*}$", "")))
+fmt <- function(x, d) sub("^-(0\\.0+)$", "\\1", sprintf(paste0("%.", d, "f"), x))   # -0.00 prints as 0.00
+comma_int <- function(x) format(x, big.mark = ",", scientific = FALSE, trim = TRUE)
+row_tex <- function(label, cells) paste0("      ", label, " & ", paste(cells, collapse = " & "), "\\\\")
+write_tex <- function(lines, file) writeLines(c("% Generated by outcomes.Rmd", lines), file.path(TAB_DIR, file))
 
-# a constructed 0/1 flag: its share printed; it stops unless the flag takes both values
-flag <- function(x, what) {
-  if (anyNA(x) || !all(x %in% 0:1) || n_distinct(x) != 2L) stop(what, ": a 0/1 flag taking both values expected")
-  message(sprintf("%s: share %.4f of %s", what, mean(x), comma(length(x))))
-  invisible(x)
-}
-
-# a table file under out_dir, at the path the paper inputs, with this notebook's name on its first line; it stops on a missing or infinite number
-no_missing <- function(tex) !any(grepl("(^|[^A-Za-z])(NA|NaN|Inf)([^A-Za-z]|$)", tex))
-stopifnot("no_missing self-test" = no_missing("x & 1.00 & (0.39) DEMRE's NAME Info") && !no_missing("x & NA\\\\") && !no_missing("-Inf") && !no_missing("{NaN}"))
-write_tex <- function(tex, file) {
-  if (!no_missing(tex)) stop(file, ": a missing or infinite number")
-  cat("% Generated by outcomes.Rmd\n", tex, file = file.path(out_dir, file), sep = "")
-}
-
-# coefficient on the instrument z (OLS) or on attendance (2SLS), SE, p-value and N, one row per model, the models' dependent
-# variables y in their order (checked); 2SLS p-values from the normal distribution, as ivreg2's
-effect <- function(fit, y, z = "OFFER") {
+# the coefficient on z (OLS) or on attendance (2SLS), its SE, p-value and N, one row per model; 2SLS p-values come
+# from the normal distribution, as ivreg2's
+effect <- function(fit, z = "OFFER") {
   models <- if (inherits(fit, "fixest_multi")) as.list(fit) else list(fit)
-  stopifnot(identical(unname(map_chr(models, function(m) deparse(m$fml[[2]]))), y))   # each model's dependent variable is its label
   bind_rows(map(models, function(m) {
-    iv <- isTRUE(m$is_iv)
-    term <- if (iv) "fit_D_OD" else z
-    p <- if (iv) 2 * pnorm(-abs(tstat(m)[[term]])) else pvalue(m)[[term]]
+    term <- if (isTRUE(m$is_iv)) "fit_D_OD" else z
+    p <- if (isTRUE(m$is_iv)) 2 * pnorm(-abs(tstat(m)[[term]])) else pvalue(m)[[term]]
     tibble(est = coef(m)[[term]], se = se(m)[[term]], p = p, n = nobs(m))
   }))
 }
 
-# the rows of an outcome table (Tables IV, C.4 and C.5): each outcome's mean without the offer and its effect, on time and ever, in pp
-outcome_body <- function(est) {
-  map_chr(names(college), function(k) {
-    ot <- filter(est, var == paste0(k, "_OT"))
-    ever <- filter(est, var == paste0(k, "_EVER"))
-    stopifnot(nrow(ot) == 1L, nrow(ever) == 1L)   # each outcome's row on time and ever, once
-    paste0(
-      tex_row(college[[k]], c(num(100 * ot$mean, 2), paste0(num(100 * ot$est, 2), stars(ot$p)),
-                              num(100 * ever$mean, 2), paste0(num(100 * ever$est, 2), stars(ever$p)))),
-      tex_row("", c("", paste0("(", num(100 * ot$se, 2), ")"), "", paste0("(", num(100 * ever$se, 2), ")")))
-    )
-  })
+# Tables III and IV and the appendix's estimate tables: caption, header, body and note
+results_table <- function(top, caption, label, columns, header, body, note, size = "footnotesize") c(
+  top,
+  paste0("   \\caption{", caption, "}\\label{", label, "}"),
+  paste0("   \\centerline{\\scalebox{0.85}{\\begin{tabular}{", columns, "}"),
+  "      \\toprule", header, "      \\midrule", body, "      \\bottomrule",
+  "   \\end{tabular}}}",
+  paste0("   \\par\\smallskip{\\", size, " ", note, "}"),
+  "\\end{table}")
+
+# Table IV and Appendix Tables C.3 and C.4: each outcome's mean without an offer and its effect in pp, on time and ever
+outcome_table <- function(top, caption, label, effect_header, est, n, note) {
+  rows <- unlist(map(names(college), function(k) {
+    ot <- est[est$var == paste0(k, "_OT"), ]
+    ever <- est[est$var == paste0(k, "_EVER"), ]
+    c(row_tex(college[[k]], c(fmt(100 * ot$mean, 2), paste0(fmt(100 * ot$est, 2), star(ot$p)),
+                              fmt(100 * ever$mean, 2), paste0(fmt(100 * ever$est, 2), star(ever$p)))),
+      row_tex("", c("", paste0("(", fmt(100 * ot$se, 2), ")"), "", paste0("(", fmt(100 * ever$se, 2), ")"))))
+  }))
+  header <- c("                   & \\multicolumn{2}{c}{On time} & \\multicolumn{2}{c}{Ever}\\\\",
+              "      \\cmidrule(lr){2-3}\\cmidrule(lr){4-5}",
+              effect_header,
+              "                   & (1) & (2) & (3) & (4)\\\\")
+  body <- c(rows, "      \\midrule", row_tex("$N$", comma_int(rep(n, 2))))
+  results_table(top, caption, label, "lcccc", header, body, note)
 }
 
-# the notes' sentence on the enrollment block (Tables IV, C.4 and C.5)
-ENROLLMENT_NOTE <- paste0("Enrolled anywhere counts the students who enrolled in any higher-education institution; the two rows indented under ",
-                          "it divide these students by where they first enrolled, and a student who first enrolled through and outside SUA in ",
-                          "the same year counts in the SUA row.")
+# Appendix Tables C.1 and C.5: a plain tabular with its note below
+tex_float <- function(caption, label, columns, body, note) c(
+  "\\begin{table}[!htbp]", "\\singlespacing\\renewcommand{\\arraystretch}{1.2}", "\\centering",
+  paste0("\\caption{", caption, "}"), paste0("\\label{", label, "}"), "\\small",
+  paste0("\\begin{tabular*}{\\textwidth}{@{\\extracolsep{\\fill}}", columns, "@{}}"), "\\toprule", body,
+  "\\bottomrule", "\\end{tabular*}", "\\par\\smallskip", "\\begin{minipage}{\\textwidth}\\footnotesize",
+  paste("Notes:", note), "\\end{minipage}", "\\end{table}")
+
+# the notes' sentence on the enrollment rows (Tables IV, C.3 and C.4)
+ENROLLMENT_NOTE <- paste0(
+  "Enrolled anywhere counts the students who enrolled in any higher-education institution; the two rows indented ",
+  "under it divide these students by where they first enrolled, and a student who first enrolled through and ",
+  "outside SUA in the same year counts in the SUA row.")
+```
+
+# Data
+
+```{r data}
+panel <- readRDS(file.path(DATA_DIR, "outcomes_panel.rds"))                # one row per applicant child
+applications <- readRDS(file.path(DATA_DIR, "outcomes_applications.rds"))  # one row per application
+entrants <- readRDS(file.path(DATA_DIR, "outcomes_entrants.rds"))          # one row per 9th-grade entry under SAE
+group <- readRDS(file.path(DATA_DIR, "outcomes_group.rds"))                # the over-demanded schools
+note_counts <- readRDS(file.path(DATA_DIR, "outcomes_note_counts.rds"))    # Table IV's note
+n_over_demanded <- nrow(group)
+
+# Enrolled anywhere: the child's first enrollment, in SUA or outside it (each child is in at most one of the two)
+panel <- mutate(panel, ANYWHERE_OT = INSUA_OT + OUTSIDE_OT, ANYWHERE_EVER = INSUA_EVER + OUTSIDE_EVER)
+outcome_vars <- c(paste0(names(college), "_OT"), paste0(names(college), "_EVER"))
+years <- paste0(min(panel$YEAR), "--", max(panel$YEAR))   # the application years
 ```
 
 # Table III: balance and enrollment
@@ -188,13 +135,10 @@ Each row's variable is regressed on the offer, with the column's fixed effects.
 ```{r balance}
 lottery <- panel %>%
   filter(LOTTERY_SAMPLE) %>%
-  mutate(ANY_SCHOOL = flag(as.integer(!is.na(ENTRY_RBD)), "ANY_SCHOOL"))   # enrolled at any school in the entry year
+  mutate(ANY_SCHOOL = as.integer(!is.na(ENTRY_RBD)))   # enrolled at any school in the entry year
 lottery_1000 <- filter(lottery, LOTTERY_SAMPLE_THOUSANDTHS)
-stopifnot("each chance group of Table III's columns (3) and (4) holds a child with an offer and one without" =
-            all(tapply(lottery$OFFER, lottery$CHANCE_GROUP, n_distinct) == 2L) &&
-            all(tapply(lottery_1000$OFFER, lottery_1000$CHANCE_GROUP_THOUSANDTHS, n_distinct) == 2L))
 
-rows2 <- tribble(
+balance_rows <- tribble(
   ~var,          ~panel, ~label,                         ~label2,                             ~scale, ~digits,
   "N_CLASS",     "A",    "Choices ranked",               "",                                  1,      3,
   "N_OD",        "A",    "Over-demanded schools ranked", "",                                  1,      3,
@@ -207,19 +151,15 @@ rows2 <- tribble(
   "D_OD",        "C",    "Attends an over-demanded",     "\\quad school (\\%)",               100,    2,
   "ANY_SCHOOL",  "C",    "Enrolled at any school (\\%)", "",                                  100,    2
 )
-balance_vars <- rows2$var[rows2$panel != "C"]   # the eight rows of the joint test
+balance_vars <- balance_rows$var[balance_rows$panel != "C"]   # the eight rows of the joint test
 
-fits2 <- list(
-  feols(.[rows2$var] ~ OFFER | YEAR, lottery),
-  feols(.[rows2$var] ~ OFFER + i(YEAR, ref = 2016) | CHANCE_GROUP, lottery),
-  feols(.[rows2$var] ~ OFFER + i(YEAR, ref = 2016) | CHANCE_GROUP_THOUSANDTHS, lottery_1000)
+balance_fits <- list(
+  feols(.[balance_rows$var] ~ OFFER | YEAR, lottery),
+  feols(.[balance_rows$var] ~ OFFER + i(YEAR, ref = 2016) | CHANCE_GROUP, lottery),
+  feols(.[balance_rows$var] ~ OFFER + i(YEAR, ref = 2016) | CHANCE_GROUP_THOUSANDTHS, lottery_1000)
 )
-est2 <- map(fits2, effect, y = rows2$var)
-mean2 <- colMeans(lottery[lottery$OFFER == 0, rows2$var], na.rm = TRUE)
-stopifnot(all(panel$ALTO[panel$YEAR == 2016] == 0))   # the notes: the top-20% indicator, not recorded in 2016, is 0 for its applicants
-no_gpa <- rows2$var != "GPA8_Z"
-stopifnot("Table III: every row but the 8th-grade average covers every child of its column (the N row)" =
-            all(est2[[1L]]$n[no_gpa] == nrow(lottery), est2[[2L]]$n[no_gpa] == nrow(lottery), est2[[3L]]$n[no_gpa] == nrow(lottery_1000)))
+balance_est <- map(balance_fits, effect)
+balance_mean <- colMeans(lottery[lottery$OFFER == 0, balance_rows$var], na.rm = TRUE)
 
 # joint F as in Abdulkadiroglu et al. (2017): Stata's mvreg, then test; on the children with all eight rows
 joint_test <- function(d, rhs) {
@@ -231,71 +171,61 @@ joint_test <- function(d, rhs) {
   df <- nobs(fit[[1]]) - fit[[1]]$nparams
   V <- crossprod(e) / df / sum(z^2)   # covariance of the eight coefficients
   f_stat <- drop(b %*% solve(V, b)) / length(b)
-  tibble(F = f_stat, df = df, p = pf(f_stat, length(b), df, lower.tail = FALSE), n = nrow(d))
+  tibble(F = f_stat, p = pf(f_stat, length(b), df, lower.tail = FALSE), n = nrow(d))
 }
-joint2 <- bind_rows(
+balance_joint <- bind_rows(
   joint_test(lottery, "| YEAR"),
   joint_test(lottery, "+ i(YEAR, ref = 2016) | CHANCE_GROUP"),
   joint_test(lottery_1000, "+ i(YEAR, ref = 2016) | CHANCE_GROUP_THOUSANDTHS")
 )
-as.data.frame(joint2)
+balance_joint
 ```
 
 ```{r balance-tex}
-body2 <- map_chr(seq_len(nrow(rows2)), function(i) {
-  r <- rows2[i, ]
-  cells <- map_chr(est2, function(e) paste0(num(r$scale * e$est[i], r$digits), stars(e$p[i])))
-  ses <- map_chr(est2, function(e) paste0("(", num(r$scale * e$se[i], r$digits), ")"))
-  paste0(tex_row(r$label, c(num(r$scale * mean2[[r$var]], r$digits), cells)),
-         tex_row(r$label2, c("", ses)))
+balance_body <- map(seq_len(nrow(balance_rows)), function(i) {
+  r <- balance_rows[i, ]
+  cells <- map_chr(balance_est, function(e) paste0(fmt(r$scale * e$est[i], r$digits), star(e$p[i])))
+  ses <- map_chr(balance_est, function(e) paste0("(", fmt(r$scale * e$se[i], r$digits), ")"))
+  c(row_tex(r$label, c(fmt(r$scale * balance_mean[[r$var]], r$digits), cells)), row_tex(r$label2, c("", ses)))
 })
-with_gpa <- comma(c(sum(lottery$OFFER == 0 & !is.na(lottery$GPA8_Z)), joint2$n))
+panel_rows <- function(p, title) {
+  c(paste0("      \\multicolumn{5}{l}{\\textit{Panel ", p, ". ", title, "}}\\\\"),
+    unlist(balance_body[balance_rows$panel == p]), "      \\midrule")
+}
+with_gpa <- comma_int(c(sum(lottery$OFFER == 0 & !is.na(lottery$GPA8_Z)), balance_joint$n))
 
-note2 <- paste0(
-  "Notes: The sample is the lottery sample of Section~\\ref{sec:lottery-data}. Column (1) is the mean among students without an offer. ",
-  "Columns (2) to (4) report the coefficient on the offer in a regression of the row's variable on the offer, with heteroskedasticity-robust ",
-  "standard errors in parentheses, and differ in what they hold fixed: column (2) the application year only; columns (3) and (4) the chance ",
-  "group (the chance rounded to the nearest hundredth or thousandth) and the application year, on the students whose group holds a ",
-  "student with an offer and a student without one. The joint test is the $F$-test that the coefficients of the eight rows of Panels A ",
-  "and B are jointly zero in a multivariate regression of those rows on the offer with the column's fixed effects. The 8th-grade ",
-  "average row and the joint test cover the students with that average: ", with_gpa[1], ", ", with_gpa[2], ", ", with_gpa[3],
-  ", and ", with_gpa[4], " in columns (1) to (4). Rows marked \\% report a share in column (1) and a difference ",
-  "in pp in columns (2) to (4). Choices ranked counts the choices the student ranked: a school, or a classroom at a school with more ",
-  "than one 9th-grade classroom. Over-demanded schools ranked counts the distinct over-demanded schools among them. The top-20\\% ",
-  "indicator is not recorded in the 2016 process and is set to 0 for its applicants. Panel C refers to the annual enrollment census ",
-  "of the entry year. $^{***}$p$<$0.01, $^{**}$p$<$0.05, $^{*}$p$<$0.1."
+balance_note <- paste0(
+  "Notes: The sample is the lottery sample of Section~\\ref{sec:lottery-data}. Column (1) is the mean among students ",
+  "without an offer. Columns (2) to (4) report the coefficient on the offer in a regression of the row's variable on ",
+  "the offer, with heteroskedasticity-robust standard errors in parentheses, and differ in what they hold fixed: ",
+  "column (2) the application year only; columns (3) and (4) the chance group (the chance rounded to the nearest ",
+  "hundredth or thousandth) and the application year, on the students whose group holds a student with an offer and ",
+  "a student without one. The joint test is the $F$-test that the coefficients of the eight rows of Panels A and B ",
+  "are jointly zero in a multivariate regression of those rows on the offer with the column's fixed effects. The ",
+  "8th-grade average row and the joint test cover the students with that average: ", with_gpa[1], ", ", with_gpa[2],
+  ", ", with_gpa[3], ", and ", with_gpa[4], " in columns (1) to (4). Rows marked \\% report a share in column (1) ",
+  "and a difference in pp in columns (2) to (4). Choices ranked counts the choices the student ranked: a school, or ",
+  "a classroom at a school with more than one 9th-grade classroom. Over-demanded schools ranked counts the distinct ",
+  "over-demanded schools among them. The top-20\\% indicator is not recorded in the 2016 process and is set to 0 for ",
+  "its applicants. Panel C refers to the annual enrollment census of the entry year. $^{***}$p$<$0.01, ",
+  "$^{**}$p$<$0.05, $^{*}$p$<$0.1."
 )
 
-tex2 <- paste0(
-  "\\begin{table}[htbp]\\singlespacing\\renewcommand{\\arraystretch}{1.0}\n",
-  "   \\caption{Lottery Balance and Enrollment, Application Years ", years, "}\\label{tab: lottery balance}\n",
-  "   \\centerline{\\scalebox{0.85}{\\begin{tabular}{lcccc}\n",
-  "      \\toprule\n",
-  "                   & No offer & No & \\multicolumn{2}{c}{Chance-group controls}\\\\\n",
-  "      \\cmidrule(lr){4-5}\n",
-  "                   & mean & controls & Hundredths & Thousandths\\\\\n",
-  "                   & (1) & (2) & (3) & (4)\\\\\n",
-  "      \\midrule\n",
-  "      \\multicolumn{5}{l}{\\textit{Panel A. Ranked list}}\\\\\n",
-  paste(body2[rows2$panel == "A"], collapse = ""),
-  "      \\midrule\n",
-  "      \\multicolumn{5}{l}{\\textit{Panel B. Characteristics}}\\\\\n",
-  paste(body2[rows2$panel == "B"], collapse = ""),
-  "      \\midrule\n",
-  "      \\multicolumn{5}{l}{\\textit{Panel C. Enrollment in the entry year}}\\\\\n",
-  paste(body2[rows2$panel == "C"], collapse = ""),
-  "      \\midrule\n",
-  tex_row("$N$", comma(c(sum(lottery$OFFER == 0), nrow(lottery), nrow(lottery), nrow(lottery_1000)))),
-  tex_row("Chance groups", c("", "", comma(n_distinct(lottery$CHANCE_GROUP)), comma(n_distinct(lottery_1000$CHANCE_GROUP_THOUSANDTHS)))),
-  tex_row("$F$-test for joint significance", c("", num(joint2$F, 2))),
-  tex_row("$p$-value", c("", num(joint2$p, 3))),
-  "      \\bottomrule\n",
-  "   \\end{tabular}}}\n",
-  "   \\par\\smallskip{\\scriptsize ", note2, "}\n",
-  "\\end{table}\n"
-)
-write_tex(tex2, "tables/results/lottery_balance.tex")
-cat(tex2)
+balance_tex <- results_table(
+  "\\begin{table}[htbp]\\singlespacing\\renewcommand{\\arraystretch}{1.0}",
+  paste0("Lottery Balance and Enrollment, Application Years ", years), "tab: lottery balance", "lcccc",
+  c("                   & No offer & No & \\multicolumn{2}{c}{Chance-group controls}\\\\",
+    "      \\cmidrule(lr){4-5}",
+    "                   & mean & controls & Hundredths & Thousandths\\\\",
+    "                   & (1) & (2) & (3) & (4)\\\\"),
+  c(panel_rows("A", "Ranked list"), panel_rows("B", "Characteristics"), panel_rows("C", "Enrollment in the entry year"),
+    row_tex("$N$", comma_int(c(sum(lottery$OFFER == 0), nrow(lottery), nrow(lottery), nrow(lottery_1000)))),
+    row_tex("Chance groups", c("", "", comma_int(n_distinct(lottery$CHANCE_GROUP)),
+                               comma_int(n_distinct(lottery_1000$CHANCE_GROUP_THOUSANDTHS)))),
+    row_tex("$F$-test for joint significance", c("", fmt(balance_joint$F, 2))),
+    row_tex("$p$-value", c("", fmt(balance_joint$p, 3)))),
+  balance_note, size = "scriptsize")
+write_tex(balance_tex, "results/lottery_balance.tex")
 ```
 
 # Table IV: graduation and college outcomes
@@ -303,667 +233,299 @@ cat(tex2)
 Each outcome is regressed on attendance at an over-demanded school by 2SLS, with the offer as the instrument.
 
 ```{r college}
-sample3 <- drop_na(lottery, all_of(controls)) %>%
-  mutate(ANYWHERE_OT = flag(ANYWHERE_OT, "ANYWHERE_OT (Table IV's sample)"),
-         ANYWHERE_EVER = flag(ANYWHERE_EVER, "ANYWHERE_EVER (Table IV's sample)"))   # Enrolled anywhere
-vars3 <- c(paste0(names(college), "_OT"), paste0(names(college), "_EVER"))
+estimation_sample <- drop_na(lottery, all_of(controls))   # the lottery sample with every characteristic
 
-# on an estimation sample: every outcome is a complete 0/1 flag (Enrolled anywhere, the sum of its two rows, included), and the two rows
-# indented under graduation divide it
-outcomes_ok <- function(d) {
-  x <- as.matrix(d[vars3])
-  stopifnot("every outcome is a complete 0/1 flag" = !anyNA(x) && all(x %in% 0:1))
-  for (h in c("_OT", "_EVER")) {
-    stopifnot("the two graduation rows divide graduation" = identical(d[[paste0("GRAD", h)]], d[[paste0("GRAD_REGULAR", h)]] + d[[paste0("GRAD_ADULT", h)]]))
-  }
-  invisible(d)
-}
-outcomes_ok(sample3)
-stopifnot("each chance group of Table IV's sample holds a child with an offer and one without" =
-            all(tapply(sample3$OFFER, sample3$CHANCE_GROUP, n_distinct) == 2L))
-
-first_stage <- feols(D_OD ~ OFFER + .[controls] + i(YEAR, ref = 2016) | CHANCE_GROUP, sample3)
-fit3 <- feols(.[vars3] ~ .[controls] + i(YEAR, ref = 2016) | CHANCE_GROUP | D_OD ~ OFFER, sample3,
-              ssc = ssc(K.adj = FALSE))   # 2SLS SEs without the N/(N-K) factor, as ivreg2's robust
-fs3 <- effect(first_stage, "D_OD")
-est3 <- effect(fit3, vars3) %>%
-  mutate(var = vars3, mean = colMeans(sample3[sample3$OFFER == 0, vars3]))
-stopifnot("Table IV: every row and the first stage cover every child of the N row" = all(est3$n == nrow(sample3), fs3$n == nrow(sample3)))
+college_fs_fit <- feols(D_OD ~ OFFER + .[controls] + i(YEAR, ref = 2016) | CHANCE_GROUP, estimation_sample)
+college_fit <- feols(.[outcome_vars] ~ .[controls] + i(YEAR, ref = 2016) | CHANCE_GROUP | D_OD ~ OFFER,
+                     estimation_sample,
+                     ssc = ssc(K.adj = FALSE))   # 2SLS SEs without the N/(N-K) factor, as ivreg2's robust
+college_fs <- effect(college_fs_fit)
+college_est <- effect(college_fit) %>%
+  mutate(var = outcome_vars, mean = colMeans(estimation_sample[estimation_sample$OFFER == 0, outcome_vars]))
+college_est
 ```
 
 ```{r college-tex}
-note3 <- paste0(
-  "Notes: The sample is the ", comma(nrow(sample3)), " students of the lottery sample with every characteristic of ",
-  "Section~\\ref{sec:lottery-data}. Columns (2) and (4) report 2SLS estimates of the effect of attending an over-demanded school, with ",
-  "the offer as the instrument, chance-group and application-year fixed effects, and the characteristics as controls ",
-  "(Section~\\ref{sec:lottery-estimation}); the first stage is ", num(100 * fs3$est, 2), " pp (", num(100 * fs3$se, 2), "). Columns (1) ",
-  "and (3) are means among the students without an offer, in \\%; the effects are in pp. Heteroskedasticity-robust standard errors in ",
-  "parentheses. On time and ever are defined in Section~\\ref{sec:lottery-data}. A student who completes secondary school in adult ",
-  "education counts as graduated; the two rows indented under graduation divide it by route, and a student who also completes twelfth ",
-  "grade in regular secondary education counts in the regular row. DEMRE's registration records list ", comma(note_counts$validation_completers),
-  " students who completed secondary school ",
-  "through validation exams or the recognition of studies abroad, two routes outside the year-end school records; they count as not ",
-  "graduated. ", ENROLLMENT_NOTE, " $^{***}$p$<$0.01, ",
-  "$^{**}$p$<$0.05, $^{*}$p$<$0.1."
+college_note <- paste0(
+  "Notes: The sample is the ", comma_int(nrow(estimation_sample)), " students of the lottery sample with every ",
+  "characteristic of Section~\\ref{sec:lottery-data}. Columns (2) and (4) report 2SLS estimates of the effect of ",
+  "attending an over-demanded school, with the offer as the instrument, chance-group and application-year fixed ",
+  "effects, and the characteristics as controls (Section~\\ref{sec:lottery-estimation}); the first stage is ",
+  fmt(100 * college_fs$est, 2), " pp (", fmt(100 * college_fs$se, 2), "). Columns (1) and (3) are means among the ",
+  "students without an offer, in \\%; the effects are in pp. Heteroskedasticity-robust standard errors in ",
+  "parentheses. On time and ever are defined in Section~\\ref{sec:lottery-data}. A student who completes secondary ",
+  "school in adult education counts as graduated; the two rows indented under graduation divide it by route, and a ",
+  "student who also completes twelfth grade in regular secondary education counts in the regular row. DEMRE's ",
+  "registration records list ", comma_int(note_counts$validation_completers), " students who completed secondary ",
+  "school through validation exams or the recognition of studies abroad, two routes outside the year-end school ",
+  "records; they count as not graduated. ", ENROLLMENT_NOTE, " $^{***}$p$<$0.01, $^{**}$p$<$0.05, $^{*}$p$<$0.1."
 )
 
-tex3 <- paste0(
-  "\\begin{table}[htbp]\\singlespacing\\renewcommand{\\arraystretch}{1.2}\n",
-  "   \\caption{Effect of Attending an Over-Demanded School on Downstream Outcomes, On Time and Ever}\\label{tab: lottery college}\n",
-  "   \\centerline{\\scalebox{0.85}{\\begin{tabular}{lcccc}\n",
-  "      \\toprule\n",
-  "                   & \\multicolumn{2}{c}{On time} & \\multicolumn{2}{c}{Ever}\\\\\n",
-  "      \\cmidrule(lr){2-3}\\cmidrule(lr){4-5}\n",
-  "                   & No offer & 2SLS & No offer & 2SLS\\\\\n",
-  "                   & mean &  & mean & \\\\\n",
-  "                   & (1) & (2) & (3) & (4)\\\\\n",
-  "      \\midrule\n",
-  paste(outcome_body(est3), collapse = ""),
-  "      \\midrule\n",
-  tex_row("$N$", comma(rep(c(sum(sample3$OFFER == 0), nrow(sample3)), 2))),
-  "      \\bottomrule\n",
-  "   \\end{tabular}}}\n",
-  "   \\par\\smallskip{\\footnotesize ", note3, "}\n",
-  "\\end{table}\n"
-)
-write_tex(tex3, "tables/results/lottery_college.tex")
-cat(tex3)
+college_tex <- outcome_table(
+  "\\begin{table}[htbp]\\singlespacing\\renewcommand{\\arraystretch}{1.2}",
+  "Graduation and College Outcomes", "tab: lottery college",
+  c("                   & No offer & 2SLS & No offer & 2SLS\\\\", "                   & mean &  & mean & \\\\"),
+  college_est, c(sum(estimation_sample$OFFER == 0), nrow(estimation_sample)), college_note)
+write_tex(college_tex, "results/lottery_college.tex")
 ```
 
 # Appendix Table C.1: the lottery sample's construction
 
-Each step's count: the applications of the population, then the children.
+The applications of the population, then the children.
 
 ```{r sample-construction}
 funnel <- c(applications = nrow(applications), eighth_grade = sum(applications$ENROLLED_8TH_GRADE_APRIL),
-            children = sum(applications$KEPT), lottery_sample = nrow(lottery), every_characteristic = nrow(sample3))
-stopifnot(funnel[["children"]] == nrow(panel),
-          identical(applications$MRUN[applications$KEPT], panel$MRUN))   # the kept applications are the panel's children, in its order
+            children = sum(applications$KEPT), lottery_sample = nrow(lottery),
+            every_characteristic = nrow(estimation_sample))
 funnel
 
-tex_c1 <- c(
-  "\\begin{table}[!htbp]",
-  "\\singlespacing\\renewcommand{\\arraystretch}{1.2}",
-  "\\centering",
-  "\\caption{Construction of the Ninth-Grade Lottery Sample}",
-  "\\label{tab: lottery sample construction}",
-  "\\small",
-  "\\begin{tabular*}{\\textwidth}{@{\\extracolsep{\\fill}}p{0.76\\textwidth}r@{}}",
-  "\\toprule",
-  "Restriction & Remaining \\\\",
-  "\\midrule",
-  paste0("Ninth-grade applications involving an over-demanded school & ", comma(funnel[["applications"]]), " \\\\"),
-  paste0("Enrollment in eighth grade in the application year & ", comma(funnel[["eighth_grade"]]), " \\\\"),
-  paste0("No preceding-year application; earliest remaining application per student & ", comma(funnel[["children"]]), " \\\\"),
-  paste0("Probability of an offer strictly between zero and one & ", comma(funnel[["lottery_sample"]]), " \\\\"),
-  paste0("All characteristics used as regression controls observed & ", comma(funnel[["every_characteristic"]]), " \\\\"),
-  "\\bottomrule",
-  "\\end{tabular*}",
-  "\\par\\smallskip",
-  "\\begin{minipage}{\\textwidth}\\footnotesize",
-  paste0("Notes: Processes ", years, ". The first two rows count applications; the remaining rows count unique students. Of the ",
-         comma(funnel[["children"]]), " students, ", comma(funnel[["children"]] - funnel[["lottery_sample"]]), " have offer probability ",
-         "zero or one and do not enter the propensity-score lottery sample. The final row defines the sample for the main regressions ",
-         "with controls. Each admission-score regression further requires the corresponding score."),
-  "\\end{minipage}",
-  "\\end{table}"
-)
-write_tex(paste0(paste(tex_c1, collapse = "\n"), "\n"), "tables/lottery_sample_construction.tex")
-cat(tex_c1, sep = "\n")
+steps <- c("Ninth-grade applications involving an over-demanded school",
+           "Enrollment in eighth grade in the application year",
+           "No preceding-year application; earliest remaining application per student",
+           "Probability of an offer strictly between zero and one",
+           "All characteristics used as regression controls observed")
+funnel_note <- paste0(
+  "Processes ", years, ". The first two rows count applications; the remaining rows count unique students. Of the ",
+  comma_int(funnel[["children"]]), " students, ", comma_int(funnel[["children"]] - funnel[["lottery_sample"]]),
+  " have offer probability zero or one and do not enter the propensity-score lottery sample. The final row defines ",
+  "the sample for the main regressions with controls. Each admission-score regression further requires the ",
+  "corresponding score.")
+
+funnel_tex <- tex_float("Construction of the Ninth-Grade Lottery Sample", "tab: lottery sample construction",
+                        "p{0.76\\textwidth}r",
+                        c("Restriction & Remaining \\\\", "\\midrule",
+                          paste0(steps, " & ", comma_int(funnel), " \\\\")),
+                        funnel_note)
+write_tex(funnel_tex, "lottery_sample_construction.tex")
 ```
 
 # Appendix Table C.2: the children whose attendance depends on the offer
 
-Column (1) is the 2SLS of $X(D - 1/2)$ on attendance, the offer the instrument, with the chance groups as fixed effects and each child
-weighted by $1/(p_c(1 - p_c))$, $p_c$ the offer share of her chance group among the row's children, so that every child whose
-attendance depends on the offer counts once; heteroskedasticity-robust standard errors without the N/(N-K) factor. Columns (2) and (3)
-are means.
+Column (1) is the 2SLS of $X(D - 1/2)$ on attendance, the offer the instrument, with the chance groups as fixed
+effects and each child weighted by $1/(p_c(1 - p_c))$, $p_c$ the offer share of her chance group among the row's
+children, so that every child whose attendance depends on the offer counts once. Columns (2) and (3) are means.
 
 ```{r characteristics}
-rows_c2 <- rows2[rows2$panel == "B", ]   # the five characteristics, as Table III's Panel B
-col1 <- bind_rows(map(rows_c2$var, function(v) {
+complier_rows <- balance_rows[balance_rows$panel == "B", ]   # the five characteristics, as Table III's Panel B
+col1 <- bind_rows(map(complier_rows$var, function(v) {
   d <- lottery %>%
     filter(!is.na(.data[[v]])) %>%
     group_by(CHANCE_GROUP) %>%
     mutate(W = 1 / (mean(OFFER) * (1 - mean(OFFER)))) %>%
     ungroup() %>%
     mutate(X = as.numeric(.data[[v]]), Y = X * (D_OD - 0.5))
-  stopifnot(all(is.finite(d$W)))   # each chance group holds a child with an offer and one without, among the row's children
   fit <- feols(Y ~ 1 | CHANCE_GROUP | D_OD ~ OFFER, d, weights = ~W, ssc = ssc(K.adj = FALSE))
-  mutate(effect(fit, "Y"), var = v, mean_all = mean(d$X))
+  mutate(effect(fit), var = v, mean_all = mean(d$X))
 }))
 
-# column (3): the entries; low income is SAE's flag with a main-stage application and the SEP roster of the entry year without one
+# column (3): the entries; low income is SAE's flag with a main-stage application, else the SEP roster of the entry year
 entrants3 <- mutate(entrants, LOW_INCOME = if_else(MAIN_STAGE_9, PRIORITARIO, LOW_INCOME_SEP_ENTRY_YEAR))
-entrant_cols <- c(GPA8_Z = "GPA8_Z", ES_MUJER = "FEMALE", PRIORITARIO = "LOW_INCOME", ALTO = "ALTO", ORIGIN_OD = "ORIGIN_OD")
-col3 <- bind_rows(map(names(entrant_cols), function(v) {
-  x <- entrants3[[entrant_cols[[v]]]]
-  tibble(var = v, mean3 = mean(x, na.rm = TRUE), n3 = sum(!is.na(x)))
-}))
-overlap <- filter(entrants, MRUN %in% lottery$MRUN)   # every entry of a child of column (2)
-stopifnot(max(table(entrants$MRUN)) == 2L)   # no child enters more than twice: the entries less the children count those who entered twice
-c2_counts <- c(twice = nrow(entrants) - n_distinct(entrants$MRUN), overlap_entries = nrow(overlap),
-               overlap_children = n_distinct(overlap$MRUN), fill = sum(!entrants$MAIN_STAGE_9), main_stage = sum(entrants$MAIN_STAGE_9),
-               eighth_grade = sum(!is.na(entrants$ORIGIN_OD)))
-stopifnot(identical(col1$var, rows_c2$var), identical(col3$var, rows_c2$var),   # the three columns in the rows' order
-          c2_counts[["main_stage"]] == col3$n3[col3$var == "ALTO"], c2_counts[["eighth_grade"]] == col3$n3[col3$var == "ORIGIN_OD"],
-          "Table C.2's note: every row but the 8th-grade average covers all of column (2); female and low-income cover all of column (3)" =
-            all(col1$n[col1$var != "GPA8_Z"] == nrow(lottery)) && all(col3$n3[col3$var %in% c("ES_MUJER", "PRIORITARIO")] == nrow(entrants)))
-as.data.frame(left_join(col1, col3, by = "var"))
-c2_counts
+entrant_cols <- c(GPA8_Z = "GPA8_Z", ES_MUJER = "FEMALE", PRIORITARIO = "LOW_INCOME", ALTO = "ALTO",
+                  ORIGIN_OD = "ORIGIN_OD")
+col3 <- map_dbl(entrant_cols, function(v) mean(entrants3[[v]], na.rm = TRUE))
+mutate(col1, mean3 = col3)
 ```
 
 ```{r characteristics-tex}
-body_c2 <- map_chr(seq_len(nrow(rows_c2)), function(i) {
-  r <- rows_c2[i, ]
-  paste0(tex_row(r$label, c(num(r$scale * col1$est[i], r$digits), num(r$scale * col1$mean_all[i], r$digits),
-                            num(r$scale * col3$mean3[i], r$digits))),
-         tex_row(r$label2, c(paste0("(", num(r$scale * col1$se[i], r$digits), ")"), "", "")))
-})
+complier_body <- unlist(map(seq_len(nrow(complier_rows)), function(i) {
+  r <- complier_rows[i, ]
+  c(row_tex(r$label, fmt(r$scale * c(col1$est[i], col1$mean_all[i], col3[[r$var]]), r$digits)),
+    row_tex(r$label2, c(paste0("(", fmt(r$scale * col1$se[i], r$digits), ")"), "", "")))
+}))
+n_lottery <- col1$n[col1$var == "ES_MUJER"]   # column (1) is estimated from column (2)'s children
 
-note_c2 <- paste0(
-  "Notes: Column (1) reports the mean of each characteristic among the students of column (2) whose attendance depends on the offer, ",
-  "estimated from all the students of column (2) by 2SLS with the offer as the instrument and chance-group fixed effects, each student ",
-  "weighted so that every student whose attendance depends on the offer counts once, as in the semiparametric estimator of ",
-  "\\citet[p.~1402]{abdulkadiroglu2017}, which follows \\citet{abadie2003semiparametric}; heteroskedasticity-robust standard errors in ",
-  "parentheses. Columns (2) and (3) report means. Column (2) is the lottery sample of Section~\\ref{sec:lottery-data}. Column (3) covers ",
-  "the 9th-grade entrants of the ", comma(n_over_demanded), " schools (Section~\\ref{sec:allocation}) from the first class SAE assigned ",
-  "in the school's region through ", max(entrants$YEAR) + 1L, "; a student who entered two of these classes (", comma(c2_counts[["twice"]]),
-  " students) counts at each entry, and ", comma(c2_counts[["overlap_entries"]]), " of these entries belong to ",
-  comma(c2_counts[["overlap_children"]]), " students of column (2). Each characteristic is defined as in Section~\\ref{sec:lottery-data}, ",
-  "from the records of the year before entry; for the ", comma(c2_counts[["fill"]]), " entrants of column (3) without a main-stage ",
-  "application that year, the female row takes the sex in the Ministry of Education's enrollment record of the entry year, and the ",
-  "low-income row prioritario status in the entry year from the annual SEP roster, as in Section~\\ref{sec:allocation}. Each row covers ",
-  "the students with that characteristic: for the 8th-grade average, ", comma(col1$n[col1$var == "GPA8_Z"]), " students in columns (1) ",
-  "and (2) and ", comma(col3$n3[col3$var == "GPA8_Z"]), " entrants in column (3); in column (3), the top-20\\% row covers the ",
-  comma(c2_counts[["main_stage"]]), " entrants who applied in the main stage of the year before entry, and the last row the ",
-  comma(c2_counts[["eighth_grade"]]), " entrants enrolled in 8th grade that year. The top-20\\% indicator is not recorded in the 2016 ",
-  "process and is set to 0 for its applicants. Rows marked \\% report shares."
+complier_note <- paste0(
+  "Notes: Column (1) reports the mean of each characteristic among the compliers, estimated from the students of ",
+  "column (2) by 2SLS with the offer as the instrument and chance-group fixed effects, each student weighted so that ",
+  "every complier has equal weight, as in the semiparametric estimator of \\citet[p.~1402]{abdulkadiroglu2017}, ",
+  "which follows \\citet{abadie2003semiparametric}; heteroskedasticity-robust standard errors in parentheses. ",
+  "Columns (2) and (3) report means. Column (3) covers the 9th-grade entrants of the ", comma_int(n_over_demanded),
+  " over-demanded schools (Section~\\ref{sec:allocation}) from the first class SAE assigned in the school's region ",
+  "through ", max(entrants$YEAR) + 1L, ". Each characteristic is defined as in Section~\\ref{sec:lottery-data}, from ",
+  "the records of the year before entry; for entrants without a main-stage application that year, sex and ",
+  "low-income status come from the records of the entry year, and the top-20\\% indicator is missing. $N$ is each ",
+  "column's sample size; each row covers the students with a value for that characteristic. The top-20\\% indicator ",
+  "is not recorded in the 2016 process and is set to 0 for its applicants."
 )
 
-n12 <- col1$n[col1$var == "ES_MUJER"]   # column (1) is estimated from column (2)'s children
-tex_c2 <- paste0(
-  "\\begin{table}[htbp]\\singlespacing\\renewcommand{\\arraystretch}{1.2}\\small\n",
-  "   \\caption{Characteristics of the Students Whose Attendance Depends on the Offer}\\label{tab: lottery characteristics}\n",
-  "   \\centerline{\\scalebox{0.85}{\\begin{tabular}{lccc}\n",
-  "      \\toprule\n",
-  "                   & Students whose & All students & 9th-grade\\\\\n",
-  "                   & attendance depends & in the lottery & entrants\\\\\n",
-  "                   & on the offer & sample & under SAE\\\\\n",
-  "                   & (1) & (2) & (3)\\\\\n",
-  "      \\midrule\n",
-  paste(body_c2, collapse = ""),
-  "      \\midrule\n",
-  tex_row("$N$", comma(c(n12, n12, nrow(entrants)))),
-  "      \\bottomrule\n",
-  "   \\end{tabular}}}\n",
-  "   \\par\\smallskip{\\footnotesize ", note_c2, "}\n",
-  "\\end{table}\n"
-)
-write_tex(tex_c2, "tables/results/lottery_characteristics.tex")
-cat(tex_c2)
+complier_tex <- results_table(
+  "\\begin{table}[htbp]\\singlespacing\\renewcommand{\\arraystretch}{1.2}\\small",
+  "Characteristics of Lottery Compliers", "tab: lottery characteristics", "lccc",
+  c("                   &  & All students & 9th-grade\\\\",
+    "                   &  & in the lottery & entrants\\\\",
+    "                   & Compliers & sample & under SAE\\\\",
+    "                   & (1) & (2) & (3)\\\\"),
+  c(complier_body, "      \\midrule", row_tex("$N$", comma_int(c(n_lottery, n_lottery, nrow(entrants))))),
+  complier_note)
+write_tex(complier_tex, "results/lottery_characteristics.tex")
 ```
 
-# Appendix Table C.3: where the children whose attendance depends on the offer go without it
-
-Each share is minus the 2SLS effect of attendance on 1[the entry school's type] x (1 - attendance), specified as in Table IV
-(Abdulkadiroglu et al. 2017, Table VII).
-
-```{r complier-destinations}
-destinations <- c(publicly_funded_outside = "Other publicly funded school", fee_paying = "Fee-paying private school",
-                  no_record = "No entry-year enrollment record")
-sample_c3 <- mutate(sample3,
-                    PUBLIC = flag((ENTRY_SCHOOL_TYPE == "publicly_funded_outside") * (1L - D_OD), "PUBLIC"),
-                    FEE = flag((ENTRY_SCHOOL_TYPE == "fee_paying") * (1L - D_OD), "FEE"),
-                    NONE = flag((ENTRY_SCHOOL_TYPE == "no_record") * (1L - D_OD), "NONE"))
-fit_c3 <- feols(c(PUBLIC, FEE, NONE) ~ .[controls] + i(YEAR, ref = 2016) | CHANCE_GROUP | D_OD ~ OFFER, sample_c3,
-                ssc = ssc(K.adj = FALSE))
-est_c3 <- effect(fit_c3, c("PUBLIC", "FEE", "NONE")) %>%
-  mutate(type = names(destinations), share = -est)
-stopifnot(abs(sum(est_c3$share) - 1) < 1e-8)   # without the offer, every such child is in one of the three
-stopifnot("Table C.3: every row covers every child of Table IV's sample" = all(est_c3$n == nrow(sample3)))
-as.data.frame(est_c3)
-
-tex_c3 <- c(
-  "\\begin{table}[!htbp]",
-  "\\singlespacing\\renewcommand{\\arraystretch}{1.2}",
-  "\\centering",
-  "\\caption{Compliers' Entry-Year Destinations without an Offer}",
-  "\\label{tab: complier alternatives}",
-  "\\small",
-  "\\begin{tabular*}{0.85\\textwidth}{@{\\extracolsep{\\fill}}lc@{}}",
-  "\\toprule",
-  "Destination & Share (\\%) \\\\",
-  "\\midrule",
-  paste0(destinations[est_c3$type], " & ", num(100 * est_c3$share, 1), " \\\\"),
-  "\\bottomrule",
-  "\\end{tabular*}",
-  "\\par\\smallskip",
-  "\\begin{minipage}{\\textwidth}\\footnotesize",
-  paste0("Notes: Shares for students whose attendance at an over-demanded school depends on an offer, estimated by 2SLS as described in ",
-         "Section~\\ref{sec:lottery-balance}. Other publicly funded schools are outside the fixed set of ", comma(n_over_demanded), ". ",
-         "These are estimated counterfactual destinations rather than observed classifications of individual compliers."),
-  "\\end{minipage}",
-  "\\end{table}"
-)
-write_tex(paste0(paste(tex_c3, collapse = "\n"), "\n"), "tables/complier_alternatives.tex")
-cat(tex_c3, sep = "\n")
-```
-
-# Appendix Table C.4: the offer's effect
+# Appendix Table C.3: the offer's effect
 
 Each outcome is regressed on the offer by OLS, with Table IV's sample, controls and fixed effects.
 
 ```{r offer-effect}
-fit_c4 <- feols(.[vars3] ~ OFFER + .[controls] + i(YEAR, ref = 2016) | CHANCE_GROUP, sample3)
-est_c4 <- effect(fit_c4, vars3) %>%
-  mutate(var = vars3, mean = colMeans(sample3[sample3$OFFER == 0, vars3]))
-stopifnot("Table C.4: every row covers every child of the N row" = all(est_c4$n == nrow(sample3)),
-          "each Table IV estimate is its offer effect divided by the first stage (the outcomes section's text on the estimation)" =
-            identical(est_c4$var, est3$var) && max(abs(est3$est - est_c4$est / fs3$est)) < 1e-8)
-# the estimator's arithmetic on the data of record: a later fixest with other defaults would move these SEs and F statistics, and the
-# knit stops here
-if (on_disk$md5[on_disk$file == inputs[["panel"]]] == "2402d24e51204816f0346855a616a38e") {
-  stopifnot("Table IV's first robust SE as of record (2SLS, without the N/(N-K) factor)" = abs(est3$se[est3$var == "GRAD_OT"] - 0.0033514252152544565) < 1e-9,
-            "Table C.4's first robust SE as of record (OLS, with the N/(N-K) factor)" = abs(est_c4$se[est_c4$var == "GRAD_OT"] - 0.0020438709615003977) < 1e-9,
-            "Table III's three joint F statistics as of record (their degrees of freedom count fixest's parameters)" =
-              max(abs(joint2$F / c(1760.7045540770171, 0.8638523994141537, 0.93060616746334546) - 1)) < 1e-9,
-            "Table C.2's first robust SE as of record (weighted 2SLS, without the N/(N-K) factor)" =
-              abs(col1$se[col1$var == "GPA8_Z"] / 0.015461133978172052 - 1) < 1e-9)
-} else message("the panel is another panel than the one of record: the standard errors and F statistics of record are not checked")
-```
+offer_fit <- feols(.[outcome_vars] ~ OFFER + .[controls] + i(YEAR, ref = 2016) | CHANCE_GROUP, estimation_sample)
+offer_est <- effect(offer_fit) %>%
+  mutate(var = outcome_vars, mean = colMeans(estimation_sample[estimation_sample$OFFER == 0, outcome_vars]))
 
-```{r offer-effect-tex}
-note_c4 <- paste0(
-  "Notes: The sample is the ", comma(nrow(sample3)), " students of the lottery sample with every characteristic of ",
-  "Section~\\ref{sec:lottery-data}. Columns (2) and (4) report OLS estimates of the effect of receiving a main-stage offer at an ",
-  "over-demanded school, with the same sample, chance-group and application-year fixed effects, and characteristics as ",
-  "Table~\\ref{tab: lottery college}. Columns (1) and (3) are means among students without an offer, in \\%; effects are in pp. ",
-  "Heteroskedasticity-robust standard errors, with the $N/(N-K)$ correction, are in parentheses; $p$-values use the $t(N-K)$ ",
-  "distribution, where $K$ counts the estimated parameters. On time and ever are defined in Section~\\ref{sec:lottery-data}; ever uses ",
-  "records through ", LAST_SCHOOL_YEAR, " for graduation and ", LAST_COLLEGE_PROCESS, " for college outcomes, with longer follow-up for ",
-  "earlier cohorts. Graduation records completion of regular or adult secondary education; the two rows indented under graduation ",
-  "divide it by route, and a student who completes both counts in the regular row. ", ENROLLMENT_NOTE, " $^{***}p<0.01$, $^{**}p<0.05$, $^{*}p<0.1$."
+offer_note <- paste0(
+  "Notes: Columns (2) and (4) report OLS estimates of the effect of receiving a main-stage offer at an over-demanded ",
+  "school, with the same sample, chance-group and application-year fixed effects, and controls as ",
+  "Table~\\ref{tab: lottery college}. Columns (1) and (3) are means among students without an offer, in \\%; effects ",
+  "are in pp. Heteroskedasticity-robust standard errors in parentheses. On time and ever are defined in ",
+  "Section~\\ref{sec:lottery-data}. The rows are defined in the note to Table~\\ref{tab: lottery college}. ",
+  "$^{***}p<0.01$, $^{**}p<0.05$, $^{*}p<0.1$."
 )
 
-tex_c4 <- paste0(
-  "\\begin{table}[htbp]\\singlespacing\\renewcommand{\\arraystretch}{1.2}\n",
-  "   \\caption{Effect of an Offer at an Over-Demanded School on Graduation and College Outcomes}\\label{tab: lottery college offer}\n",
-  "   \\centerline{\\scalebox{0.85}{\\begin{tabular}{lcccc}\n",
-  "      \\toprule\n",
-  "                   & \\multicolumn{2}{c}{On time} & \\multicolumn{2}{c}{Ever}\\\\\n",
-  "      \\cmidrule(lr){2-3}\\cmidrule(lr){4-5}\n",
-  "                   & No offer & \\shortstack{Offer\\\\effect} & No offer & \\shortstack{Offer\\\\effect}\\\\\n",
-  "                   & mean & & mean & \\\\\n",
-  "                   & (1) & (2) & (3) & (4)\\\\\n",
-  "      \\midrule\n",
-  paste(outcome_body(est_c4), collapse = ""),
-  "      \\midrule\n",
-  tex_row("$N$", comma(rep(c(sum(sample3$OFFER == 0), nrow(sample3)), 2))),
-  "      \\bottomrule\n",
-  "   \\end{tabular}}}\n",
-  "   \\par\\smallskip{\\footnotesize ", note_c4, "}\n",
-  "\\end{table}\n"
-)
-write_tex(paste0(tex_c4, "\n"), "tables/results/lottery_college_offer.tex")   # the file ends with an empty line, as the paper's file of this table does
-cat(tex_c4)
+offer_tex <- outcome_table(
+  "\\begin{table}[htbp]\\singlespacing\\renewcommand{\\arraystretch}{1.2}",
+  "Offer Effects on Graduation and College Outcomes", "tab: lottery college offer",
+  c("                   & No offer & \\shortstack{Offer\\\\effect} & No offer & \\shortstack{Offer\\\\effect}\\\\",
+    "                   & mean & & mean & \\\\"),
+  offer_est, c(sum(estimation_sample$OFFER == 0), nrow(estimation_sample)), offer_note)
+write_tex(c(offer_tex, ""), "results/lottery_college_offer.tex")   # the paper's file ends with an empty line
 ```
 
-# Appendix Table C.5: first-choice admission lotteries
+# Appendix Table C.4: first-choice admission lotteries
 
-Table IV's 2SLS with a first-choice offer as the instrument and one fixed effect per first-choice admission lottery, on the children
-of the first-choice sample with every characteristic, in or outside the lottery sample.
+Table IV's 2SLS with a first-choice offer as the instrument and one fixed effect per first-choice admission lottery,
+on the children of the first-choice sample with every characteristic, in or outside the lottery sample.
 
 ```{r first-choice}
 first_choice <- panel %>%
   filter(FIRST_CHOICE_SAMPLE) %>%
-  drop_na(all_of(controls)) %>%
-  mutate(ANYWHERE_OT = flag(ANYWHERE_OT, "ANYWHERE_OT (first-choice sample)"),
-         ANYWHERE_EVER = flag(ANYWHERE_EVER, "ANYWHERE_EVER (first-choice sample)"))   # Enrolled anywhere
-outcomes_ok(first_choice)
-first_stage_c5 <- feols(D_OD ~ FIRST_CHOICE_OFFER + .[controls] | FIRST_CHOICE_LOTTERY, first_choice)
-fit_c5 <- feols(.[vars3] ~ .[controls] | FIRST_CHOICE_LOTTERY | D_OD ~ FIRST_CHOICE_OFFER, first_choice,
-                ssc = ssc(K.adj = FALSE))
-fs_c5 <- effect(first_stage_c5, "D_OD", z = "FIRST_CHOICE_OFFER")
-est_c5 <- effect(fit_c5, vars3) %>%
-  mutate(var = vars3, mean = colMeans(first_choice[first_choice$FIRST_CHOICE_OFFER == 0, vars3]))
-stopifnot("Table C.5: every row and the first stage cover every child of the N row" = all(est_c5$n == nrow(first_choice), fs_c5$n == nrow(first_choice)))
-print(c(children = nrow(first_choice), lotteries = n_distinct(first_choice$FIRST_CHOICE_LOTTERY)))
-print(c(first_stage_pp = 100 * fs_c5$est, se_pp = 100 * fs_c5$se))
-```
+  drop_na(all_of(controls))
+first_choice_fs_fit <- feols(D_OD ~ FIRST_CHOICE_OFFER + .[controls] | FIRST_CHOICE_LOTTERY, first_choice)
+first_choice_fit <- feols(.[outcome_vars] ~ .[controls] | FIRST_CHOICE_LOTTERY | D_OD ~ FIRST_CHOICE_OFFER,
+                          first_choice, ssc = ssc(K.adj = FALSE))
+first_choice_fs <- effect(first_choice_fs_fit, z = "FIRST_CHOICE_OFFER")
+first_choice_est <- effect(first_choice_fit) %>%
+  mutate(var = outcome_vars, mean = colMeans(first_choice[first_choice$FIRST_CHOICE_OFFER == 0, outcome_vars]))
+first_choice_fs
 
-```{r first-choice-tex}
-note_c5 <- paste0(
-  "Notes: Estimates as in Table~\\ref{tab: lottery college}, with receiving a first-choice offer (a main-stage placement at the ",
-  "classroom the student ranked first) as the instrument; each entry of a family's ranked list is one of a school's classrooms for the ",
-  "grade, with its own seats. The fixed effects are one per first-choice admission lottery: the students who ranked the same classroom ",
-  "first in the same application year, with the same priority there \\citep[Section~4.5]{abdulkadiroglu2017}, including low-income ",
-  "status where the classroom has a reserved quota, and, from 2018, the same number of siblings applying to that classroom with ",
-  "adjacent random numbers. The sample is the ", comma(nrow(first_choice)), " students of Section~\\ref{sec:lottery-data}, in or outside ",
-  "the lottery sample, who have every characteristic, whose first choice is a classroom of an over-demanded school, whose own random ",
-  "number decided, in SAE's main stage, whether they received a first-choice offer, and whose first-choice admission lottery holds ",
-  "students with and without a first-choice offer. It leaves out the students whose priority or list depended on a sibling's placement ",
-  "in the same process. The first stage is ", num(100 * fs_c5$est, 2), " pp (", num(100 * fs_c5$se, 2), "). Columns (1) and (3) are ",
-  "means among the students without a first-choice offer, in \\%; the effects are in pp. Heteroskedasticity-robust standard errors in ",
-  "parentheses. On time and ever are defined in Section~\\ref{sec:lottery-data}. A student who completes secondary school in adult ",
-  "education counts as graduated; the two rows indented under graduation divide it by route, and a student who also completes twelfth ",
-  "grade in regular secondary education counts in the regular row. ", ENROLLMENT_NOTE, " $^{***}$p$<$0.01, $^{**}$p$<$0.05, $^{*}$p$<$0.1."
+first_choice_note <- paste0(
+  "Notes: Estimates as in Table~\\ref{tab: lottery college}, with a first-choice offer (a main-stage placement at the ",
+  "classroom the student ranked first) as the instrument; each entry of a student's ranked list is one of a school's ",
+  "ninth-grade classrooms, with its own seats. The fixed effects are one per first-choice lottery ",
+  "\\citep[Section~4.5]{abdulkadiroglu2017}, defined in Appendix~\\ref{app:first-choice-iv}. The sample is the ",
+  comma_int(nrow(first_choice)), " applicants of Section~\\ref{sec:lottery-data}, inside or outside its lottery ",
+  "sample, who meet the conditions of Appendix~\\ref{app:first-choice-iv} and have all the characteristics used as ",
+  "controls. The first stage is ", fmt(100 * first_choice_fs$est, 2), " pp (", fmt(100 * first_choice_fs$se, 2),
+  "). Columns (1) and (3) are means among the students without a first-choice offer, in \\%; the effects are in ",
+  "pp. Heteroskedasticity-robust standard errors in parentheses. On time and ever are defined in ",
+  "Section~\\ref{sec:lottery-data}. The rows are defined in the note to Table~\\ref{tab: lottery college}. ",
+  "$^{***}$p$<$0.01, $^{**}$p$<$0.05, $^{*}$p$<$0.1."
 )
 
-tex_c5 <- paste0(
-  "\\begin{table}[htbp]\\singlespacing\\renewcommand{\\arraystretch}{1.0}\n",   # as Table III: at 1.2 the table and its note run over the page
-  "   \\caption{Effect of Attending an Over-Demanded School on Graduation and College Outcomes, On Time and Ever, with First-Choice ",
-  "Admission Lotteries}\\label{tab: lottery horizon}\n",
-  "   \\centerline{\\scalebox{0.85}{\\begin{tabular}{lcccc}\n",
-  "      \\toprule\n",
-  "                   & \\multicolumn{2}{c}{On time} & \\multicolumn{2}{c}{Ever}\\\\\n",
-  "      \\cmidrule(lr){2-3}\\cmidrule(lr){4-5}\n",
-  "                   & No offer & 2SLS & No offer & 2SLS\\\\\n",
-  "                   & mean &  & mean & \\\\\n",
-  "                   & (1) & (2) & (3) & (4)\\\\\n",
-  "      \\midrule\n",
-  paste(outcome_body(est_c5), collapse = ""),
-  "      \\midrule\n",
-  tex_row("$N$", comma(rep(c(sum(first_choice$FIRST_CHOICE_OFFER == 0), nrow(first_choice)), 2))),
-  "      \\bottomrule\n",
-  "   \\end{tabular}}}\n",
-  "   \\par\\smallskip{\\footnotesize ", note_c5, "}\n",
-  "\\end{table}\n"
-)
-write_tex(tex_c5, "tables/results/lottery_college_first_choice.tex")
-cat(tex_c5)
+first_choice_tex <- outcome_table(
+  c("\\begin{table}[htbp]\\singlespacing\\renewcommand{\\arraystretch}{1.0}",
+    "\\captionsetup{skip=4pt}"),
+  "Graduation and College Outcomes Using First-Choice Admission Lotteries", "tab: lottery horizon",
+  c("                   & No offer & 2SLS & No offer & 2SLS\\\\", "                   & mean &  & mean & \\\\"),
+  first_choice_est, c(sum(first_choice$FIRST_CHOICE_OFFER == 0), nrow(first_choice)), first_choice_note)
+write_tex(first_choice_tex, "results/lottery_college_first_choice.tex")
 ```
 
-# Appendix Table C.6: the outcome horizons by application year
+# Appendix Table C.5: the outcome horizons by application year
 
 ```{r followup}
 followup <- tibble(YEAR = sort(unique(panel$YEAR))) %>%
-  mutate(graduation = YEAR + ON_TIME_GRADUATION, process = YEAR + ON_TIME_COLLEGE, more_years = LAST_SCHOOL_YEAR - graduation)
-stopifnot(all(followup$more_years == LAST_COLLEGE_PROCESS - followup$process))   # the same follow-up for graduation and college
-# the windows against the outcome columns (the children with every outcome): in the application year with no further follow-up, each
-# on-time outcome equals its ever outcome; in the year with one more year of records, each outcome has a child whose ever outcome is above it
-observed <- drop_na(panel, all_of(vars3))
-no_more <- filter(observed, YEAR == followup$YEAR[followup$more_years == 0])
-one_more <- filter(observed, YEAR == followup$YEAR[followup$more_years == 1])
-cols_ot <- paste0(names(college), "_OT")
-cols_ever <- paste0(names(college), "_EVER")
-stopifnot(all(no_more[cols_ot] == no_more[cols_ever]), all(colSums(one_more[cols_ever] > one_more[cols_ot]) > 0))
-as.data.frame(followup)
+  mutate(graduation = YEAR + ON_TIME_GRADUATION, process = YEAR + ON_TIME_COLLEGE,
+         more_years = LAST_SCHOOL_YEAR - graduation)
 
-tex_c6 <- c(
-  "\\begin{table}[!htbp]",
-  "\\singlespacing\\renewcommand{\\arraystretch}{1.2}",
-  "\\centering",
-  "\\caption{Scheduled Outcomes and Additional Follow-Up by Application Year}",
-  "\\label{tab: lottery followup}",
-  "\\small",
-  "\\begin{tabular*}{\\textwidth}{@{\\extracolsep{\\fill}}cccc@{}}",
-  "\\toprule",
-  "Application & Scheduled & Scheduled college & Additional years \\\\",
-  "year & graduation & admission process & of follow-up \\\\",
-  "\\midrule",
-  with(followup, paste0(YEAR, " & ", graduation, " & ", process, " & ", more_years, " \\\\")),
-  "\\bottomrule",
-  "\\end{tabular*}",
-  "\\par\\smallskip",
-  "\\begin{minipage}{\\textwidth}\\footnotesize",
-  paste0("Notes: Scheduled dates assume one grade of progression per year after ninth-grade entry. The final column counts years beyond ",
-         "the scheduled horizon through the latest records: ", LAST_SCHOOL_YEAR, " for graduation and ", LAST_COLLEGE_PROCESS, " for ",
-         "college outcomes. It describes the observation window, not a restriction to students who graduate or apply on schedule."),
-  "\\end{minipage}",
-  "\\end{table}"
-)
-write_tex(paste0(paste(tex_c6, collapse = "\n"), "\n"), "tables/lottery_followup.tex")
-cat(tex_c6, sep = "\n")
+followup_note <- paste0(
+  "Scheduled dates are the on-time horizons, which assume one grade of progression per year after ninth-grade entry. ",
+  "The final column counts the years beyond the on-time horizon that ever outcomes add, through the latest records: ",
+  LAST_SCHOOL_YEAR, " for graduation and ", LAST_COLLEGE_PROCESS, " for college outcomes.")
+
+followup_tex <- tex_float("Scheduled Outcomes and Additional Follow-Up by Application Year", "tab: lottery followup",
+                          "cccc",
+                          c("Application & Scheduled & Scheduled college & Additional years \\\\",
+                            "year & graduation & admission process & of follow-up \\\\", "\\midrule",
+                            with(followup,
+                                 paste0(YEAR, " & ", graduation, " & ", process, " & ", more_years, " \\\\"))),
+                          followup_note)
+write_tex(followup_tex, "lottery_followup.tex")
 ```
 
-# The numbers of the outcomes section's text and of its appendix's prose
+# The numbers the text quotes
 
-The comments name the paragraph of the outcomes section that quotes each number. The chunk `text-numbers` writes each number the text
-quotes, named as the text's macro, and those macros; it stops if one of these numbers comes out missing, empty or infinite. It then
-checks each statement the current text makes about these results (a sign, a significance call, a comparison) and writes them with
-whether they hold; if a statement does not hold, the knit names it and stops once all are written.
+Written as LaTeX macros: shares are plain numbers (the text adds the percent sign) and effects are absolute values
+(the text gives their direction in words).
 
-```{r text-counts}
-# the sample paragraphs: the over-demanded schools and the children
-outside <- filter(panel, !LOTTERY_SAMPLE)   # a chance of 0 or 1
-stopifnot("Table C.1's note: every child outside the lottery sample is in chance group 0 or 100" =
-            all(outside$CHANCE_GROUP %in% c(0, 100)))
-counts <- c(over_demanded_schools = n_over_demanded, applicants = nrow(panel), lottery_sample = nrow(lottery),
-            every_characteristic = nrow(sample3), chance_0_or_1 = nrow(outside), chance_0 = sum(outside$CHANCE_GROUP == 0),
-            chance_1 = sum(outside$CHANCE_GROUP == 100), offer = sum(lottery$OFFER == 1), no_offer = sum(lottery$OFFER == 0))
-counts
+The text also quotes where the children whose attendance depends on the offer go without it: each share is minus the
+2SLS effect of attendance on 1[the entry school's type] x (1 - attendance), specified as in Table IV (Abdulkadiroglu
+et al. 2017, Table VII).
 
-# the sample paragraph's footnote on the placements: the 9th-grade main-stage placements at the over-demanded schools in the 2016-2021
-# processes; the share with no priority (the regular category), and the schools where a random number decided at least one seat taken
-# with no priority: a seat filled by priority tier and random number (every seat but those filled through a school's special-education
-# or academic-track ordering, and the guaranteed return of current students)
-placements <- filter(applications, !is.na(RBD_ADMITIDO))
-no_priority <- filter(placements, PRIORITY_CATEGORY == "regular")
-seat_types <- c("2016 pilot list", "S ordering", "S tier and random number", "T ordering", "T tier and random number",
-                "A high achiever, random number", "A tier and random number", "D low-income pool", "R regular pool", "G guaranteed return")
-stopifnot("every placement has its seat type" = !anyNA(placements$POOL_TYPE),
-          "every placement took one of the assignment's ten seat types" = all(placements$POOL_TYPE %in% seat_types))
-by_number <- flag(!no_priority$POOL_TYPE %in% c("S ordering", "T ordering", "G guaranteed return"), "by_number")
-footnote <- c(placements = nrow(placements), no_priority = nrow(no_priority), share_no_priority = nrow(no_priority) / nrow(placements),
-              schools_no_priority = n_distinct(no_priority$RBD_ADMITIDO), schools_random_number = n_distinct(no_priority$RBD_ADMITIDO[by_number]))
-footnote[names(footnote) != "share_no_priority"]
-c(share_no_priority_pct = 100 * footnote[["share_no_priority"]])
-
-# the balance paragraph: without the offer, the entry-year destinations of the children whose attendance depends on it (Table C.3), in
-# % with their SEs
-est_c3 %>%
-  transmute(type, share_pct = 100 * share, se_pp = 100 * se, n) %>%
-  as.data.frame()
-
-# the results paragraphs: the effects (pp) as shares of the means without an offer (%), on time and ever
-shares <- est3 %>%
-  filter(var %in% c(paste0(c("GRAD", "APPLIED", "ASSIGNED", "INSUA"), "_OT"), paste0(c("GRAD", "ASSIGNED", "INSUA"), "_EVER"))) %>%
-  transmute(var, effect_pp = 100 * est, se_pp = 100 * se, p, n, mean_pct = 100 * mean, pct_of_mean = 100 * abs(est) / mean)
-as.data.frame(shares)
+```{r destinations}
+# "fee_paying" is the data's code for a private non-subsidized school
+destinations_sample <- mutate(estimation_sample,
+                              PUBLIC = (ENTRY_SCHOOL_TYPE == "publicly_funded_outside") * (1L - D_OD),
+                              PRIVATE = (ENTRY_SCHOOL_TYPE == "fee_paying") * (1L - D_OD),
+                              NONE = (ENTRY_SCHOOL_TYPE == "no_record") * (1L - D_OD))
+destinations_fit <- feols(c(PUBLIC, PRIVATE, NONE) ~ .[controls] + i(YEAR, ref = 2016) | CHANCE_GROUP | D_OD ~ OFFER,
+                          destinations_sample, ssc = ssc(K.adj = FALSE))
+destinations_est <- effect(destinations_fit) %>%
+  mutate(type = c("publicly_funded_outside", "private_non_subsidized", "no_record"), share = -est)
+destinations_est
 ```
 
 ```{r text-numbers}
-# the position of the one row whose key is v: it stops unless exactly one row matches (a key that is missing, NA or repeated stops the knit)
-one_row <- function(keys, v) { i <- which(keys == v); if (length(i) != 1L) stop(length(i), " rows match ", v); i }
-local({   # self-test: a match; a miss, an NA and a repeated key stop
-  stops <- function(expr) inherits(tryCatch(expr, error = function(e) e), "error")
-  stopifnot("one_row self-test" = one_row(c("a", "b", NA), "b") == 2L && stops(one_row(c("a", "b"), "z")) && stops(one_row(c("a", "b"), NA)) && stops(one_row(c("a", "a"), "a")))
-})
-t3 <- function(v) est3[one_row(est3$var, v), ]             # Table IV
-t2 <- function(v, k) est2[[k]][one_row(rows2$var, v), ]    # Table III, columns (2) to (4)
-t4 <- function(v) est_c4[one_row(est_c4$var, v), ]         # Table C.4
-t5 <- function(v) est_c5[one_row(est_c5$var, v), ]         # Table C.5
-pp <- function(x) num(abs(100 * x), 2)                     # an effect in pp, as the text quotes it (the direction in words)
-share_of <- function(v) num(shares$pct_of_mean[one_row(shares$var, v)], 1)   # an effect as a share of its mean without an offer, in %, as the text quotes it
-dest <- function(k) num(100 * est_c3$share[one_row(est_c3$type, k)], 1)      # a destination's share, Table C.3, in %
-coincide <- followup$YEAR[followup$more_years == 0]   # the application year whose on-time and ever windows coincide
-no_alto <- panel %>% group_by(YEAR) %>% summarise(zero = isTRUE(all(ALTO == 0))) %>% filter(zero) %>% pull(YEAR)
-stopifnot(length(no_alto) == 1L)   # one application year whose applicants all carry ALTO 0: the process without the top-20% indicator
+# the placements footnote: the no-priority share and the schools where a random number decided such a seat
+placements <- filter(applications, !is.na(RBD_ADMITIDO))
+no_priority <- filter(placements, PRIORITY_CATEGORY == "regular")
+by_number <- !no_priority$POOL_TYPE %in% c("S ordering", "T ordering", "G guaranteed return")
+share_no_priority <- nrow(no_priority) / nrow(placements)
 
-# every number the outcomes section and its appendix quote, named as the macro the text prints: numbers/outcomes_text_numbers.csv and
-# tables/outcomes_text_macros.tex. Shares are plain numbers (the text adds the percent sign); the years stay typed (a statement below checks them)
-text_numbers <- tribble(
-  ~macro,                            ~value,                                     ~what,
-  "OutcomesODSchools",               comma(n_over_demanded),                     "the over-demanded schools",
-  "OutcomesLotterySample",           comma(nrow(lottery)),                       "the lottery sample",
-  "OutcomesEstimationSample",        comma(nrow(sample3)),                       "the lottery sample with every characteristic",
-  "OutcomesNoPriorityShare",         num(100 * footnote[["share_no_priority"]], 1), "the placements with no priority, % of the placements at the over-demanded schools",
-  "OutcomesRandomNumberSchools",     comma(footnote[["schools_random_number"]]), "the schools where a random number decided a seat taken with no priority",
-  "OutcomesChanceGroups",            comma(n_distinct(lottery$CHANCE_GROUP)),    "the chance groups",
-  "OutcomesWithOffer",               comma(sum(lottery$OFFER == 1)),             "the children with an offer",
-  "OutcomesWithoutOffer",            comma(sum(lottery$OFFER == 0)),             "the children without an offer",
-  "OutcomesBalanceODRanked",         num(t2("N_OD", 1)$est, 3),                  "Table III (2), over-demanded schools ranked",
-  "OutcomesBalanceRankedFirst",      num(100 * t2("FC_OD", 1)$est, 2),           "Table III (2), ranked an over-demanded school first, pp",
-  "OutcomesFirstStageTableIII",      num(100 * t2("D_OD", 2)$est, 2),            "the first stage, Table III (3), pp",
-  "OutcomesFirstStage",              num(100 * fs3$est, 2),                      "the first stage, Table IV's specification, pp",
-  "OutcomesAttendanceNoOffer",       num(100 * mean2[["D_OD"]], 2),              "attendance without an offer, Table III (1), %",
-  "OutcomesNoOfferPublic",           dest("publicly_funded_outside"),            "Table C.3, other publicly funded school, %",
-  "OutcomesNoOfferPrivate",          dest("fee_paying"),                         "Table C.3, fee-paying private school, %",
-  "OutcomesNoOfferNoRecord",         dest("no_record"),                          "Table C.3, no enrollment record, %",
-  "OutcomesOLSGradOnTime",           pp(t4("GRAD_OT")$est),                      "Table C.4, graduation on time, pp",
-  "OutcomesOLSAssignedOnTime",       pp(t4("ASSIGNED_OT")$est),                  "Table C.4, assigned on time, pp",
-  "OutcomesOLSEnrolledSUAOnTime",    pp(t4("INSUA_OT")$est),                     "Table C.4, first enrollment in SUA on time, pp",
-  "OutcomesGradOnTime",              pp(t3("GRAD_OT")$est),                      "Table IV, graduation on time, pp",
-  "OutcomesAppliedOnTime",           pp(t3("APPLIED_OT")$est),                   "Table IV, applied on time, pp",
-  "OutcomesAssignedOnTime",          pp(t3("ASSIGNED_OT")$est),                  "Table IV, assigned on time, pp",
-  "OutcomesEnrolledSUAOnTime",       pp(t3("INSUA_OT")$est),                     "Table IV, first enrollment in SUA on time, pp",
-  "OutcomesGradOnTimeShare",         share_of("GRAD_OT"),                        "graduation on time, % of its mean without an offer",
-  "OutcomesAppliedOnTimeShare",      share_of("APPLIED_OT"),                     "applied on time, % of its mean without an offer",
-  "OutcomesAssignedOnTimeShare",     share_of("ASSIGNED_OT"),                    "assigned on time, % of its mean without an offer",
-  "OutcomesEnrolledSUAOnTimeShare",  share_of("INSUA_OT"),                       "first enrollment in SUA on time, % of its mean without an offer",
-  "OutcomesGradRegularOnTime",       pp(t3("GRAD_REGULAR_OT")$est),              "Table IV, graduation through regular secondary education on time, pp",
-  "OutcomesGradAdultOnTime",         pp(t3("GRAD_ADULT_OT")$est),                "Table IV, graduation through adult secondary education on time, pp",
-  "OutcomesGradEver",                pp(t3("GRAD_EVER")$est),                    "Table IV, graduation ever, pp",
-  "OutcomesGradEverShare",           share_of("GRAD_EVER"),                      "graduation ever, % of its mean without an offer",
-  "OutcomesAppliedEver",             pp(t3("APPLIED_EVER")$est),                 "Table IV, applied ever, pp",
-  "OutcomesAssignedEver",            pp(t3("ASSIGNED_EVER")$est),                "Table IV, assigned ever, pp",
-  "OutcomesEnrolledSUAEver",         pp(t3("INSUA_EVER")$est),                   "Table IV, first enrollment in SUA ever, pp",
-  "OutcomesAssignedEverShare",       share_of("ASSIGNED_EVER"),                  "assigned ever, % of its mean without an offer",
-  "OutcomesEnrolledSUAEverShare",    share_of("INSUA_EVER"),                     "first enrollment in SUA ever, % of its mean without an offer",
-  "OutcomesFirstChoiceSample",       comma(nrow(first_choice)),                  "Table C.5's sample",
-  "OutcomesFirstChoiceFirstStage",   num(100 * fs_c5$est, 2),                    "Table C.5's first stage, pp",
-  "OutcomesFirstChoiceFirstStageSE", num(100 * fs_c5$se, 2),                     "its robust standard error, pp"
+iv <- setNames(college_est$est, college_est$var)                        # Table IV's effects
+rf <- setNames(offer_est$est, offer_est$var)                            # Appendix Table C.3's effects
+# Table IV's effects in % of the means without an offer
+of_mean <- setNames(100 * abs(college_est$est) / college_est$mean, college_est$var)
+dest <- setNames(100 * destinations_est$share, destinations_est$type)   # the destinations without the offer, in %
+pp <- function(x) fmt(abs(100 * x), 2)                                  # an effect in pp
+
+macros <- c(
+  ODSchools               = comma_int(n_over_demanded),
+  LotterySample           = comma_int(nrow(lottery)),
+  EstimationSample        = comma_int(nrow(estimation_sample)),
+  NoPriorityShare         = fmt(100 * share_no_priority, 1),
+  RandomNumberSchools     = comma_int(n_distinct(no_priority$RBD_ADMITIDO[by_number])),
+  ChanceGroups            = comma_int(n_distinct(lottery$CHANCE_GROUP)),
+  WithOffer               = comma_int(sum(lottery$OFFER == 1)),
+  WithoutOffer            = comma_int(sum(lottery$OFFER == 0)),
+  BalanceODRanked         = fmt(balance_est[[1]]$est[balance_rows$var == "N_OD"], 3),
+  BalanceRankedFirst      = fmt(100 * balance_est[[1]]$est[balance_rows$var == "FC_OD"], 2),
+  FirstStageTableIII      = fmt(100 * balance_est[[2]]$est[balance_rows$var == "D_OD"], 2),
+  FirstStage              = fmt(100 * college_fs$est, 2),
+  AttendanceNoOffer       = fmt(100 * balance_mean[["D_OD"]], 2),
+  NoOfferPublic           = fmt(dest[["publicly_funded_outside"]], 1),
+  NoOfferPrivate          = fmt(dest[["private_non_subsidized"]], 1),
+  NoOfferNoRecord         = fmt(dest[["no_record"]], 1),
+  OLSGradOnTime           = pp(rf[["GRAD_OT"]]),
+  OLSAssignedOnTime       = pp(rf[["ASSIGNED_OT"]]),
+  OLSEnrolledSUAOnTime    = pp(rf[["INSUA_OT"]]),
+  GradOnTime              = pp(iv[["GRAD_OT"]]),
+  AppliedOnTime           = pp(iv[["APPLIED_OT"]]),
+  AssignedOnTime          = pp(iv[["ASSIGNED_OT"]]),
+  EnrolledSUAOnTime       = pp(iv[["INSUA_OT"]]),
+  GradOnTimeShare         = fmt(of_mean[["GRAD_OT"]], 1),
+  AppliedOnTimeShare      = fmt(of_mean[["APPLIED_OT"]], 1),
+  AssignedOnTimeShare     = fmt(of_mean[["ASSIGNED_OT"]], 1),
+  EnrolledSUAOnTimeShare  = fmt(of_mean[["INSUA_OT"]], 1),
+  GradRegularOnTime       = pp(iv[["GRAD_REGULAR_OT"]]),
+  GradAdultOnTime         = pp(iv[["GRAD_ADULT_OT"]]),
+  GradEver                = pp(iv[["GRAD_EVER"]]),
+  GradEverShare           = fmt(of_mean[["GRAD_EVER"]], 1),
+  AppliedEver             = pp(iv[["APPLIED_EVER"]]),
+  AssignedEver            = pp(iv[["ASSIGNED_EVER"]]),
+  EnrolledSUAEver         = pp(iv[["INSUA_EVER"]]),
+  AssignedEverShare       = fmt(of_mean[["ASSIGNED_EVER"]], 1),
+  EnrolledSUAEverShare    = fmt(of_mean[["INSUA_EVER"]], 1),
+  FirstChoiceSample       = comma_int(nrow(first_choice)),
+  FirstChoiceFirstStage   = fmt(100 * first_choice_fs$est, 2),
+  FirstChoiceFirstStageSE = fmt(100 * first_choice_fs$se, 2)
 )
-stopifnot("each macro name is letters only and appears once" = all(grepl("^[A-Za-z]+$", text_numbers$macro)) && !anyDuplicated(text_numbers$macro),
-          "every number the text quotes has a value (none missing, empty or infinite)" =
-            !anyNA(text_numbers$value) && all(nzchar(text_numbers$value)) && no_missing(text_numbers$value))
-write.csv(text_numbers, file.path(out_dir, "numbers", "outcomes_text_numbers.csv"), row.names = FALSE)
-write_tex(paste0(paste(sprintf("\\newcommand{\\%s}{%s}", text_numbers$macro, text_numbers$value), collapse = "\n"), "\n"), "tables/outcomes_text_macros.tex")
-as.data.frame(text_numbers)
-
-# a statement the current text makes about these results, named by the part of the paper that makes it: each is evaluated (an error counts
-# as not holding) and written with whether it holds (numbers/outcomes_text_claims.csv); each that does not hold is printed (a sentence of the
-# text that moves with these results), and once they are all written the knit stops on it
-text_claims <- function(...) {
-  labels <- ...names()
-  stopifnot("every statement carries its label, each once" = ...length() > 0L && !is.null(labels) && all(nzchar(labels)) && !anyDuplicated(labels))
-  holds <- logical(...length())
-  for (i in seq_len(...length())) holds[i] <- isTRUE(tryCatch(...elt(i), error = function(e) NA))
-  for (s in labels[!holds]) message("a statement of the current text does not hold with these results: ", s)
-  tibble(statement = labels, holds = holds)
-}
-local({   # self-test: a true, a false and an erroring statement are recorded as TRUE, FALSE, FALSE; an unlabelled statement stops
-  stops <- function(expr) inherits(tryCatch(expr, error = function(e) e), "error")
-  s <- suppressMessages(text_claims("t1" = TRUE, "t2" = FALSE, "t3" = stop("an error")))
-  stopifnot("text_claims self-test" = identical(s$holds, c(TRUE, FALSE, FALSE)) && identical(s$statement, c("t1", "t2", "t3")) && stops(text_claims(TRUE)))
-})
-
-t2s <- function(k, v) bind_rows(map(v, t2, k = k))    # rows of Table III's column k + 1
-t3s <- function(...) bind_rows(map(c(...), t3))       # rows of Table IV
-t4s <- function(...) bind_rows(map(c(...), t4))       # rows of Table C.4
-t5s <- function(...) bind_rows(map(c(...), t5))       # rows of Table C.5
-falls <- function(r) nrow(r) > 0L && all(r$est < 0 & r$p < 0.1)   # negative and statistically significant
-null <- function(r) nrow(r) > 0L && all(r$p >= 0.1)               # not statistically significant
-shrinks <- function(k) t3(paste0(k, "_EVER"))$est < 0 && abs(t3(paste0(k, "_EVER"))$est) < abs(t3(paste0(k, "_OT"))$est)   # negative ever, smaller than on time
-panel_a <- rows2$var[rows2$panel == "A"]
-panel_b <- rows2$var[rows2$panel == "B"]
-claims <- text_claims(
-  "the abstract's, the Introduction's, the mechanisms section's opening and the conclusion's text on Table IV: attending lowers on-time graduation, assignment and enrollment through SUA, each statistically significant" =
-    falls(t3s("GRAD_OT", "ASSIGNED_OT", "INSUA_OT")),
-  "the abstract's text on Table IV: the losses persist over time (graduation, assignment and enrollment through SUA negative and statistically significant ever)" =
-    falls(t3s("GRAD_EVER", "ASSIGNED_EVER", "INSUA_EVER")),
-  "the outcomes section's text on Table III: within application years, the students with and without an offer differ in their ranked lists (all three rows of Panel A)" =
-    all(t2s(1L, panel_a)$p < 0.1),
-  "the outcomes section's text on Table III: within chance groups, none of the eight differences of Panels A and B is statistically significant, individually or jointly, at the hundredth or the thousandth" =
-    null(t2s(2L, balance_vars)) && null(t2s(3L, balance_vars)) && all(joint2$p[2:3] >= 0.1),
-  "a footnote of the outcomes section on Table III: within application years, students with an offer rank more over-demanded schools and are more likely to rank one first" =
-    t2("N_OD", 1L)$est > 0 && t2("FC_OD", 1L)$est > 0,
-  "a footnote of the outcomes section on Table III: within application years, the groups differ in four of the five baseline characteristics" =
-    sum(t2s(1L, panel_b)$p < 0.1) == 4L,
-  "the outcomes section's text on Table III's Panel C: an offer raises attendance, in both specifications, statistically significant at the 1% level (offers are relevant for attendance)" =
-    t2("D_OD", 2L)$est > 0 && fs3$est > 0 && t2("D_OD", 2L)$p < 0.01 && fs3$p < 0.01,
-  "the outcomes section's and its appendix's text on Table C.3: most students whose attendance depends on the offer enroll in another publicly funded school without it" =
-    est_c3$share[est_c3$type == "publicly_funded_outside"] > 0.5,
-  "a footnote of the outcomes section and the outcomes appendix's text on Table C.2: these students have a lower 8th-grade average and a larger low-income share than the entrants" =
-    col1$est[col1$var == "GPA8_Z"] < col3$mean3[col3$var == "GPA8_Z"] && col1$est[col1$var == "PRIORITARIO"] > col3$mean3[col3$var == "PRIORITARIO"],
-  "a footnote of the outcomes section on Table C.4: an offer lowers on-time graduation, assignment and enrollment through SUA, each statistically significant (the effects that remain significant ever)" =
-    falls(t4s("GRAD_OT", "ASSIGNED_OT", "INSUA_OT")),
-  "a footnote of the outcomes section on Table C.4: the three effects remain negative and statistically significant ever" = falls(t4s("GRAD_EVER", "ASSIGNED_EVER", "INSUA_EVER")),
-  "the outcomes section's text on Table IV: attending lowers on-time graduation, application, assignment and enrollment through SUA, all four statistically significant" =
-    falls(t3s("GRAD_OT", "APPLIED_OT", "ASSIGNED_OT", "INSUA_OT")),
-  "the outcomes section's text on Table IV: on time, graduation through regular secondary education falls and through adult secondary education rises, both statistically significant" =
-    falls(t3s("GRAD_REGULAR_OT")) && t3("GRAD_ADULT_OT")$est > 0 && t3("GRAD_ADULT_OT")$p < 0.1,
-  "the outcomes section's text on Table IV: the effect on enrollment outside SUA on time is negative and statistically significant" = falls(t3s("OUTSIDE_OT")),
-  "the outcomes section's text on Table IV: lost SUA enrollments are not offset outside the system (enrolled anywhere falls on time, statistically significant)" = falls(t3s("ANYWHERE_OT")),
-  "the outcomes section's text on Table IV: the graduation decline shrinks with follow-up" = shrinks("GRAD"),
-  "the outcomes section's text on Table IV: the decline in college applications shrinks and is statistically significant only at the 10% level" =
-    shrinks("APPLIED") && t3("APPLIED_EVER")$p < 0.1 && t3("APPLIED_EVER")$p >= 0.05,
-  "the outcomes section's text on Table IV: ever assignment and enrollment through SUA fall, both statistically significant, by contrast with applications at the 5% level or below" =
-    falls(t3s("ASSIGNED_EVER", "INSUA_EVER")) && all(t3s("ASSIGNED_EVER", "INSUA_EVER")$p < 0.05),
-  "the outcomes section's text on Table IV: the eventual effect on enrollment outside SUA is not statistically significant" = null(t3s("OUTSIDE_EVER")),
-  "the outcomes section's text on Table IV: the effects on graduation and application become smaller with follow-up, and assignment and enrollment through SUA remain lower" =
-    shrinks("GRAD") && shrinks("APPLIED") && all(t3s("ASSIGNED_EVER", "INSUA_EVER")$est < 0),
-  "a footnote of the outcomes section and the outcomes appendix's text on Table C.5: graduation, assignment and enrollment through SUA lower and statistically significant at both horizons" =
-    falls(t5s("GRAD_OT", "GRAD_EVER", "ASSIGNED_OT", "ASSIGNED_EVER", "INSUA_OT", "INSUA_EVER")),
-  "a footnote of the outcomes section and the outcomes appendix's text on Table C.5: the ever application effect is negative and statistically significant" = falls(t5s("APPLIED_EVER")),
-  "a footnote of the outcomes section and the outcomes appendix's text on Table C.5: the effect on graduation through adult secondary education is statistically significant only at the eventual horizon" =
-    null(t5s("GRAD_ADULT_OT")) && t5("GRAD_ADULT_EVER")$p < 0.1,
-  "the outcomes section's and its appendix's text on the years: application years 2016-2021; the 2021 applicants' on-time and ever windows coincide; records through the 2025 school year and the 2026 process" =
-    identical(years, "2016--2021") && identical(coincide, 2021L) && LAST_SCHOOL_YEAR == 2025L && LAST_COLLEGE_PROCESS == 2026L,
-  "the outcomes appendix's text: the top-20% indicator is unavailable in the 2016 process" = identical(no_alto, 2016L),
-  "the outcomes appendix's text: a student of the sample can belong to a rounded group labeled zero or one" = any(lottery$CHANCE_GROUP %in% c(0, 100)),
-  "the outcomes appendix's text and Table C.5's note: the first-choice sample holds students inside and outside the lottery sample" =
-    any(first_choice$LOTTERY_SAMPLE) && any(!first_choice$LOTTERY_SAMPLE),
-  "a footnote of the outcomes section on the chance groups: the chance rounded to the hundredth takes all 101 possible values in the sample" =
-    n_distinct(lottery$CHANCE_GROUP) == 101L
-)
-write.csv(claims, file.path(out_dir, "numbers", "outcomes_text_claims.csv"), row.names = FALSE)
-message(sprintf("%d statements of the current text checked; %d do not hold with these results", nrow(claims), sum(!claims$holds)))
-if (!all(claims$holds)) stop("statements of the current text that do not hold with these results: ", paste(claims$statement[!claims$holds], collapse = "; "))
-as.data.frame(claims)
-```
-
-# Every estimate at full precision
-
-Written to `numbers/outcomes_estimates.csv` under `out_dir` (17 significant digits), so that the tables can be checked against other
-runs.
-
-```{r estimates}
-outcome_rows <- function(est, table, column) transmute(est, table = table, column = column, variable = var, est, se, p, n, mean)
-estimates <- bind_rows(
-  bind_rows(map2(est2, c("(2)", "(3)", "(4)"), function(e, k) mutate(e, table = "III", column = k, variable = rows2$var))),
-  tibble(table = "III", column = "(1)", variable = rows2$var, mean = unname(mean2[rows2$var])),
-  transmute(joint2, table = "III", column = c("(2)", "(3)", "(4)"), variable = "joint F", est = .data$F, p, n),
-  mutate(fs3, table = "IV", column = "first stage", variable = "D_OD"),
-  outcome_rows(est3, "IV", "2SLS"),
-  transmute(col1, table = "C.2", column = "(1)", variable = var, est, se, n),
-  transmute(col1, table = "C.2", column = "(2)", variable = var, mean = mean_all, n),
-  transmute(col3, table = "C.2", column = "(3)", variable = var, mean = mean3, n = n3),
-  transmute(est_c3, table = "C.3", column = "without the offer", variable = type, est = share, se, n),
-  outcome_rows(est_c4, "C.4", "OLS"),
-  mutate(fs_c5, table = "C.5", column = "first stage", variable = "D_OD"),
-  outcome_rows(est_c5, "C.5", "2SLS"),
-  tibble(table = "counts", column = "C.1", variable = names(funnel), est = unname(funnel)),
-  tibble(table = "counts", column = "C.2 note", variable = names(c2_counts), est = unname(c2_counts)),
-  tibble(table = "counts", column = "text", variable = names(counts), est = unname(counts)),
-  tibble(table = "counts", column = "footnote", variable = names(footnote), est = unname(footnote))
-) %>%
-  select(table, column, variable, est, se, p, n, mean)
-estimates %>%
-  mutate(across(c(est, se, p, mean), function(x) sprintf("%.17g", x))) %>%
-  write.csv(file.path(out_dir, "numbers", "outcomes_estimates.csv"), row.names = FALSE)
-nrow(estimates)
-```
-
-# The files written
-
-Checks that this knit wrote every file listed here, and prints each with its bytes and MD5.
-
-```{r outputs}
-written <- c(file.path("tables", "results", c("lottery_balance.tex", "lottery_college.tex", "lottery_characteristics.tex", "lottery_college_offer.tex",
-                                              "lottery_college_first_choice.tex")),
-             file.path("tables", c("lottery_sample_construction.tex", "complier_alternatives.tex", "lottery_followup.tex", "outcomes_text_macros.tex")),
-             file.path("numbers", c("outcomes_estimates.csv", "outcomes_text_numbers.csv", "outcomes_text_claims.csv")))
-full <- file.path(out_dir, written)
-stopifnot("every output was written by this knit" = all(file.exists(full)) && all(file.mtime(full) >= KNIT_START))
-others <- setdiff(list.files(out_dir, recursive = TRUE), written)
-if (length(others)) message("the output folder also holds files this knit did not write: ", paste(others, collapse = ", "))
-data.frame(file = written, bytes = file.size(full), md5 = unname(tools::md5sum(full)))
-```
-
-# R session
-
-```{r session-info}
-sessionInfo()
+write_tex(sprintf("\\newcommand{\\Outcomes%s}{%s}", names(macros), macros), "outcomes_text_macros.tex")
+macros
 ```

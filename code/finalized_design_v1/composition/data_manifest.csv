@@ -1,7 +1,6 @@
 file,bytes,md5
 composition_panel.rds,9362680,062eac71b982c860ea2281850e896c9d
 composition_schools.rds,252351,d536e8b1cdccae6a696e4ccd01acd9b2
-composition_applicants.rds,4022529,fc4ae77760df7a8935f06b8adb2d202b
 draws/did/regional/headline.rds,61253,8fba99598b055af2420780f23eb437a2
 draws/did/regional/gpa_robustness_2.rds,19257,c9787f96b13f289545dcbedd9e6d2063
 draws/did/regional/gpa_robustness_3.rds,22989,cc1f2d7fc419f1d1ad20e7d7320d8755
