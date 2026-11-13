@@ -1,0 +1,6 @@
+check 1: the whole sample reproduces the paper's ten estimates, SEs and Ns, the 112,679 without an offer and the first stage (61.04 pp)
+check 2: on the 983 children whose highest-ranked school has no peer measure, the SE equals the HC0 sandwich by hand (0.049026)
+check 3: the first-choice estimator reproduces Appendix Table C.4 (16 means, estimates and SEs; N 114,550; 73,314 without an offer; first stage 50.42 (0.27))
+first-choice children inside the lottery sample with every control: 107,184; outside it with every control: 7,366 (each with a chance of exactly 1; no score outcomes in the shared panels)
+correlation of value added and peer achievement: 0.536 over the schools with both, 0.542 over the children (their highest-ranked school)
+wrote output/i2_*.csv and output/i2_report.md in 19 s

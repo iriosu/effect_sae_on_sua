@@ -1,0 +1,35 @@
+inputs: all 9 MD5s match
+children: 186,440 in the lottery sample; 73,446 with an offer
+schools: value added for 929 (median 0.1498; 173 within one SE of the median), peer achievement for 1001 (median 0.1381); correlation over the 929 with both 0.536
+school types (value added x peer):
+Key: <VA_TYPE, PEER_TYPE>
+   VA_TYPE PEER_TYPE     N
+    <char>    <char> <int>
+1:    high      high   329
+2:    high       low   135
+3:     low      high   147
+4:     low       low   318
+5:    none      high    24
+6:    none       low    48
+7:    none      none    19
+highest-ranked over-demanded school (rows she entered): 826 children entered none (their only over-demanded row is their current school)
+Key: <TOP_VA_TYPE>
+    TOP_VA_TYPE      N
+         <char>  <int>
+1: current only    826
+2:         high  66292
+3:          low 111022
+4:         none   8300
+Key: <TOP_PEER_TYPE>
+   TOP_PEER_TYPE      N
+          <char>  <int>
+1:  current only    826
+2:          high 110478
+3:           low  74152
+4:          none    984
+first-choice children outside the lottery sample: 7,389, of them with a chance of exactly 1: 7,389, strictly between 0 and 1: 0
+chance: the recomputed chance gives the paper's hundredths and thousandths groups for all 186,440 children
+chances by VA type add up to the chance for every child (largest gap 2.2e-16)
+chances by PEER type add up to the chance for every child (largest gap 2.2e-16)
+offers: 73,446, each at a school where the child has a positive chance; at her highest-ranked over-demanded school: 44,035
+wrote output/i1_frame.rds (186,440 rows, 55 columns) and output/i1_schools.csv (1020 schools) in 19 s

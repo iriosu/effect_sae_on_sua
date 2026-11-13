@@ -1,0 +1,8 @@
+VA_TYPE,PEER_TYPE,N
+high,high,329
+high,low,135
+low,high,147
+low,low,318
+none,high,24
+none,low,48
+none,none,19
